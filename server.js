@@ -595,7 +595,7 @@ async function processExcel(req, res) {
     rows = rows.slice(2);
 
     // Define specific columns to retain in the processed data
-    const keepCols = ['Case Code', 'Occurr. Stg.', 'Title', 'Problem', 'Model No.'];
+    const keepCols = ['Case Code', 'Occurr. Stg.', 'Title', 'Problem', 'Model No.', 'S/W Ver.'];
 
     // Ensure rows is an array, even if sheet is empty
     if (!Array.isArray(rows)) rows = [];
@@ -725,6 +725,7 @@ async function processExcel(req, res) {
         { wch: 41 },  // Title
         { wch: 41 },  // Problem
         { wch: 21 },  // Model No.
+        { wch: 15 },  // S/W Ver.
         { wch: 15 },  // Module
         { wch: 15 },  // Sub-Module (added column)
         { wch: 41 },  // Summarized Problem
