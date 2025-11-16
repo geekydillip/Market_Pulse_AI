@@ -1,0 +1,51 @@
+{
+  "excel_process_start": "2025-11-16T16:25:13.689Z",
+  "excel_process_end": "2025-11-16T16:30:19.187Z",
+  "excel_processing_duration_ms": 305476,
+  "number_of_input_rows": 8,
+  "number_of_chunks": 8,
+  "number_of_output_rows": 8,
+  "failed_row_details": [],
+  "added_columns": [
+    "Module",
+    "Sub-Module",
+    "Summarized Problem",
+    "Severity",
+    "Severity Reason"
+  ],
+  "chunks_processing_time": [
+    {
+      "chunk_id": 0,
+      "time_ms": 18985
+    },
+    {
+      "chunk_id": 1,
+      "time_ms": 39162
+    },
+    {
+      "chunk_id": 2,
+      "time_ms": 35697
+    },
+    {
+      "chunk_id": 3,
+      "time_ms": 41459
+    },
+    {
+      "chunk_id": 4,
+      "time_ms": 41354
+    },
+    {
+      "chunk_id": 5,
+      "time_ms": 41922
+    },
+    {
+      "chunk_id": 6,
+      "time_ms": 45693
+    },
+    {
+      "chunk_id": 7,
+      "time_ms": 41191
+    }
+  ],
+  "total_processing_time_ms": 305476
+}
