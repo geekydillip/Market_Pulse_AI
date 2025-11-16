@@ -720,18 +720,18 @@ async function processExcel(req, res) {
 
     // === Apply Column Widths ===
     newSheet['!cols'] = [
-        { wch: 13 },  // Case Code
+        { wch: 15 },  // Case Code
         { wch: 15 },  // Occurr. Stg.
         { wch: 41 },  // Title
         { wch: 41 },  // Problem
-        { wch: 21 },  // Model No.
+        { wch: 15 },  // Model No.
         { wch: 15 },  // S/W Ver.
         { wch: 15 },  // Module
         { wch: 15 },  // Sub-Module (added column)
         { wch: 41 },  // Summarized Problem
-        { wch: 12 },  // Severity
+        { wch: 15 },  // Severity
         { wch: 41 },  // Severity Reason
-        { wch: 20 }   // error (if added)
+        { wch: 15 }   // error (if added)
     ];
 
     // === Apply Cell Alignment and Text Wrap ===
