@@ -1,6 +1,6 @@
 # Market Pulse AI
 
-A professional web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama gemma3:4b model. Upload Excel or JSON files for automated data cleaning, VOC processing, custom transformations, and visualization - all processed locally on your machine.
+A professional web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama (qwen3:4b-instruct or gemma3:4b preferred). Upload Excel or JSON files for automated data cleaning, VOC processing, custom transformations, and visualization - all processed locally on your machine.
 
 ## 🚀 Features
 
@@ -29,7 +29,7 @@ A professional web interface for AI-powered data processing and Voice of Custome
 ## 📋 Prerequisites
 
 - **Node.js** (v14 or higher) or **Python 3** (for automated setup)
-- **Ollama** with gemma3:4b model installed
+- **Ollama** with qwen3:4b-instruct or gemma3:4b model installed
 - **Web Browser** (Chrome, Firefox, Edge, etc.)
 
 ## 🛠️ Installation
@@ -45,8 +45,10 @@ A professional web interface for AI-powered data processing and Voice of Custome
 
 ### Option 1: Manual Setup (Node.js)
 
-1. **Start Ollama** with gemma3:4b model:
+1. **Start Ollama** with preferred model (qwen3:4b-instruct or gemma3:4b):
    ```bash
+   ollama run qwen3:4b-instruct
+   # or
    ollama run gemma3:4b
    ```
 
@@ -73,7 +75,7 @@ A professional web interface for AI-powered data processing and Voice of Custome
    - VOC for customer feedback analysis
    - Custom for flexible AI prompts (enter custom prompt text)
    - Clean for deterministic data cleansing
-3. **Select AI Model**: Choose from available Ollama models (defaults to gemma3:4b)
+3. **Select AI Model**: Choose from available Ollama models (defaults to qwen3:4b-instruct)
 4. **Process File**: Click "Process with AI" and monitor real-time progress
 5. **Download Results**: Automatically download processed files and processing logs
 
@@ -195,6 +197,7 @@ Deterministic automated cleaning without AI:
 
 - **v1.2.0** - Added new features and improvements (November 2025)
 - **v1.1.0** - Switched to Gemma 3:4B model for improved performance
+- **v1.2.1** - Updated to prefer qwen3:4b-instruct model for Excel processing
 - **Automation Scripts** - Added Python scripts for automated Ollama and server startup
 - **Code Improvements** - Simplified Ollama API integration and enhanced file processing
 - **UI Enhancements** - Updated Excel file processing display messages

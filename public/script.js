@@ -252,13 +252,15 @@ async function processStructuredFile(file, processingType, customPrompt, model, 
             };
 
             // Start live timer
-            timerInterval = setInterval(() => {
+            currentTimerInterval = setInterval(() => {
                 const elapsedMs = Date.now() - processStartTime;
-                const elapsedSec = (elapsedMs / 1000).toFixed(1);
+                const elapsedSec = Math.floor(elapsedMs / 1000);
+                const message = `Processing... (${elapsedSec}s)`;
+                // Update timer display, but allow current progress message to show if it's detailed
                 if (!progressText.textContent.includes('Processed chunk')) {
-                    progressText.textContent = `Processing... (${elapsedSec}s)`;
+                    progressText.textContent = message;
                 }
-            }, 100);
+            }, 1000);
 
             // Send processing request
             const formData = new FormData();
@@ -283,7 +285,7 @@ async function processStructuredFile(file, processingType, customPrompt, model, 
             const result = await response.json();
 
             if (result.success && result.downloads && result.downloads.length > 0) {
-                clearInterval(timerInterval);
+                clearInterval(currentTimerInterval);
                 eventSource.close();
                 updateProgress(100, 'Processing complete');
                 // Download the first file (processed Excel/JSON)
@@ -292,7 +294,7 @@ async function processStructuredFile(file, processingType, customPrompt, model, 
                 // Show processing summary
                 showProcessingSummary(result.total_processing_time_ms / 1000, result.downloads);
             } else {
-                clearInterval(timerInterval);
+                clearInterval(currentTimerInterval);
                 eventSource.close();
                 reject(new Error(result.error || 'Processing failed'));
             }
@@ -318,6 +320,9 @@ function updateProgress(percent, text, timerInterval) {
     }
     progressText.textContent = text;
 }
+
+// Store current timer for cleanup
+let currentTimerInterval = null;
 
 
 
@@ -391,8 +396,9 @@ async function loadModels() {
                 modelSelect.appendChild(option);
             });
 
-            // Default to gemma3:4b if available, else first model
-            const defaultModel = data.models.includes('gemma3:4b') ? 'gemma3:4b' : data.models[0];
+            // Default to qwen3:4b-instruct or gemma3:4b if available, else first model
+            const defaultModel = data.models.includes('qwen3:4b-instruct') ? 'qwen3:4b-instruct' :
+                                data.models.includes('gemma3:4b') ? 'gemma3:4b' : data.models[0];
             modelSelect.value = defaultModel;
         } else {
             // Fallback
@@ -467,6 +473,22 @@ document.addEventListener('click', (e) => {
 const refreshBtn = document.getElementById('refreshVisualization');
 if (refreshBtn) refreshBtn.addEventListener('click', loadVisualization);
 
+// Hook CSV export button
+const exportBtn = document.getElementById('exportVisualization');
+if (exportBtn) exportBtn.addEventListener('click', exportVisualization);
+
+// CSV export function
+async function exportVisualization() {
+    try {
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+        const filename = `visualize_summary_${timestamp}.csv`;
+        downloadFile('/api/visualize/export', filename);
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Failed to export CSV: ' + error.message);
+    }
+}
+
 let vizChartInstance = null;
 
 async function loadVisualization() {
@@ -496,9 +518,9 @@ async function loadVisualization() {
         }
         statusEl.textContent = `Scanned ${data.filesScanned || 0} file(s)${location}. ${summary.length} rows grouped.`;
 
-        // Fill table
+        // Fill table - now with 7 columns (added Sub-Module)
         if (summary.length === 0) {
-            tbody.innerHTML = '<tr><td colspan=\"6\" style=\"padding:16px; text-align:center; color:var(--text-secondary); border-bottom:1px solid #374151;\">No data found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan=\"7\" style=\"padding:16px; text-align:center; color:var(--text-secondary); border-bottom:1px solid #374151;\">No data found</td></tr>';
         } else {
             tbody.innerHTML = summary.map((row, index) => `
                 <tr style="border-bottom:1px solid #374151;">
@@ -506,6 +528,7 @@ async function loadVisualization() {
                     <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.swver)}</td>
                     <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.grade)}</td>
                     <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.critical_module)}</td>
+                    <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.sub_module || row.critical_module || 'N/A')}</td>
                     <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.critical_voc)}</td>
                     <td style="padding:12px 8px; text-align:right; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};"><button class="detail-btn" data-model="${escapeHtml(row.model)}" data-swver="${escapeHtml(row.swver)}" data-grade="${escapeHtml(row.grade)}" data-module="${escapeHtml(row.critical_module)}" data-voc="${escapeHtml(row.critical_voc)}" style="background:none; border:none; color:#3b82f6; text-decoration:underline; cursor:pointer; font-weight:600;">${row.count}</button></td>
                 </tr>
@@ -622,7 +645,46 @@ async function showModuleDetails(param) {
         const resp = await fetch(`/api/module-details?${url.toString()}`);
         const data = await resp.json();
         if (data.success && data.details && data.details.length > 0) {
-            content.innerHTML = `<div style="text-align:center; margin-bottom:20px;"><h1 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin:0; font-size:28px; font-weight:700;">${escapeHtml(moduleName)} Module Details</h1><p style="color:var(--text-secondary); margin-top:8px;">Detailed breakdown of all related issues for ${escapeHtml(param.model)} ${escapeHtml(param.swver)}</p></div><div style="overflow-x:auto; border:1px solid #374151; border-radius:8px; background: var(--card-bg);"><table style="width:100%; border-collapse:collapse;"><thead><tr style="background: var(--card-hover);"><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:100px;">Case Code</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:150px;">Model</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">SW Ver</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">Grade</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Title</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Problem</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Summarized</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">Severity</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Severity Reason</th></tr></thead><tbody>${data.details.map((d, idx) => `<tr style="border-bottom:1px solid #374151;"><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; font-weight:500; word-wrap:break-word;">${escapeHtml(d.caseCode)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.model)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.swver)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.grade)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.title)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.problem)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.summarized_problem)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.severity)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.severity_reason)}</td></tr>`).join('')}</tbody></table></div>`;
+            // Create download function for this modal
+            const downloadTableData = (details) => {
+                const headers = ['Case Code', 'Model', 'SW Ver', 'Grade', 'Critical VOC', 'Title', 'Problem', 'Summarized Problem', 'Severity', 'Severity Reason'];
+                const csvData = [headers.join(',')];
+
+                details.forEach(d => {
+                    const row = [
+                        `"${(d.caseCode || '').replace(/"/g, '""')}"`,
+                        `"${(d.model || '').replace(/"/g, '""')}"`,
+                        `"${(d.swver || '').replace(/"/g, '""')}"`,
+                        `"${(d.grade || '').replace(/"/g, '""')}"`,
+                        `"${(d.critical_voc || '').replace(/"/g, '""')}"`,
+                        `"${(d.title || '').replace(/"/g, '""')}"`,
+                        `"${(d.problem || '').replace(/"/g, '""')}"`,
+                        `"${(d.summarized_problem || '').replace(/"/g, '""')}"`,
+                        `"${(d.severity || '').replace(/"/g, '""')}"`,
+                        `"${(d.severity_reason || '').replace(/"/g, '""')}"`
+                    ];
+                    csvData.push(row.join(','));
+                });
+
+                const csvText = csvData.join('\n');
+                const blob = new Blob([csvText], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${moduleName}_details_${Date.now()}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            content.innerHTML = `<div style="text-align:center; margin-bottom:20px;"><h1 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin:0; font-size:28px; font-weight:700;">${escapeHtml(moduleName)} Module Details</h1><p style="color:var(--text-secondary); margin-top:8px;">Detailed breakdown of all related issues for ${escapeHtml(param.model)} ${escapeHtml(param.swver)}</p><button id="downloadTableBtn" class="btn-action" style="margin-top:15px; background: var(--accent-bg); color: var(--text-primary); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Download CSV</button></div><div style="overflow-x:auto; border:1px solid #374151; border-radius:8px; background: var(--card-bg);"><table style="width:100%; border-collapse:collapse;"><thead><tr style="background: var(--card-hover);"><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:100px;">Case Code</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:150px;">Model</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">SW Ver</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">Grade</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Title</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Problem</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Summarized</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">Severity</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Severity Reason</th></tr></thead><tbody>${data.details.map((d, idx) => `<tr style="border-bottom:1px solid #374151;"><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; font-weight:500; word-wrap:break-word;">${escapeHtml(d.caseCode)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.model)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.swver)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.grade)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.title)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.problem)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.summarized_problem)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.severity)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.severity_reason)}</td></tr>`).join('')}</tbody></table></div>`;
+
+            // Add event listener for download button
+            const downloadBtn = content.querySelector('#downloadTableBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', () => downloadTableData(data.details));
+            }
         } else {
             content.innerHTML = `<h3 style="color:#cbd5e1; text-align:center;">Details for Module: ${escapeHtml(moduleName)}</h3><p style="color:var(--text-secondary); text-align:center;">No details found.</p>`;
         }

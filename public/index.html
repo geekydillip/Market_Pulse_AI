@@ -104,6 +104,14 @@
                     <div class="processing-summary" style="display:block; margin-bottom:16px;">
                         <div style="display:flex; gap:12px; align-items:center;">
                             <button id="refreshVisualization" class="btn-action">Refresh</button>
+                            <button id="exportVisualization" class="btn-action">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download CSV
+                            </button>
                             <div id="visualizeStatus" style="color:var(--text-secondary); font-size:14px;">Click Refresh to load summary</div>
                         </div>
                     </div>
@@ -117,6 +125,7 @@
                                         <th style="padding:12px 8px; text-align:left; font-weight:600;">S/W Ver.</th>
                                         <th style="padding:12px 8px; text-align:left; font-weight:600;">Grade</th>
                                         <th style="padding:12px 8px; text-align:left; font-weight:600;">Critical Module</th>
+                                        <th style="padding:12px 8px; text-align:left; font-weight:600;">Sub-Module</th>
                                         <th style="padding:12px 8px; text-align:left; font-weight:600;">Critical VOC</th>
                                         <th style="padding:12px 8px; text-align:right; font-weight:600;">Count</th>
                                     </tr>

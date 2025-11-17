@@ -118,7 +118,7 @@ def run_server():
         sys.exit(1)
 
 if __name__ == "__main__":
-    model = "gemma3:4b"  # change to your model name
+    model = "qwen3:4b-instruct"  # change to your model name
     print("Checking if Ollama server is already running...")
     if not wait_for_api(5):
         print("Ollama server not running. Starting ollama server...")

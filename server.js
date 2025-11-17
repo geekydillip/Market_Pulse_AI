@@ -1,17 +1,163 @@
-const express = require('express');
-const multer = require('multer');
-const cors = require('cors');
+
+/*
+  Minimal Express init. Ensure this block appears BEFORE any app.get/app.post calls.
+*/
 const path = require('path');
 const fs = require('fs');
-const http = require('http');
+const express = require('express');
+const cors = require('cors');
 const xlsx = require('xlsx-js-style');
+const multer = require('multer');
+const http = require('http');
 
-const app = express();
-const PORT = process.env.PORT || 3001; // Allow environment port
+const app = express();              // <-- IMPORTANT: app must be created BEFORE routes
+const PORT = process.env.PORT || 3001;
 const DEFAULT_OLLAMA_PORT = 11434;
+
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Create keep-alive agent for HTTP connections
 const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
+
+// serve frontend static files (adjust folder if your frontend is in 'public')
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/downloads', express.static('downloads'));
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// simple health route (optional)
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+//// ---------------------- BEGIN: Robust Excel read + header detection ----------------------
+
+function readAndNormalizeExcel(uploadedPath) {
+  const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+
+  // Read sheet as 2D array so we can find header row robustly
+  const sheetRows = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+  // Find a header row: first row that contains at least one expected key or at least one non-empty cell
+  let headerRowIndex = 0;
+  const expectedHeaderKeywords = ['Case Code', 'Occurr. Stg.','Title','Problem','Model No.','S/W Ver.']; // lowercase checks
+  for (let r = 0; r < sheetRows.length; r++) {
+    const row = sheetRows[r];
+    if (!Array.isArray(row)) continue;
+    const rowText = row.map(c => String(c || '').toLowerCase()).join(' | ');
+    // if the row contains any expected header keyword, choose it as header
+    if (expectedHeaderKeywords.some(k => rowText.includes(k))) {
+      headerRowIndex = r;
+      break;
+    }
+    // fallback: first non-empty row becomes header
+    if (row.some(cell => String(cell).trim() !== '')) {
+      headerRowIndex = r;
+      break;
+    }
+  }
+
+  // Build raw headers and trim
+  const rawHeaders = (sheetRows[headerRowIndex] || []).map(h => String(h || '').trim());
+
+  // Build data rows starting after headerRowIndex
+  const dataRows = sheetRows.slice(headerRowIndex + 1);
+
+  // Convert dataRows to array of objects keyed by rawHeaders
+  let rows = dataRows.map(r => {
+    const obj = {};
+    for (let ci = 0; ci < rawHeaders.length; ci++) {
+      const key = rawHeaders[ci] || `col_${ci}`;
+      obj[key] = r[ci] !== undefined && r[ci] !== null ? r[ci] : '';
+    }
+    return obj;
+  });
+
+  // Map header name variants to canonical names
+  // Add any other variants you see in your files here
+  const headerMap = {
+    // Model variants
+    'model no': 'Model No.',
+    'model no.': 'Model No.',
+    'modelno': 'Model No.',
+    'model number': 'Model No.',
+    // Case Code
+    'case code': 'Case Code',
+    'caseno': 'Case Code',
+    'case no': 'Case Code',
+    // S/W Ver variants
+    's/w ver.': 'S/W Ver.',
+    's/w ver': 'S/W Ver.',
+    'sw ver': 'S/W Ver.',
+    'swversion': 'S/W Ver.',
+    // Occurrence stage
+    'occurr. stg.': 'Occurr. Stg.',
+    'occurr stg': 'Occurr. Stg.',
+    'occurrence stage': 'Occurr. Stg.',
+    // Title, Problem, Module, Sub-Module
+    'title': 'Title',
+    'problem': 'Problem',
+    'module': 'Module',
+    'sub-module': 'Sub-Module',
+    'sub module': 'Sub-Module',
+  };
+
+  // canonical columns you expect in the downstream processing
+  const canonicalCols = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.','Module','Sub-Module','Summarized Problem','Severity','Severity Reason'];
+
+  // For each row, build an object with canonical keys, trying to find matches from raw headers via headerMap
+  const normalizedRows = rows.map(orig => {
+    const out = {};
+    // Build a reverse map of original header -> canonical (if possible)
+    const keyMap = {}; // rawKey -> canonical
+    Object.keys(orig).forEach(rawKey => {
+      const norm = String(rawKey || '').trim().toLowerCase();
+      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
+      if (mapped) keyMap[rawKey] = mapped;
+      else {
+        // try exact match to canonical
+        for (const c of canonicalCols) {
+          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
+            keyMap[rawKey] = c;
+            break;
+          }
+        }
+      }
+    });
+    // Fill canonical fields
+    for (const tgt of canonicalCols) {
+      // find a source raw key that maps to this tgt
+      let found = null;
+      for (const rawKey of Object.keys(orig)) {
+        if (keyMap[rawKey] === tgt) {
+          found = orig[rawKey];
+          break;
+        }
+      }
+      // also if tgt exists exactly as a raw header name, use it
+      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
+      out[tgt] = (found !== undefined && found !== null) ? found : '';
+    }
+    return out;
+  });
+
+  return normalizedRows;
+}
 
 // Cache for identical prompts
 const aiCache = new Map();
@@ -19,8 +165,6 @@ const aiCache = new Map();
 // Monitoring variables
 let aiRequestCount = 0;
 let aiRequestTimes = [];
-let activeCalls = 0;
-let maxActiveCalls = 0;
 
 /**
  * Simple concurrency limiter to run tasks with a limit
@@ -55,30 +199,6 @@ async function callOllamaCached(prompt, model = 'gemma3:4b', opts = {}) {
   return res;
 }
 
-// Store SSE clients for progress updates
-const progressClients = new Map();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-app.use('/downloads', express.static('downloads'));
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
-});
-
 /**
  * callOllama - robust HTTP call to local Ollama server
  * prompt: string or object
@@ -89,16 +209,13 @@ async function callOllama(prompt, model = 'gemma3:4b', opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000; // default 5min, or false to disable
 
-  activeCalls++;
-  if (activeCalls > maxActiveCalls) maxActiveCalls = activeCalls;
   const callStart = Date.now();
 
   try {
     const payload = typeof prompt === 'string' ? { model, prompt, stream: false } : { model, ...prompt, stream: false };
     const data = JSON.stringify(payload);
-    const byteLen = Buffer.byteLength(data);
 
-    console.log('[callOllama] port=%d model=%s byteLen=%d activeCalls=%d', port, model, byteLen, activeCalls);
+    console.log('[callOllama] port=%d model=%s byteLen=%d', port, model, Buffer.byteLength(data));
 
     const response = await new Promise((resolve, reject) => {
       const options = {
@@ -109,7 +226,7 @@ async function callOllama(prompt, model = 'gemma3:4b', opts = {}) {
         agent: keepAliveAgent,
         headers: {
           'Content-Type': 'application/json',
-          'Content-Length': byteLen,
+          'Content-Length': Buffer.byteLength(data),
           'Connection': 'keep-alive'
         }
       };
@@ -143,12 +260,10 @@ async function callOllama(prompt, model = 'gemma3:4b', opts = {}) {
       }
 
       req.on('error', (err) => {
-        // captures "socket hang up", ECONNRESET, ENOTFOUND, etc.
         console.error('[callOllama] request error:', err && err.message);
         reject(new Error('Failed to connect to Ollama: ' + (err && err.message)));
       });
 
-      // write + end
       req.write(data);
       req.end();
     });
@@ -156,8 +271,8 @@ async function callOllama(prompt, model = 'gemma3:4b', opts = {}) {
     aiRequestTimes.push(Date.now() - callStart);
     aiRequestCount++;
     return response;
-  } finally {
-    activeCalls--;
+  } catch (error) {
+    throw error;
   }
 }
 
@@ -221,6 +336,9 @@ function applyGenericCleaning(value) {
   return value;
 }
 
+// Store SSE clients for progress updates
+const progressClients = new Map();
+
 // Process a single chunk
 async function processChunk(chunk, processingType, customPrompt, model, chunkId) {
   const startTime = Date.now();
@@ -238,69 +356,30 @@ async function processChunk(chunk, processingType, customPrompt, model, chunkId)
       });
     } else if (processingType === 'voc') {
       // VOC processing using AI with specific data-cleaning prompt
-      const vocPrompt = `You are a data-cleaning assistant for Voice of Problem analysis reported by customers.
-Your goal is to process each row of customer feedback data, extract meaningful insights, and generate structured outputs for Excel.
+      const vocPrompt = `You are an assistant for cleaning and structuring "Voice of Customer" issue reports.
 
+For each row:
+1. Merge & Clean → Combine Title + Problem into one clear English sentence. Remove IDs, tags, usernames, timestamps, anything in [ ... ], non-English text, duplicates, and internal notes.
+2. Module → Identify product module from Title (e.g., Lock Screen, Camera, Battery, Network, Display, Settings, etc.).
+3. Sub-Module → The functional element affected (e.g., Now bar not working on Lock Screen → Module: Now bar, Sub-Module: Lock Screen).
+4. Summarized Problem → One clean sentence describing the actual issue.
+5. Severity:
+   - Critical: device unusable / crashes / freezing / data loss.
+   - High: major function not working.
+   - Medium: partial malfunction or intermittent failure.
+   - Low: minor UI issue or cosmetic/suggestion.
+6. Severity Reason → One sentence explaining the chosen severity.
 
-For each row in the input data:
+Rules:
+- Ignore all content inside brackets [ ... ].
+- Output must be only English.
+- Avoid duplicated wording when merging.
+- No internal diagnostic notes.
+- Preserve input row order.
 
-Merge & Clean
-Combine and clean the Title and Problem fields into one single clear English sentence that accurately describes the real user issue.
-
-Module Identification
-Identify the correct product module or functional area the issue belongs to (e.g., Lock Screen, Camera, Battery, Network, Settings, Display, App Permissions, etc.). from Title column.
-example: [Samsung Members][64543808] [MembersId : wiomh8vrrfun][AppName : Power][Arshit Sharma] [Overheat] Sometime overheating
-Module:[Heating]
-Sub-Module: [Heating]
-
-Severity Classification
-Determine severity based on user impact, using the rules below.
-
-Severity Reason
-Provide 1 concise sentence explaining why the chosen severity applies
-(e.g., “Major feature not working”, “Cosmetic issue only”, “Device freeze causing usability problems”, etc.).
-
-Output JSON Object
-For each row, produce one JSON object containing EXACTLY these keys in this order:
-
-Case Code,
-Model No.,
-Title,
-Problem,
-Module,
-Sub-Module,
-Summarized Problem,
-Severity,
-Severity Reason
-
-📌 Rules
-Text Cleaning Rules
-
-Remove IDs, usernames, timestamps, tags or anything inside [ ... ].
-Example: [Samsung Members][AppName: Samsung Members] → ignored
-
-Avoid text other than English language.
-Avoid duplication when merging Title + Problem.
-Avoid internal diagnostic notes (e.g., “log 부족”, “H/W check needed”).
-Output one complete sentence for Summarized Problem.
-
-📌 Severity Guidelines
-
-Choose the severity that best reflects real customer impact:
-
-Severity	When to Use
-Critical	Device unusable, boot failure, data loss, crashes, freezing.
-High	Major feature not working (e.g., Camera fails, Wi-Fi not connecting).
-Medium	Partial malfunction, occasional failure, degraded experience.
-Low	Minor UI issue, cosmetic problem, suggestion or enhancement request.
-
-📌 Output Format Requirements
-
-Return a single JSON array.
-No explanations outside the JSON.
-The JSON must be valid and strictly parseable.
-Each output object must preserve the input order.
-Output must match this structural sequence and no other columns should present:
+Output:
+Return a **single valid JSON array**.
+Each object must contain EXACTLY these keys in this order:
 
 Case Code,
 Model No.,
@@ -311,7 +390,6 @@ Sub-Module,
 Summarized Problem,
 Severity,
 Severity Reason
-
 
 Input Data:
 ${JSON.stringify(chunk.rows, null, 2)}
@@ -329,10 +407,22 @@ Return only the JSON array.`;
         if (Array.isArray(parsed) && parsed.length === chunk.rows.length) {
           processedRows = parsed.map((row, idx) => {
             // Ensure all required keys are present, fill with defaults if missing
-            const requiredKeys = ['Case Code', 'Model No.', 'Title', 'Problem', 'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'];
+            // Include both VOC-specific keys and original data columns we want to preserve
+            const requiredKeys = ['Case Code', 'Model No.', 'S/W Ver.', 'Occurr. Stg.', 'Title', 'Problem', 'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'];
             const processedRow = {};
             requiredKeys.forEach(key => {
               processedRow[key] = row[key] !== undefined ? row[key] : chunk.rows[idx][key] || ''; // fallback to original
+            });
+            return processedRow;
+          });
+        } else if (Array.isArray(parsed) && parsed.length === 0) {
+          // AI returned empty array, likely unable to process the row
+          // Create processedRows with original data, leaving new columns empty
+          processedRows = chunk.rows.map((row, idx) => {
+            const processedRow = {};
+            const requiredKeys = ['Case Code', 'Model No.', 'S/W Ver.', 'Occurr. Stg.', 'Title', 'Problem', 'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'];
+            requiredKeys.forEach(key => {
+              processedRow[key] = row[key] || ''; // Use original value directly
             });
             return processedRow;
           });
@@ -419,7 +509,17 @@ async function processJSON(req, res) {
     const uploadedPath = req.file.path;
     const originalName = req.file.originalname;
     const fileNameBase = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
-    const processedJSONFilename = `${fileNameBase}_processed.json`;
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+    const sanitizedModel = req.body.model.replace(/[^a-zA-Z0-9]/g, '_');
+    const processedJSONFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.json`;
     const logFilename = `${fileNameBase}_log.json`;
 
     // Read and parse JSON file
@@ -440,6 +540,7 @@ async function processJSON(req, res) {
     // Remove top 2 rows before pre-processing
     rows = rows.slice(2);
 
+    const tStart = Date.now();
     const headers = Object.keys(rows[0] || {});
 
     // Use VOC processing type for JSON (since only structured data should be in JSON)
@@ -450,8 +551,21 @@ async function processJSON(req, res) {
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
-    const chunkSize = processingType === 'voc' ? 1 : 2; // Use 1 row per chunk for VOC, 2 for others
-    const numberOfChunks = Math.ceil(rows.length / chunkSize);
+    // Adaptive chunk size (replace existing fixed chunkSize)
+    const ROWSCOUNT = rows.length || 0;
+
+    // If VOC strict per-row analysis required, use 1 row per chunk, but batch when file > threshold
+    let chunkSize;
+    if (processingType === 'voc') {
+      chunkSize = ROWSCOUNT <= 50 ? 1
+                : ROWSCOUNT <= 200 ? 2
+                : 4;
+    } else {
+      chunkSize = ROWSCOUNT <= 200 ? 5
+                : ROWSCOUNT <= 1000 ? 10
+                : 20;
+    }
+    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     // Send initial progress for JSON
     sendProgress(sessionId, {
@@ -461,29 +575,30 @@ async function processJSON(req, res) {
       chunksCompleted: 0,
       totalChunks: numberOfChunks
     });
-    const chunkResults = [];
-    const allProcessedRows = [];
-    const addedColumns = new Set();
 
-    const startProcessing = Date.now();
-
-    // Process chunks
+    // Build chunk tasks
+    const tasks = [];
     for (let i = 0; i < numberOfChunks; i++) {
       const startIdx = i * chunkSize;
       const endIdx = Math.min(startIdx + chunkSize, rows.length);
       const chunkRows = rows.slice(startIdx, endIdx);
+      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx-1], headers, rows: chunkRows };
+      tasks.push(async () => {
+        const result = await processChunk(chunk, processingType, customPrompt, model, i);
+        // send per-chunk progress update
+        sendProgress(sessionId, { type: 'progress', percent: Math.round((i+1)/numberOfChunks*100), message: `Processed chunk ${i+1}/${numberOfChunks}`, chunkId: i });
+        return result;
+      });
+    }
 
-      const chunk = {
-        file_name: originalName,
-        chunk_id: i,
-        row_indices: chunkRows.length === 1 ? [startIdx] : [startIdx, startIdx + 1],
-        headers: headers,
-        rows: chunkRows
-      };
+    // Run with concurrency limit (4)
+    const chunkResults = await runTasksWithLimit(tasks, 4);
 
-      const result = await processChunk(chunk, processingType, customPrompt, model, i);
-      chunkResults.push(result);
+    // Process results
+    const allProcessedRows = [];
+    const addedColumns = new Set();
 
+    chunkResults.forEach(result => {
       if (result.status === 'ok') {
         result.processedRows.forEach((row, idx) => {
           const originalIdx = result.chunkId * chunkSize + idx;
@@ -502,17 +617,7 @@ async function processJSON(req, res) {
           }
         });
       }
-
-      // Send progress update after this chunk
-      const progressPercent = Math.round(((i + 1) / numberOfChunks) * 100);
-      sendProgress(sessionId, {
-        type: 'progress',
-        percent: progressPercent,
-        message: `Processed chunk ${i + 1} of ${numberOfChunks}...`,
-        chunksCompleted: i + 1,
-        totalChunks: numberOfChunks
-      });
-    }
+    });
 
     // Filter out null entries if any (though shouldn't have)
     const finalRows = allProcessedRows.filter(row => row != null);
@@ -533,13 +638,14 @@ async function processJSON(req, res) {
     });
 
     const log = {
+      total_processing_time_ms: Date.now() - tStart,
+      total_processing_time_seconds: ((Date.now() - tStart) / 1000).toFixed(3),
       number_of_input_rows: numberOfInputRows,
       number_of_chunks: numberOfChunks,
       number_of_output_rows: finalRows.length,
       failed_row_details: failedRows,
       added_columns: Array.from(addedColumns),
-      chunks_processing_time: chunkResults.map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime })),
-      total_processing_time_ms: Date.now() - startProcessing
+      chunks_processing_time: chunkResults.map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
     };
 
     if (processingType === 'clean') {
@@ -559,7 +665,7 @@ async function processJSON(req, res) {
 
     res.json({
       success: true,
-      total_processing_time_ms: Date.now() - startProcessing,
+      total_processing_time_ms: Date.now(),
       processedRows: finalRows,
       downloads: [{ url: `/downloads/${processedJSONFilename}`, filename: processedJSONFilename },
                   { url: `/downloads/${logFilename}`, filename: logFilename }]
@@ -572,252 +678,6 @@ async function processJSON(req, res) {
     });
   }
 }
-
-// Excel processing with chunking
-async function processExcel(req, res) {
-  try {
-    console.log('Starting Excel processing...');
-    const excelProcessStart = new Date().toISOString();
-    const uploadedPath = req.file.path;
-    const originalName = req.file.originalname;
-    const fileNameBase = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
-    const processedExcelFilename = `${fileNameBase}_processed.xlsx`;
-    const logFilename = `${fileNameBase}_log.json`;
-
-    // Read Excel file and convert to JSON
-    const workbook = xlsx.readFile(uploadedPath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    // Read all rows from Excel sheet and convert to JSON array
-    let rows = xlsx.utils.sheet_to_json(worksheet, { defval: '' }); // defval: '' to keep empty as empty string
-
-    // Remove top 2 rows before pre-processing
-    rows = rows.slice(2);
-
-    // Define specific columns to retain in the processed data
-    const keepCols = ['Case Code', 'Occurr. Stg.', 'Title', 'Problem', 'Model No.', 'S/W Ver.'];
-
-    // Ensure rows is an array, even if sheet is empty
-    if (!Array.isArray(rows)) rows = [];
-
-    // Normalize rows to contain only the specified columns, filling missing ones with empty strings
-    rows = rows.map(origRow => {
-      const newRow = {};
-      for (const col of keepCols) {
-        // Check if column exists in original row, preserve original value if present
-        // Optional fallback for 'Model No.' variant without dot
-        if (origRow.hasOwnProperty(col)) {
-          newRow[col] = origRow[col];
-        } else if (col === 'Model No.' && origRow.hasOwnProperty('Model No')) {
-          newRow[col] = origRow['Model No'];
-        } else {
-          // Fill missing columns with empty string
-          newRow[col] = '';
-        }
-      }
-      return newRow;
-    });
-
-    // Set headers to the defined kept columns
-    const headers = keepCols.slice();
-
-    // Use the requested processing type for Excel
-    const processingType = req.body.processingType || 'clean';
-    const customPrompt = req.body.customPrompt || '';
-    const model = req.body.model || 'gemma3:4b';
-    const sessionId = req.body.sessionId || 'default';
-
-    // Unified chunked processing (works for all types: clean, voc, custom)
-    const numberOfInputRows = rows.length;
-    const chunkSize = processingType === 'voc' ? 1 : 2; // Use 1 row per chunk for VOC, 2 for others
-    const numberOfChunks = Math.ceil(rows.length / chunkSize);
-
-    // Send initial progress (0%)
-    sendProgress(sessionId, {
-
-      type: 'progress',
-
-      percent: 0,
-
-      message: 'Starting Excel processing...',
-
-      chunksCompleted: 0,
-
-      totalChunks: numberOfChunks
-
-    });
-    const chunkResults = [];
-    const allProcessedRows = [];
-    const addedColumns = new Set();
-
-    const startProcessing = Date.now();
-
-    // Process chunks
-    for (let i = 0; i < numberOfChunks; i++) {
-      const startIdx = i * chunkSize;
-      const endIdx = Math.min(startIdx + chunkSize, rows.length);
-      const chunkRows = rows.slice(startIdx, endIdx);
-
-      const chunk = {
-        file_name: originalName,
-        chunk_id: i,
-        row_indices: chunkRows.length === 1 ? [startIdx] : [startIdx, startIdx + 1],
-        headers: headers,
-        rows: chunkRows
-      };
-
-      const result = await processChunk(chunk, processingType, customPrompt, model, i);
-      chunkResults.push(result);
-
-      if (result.status === 'ok') {
-        result.processedRows.forEach((row, idx) => {
-          const originalIdx = result.chunkId * chunkSize + idx;
-          allProcessedRows[originalIdx] = row;
-          Object.keys(row).forEach(col => {
-            if (!headers.includes(col)) addedColumns.add(col);
-          });
-        });
-      } else {
-        // For failed chunks, still include rows with error
-        result.processedRows.forEach((row, idx) => {
-          const originalIdx = result.chunkId * chunkSize + idx;
-          allProcessedRows[originalIdx] = row;
-          if (row.error) {
-            addedColumns.add('error');
-          }
-        });
-      }
-    }
-
-    // Filter out null entries if any (though shouldn't have)
-    const finalRows = allProcessedRows.filter(row => row != null);
-
-    // Create final headers: original + any added columns
-    const finalHeaders = [...headers];
-    addedColumns.forEach(col => {
-      if (!finalHeaders.includes(col)) finalHeaders.push(col);
-    });
-
-    // Ensure all rows have same columns, fill missing with null
-    const schemaMergedRows = finalRows.map(row => {
-      const mergedRow = {};
-      finalHeaders.forEach(header => {
-        mergedRow[header] = row[header] === undefined ? null : row[header];
-      });
-      return mergedRow;
-    });
-
-    // Convert back to Excel
-    const newWb = xlsx.utils.book_new();
-    const newSheet = xlsx.utils.json_to_sheet(schemaMergedRows);
-    xlsx.utils.book_append_sheet(newWb, newSheet, 'Data');
-
-    // Add error column if there were failures
-    const hasErrors = chunkResults.some(cr => cr.status === 'failed' || chunkResults.some(cr => cr.processedRows.some(r => r.error)));
-    if (hasErrors && !finalHeaders.includes('error')) {
-      finalHeaders.push('error');
-    }
-
-    // === Apply Column Widths ===
-    newSheet['!cols'] = [
-        { wch: 15 },  // Case Code
-        { wch: 15 },  // Occurr. Stg.
-        { wch: 41 },  // Title
-        { wch: 41 },  // Problem
-        { wch: 15 },  // Model No.
-        { wch: 15 },  // S/W Ver.
-        { wch: 15 },  // Module
-        { wch: 15 },  // Sub-Module (added column)
-        { wch: 41 },  // Summarized Problem
-        { wch: 15 },  // Severity
-        { wch: 41 },  // Severity Reason
-        { wch: 15 }   // error (if added)
-    ];
-
-    // === Apply Cell Alignment and Text Wrap ===
-    Object.keys(newSheet).forEach((cellKey) => {
-        if (cellKey[0] === '!') return;
-        newSheet[cellKey].s = {
-            alignment: { horizontal: "center", vertical: "center", wrapText: true }
-        };
-    });
-
-    // === Apply Header Styling ===
-    finalHeaders.forEach((header, index) => {
-        const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
-        if (!newSheet[cellAddress]) return;
-        newSheet[cellAddress].s = {
-            fill: { patternType: "solid", fgColor: { rgb: "1E90FF" } },
-            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
-            alignment: { horizontal: "center", vertical: "center", wrapText: true }
-        };
-    });
-
-    const buf = xlsx.write(newWb, { bookType: 'xlsx', type: 'buffer' });
-
-    const excelProcessEnd = new Date().toISOString();
-
-    // Generate log
-    const failedRows = [];
-    chunkResults.forEach(cr => {
-      cr.processedRows.forEach((row, idx) => {
-        if (row.error) {
-          const originalIdx = cr.chunkId * chunkSize + idx;
-          failedRows.push({
-            row_index: originalIdx,
-            chunk_id: cr.chunkId,
-            error_reason: row.error
-          });
-        }
-      });
-    });
-
-    const log = {
-      excel_process_start: excelProcessStart,
-      excel_process_end: excelProcessEnd,
-      excel_processing_duration_ms: Date.now() - startProcessing,
-
-      number_of_input_rows: numberOfInputRows,
-      number_of_chunks: numberOfChunks,
-      number_of_output_rows: schemaMergedRows.length,
-      failed_row_details: failedRows,
-      added_columns: Array.from(addedColumns),
-      chunks_processing_time: chunkResults.map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime })),
-      total_processing_time_ms: Date.now() - startProcessing
-    };
-
-    if (processingType === 'clean') {
-      log.assumptions = [
-        "Applied generic cleaning: trimmed whitespace, normalized dates to ISO YYYY-MM-DD, converted numeric-looking strings to numbers, kept empty cells as empty strings."
-      ];
-    }
-
-    // Save files
-    const processedPath = path.join('downloads', processedExcelFilename);
-    const logPath = path.join('downloads', logFilename);
-
-    fs.writeFileSync(processedPath, buf);
-    fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
-
-    fs.unlinkSync(uploadedPath);
-
-    res.json({
-      success: true,
-      total_processing_time_ms: Date.now() - startProcessing,
-      processedRows: schemaMergedRows,
-      downloads: [{ url: `/downloads/${processedExcelFilename}`, filename: processedExcelFilename },
-                  { url: `/downloads/${logFilename}`, filename: logFilename }]
-    });
-  } catch (error) {
-    console.error('Excel processing error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Processing failed'
-    });
-  }
-}
-
-
 
 // Progress SSE endpoint
 app.get('/api/progress/:sessionId', (req, res) => {
@@ -852,6 +712,244 @@ function sendProgress(sessionId, data) {
   const client = progressClients.get(sessionId);
   if (client) {
     client.write(`data: ${JSON.stringify(data)}\n\n`);
+  }
+}
+
+// Excel processing with chunking
+async function processExcel(req, res) {
+  try {
+    console.log('Starting Excel processing...');
+    const tStart = Date.now();
+    const uploadedPath = req.file.path;
+    const originalName = req.file.originalname;
+    const fileNameBase = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+    const sanitizedModel = req.body.model.replace(/[^a-zA-Z0-9]/g, '_');
+    const processedExcelFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.xlsx`;
+    const logFilename = `${fileNameBase}_log.json`;
+
+    // Use the robust Excel reading function
+    let rows = readAndNormalizeExcel(uploadedPath);
+
+    // Sanity check: verify we have meaningful rows with Title/Problem data
+    const meaningful = rows.filter(r => String(r['Title']||'').trim() !== '' || String(r['Problem']||'').trim() !== '');
+    console.log(`Read ${rows.length} rows; ${meaningful.length} rows with Title/Problem data.`);
+    if (meaningful.length === 0) {
+      console.warn('No meaningful rows found - check header detection logic or the uploaded file.');
+    }
+
+    // Set headers to the canonical columns from the function
+    const headers = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.'];
+
+    // Use the requested processing type for Excel
+    const processingType = req.body.processingType || 'clean';
+    const customPrompt = req.body.customPrompt || '';
+    const model = req.body.model || 'qwen3:4b-instruct';
+    const sessionId = req.body.sessionId || 'default';
+
+    // Unified chunked processing (works for all types: clean, voc, custom)
+    const numberOfInputRows = rows.length;
+    // Adaptive chunk size (replace existing fixed chunkSize)
+    const ROWSCOUNT = rows.length || 0;
+
+    // If VOC strict per-row analysis required, use 1 row per chunk, but batch when file > threshold
+    let chunkSize;
+    if (processingType === 'voc') {
+      chunkSize = ROWSCOUNT <= 50 ? 1
+                : ROWSCOUNT <= 200 ? 2
+                : 4;
+    } else {
+      chunkSize = ROWSCOUNT <= 200 ? 5
+                : ROWSCOUNT <= 1000 ? 10
+                : 20;
+    }
+    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
+
+    // Send initial progress (0%)
+    sendProgress(sessionId, {
+      type: 'progress',
+      percent: 0,
+      message: 'Starting Excel processing...',
+      chunksCompleted: 0,
+      totalChunks: numberOfChunks
+    });
+
+    // Build chunk tasks
+    const tasks = [];
+    for (let i = 0; i < numberOfChunks; i++) {
+      const startIdx = i * chunkSize;
+      const endIdx = Math.min(startIdx + chunkSize, rows.length);
+      const chunkRows = rows.slice(startIdx, endIdx);
+      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx-1], headers, rows: chunkRows };
+      tasks.push(async () => {
+        const result = await processChunk(chunk, processingType, customPrompt, model, i);
+        // send per-chunk progress update
+        sendProgress(sessionId, { type: 'progress', percent: Math.round((i+1)/numberOfChunks*100), message: `Processed chunk ${i+1}/${numberOfChunks}`, chunkId: i });
+        return result;
+      });
+    }
+
+    // Run with concurrency limit (4)
+    const chunkResults = await runTasksWithLimit(tasks, 4);
+
+    // Process results
+    const allProcessedRows = [];
+    const addedColumns = new Set();
+
+    chunkResults.forEach(result => {
+      if (result.status === 'ok') {
+        result.processedRows.forEach((row, idx) => {
+          const originalIdx = result.chunkId * chunkSize + idx;
+          allProcessedRows[originalIdx] = row;
+          Object.keys(row).forEach(col => {
+            if (!headers.includes(col)) addedColumns.add(col);
+          });
+        });
+      } else {
+        // For failed chunks, still include rows with error
+        result.processedRows.forEach((row, idx) => {
+          const originalIdx = result.chunkId * chunkSize + idx;
+          allProcessedRows[originalIdx] = row;
+          if (row.error) {
+            addedColumns.add('error');
+          }
+        });
+      }
+    });
+
+    // Filter out null entries if any (though shouldn't have)
+    const finalRows = allProcessedRows.filter(row => row != null);
+
+    // Create final headers: original + any added columns
+    const finalHeaders = [...headers];
+    addedColumns.forEach(col => {
+      if (!finalHeaders.includes(col)) finalHeaders.push(col);
+    });
+
+    // Ensure all rows have same columns, fill missing with null
+    const schemaMergedRows = finalRows.map(row => {
+      const mergedRow = {};
+      for (const header of finalHeaders) {
+        mergedRow[header] = row[header] === undefined ? null : row[header];
+      }
+      return mergedRow;
+    });
+
+    // Convert back to Excel
+    const newWb = xlsx.utils.book_new();
+    const newSheet = xlsx.utils.json_to_sheet(schemaMergedRows);
+    xlsx.utils.book_append_sheet(newWb, newSheet, 'Data');
+
+    // Add error column if there were failures
+    const hasErrors = chunkResults.some(cr => cr.status === 'failed' || chunkResults.some(cr => cr.processedRows.some(r => r.error)));
+    if (hasErrors && !finalHeaders.includes('error')) {
+      finalHeaders.push('error');
+    }
+
+    // === Apply Column Widths ===
+    newSheet['!cols'] = [
+        { wch: 15 },  // Case Code
+        { wch: 15 },  // Occurr. Stg.
+        { wch: 41 },  // Title
+        { wch: 41 },  // Problem
+        { wch: 20 },  // Model No.
+        { wch: 15 },  // S/W Ver.
+        { wch: 15 },  // Module
+        { wch: 15 },  // Sub-Module (added column)
+        { wch: 41 },  // Summarized Problem
+        { wch: 15 },  // Severity
+        { wch: 41 },  // Severity Reason
+        { wch: 15 }   // error (if added)
+    ];
+
+    // === Apply Cell Alignment and Text Wrap ===
+    Object.keys(newSheet).forEach((cellKey) => {
+        if (cellKey[0] === '!') return;
+        newSheet[cellKey].s = {
+            alignment: { horizontal: "center", vertical: "center", wrapText: true }
+        };
+    });
+
+    // === Apply Header Styling ===
+    finalHeaders.forEach((header, index) => {
+        const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
+        if (!newSheet[cellAddress]) return;
+        newSheet[cellAddress].s = {
+            fill: { patternType: "solid", fgColor: { rgb: "1E90FF" } },
+            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+            alignment: { horizontal: "center", vertical: "center", wrapText: true }
+        };
+    });
+
+    const buf = xlsx.write(newWb, { bookType: 'xlsx', type: 'buffer' });
+
+    // Calculate elapsed time
+    const tEnd = Date.now();
+    const elapsedMs = tEnd - tStart;
+    const elapsedSec = elapsedMs / 1000;
+
+    // Generate log
+    const failedRows = [];
+    chunkResults.forEach(cr => {
+      cr.processedRows.forEach((row, idx) => {
+        if (row.error) {
+          const originalIdx = cr.chunkId * chunkSize + idx;
+          failedRows.push({
+            row_index: originalIdx,
+            chunk_id: cr.chunkId,
+            error_reason: row.error
+          });
+        }
+      });
+    });
+
+    const log = {
+      total_processing_time_ms: elapsedMs,
+      total_processing_time_seconds: elapsedSec.toFixed(3),
+      number_of_input_rows: numberOfInputRows,
+      number_of_chunks: numberOfChunks,
+      number_of_output_rows: schemaMergedRows.length,
+      failed_row_details: failedRows,
+      added_columns: Array.from(addedColumns),
+      chunks_processing_time: chunkResults.map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
+    };
+
+    if (processingType === 'clean') {
+      log.assumptions = [
+        "Applied generic cleaning: trimmed whitespace, normalized dates to ISO YYYY-MM-DD, converted numeric-looking strings to numbers, kept empty cells as empty strings."
+      ];
+    }
+
+    // Save files
+    const processedPath = path.join('downloads', processedExcelFilename);
+    const logPath = path.join('downloads', logFilename);
+
+    fs.writeFileSync(processedPath, buf);
+    fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
+
+    fs.unlinkSync(uploadedPath);
+
+    res.json({
+      success: true,
+      total_processing_time_ms: Date.now(),
+      processedRows: schemaMergedRows,
+      downloads: [{ url: `/downloads/${processedExcelFilename}`, filename: processedExcelFilename },
+                  { url: `/downloads/${logFilename}`, filename: logFilename }]
+    });
+  } catch (error) {
+    console.error('Excel processing error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Processing failed'
+    });
   }
 }
 
@@ -891,7 +989,31 @@ app.get('/api/models', async (req, res) => {
   }
 });
 
-// --- /api/visualize moved to a more robust implementation ---
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    // Check if Ollama is running
+    const response = await new Promise((resolve, reject) => {
+      const req = http.get('http://localhost:11434/', (res) => {
+        resolve(res.statusCode === 200);
+      });
+
+      req.on('error', () => resolve(false));
+      req.setTimeout(5000, () => {
+        req.destroy();
+        resolve(false);
+      });
+    });
+
+    if (response) {
+      res.json({ status: 'ok', ollama: 'connected' });
+    } else {
+      res.json({ status: 'ok', ollama: 'disconnected' });
+    }
+  } catch (error) {
+    res.json({ status: 'ok', ollama: 'disconnected' });
+  }
+});
 
 /**
  * Read all .xlsx/.xls files from candidate directories and aggregate summary
@@ -899,106 +1021,140 @@ app.get('/api/models', async (req, res) => {
  */
 app.get('/api/visualize', async (req, res) => {
   try {
-    const candidateDirs = [
-      path.join(__dirname, 'downloads'),
-      path.join(__dirname, 'Downloads'),
-      path.join(process.cwd(), 'downloads'),
-      path.join(process.cwd(), 'Downloads'),
-      path.join(__dirname, 'public', 'downloads'),
-      '/mnt/data',                       // common place where uploaded files live in some environments
-      path.join(process.env.HOME || '', 'Downloads'), // user's Downloads on *nix
-      path.join(process.env.USERPROFILE || '', 'Downloads') // user's Downloads on Windows
-    ];
-
-    const tried = [];
-    let chosenDir = null;
-    let files = [];
-
-    for (const d of candidateDirs) {
-      if (!d) { tried.push({ dir: d, exists: false }); continue; }
-      try {
-        const exists = fs.existsSync(d);
-        tried.push({ dir: d, exists });
-        if (!exists) continue;
-        const list = fs.readdirSync(d).filter(f => /\.(xlsx|xls)$/i.test(f));
-        tried[tried.length - 1].excelCount = list.length;
-        if (list.length > 0) {
-          chosenDir = d;
-          files = list;
-          break;
-        }
-      } catch (e) {
-        tried[tried.length - 1].error = String(e && e.message || e);
-      }
-    }
-
-    if (!chosenDir) {
-      return res.json({
-        success: true,
-        summary: [],
-        message: 'No Excel files found in candidate directories.',
-        tried
-      });
-    }
-
-    const aggregation = new Map();
-
-    function pickField(row, candidates) {
-      for (const c of candidates) {
-        if (row.hasOwnProperty(c) && row[c] !== undefined && row[c] !== null && String(row[c]).toString().trim() !== '') {
-          return String(row[c]).trim();
-        }
-      }
-      return '';
-    }
-
-    for (const file of files) {
-      try {
-        const filePath = path.join(chosenDir, file);
-        const wb = xlsx.readFile(filePath);
-        const sheetName = wb.SheetNames[0];
-        if (!sheetName) continue;
-        const ws = wb.Sheets[sheetName];
-        const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
-
-        for (const r of rows) {
-          // Try common header names
-          const model = pickField(r, ['Model No.', 'Model No', 'Model', 'ModelNo', 'Model No']);
-          const swver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
-          const grade = pickField(r, ['Grade', 'Garde', 'grade']);
-          const critical_module = pickField(r, ['Critical Module', 'Cirital Module', 'Module', 'critical module', 'Module Name']);
-          const critical_voc = pickField(r, ['Critical VOC', 'Critical VOCs', 'Critical_VOC', 'Critical', 'VOC']);
-
-          // Build key
-          const key = `${model}||${swver}||${grade}||${critical_module}||${critical_voc}`;
-          aggregation.set(key, (aggregation.get(key) || 0) + 1);
-        }
-      } catch (err) {
-        console.warn('Failed to read', file, err && err.message);
-        continue;
-      }
-    }
-
-    // Convert aggregation map to array
-    const summary = Array.from(aggregation.entries()).map(([k, count]) => {
-      const [model, swver, grade, critical_module, critical_voc] = k.split('||');
-      return {
-        model: model || '',
-        swver: swver || '',
-        grade: grade || '',
-        critical_module: critical_module || '',
-        critical_voc: critical_voc || '',
-        count
-      };
-    });
-
-    // Sort by count descending
-    summary.sort((a,b) => b.count - a.count);
-
-    res.json({ success: true, summary, filesScanned: files.length, chosenDir });
+    const result = await getVisualizationData();
+    res.json({ success: true, summary: result.summary, filesScanned: result.filesScanned, chosenDir: result.chosenDir, tried: result.tried });
   } catch (error) {
     console.error('Visualize error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Get visualization data (shared function)
+ */
+async function getVisualizationData() {
+  const candidateDirs = [
+    path.join(__dirname, 'downloads'),
+    path.join(__dirname, 'Downloads'),
+    path.join(process.cwd(), 'downloads'),
+    path.join(process.cwd(), 'Downloads'),
+    path.join(__dirname, 'public', 'downloads'),
+    '/mnt/data',                       // common place where uploaded files live in some environments
+    path.join(process.env.HOME || '', 'Downloads'), // user's Downloads on *nix
+    path.join(process.env.USERPROFILE || '', 'Downloads') // user's Downloads on Windows
+  ];
+
+  const tried = [];
+  let chosenDir = null;
+  let files = [];
+
+  for (const d of candidateDirs) {
+    if (!d) { tried.push({ dir: d, exists: false }); continue; }
+    try {
+      const exists = fs.existsSync(d);
+      tried.push({ dir: d, exists });
+      if (!exists) continue;
+      const list = fs.readdirSync(d).filter(f => /\.(xlsx|xls)$/i.test(f));
+      tried[tried.length - 1].excelCount = list.length;
+      if (list.length > 0) {
+        chosenDir = d;
+        files = list;
+        break;
+      }
+    } catch (e) {
+      tried[tried.length - 1].error = String(e && e.message || e);
+    }
+  }
+
+  if (!chosenDir) {
+    return { summary: [], filesScanned: 0, chosenDir: null, tried }; // No files found
+  }
+
+  const aggregation = new Map();
+
+  function pickField(row, candidates) {
+    for (const c of candidates) {
+      if (row.hasOwnProperty(c) && row[c] !== undefined && row[c] !== null && String(row[c]).toString().trim() !== '') {
+        return String(row[c]).trim();
+      }
+    }
+    return '';
+  }
+
+  function pickSubModule(row, candidates) {
+    // Try to get sub-module first, then fall back to module if no sub-module
+    for (const c of candidates) {
+      if (row.hasOwnProperty(c) && row[c] !== undefined && row[c] !== null && String(row[c]).toString().trim() !== '') {
+        return String(row[c]).trim();
+      }
+    }
+    // If no sub-module found, try to get just module
+    const module = pickField(row, ['Module', 'Critical Module', 'critical module', 'Module Name']);
+    return module; // Return module if no sub-module, can be used for grouping
+  }
+
+  for (const file of files) {
+    try {
+      const filePath = path.join(chosenDir, file);
+      const wb = xlsx.readFile(filePath);
+      const sheetName = wb.SheetNames[0];
+      if (!sheetName) continue;
+      const ws = wb.Sheets[sheetName];
+      const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+
+      for (const r of rows) {
+        // Try common header names
+        const model = pickField(r, ['Model No.', 'Model No', 'Model', 'ModelNo', 'Model No']);
+        const swver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
+        const grade = pickField(r, ['Grade', 'Garde', 'grade']);
+        const critical_module = pickField(r, ['Critical Module', 'Cirital Module', 'Module', 'critical module', 'Module Name']);
+        const critical_voc = pickField(r, ['Critical VOC', 'Critical VOCs', 'Critical_VOC', 'Critical', 'VOC']);
+
+        // Build key
+        const key = `${model}||${swver}||${grade}||${critical_module}||${critical_voc}`;
+        aggregation.set(key, (aggregation.get(key) || 0) + 1);
+      }
+    } catch (err) {
+      console.warn('Failed to read', file, err && err.message);
+      continue;
+    }
+  }
+
+  // Convert aggregation map to array
+  const summary = Array.from(aggregation.entries()).map(([k, count]) => {
+    const [model, swver, grade, critical_module, critical_voc] = k.split('||');
+    return {
+      model: model || '',
+      swver: swver || '',
+      grade: grade || '',
+      critical_module: critical_module || '',
+      critical_voc: critical_voc || '',
+      count
+    };
+  });
+
+  // Sort by count descending
+  summary.sort((a,b) => b.count - a.count);
+
+  return { summary, filesScanned: files.length, chosenDir, tried };
+}
+
+// CSV export endpoint
+app.get('/api/visualize/export', async (req, res) => {
+  try {
+    const resp = await getVisualizationData();
+    // Build CSV header
+    const csvHeader = ['model','swver','grade','critical_module','critical_voc','count'];
+    const lines = [csvHeader.join(',')];
+    resp.summary.forEach(r => {
+      lines.push([r.model,r.swver,r.grade,r.critical_module,r.critical_voc,r.count].map(v => `\"${String(v||'').replace(/\"/g,'\"\"')}\"`).join(','));
+    });
+    const csv = lines.join('\n');
+    res.setHeader('Content-disposition', 'attachment; filename=visualize_summary.csv');
+    res.setHeader('Content-Type', 'text/csv');
+    res.send(csv);
+  } catch (e) {
+    res.status(500).json({ success:false, error: e.message });
   }
 });
 
@@ -1102,35 +1258,9 @@ app.get('/api/module-details', async (req, res) => {
   }
 });
 
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
-  try {
-    // Check if Ollama is running
-    const response = await new Promise((resolve, reject) => {
-      const req = http.get('http://localhost:11434/', (res) => {
-        resolve(res.statusCode === 200);
-      });
-
-      req.on('error', () => resolve(false));
-      req.setTimeout(5000, () => {
-        req.destroy();
-        resolve(false);
-      });
-    });
-
-    if (response) {
-      res.json({ status: 'ok', ollama: 'connected' });
-    } else {
-      res.json({ status: 'ok', ollama: 'disconnected' });
-    }
-  } catch (error) {
-    res.json({ status: 'ok', ollama: 'disconnected' });
-  }
-});
-
 // Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 Ollama Web Processor is running!`);
   console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
-  console.log(`🤖 Make sure Ollama is running with gemma3:4b model\n`);
+  console.log(`🤖 Make sure Ollama is running (gemma3:4b or qwen3:4b-instruct preferred)\n`);
 });
