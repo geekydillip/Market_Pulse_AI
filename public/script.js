@@ -1,3 +1,35 @@
+// Theme Management
+let currentTheme = 'dark';
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    updateThemeToggleIcon();
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+}
+
+function setTheme(theme) {
+    currentTheme = theme;
+    document.body.className = `theme-${theme}`;
+    localStorage.setItem('theme', theme);
+    updateThemeToggleIcon();
+}
+
+function toggleTheme() {
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+}
+
+function updateThemeToggleIcon() {
+    const icon = document.querySelector('#themeToggle svg');
+    if (currentTheme === 'light') {
+        icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    } else {
+        icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="m12 1v2m0 18v2M4.93 4.93l1.41 1.41m11.32 0l1.41 -1.41M1 12h2m18 0h2M4.93 19.07l1.41 -1.41m11.32 0l1.41 1.41"/>';
+    }
+}
+
 // DOM Elements
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -22,9 +54,20 @@ let currentResult = '';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize theme
+    initTheme();
+
     setupEventListeners();
     loadModels();
     checkOllamaConnection();
+
+    // Initialize processing options visibility - show only on upload tab
+    const processingSection = document.querySelector('.processing-section');
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (processingSection && activeTab) {
+        const activeTabName = activeTab.getAttribute('data-tab');
+        processingSection.style.display = activeTabName === 'upload' ? 'block' : 'none';
+    }
 });
 
 function setupEventListeners() {
@@ -52,6 +95,7 @@ function setupEventListeners() {
 
 
 
+// Helper functions for file handling
 function handleDragOver(e) {
     e.preventDefault();
     dropzone.classList.add('drag-over');
@@ -133,8 +177,7 @@ function formatFileSize(bytes) {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
-
-
+// Processing type change handler
 function handleProcessingTypeChange(e) {
     if (e.target.value === 'custom') {
         customPrompt.style.display = 'block';
@@ -162,6 +205,7 @@ async function handleModelChange(e) {
     }
 }
 
+// Main processing function
 async function handleProcess() {
     if (!currentFile) {
         alert('Please upload a file first');
@@ -308,8 +352,6 @@ async function processStructuredFile(file, processingType, customPrompt, model, 
     });
 }
 
-
-
 function updateProgress(percent, text, timerInterval) {
     console.log('Updating progress to ' + percent + '%', 'type:', typeof percent, 'element exists:', !!progressFill);
     progressFill.style.width = percent + '%';
@@ -323,8 +365,6 @@ function updateProgress(percent, text, timerInterval) {
 
 // Store current timer for cleanup
 let currentTimerInterval = null;
-
-
 
 function downloadFile(url, filename) {
     const a = document.createElement('a');
@@ -359,6 +399,7 @@ function hideLoading() {
     processBtn.disabled = false;
 }
 
+// Connection status functions
 async function checkOllamaConnection() {
     try {
         const response = await fetch('/api/health');
@@ -384,7 +425,7 @@ function updateStatus(status, text) {
 
 async function loadModels() {
     try {
-        const response = await fetch('/api/models');
+        const response = await fetch('/api/ollama-models');
         const data = await response.json();
 
         if (data.success && data.models.length > 0) {
@@ -446,9 +487,7 @@ function showProcessingSummary(timeSeconds, downloads) {
     summary.style.display = 'block';
 }
 
-// --- Additions to script.js (append near other UI handlers) ---
-
-// Tab switching: reuse existing tab-btn behavior
+// Tab switching functionality
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('.tab-btn');
     if (!btn) return;
@@ -463,235 +502,16 @@ document.addEventListener('click', (e) => {
     const content = document.getElementById(tab + '-tab') || document.getElementById(tab);
     if (content) content.classList.add('active');
 
-    // if visualize tab opened, trigger a load
-    if (tab === 'visualize') {
-        loadVisualization();
+    // Show/hide processing options based on active tab
+    const processingSection = document.querySelector('.processing-section');
+    if (processingSection) {
+        if (tab === 'upload') {
+            processingSection.style.display = 'block';
+        } else {
+            processingSection.style.display = 'none';
+        }
     }
 });
-
-// Hook refresh button
-const refreshBtn = document.getElementById('refreshVisualization');
-if (refreshBtn) refreshBtn.addEventListener('click', loadVisualization);
-
-// Hook CSV export button
-const exportBtn = document.getElementById('exportVisualization');
-if (exportBtn) exportBtn.addEventListener('click', exportVisualization);
-
-// CSV export function
-async function exportVisualization() {
-    try {
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-        const filename = `visualize_summary_${timestamp}.csv`;
-        downloadFile('/api/visualize/export', filename);
-    } catch (error) {
-        console.error('Export error:', error);
-        alert('Failed to export CSV: ' + error.message);
-    }
-}
-
-let vizChartInstance = null;
-
-async function loadVisualization() {
-    const statusEl = document.getElementById('visualizeStatus');
-    const tbody = document.getElementById('vizTableBody');
-    const chartEl = document.getElementById('vizChart');
-
-    statusEl.textContent = 'Loading summary...';
-    tbody.innerHTML = '';
-    if (vizChartInstance) {
-        try { vizChartInstance.destroy(); } catch(e) {}
-        vizChartInstance = null;
-    }
-
-    try {
-        const resp = await fetch('/api/visualize');
-        const data = await resp.json();
-        if (!data.success) {
-            statusEl.textContent = 'Failed to load summary: ' + (data.error || 'unknown');
-            return;
-        }
-
-        const summary = data.summary || [];
-        let location = '';
-        if (data.chosenDir) {
-            location = ` from ${data.chosenDir.split(/[\/\\\\]/).pop()}`;
-        }
-        statusEl.textContent = `Scanned ${data.filesScanned || 0} file(s)${location}. ${summary.length} rows grouped.`;
-
-        // Fill table - now with 7 columns (added Sub-Module)
-        if (summary.length === 0) {
-            tbody.innerHTML = '<tr><td colspan=\"7\" style=\"padding:16px; text-align:center; color:var(--text-secondary); border-bottom:1px solid #374151;\">No data found</td></tr>';
-        } else {
-            tbody.innerHTML = summary.map((row, index) => `
-                <tr style="border-bottom:1px solid #374151;">
-                    <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.model)}</td>
-                    <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.swver)}</td>
-                    <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.grade)}</td>
-                    <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.critical_module)}</td>
-                    <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.sub_module || row.critical_module || 'N/A')}</td>
-                    <td style="padding:12px 8px; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};">${escapeHtml(row.critical_voc)}</td>
-                    <td style="padding:12px 8px; text-align:right; background:${index % 2 === 0 ? 'transparent' : '#1a1d22'};"><button class="detail-btn" data-model="${escapeHtml(row.model)}" data-swver="${escapeHtml(row.swver)}" data-grade="${escapeHtml(row.grade)}" data-module="${escapeHtml(row.critical_module)}" data-voc="${escapeHtml(row.critical_voc)}" style="background:none; border:none; color:#3b82f6; text-decoration:underline; cursor:pointer; font-weight:600;">${row.count}</button></td>
-                </tr>
-            `).join('');
-        }
-
-        // Build chart data: top 8 modules by total count
-        const moduleCounts = {};
-        summary.forEach(r => {
-            const key = r.critical_module || '(none)';
-            moduleCounts[key] = (moduleCounts[key] || 0) + r.count;
-        });
-        const moduleEntries = Object.entries(moduleCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
-        const labels = moduleEntries.map(e => e[0]);
-        const counts = moduleEntries.map(e => e[1]);
-
-        // Render chart with Chart.js
-        if (chartEl && labels.length > 0) {
-            const gradient = chartEl.getContext('2d').createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
-            gradient.addColorStop(1, 'rgba(30, 41, 59, 0.4)');
-
-            vizChartInstance = new Chart(chartEl.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Issue Count',
-                        data: counts,
-                        backgroundColor: gradient,
-                        borderColor: '#3b82f6',
-                        borderWidth: 1,
-                        borderRadius: 4,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Critical Modules Distribution',
-                            color: '#cbd5e1',
-                            font: { size: 16, weight: 'bold' }
-                        },
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                            titleColor: '#cbd5e1',
-                            bodyColor: '#cbd5e1',
-                            borderColor: '#374151',
-                            borderWidth: 1
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: '#cbd5e1' },
-                            grid: { color: '#374151' },
-                            title: { display: true, text: 'Modules', color: '#cbd5e1' }
-                        },
-                        y: {
-                            ticks: { color: '#cbd5e1' },
-                            grid: { color: '#374151' },
-                            title: { display: true, text: 'Count', color: '#cbd5e1' }
-                        }
-                    }
-                }
-            });
-        }
-
-    } catch (error) {
-        console.error('Visualization load error:', error);
-        statusEl.textContent = 'Error loading visualization: ' + (error.message || error);
-    }
-}
-
-function escapeHtml(text) {
-    if (!text && text !== 0) return '';
-    return String(text).replaceAll('&', '&').replaceAll('<', '<').replaceAll('>', '>').replaceAll('\"', '"');
-}
-
-// Event listener for detail buttons
-document.addEventListener('click', e => {
-    if (e.target.classList.contains('detail-btn')) {
-        const dataset = e.target.dataset;
-        showModuleDetails(dataset);
-    }
-});
-
-async function showModuleDetails(param) {
-    const modal = document.getElementById('moduleModal');
-    const content = document.getElementById('modalContent');
-    const closeBtn = document.getElementById('closeModal');
-
-    const moduleName = param.module;
-
-    const url = new URLSearchParams({
-        model: param.model,
-        swver: param.swver,
-        grade: param.grade,
-        module: param.module,
-        voc: param.voc
-    });
-
-    content.innerHTML = 'Loading details...';
-    modal.style.display = 'flex';
-
-    const closeModal = () => modal.style.display = 'none';
-    closeBtn.onclick = closeModal;
-    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
-
-    try {
-        const resp = await fetch(`/api/module-details?${url.toString()}`);
-        const data = await resp.json();
-        if (data.success && data.details && data.details.length > 0) {
-            // Create download function for this modal
-            const downloadTableData = (details) => {
-                const headers = ['Case Code', 'Model', 'SW Ver', 'Grade', 'Critical VOC', 'Title', 'Problem', 'Summarized Problem', 'Severity', 'Severity Reason'];
-                const csvData = [headers.join(',')];
-
-                details.forEach(d => {
-                    const row = [
-                        `"${(d.caseCode || '').replace(/"/g, '""')}"`,
-                        `"${(d.model || '').replace(/"/g, '""')}"`,
-                        `"${(d.swver || '').replace(/"/g, '""')}"`,
-                        `"${(d.grade || '').replace(/"/g, '""')}"`,
-                        `"${(d.critical_voc || '').replace(/"/g, '""')}"`,
-                        `"${(d.title || '').replace(/"/g, '""')}"`,
-                        `"${(d.problem || '').replace(/"/g, '""')}"`,
-                        `"${(d.summarized_problem || '').replace(/"/g, '""')}"`,
-                        `"${(d.severity || '').replace(/"/g, '""')}"`,
-                        `"${(d.severity_reason || '').replace(/"/g, '""')}"`
-                    ];
-                    csvData.push(row.join(','));
-                });
-
-                const csvText = csvData.join('\n');
-                const blob = new Blob([csvText], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${moduleName}_details_${Date.now()}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            };
-
-            content.innerHTML = `<div style="text-align:center; margin-bottom:20px;"><h1 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin:0; font-size:28px; font-weight:700;">${escapeHtml(moduleName)} Module Details</h1><p style="color:var(--text-secondary); margin-top:8px;">Detailed breakdown of all related issues for ${escapeHtml(param.model)} ${escapeHtml(param.swver)}</p><button id="downloadTableBtn" class="btn-action" style="margin-top:15px; background: var(--accent-bg); color: var(--text-primary); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Download CSV</button></div><div style="overflow-x:auto; border:1px solid #374151; border-radius:8px; background: var(--card-bg);"><table style="width:100%; border-collapse:collapse;"><thead><tr style="background: var(--card-hover);"><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:100px;">Case Code</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:150px;">Model</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">SW Ver</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">Grade</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Title</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Problem</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Summarized</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:80px;">Severity</th><th style="padding:12px 8px; color:#cbd5e1; font-weight:600; border-bottom:1px solid #374151; width:250px;">Severity Reason</th></tr></thead><tbody>${data.details.map((d, idx) => `<tr style="border-bottom:1px solid #374151;"><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; font-weight:500; word-wrap:break-word;">${escapeHtml(d.caseCode)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.model)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.swver)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.grade)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.title)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.problem)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.summarized_problem)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.severity)}</td><td style="padding:10px 8px; background:${idx % 2 === 0 ? 'rgba(107,114,128,0.1)' : 'transparent'}; word-wrap:break-word;">${escapeHtml(d.severity_reason)}</td></tr>`).join('')}</tbody></table></div>`;
-
-            // Add event listener for download button
-            const downloadBtn = content.querySelector('#downloadTableBtn');
-            if (downloadBtn) {
-                downloadBtn.addEventListener('click', () => downloadTableData(data.details));
-            }
-        } else {
-            content.innerHTML = `<h3 style="color:#cbd5e1; text-align:center;">Details for Module: ${escapeHtml(moduleName)}</h3><p style="color:var(--text-secondary); text-align:center;">No details found.</p>`;
-        }
-    } catch (error) {
-        content.innerHTML = '<h3 style="color:#cbd5e1; text-align:center;">Error</h3><p style="color:#ef4444; text-align:center;">Error loading details: ' + error.message + '</p>';
-    }
-}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {

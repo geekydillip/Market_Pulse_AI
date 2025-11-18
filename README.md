@@ -79,13 +79,149 @@ A professional web interface for AI-powered data processing and Voice of Custome
 4. **Process File**: Click "Process with AI" and monitor real-time progress
 5. **Download Results**: Automatically download processed files and processing logs
 
-### Visualization Dashboard
+### Data Visualization Table
 
-1. **Switch to Visualize Tab**: Access data aggregation from processed Excel files
-2. **Auto-Load Summary**: Scans /downloads folder for all Excel files and aggregates by model/SW version/grade/module/VOC
-3. **Interactive Charts**: View top critical modules with Chart.js bar charts
-4. **Detailed Drill-Down**: Click issue counts to see full row details in modal dialogs
-5. **Refresh Data**: Click "Refresh" to reload summary from latest processed files
+1. **Switch to Data Visualize Tab**: Access client-side table visualization from processed Excel files
+2. **Auto-Load Summary**: Scans /downloads folder for all Excel files and aggregates by model/grade/critical module/top issue titles/count
+3. **Table Features**:
+   - **S/N Column**: Sequential numbering based on filtered results (1, 2, 3...)
+   - **Pagination**: Choose page size (10, 25, 50 items), navigate with Prev/Next buttons
+   - **Search Filtering**: Search across model, grade, critical module, and top issue titles (debounced, 300ms)
+   - **Client-side CSV Export**: Download filtered results as CSV with S/N numbering
+4. **Modal Drill-Down**: Click Count buttons to see detailed individual issue rows for that grouping
+5. **Keyboard Shortcuts**: Press "/" to focus search input field
+
+#### Table Columns (Fixed Layout, Specified Widths)
+- **S/N**: 64px (sequential number in filtered results)
+- **Model**: 140px (model identifier)
+- **Critical Module**: 160px (main affected component)
+- **Top Issue Titles**: flex (truncated with ellipsis if long, title tooltip)
+- **Count**: 80px (number of issues in group, clickable for modal)
+
+## 🔌 API Endpoints
+
+### `/api/visualize` - Data Visualization Summary
+
+**Method**: `GET`
+
+**Description**: Aggregates summary data from all processed Excel files in the `/downloads` folder, grouped by model/grade/critical module. Returns aggregated counts with top issue titles.
+
+**Response Schema**:
+```json
+{
+  "success": boolean,
+  "filesScanned": number,
+  "summary": [
+    {
+      "model": string,
+      "grade": string,
+      "critical_module": string,
+      "critical_voc": string,
+      "count": number
+    }
+  ]
+}
+```
+
+### `/api/module-details` - Detailed Module Issues
+
+**Method**: `GET`
+
+**Parameters**:
+- `model`: string (required) - Model identifier
+- `grade`: string (required) - Product grade
+- `module`: string (required) - Critical module name
+- `voc`: string (required) - Critical VOC/titles
+
+**Description**: Returns detailed individual issue rows matching the specific model/grade/module grouping.
+
+**Response Schema**:
+```json
+{
+  "success": boolean,
+  "details": [
+    {
+      "caseCode": string,
+      "model": string,
+      "grade": string,
+      "title": string,
+      "problem": string,
+      "severity": string,
+      "severity_reason": string,
+      "sub_module": string
+    }
+  ]
+}
+```
+
+### How to Use Table Features
+
+#### Pagination
+- Select page size from dropdown (10, 25, 50 items per page)
+- Use Prev/Next buttons to navigate pages
+- Page numbers update automatically as you filter/search
+
+#### Search Filtering
+- Type in search box to filter across all columns simultaneously
+- Search fields: model, grade, critical module, top issue titles
+- Debounced search (300ms delay) prevents excessive filtering
+- Keyboard shortcut: Press "/" anywhere to focus search input
+
+#### View Toggle
+- **Compact View** (default): Summary table only
+- **Detailed View**: Adds expandable JSON rows below summary rows
+- Toggle affects all currently visible rows
+
+#### CSV Export
+- Filters current search results
+- Includes S/N column (1, 2, 3... based on current filter/sort)
+- Columns: S/N, Model, Grade, Critical Module, Top Issue Titles, Count
+- Quotes escaped properly for CSV format
+- Downloads as `visualize_summary_TIMESTAMP.csv`
+
+#### Modal Drill-Down
+- Click any Count number to open detailed view
+- Shows individual issue rows for that grouping
+- Includes CS V download option for detailed data
+
+### Sample Summary Records
+
+Here are 3-5 sample records from typical processed data:
+
+```json
+[
+  {
+    "model": "A366E",
+    "grade": "SWA_16_DD",
+    "critical_module": "Camera",
+    "critical_voc": "Camera not focusing properly, blurry images in low light conditions",
+    "count": 15
+  },
+  {
+    "model": "SMS921BE",
+    "grade": "SWA_16_DD_(OS+Beta)B+OS+Beta",
+    "critical_module": "Network",
+    "critical_voc": "WiFi connection drops frequently, cannot maintain stable connection",
+    "count": 8
+  },
+  {
+    "model": "A366E",
+    "grade": "SWA_16_DD",
+    "critical_module": "Battery",
+    "critical_voc": "Battery drains very fast, less than 2 hours usage time",
+    "count": 22
+  },
+  {
+    "model": "SMS921BE",
+    "grade": "SWA_16_DD_(OS+Beta)B+OS+Beta",
+    "critical_module": "Lock Screen",
+    "critical_voc": "Lock screen unresponsive, takes long time to unlock device",
+    "count": 6
+  }
+]
+```
+
+The aggregate count represents the number of individual issue reports grouped by model/grade/module, with the most common issue titles combined into the `critical_voc` field.
 
 ## 📁 Project Structure
 

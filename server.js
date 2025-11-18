@@ -159,6 +159,77 @@ function readAndNormalizeExcel(uploadedPath) {
   return normalizedRows;
 }
 
+// normalizeRows - reusable function to normalize row objects with header mappings
+function normalizeRows(rows) {
+  // Map header name variants to canonical names (same mapping as in readAndNormalizeExcel)
+  const headerMap = {
+    // Model variants
+    'model no': 'Model No.',
+    'model no.': 'Model No.',
+    'modelno': 'Model No.',
+    'model number': 'Model No.',
+    // Case Code
+    'case code': 'Case Code',
+    'caseno': 'Case Code',
+    'case no': 'Case Code',
+    // S/W Ver variants
+    's/w ver.': 'S/W Ver.',
+    's/w ver': 'S/W Ver.',
+    'sw ver': 'S/W Ver.',
+    'swversion': 'S/W Ver.',
+    // Occurrence stage
+    'occurr. stg.': 'Occurr. Stg.',
+    'occurr stg': 'Occurr. Stg.',
+    'occurrence stage': 'Occurr. Stg.',
+    // Title, Problem, Module, Sub-Module
+    'title': 'Title',
+    'problem': 'Problem',
+    'module': 'Module',
+    'sub-module': 'Sub-Module',
+    'sub module': 'Sub-Module',
+  };
+
+  // canonical columns you expect in the downstream processing
+  const canonicalCols = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.','Module','Sub-Module','Summarized Problem','Severity','Severity Reason'];
+
+  const normalizedRows = rows.map(orig => {
+    const out = {};
+    // Build a reverse map of original header -> canonical (if possible)
+    const keyMap = {}; // rawKey -> canonical
+    Object.keys(orig).forEach(rawKey => {
+      const norm = String(rawKey || '').trim().toLowerCase();
+      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
+      if (mapped) keyMap[rawKey] = mapped;
+      else {
+        // try exact match to canonical
+        for (const c of canonicalCols) {
+          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
+            keyMap[rawKey] = c;
+            break;
+          }
+        }
+      }
+    });
+    // Fill canonical fields
+    for (const tgt of canonicalCols) {
+      // find a source raw key that maps to this tgt
+      let found = null;
+      for (const rawKey of Object.keys(orig)) {
+        if (keyMap[rawKey] === tgt) {
+          found = orig[rawKey];
+          break;
+        }
+      }
+      // also if tgt exists exactly as a raw header name, use it
+      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
+      out[tgt] = (found !== undefined && found !== null) ? found : '';
+    }
+    return out;
+  });
+
+  return normalizedRows;
+}
+
 // Cache for identical prompts
 const aiCache = new Map();
 
@@ -870,12 +941,56 @@ async function processExcel(req, res) {
         { wch: 15 }   // error (if added)
     ];
 
-    // === Apply Cell Alignment and Text Wrap ===
+    // === Apply Cell Styles (fonts, alignment, borders) ===
+    const dataRows = schemaMergedRows.length;
+    const totalColumns = finalHeaders.length;
+
+    // Define column alignments based on webpage table
+    const centerAlignColumns = [0, 1, 2, 3, 7]; // Case Code, Occurr. Stg., Title, Problem, Module (0-based)
+    // Case Code (0), Model (1), Grade (2), S/W Ver. (3), Severity (7) are centered
+
     Object.keys(newSheet).forEach((cellKey) => {
         if (cellKey[0] === '!') return;
-        newSheet[cellKey].s = {
-            alignment: { horizontal: "center", vertical: "center", wrapText: true }
+
+        const colMatch = cellKey.match(/([A-Z]+)(\d+)/);
+        if (!colMatch) return;
+
+        const col = xlsx.utils.decode_range(cellKey).c; // column index
+        const row = xlsx.utils.decode_range(cellKey).r; // row index
+
+        let cellStyle = {
+            alignment: { vertical: "center", wrapText: true },
+            font: {
+                name: "Arial",
+                sz: 10,
+                color: { rgb: colMatch[2] === '1' ? "FFFFFF" : "000000" } // header white, data black
+            }
         };
+
+        // Set horizontal alignment
+        if (row === 0) {
+            // Header row - always center
+            cellStyle.alignment.horizontal = "center";
+        } else {
+            // Data rows - center specific columns, left for others
+            if (centerAlignColumns.includes(col)) {
+                cellStyle.alignment.horizontal = "center";
+            } else {
+                cellStyle.alignment.horizontal = "left";
+            }
+        }
+
+        // Add borders to data area only (not headers)
+        if (row > 0 && row <= dataRows) {
+            cellStyle.border = {
+                top: { style: "thin", color: { rgb: "CCCCCC" } },
+                bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                left: { style: "thin", color: { rgb: "CCCCCC" } },
+                right: { style: "thin", color: { rgb: "CCCCCC" } }
+            };
+        }
+
+        newSheet[cellKey].s = cellStyle;
     });
 
     // === Apply Header Styling ===
@@ -953,39 +1068,150 @@ async function processExcel(req, res) {
   }
 }
 
-// Models endpoint
-app.get('/api/models', async (req, res) => {
-  try {
-    const response = await new Promise((resolve, reject) => {
-      const req = http.get('http://localhost:11434/api/tags', (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            try {
-              const json = JSON.parse(data);
-              const models = json.models ? json.models.map(m => m.name) : [];
-              resolve(models);
-            } catch (e) {
-              reject(e);
-            }
-          } else {
-            reject(new Error(`HTTP ${res.statusCode}`));
-          }
-        });
-      });
+// ---------- Dashboard endpoints: read model from sheet cell and aggregate ----------
+// (XLSX is already required above as 'xlsx')
 
-      req.on('error', reject);
-      req.setTimeout(5000, () => {
-        req.destroy();
-        reject(new Error('Timeout'));
+// Helper: find a cell that contains \"Model No\" (case-insensitive) and return the value of the cell below it
+function getModelFromSheet(ws) {
+  if (!ws || !ws['!ref']) return '';
+  const range = xlsx.utils.decode_range(ws['!ref']);
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const addr = xlsx.utils.encode_cell({ r: R, c: C });
+      const cell = ws[addr];
+      if (!cell || !cell.v) continue;
+      const txt = String(cell.v).trim();
+      if (/model\s*no/i.test(txt) || /^model\s*no\.?$/i.test(txt) || /^model$/i.test(txt)) {
+        // take the cell below if present
+        const belowAddr = xlsx.utils.encode_cell({ r: R + 1, c: C });
+        const belowCell = ws[belowAddr];
+        if (belowCell && typeof belowCell.v !== 'undefined') return String(belowCell.v).trim();
+        // fallback: try to read from column E row 1 (E1) if above not found
+        try {
+          const fallback = ws['E1'] && ws['E1'].v ? String(ws['E1'].v).trim() : '';
+          if (fallback) return fallback;
+        } catch (e) {}
+      }
+    }
+  }
+  // fallback heuristics: if there is a header row with \"Model\" column, try sheet_to_json
+  try {
+    const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+    if (rows.length) {
+      const first = rows[0];
+      if (first['Model'] && String(first['Model']).trim()) return String(first['Model']).trim();
+      if (first['Model No.'] && String(first['Model No.']).trim()) return String(first['Model No.']).trim();
+      if (first['Model No'] && String(first['Model No']).trim()) return String(first['Model No']).trim();
+    }
+  } catch (e) {}
+  return '';
+}
+
+// Helper: read each Excel file in downloads/ and return an array of objects {file, modelFromFile, rows: [...]}
+// Each row is the sheet_to_json row (defval '')
+function readAllFilesWithModel() {
+  const dlDir = path.join(__dirname, 'downloads');
+  if (!fs.existsSync(dlDir)) return [];
+  const files = fs.readdirSync(dlDir).filter(f => /\.(xlsx|xls)$/i.test(f));
+  const allFiles = [];
+  files.forEach(file => {
+    try {
+      const wb = xlsx.readFile(path.join(dlDir, file));
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const modelFromFile = getModelFromSheet(ws) || '';
+      const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+      allFiles.push({ file, modelFromFile, rows });
+    } catch (err) {
+      console.warn('[readAllFilesWithModel] skip', file, err.message);
+    }
+  });
+  return allFiles;
+}
+
+// GET /api/models -> returns unique model list (modelFromFile values). Includes 'All' as default.
+app.get('/api/models', (req, res) => {
+  try {
+    const files = readAllFilesWithModel();
+    const models = new Set();
+    files.forEach(f => {
+      const m = (f.modelFromFile || '').toString().trim();
+      if (m) models.add(m);
+    });
+    const arr = Array.from(models).sort();
+    res.json({ success: true, models: arr });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/dashboard?model=<modelName>  (if model omitted or model=ALL -> aggregate across all files)
+// returns: { success:true, model:..., totals:{ totalCases, critical, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
+app.get('/api/dashboard', (req, res) => {
+  try {
+    const modelQueryRaw = (req.query.model || '').toString().trim();
+    const modelQuery = (modelQueryRaw === '' || /^(all|__all__|aggregate)$/i.test(modelQueryRaw)) ? null : modelQueryRaw;
+    const files = readAllFilesWithModel();
+
+    // Build unified rows with an attached modelFromFile field for each row
+    let allRows = [];
+    files.forEach(f => {
+      const mFromFile = f.modelFromFile || '';
+      f.rows.forEach(r => {
+        // attach modelFromFile to each row so we can easily filter by model
+        const row = Object.assign({}, r);
+        row._modelFromFile = mFromFile;
+        allRows.push(row);
       });
     });
 
-    res.json({ success: true, models: response });
-  } catch (error) {
-    console.error('Error fetching models:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch models' });
+    // Filter rows if a model is selected
+    const filteredRows = modelQuery ? allRows.filter(r => String(r._modelFromFile || '').trim() === modelQuery) : allRows;
+
+    // Aggregations
+    const totals = { totalCases: filteredRows.length, critical: 0, high: 0, medium: 0, low: 0 };
+    const severityCounts = {};
+    const moduleCounts = {};
+
+    filteredRows.forEach(r => {
+      // Severity detection: look for common severity words in any of the severity columns
+      const sev = (r.Severity || r['Severity'] || r['Severity Level'] || '').toString().trim() || 'Unknown';
+      const sevKey = sev || 'Unknown';
+      severityCounts[sevKey] = (severityCounts[sevKey] || 0) + 1;
+      if (/crit/i.test(sevKey)) totals.critical++;
+      if (/high/i.test(sevKey)) totals.high++;
+      if (/med/i.test(sevKey)) totals.medium++;
+      if (/low/i.test(sevKey)) totals.low++;
+
+      // Module detection: check common column names and fallback to empty
+      const mod = (r.Module || r['Module'] || r['Module Name'] || r['Modules'] || '').toString().trim() || 'Unknown';
+      moduleCounts[mod] = (moduleCounts[mod] || 0) + 1;
+    });
+
+    const severityDistribution = Object.keys(severityCounts).map(k => ({ severity: k, count: severityCounts[k] })).sort((a, b) => b.count - a.count);
+    const moduleDistribution = Object.keys(moduleCounts).map(k => ({ module: k, count: moduleCounts[k] })).sort((a, b) => b.count - a.count);
+
+    // Prepare table rows to return (limit to avoid huge payload)
+    const tableRows = filteredRows.slice(0, 500).map(r => ({
+      caseId: r['Case Code'] || r['CaseId'] || r['ID'] || '',
+      title: r['Title'] || r['Summary'] || r['Problem Title'] || '',
+      problem: r['Problem'] || r['Issue'] || '',
+      modelFromFile: r._modelFromFile || '',
+      module: r['Module'] || r['Module Name'] || '',
+      severity: r['Severity'] || '',
+      loadedDate: r['Loaded CV Date'] || r['Loaded Date'] || r['Date'] || ''
+    }));
+
+    res.json({
+      success: true,
+      model: modelQuery || 'All',
+      totals,
+      severityDistribution,
+      moduleDistribution,
+      rows: tableRows
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -1021,8 +1247,27 @@ app.get('/api/health', async (req, res) => {
  */
 app.get('/api/visualize', async (req, res) => {
   try {
+    const page = parseInt(req.query.page || '1', 10);
+    const pageSize = parseInt(req.query.pageSize || '25', 10);
+
+    // load or compute the full summary array (reuse existing implementation)
     const result = await getVisualizationData();
-    res.json({ success: true, summary: result.summary, filesScanned: result.filesScanned, chosenDir: result.chosenDir, tried: result.tried });
+
+    const allRows = result.summary;
+    const total = allRows.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const start = (page - 1) * pageSize;
+    const pageRows = allRows.slice(start, start + pageSize);
+
+    res.json({
+      success: true,
+      filesScanned: result.filesScanned,
+      total,
+      page,
+      pageSize,
+      pages,
+      summary: pageRows
+    });
   } catch (error) {
     console.error('Visualize error:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -1088,9 +1333,8 @@ async function getVisualizationData() {
         return String(row[c]).trim();
       }
     }
-    // If no sub-module found, try to get just module
-    const module = pickField(row, ['Module', 'Critical Module', 'critical module', 'Module Name']);
-    return module; // Return module if no sub-module, can be used for grouping
+    // If no sub-module found, leave empty (don't fall back to module for grouping)
+    return '';
   }
 
   for (const file of files) {
@@ -1104,15 +1348,21 @@ async function getVisualizationData() {
 
       for (const r of rows) {
         // Try common header names
-        const model = pickField(r, ['Model No.', 'Model No', 'Model', 'ModelNo', 'Model No']);
+        const model = pickField(r, ['Model', 'model', 'Model No.', 'Model No', 'ModelNo', 'Model No']);
         const swver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
         const grade = pickField(r, ['Grade', 'Garde', 'grade']);
         const critical_module = pickField(r, ['Critical Module', 'Cirital Module', 'Module', 'critical module', 'Module Name']);
         const critical_voc = pickField(r, ['Critical VOC', 'Critical VOCs', 'Critical_VOC', 'Critical', 'VOC']);
+        const title = pickField(r, ['Title', 'title']);
 
-        // Build key
-        const key = `${model}||${swver}||${grade}||${critical_module}||${critical_voc}`;
-        aggregation.set(key, (aggregation.get(key) || 0) + 1);
+        // Build key for aggregation (group by model+grade+module to avoid duplicates)
+        const key = `${model}||${grade}||${critical_module}`;
+        if (!aggregation.has(key)) {
+          aggregation.set(key, { count: 0, titleMap: new Map(), voc: critical_voc });
+        }
+        const entry = aggregation.get(key);
+        entry.count += 1;
+        entry.titleMap.set(title || 'N/A', (entry.titleMap.get(title || 'N/A') || 0) + 1);
       }
     } catch (err) {
       console.warn('Failed to read', file, err && err.message);
@@ -1121,15 +1371,15 @@ async function getVisualizationData() {
   }
 
   // Convert aggregation map to array
-  const summary = Array.from(aggregation.entries()).map(([k, count]) => {
-    const [model, swver, grade, critical_module, critical_voc] = k.split('||');
+  const summary = Array.from(aggregation.entries()).map(([k, entry]) => {
+    const [model, grade, critical_module] = k.split('||');
+    const topTitles = Array.from(entry.titleMap.entries()).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([title,count])=>title).join(', ');
     return {
       model: model || '',
-      swver: swver || '',
       grade: grade || '',
       critical_module: critical_module || '',
-      critical_voc: critical_voc || '',
-      count
+      critical_voc: topTitles || '',
+      count: entry.count || 0
     };
   });
 
@@ -1139,15 +1389,93 @@ async function getVisualizationData() {
   return { summary, filesScanned: files.length, chosenDir, tried };
 }
 
+/**
+ * Get detailed rows for visualization drill-down (Raw_Details sheet)
+ */
+app.get('/api/visualize-raw-details', async (req, res) => {
+  try {
+    const candidateDirs = [
+      path.join(process.cwd(), 'downloads'),
+      path.join(process.cwd(), 'Downloads'),
+      path.join(__dirname, 'downloads'),
+      path.join(__dirname, 'Downloads'),
+      path.join(__dirname, 'public', 'downloads'),
+      '/mnt/data',
+      path.join(process.env.HOME || '', 'Downloads'),
+      path.join(process.env.USERPROFILE || '', 'Downloads')
+    ];
+
+    let chosenDir = null;
+    let files = [];
+
+    for (const d of candidateDirs) {
+      if (!d) continue;
+      try {
+        const exists = fs.existsSync(d);
+        if (!exists) continue;
+        const list = fs.readdirSync(d).filter(f => /\.(xlsx|xls)$/i.test(f));
+        if (list.length > 0) {
+          chosenDir = d;
+          files = list;
+          break;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!chosenDir) {
+      return res.json({ success: true, details: [] });
+    }
+
+    const allDetails = [];
+
+    for (const file of files) {
+      try {
+        const filePath = path.join(chosenDir, file);
+        const wb = xlsx.readFile(filePath);
+        const sheetName = wb.SheetNames[0];
+        if (!sheetName) continue;
+        const ws = wb.Sheets[sheetName];
+        const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+
+        for (const r of rows) {
+          // Extract all available fields for raw details
+          allDetails.push({
+            caseCode: pickField(r, ['Case Code', 'CaseCode', 'Case']),
+            model: pickField(r, ['Model No.', 'Model No', 'Model', 'ModelNo', 'Model No']),
+            grade: pickField(r, ['Grade', 'Garde']),
+            swver: pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']),
+            title: pickField(r, ['Title']),
+            problem: pickField(r, ['Problem']),
+            sub_module: pickField(r, ['Sub-Module', 'Sub Module', 'SubModule', 'sub-module', 'sub module', 'submodule']),
+            severity: pickField(r, ['Severity']),
+            severity_reason: pickField(r, ['Severity Reason', 'Severity_Reason']),
+            count: 1 // Each row represents one case
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to read file for raw details:', file, err && err.message);
+        continue;
+      }
+    }
+
+    res.json({ success: true, details: allDetails });
+  } catch (error) {
+    console.error('Raw details fetch error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // CSV export endpoint
 app.get('/api/visualize/export', async (req, res) => {
   try {
     const resp = await getVisualizationData();
     // Build CSV header
-    const csvHeader = ['model','swver','grade','critical_module','critical_voc','count'];
+    const csvHeader = ['model','grade','critical_module','critical_issue','count'];
     const lines = [csvHeader.join(',')];
     resp.summary.forEach(r => {
-      lines.push([r.model,r.swver,r.grade,r.critical_module,r.critical_voc,r.count].map(v => `\"${String(v||'').replace(/\"/g,'\"\"')}\"`).join(','));
+      lines.push([r.model,r.grade,r.critical_module,r.critical_voc,r.count].map(v => `\"${String(v||'').replace(/\"/g,'\"\"')}\"`).join(','));
     });
     const csv = lines.join('\n');
     res.setHeader('Content-disposition', 'attachment; filename=visualize_summary.csv');
@@ -1155,6 +1483,73 @@ app.get('/api/visualize/export', async (req, res) => {
     res.send(csv);
   } catch (e) {
     res.status(500).json({ success:false, error: e.message });
+  }
+});
+
+/**
+ * Fetch available Ollama models
+ */
+async function fetchOllamaModels(opts = {}) {
+  const port = opts.port || DEFAULT_OLLAMA_PORT;
+  const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 10000; // 10s default
+
+  const response = await new Promise((resolve, reject) => {
+    const options = {
+      hostname: '127.0.0.1',
+      port,
+      path: '/api/tags',
+      method: 'GET',
+      agent: keepAliveAgent,
+      headers: {
+        'Connection': 'keep-alive'
+      }
+    };
+
+    const req = http.request(options, (res) => {
+      let raw = '';
+      res.setEncoding('utf8');
+
+      res.on('data', (chunk) => raw += chunk);
+      res.on('end', () => {
+        if (!raw) return reject(new Error('Empty response from Ollama tags'));
+        try {
+          const json = JSON.parse(raw);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            console.log('[fetchOllamaModels] success, models:', json.models?.length || 0);
+            return resolve(json);
+          } else {
+            return reject(new Error(`Ollama tags ${res.statusCode}: ${JSON.stringify(json)}`));
+          }
+        } catch (err) {
+          return reject(new Error('Failed to parse Ollama tags response: ' + err.message));
+        }
+      });
+    });
+
+    if (timeoutMs !== false && timeoutMs !== 0) {
+      req.setTimeout(timeoutMs, () => {
+        req.destroy(new Error(`Timeout after ${timeoutMs} ms`));
+      });
+    }
+
+    req.on('error', (err) => {
+      console.error('[fetchOllamaModels] request error:', err);
+      reject(new Error('Failed to connect to Ollama: ' + err.message));
+    });
+
+    req.end();
+  });
+
+  return response.models ? response.models.map(m => m.name) : [];
+}
+
+// GET /api/ollama-models -> returns available Ollama AI models
+app.get('/api/ollama-models', async (req, res) => {
+  try {
+    const models = await fetchOllamaModels();
+    res.json({ success: true, models });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -1225,12 +1620,10 @@ app.get('/api/module-details', async (req, res) => {
           const critMod = pickField(r, ['Critical Module', 'Cirital Module', 'Module', 'critical module', 'Module Name']);
           const critVoc = pickField(r, ['Critical VOC', 'Critical VOCs', 'Critical_VOC', 'Critical', 'VOC']);
 
-      // Exact match for all combination fields (case-insensitive and trimmed)
+      // Match model, grade, and module (ignore swver and voc since we aggregated by model+grade+module)
       if (String(rmodel).toLowerCase().trim() !== String(model).toLowerCase().trim() ||
-          String(rswver).toLowerCase().trim() !== String(swver).toLowerCase().trim() ||
           String(rgrade).toLowerCase().trim() !== String(grade).toLowerCase().trim() ||
-          String(critMod).toLowerCase().trim() !== String(critical_module).toLowerCase().trim() ||
-          String(critVoc).toLowerCase().trim() !== String(critical_voc).toLowerCase().trim()) continue;
+          String(critMod).toLowerCase().trim() !== String(critical_module).toLowerCase().trim()) continue;
 
           // Collect the detailed fields for display
           details.push({
@@ -1241,7 +1634,7 @@ app.get('/api/module-details', async (req, res) => {
             critical_voc: pickField(r, ['Critical VOC', 'Critical VOCs']),
             title: pickField(r, ['Title']),
             problem: pickField(r, ['Problem']),
-            summarized_problem: pickField(r, ['Summarized Problem']),
+            sub_module: pickField(r, ['Sub-Module', 'Sub Module', 'SubModule', 'sub-module', 'sub module', 'submodule']),
             severity: pickField(r, ['Severity']),
             severity_reason: pickField(r, ['Severity Reason'])
           });
@@ -1260,7 +1653,8 @@ app.get('/api/module-details', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`\n🚀 Ollama Web Processor is running!`);
+  console.log('\n🚀 Ollama Web Processor is running!');
   console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
-  console.log(`🤖 Make sure Ollama is running (gemma3:4b or qwen3:4b-instruct preferred)\n`);
+  console.log(`📊 Dashboard available at: http://localhost:${PORT}/dashboard.html`);
+  console.log('🤖 Make sure Ollama is running (gemma3:4b or qwen3:4b-instruct preferred)\n');
 });
