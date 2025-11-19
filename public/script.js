@@ -53,7 +53,7 @@ let currentFile = null;
 let currentResult = '';
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme
     initTheme();
 
@@ -68,7 +68,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeTabName = activeTab.getAttribute('data-tab');
         processingSection.style.display = activeTabName === 'upload' ? 'block' : 'none';
     }
+
+    // Initialize Desire Selector visual state
+    updateSelectionState();
+    initializeProgressState();
 });
+
+function initializeProgressState() {
+    progressFill.style.width = '0%';
+    progressContainer.style.display = 'none';
+}
+
+// Global processing timing variables
+let processingStartTime = null;
+let processingEndTime = null;
 
 function setupEventListeners() {
     // Dropzone events
@@ -184,6 +197,54 @@ function handleProcessingTypeChange(e) {
     } else {
         customPrompt.style.display = 'none';
     }
+
+    // Update visual selection state
+    updateSelectionState();
+}
+
+// Selection state management
+function updateSelectionState() {
+    const selectedRadio = document.querySelector('input[name="processingType"]:checked');
+    const processBtn = document.getElementById('processBtn');
+    const statusElement = document.getElementById('selectionStatus');
+    const selectionText = document.getElementById('selectionText');
+
+    // Reset all cards to unselected state
+    document.querySelectorAll('.radio-card-content').forEach(card => {
+        card.classList.remove('selected');
+        const indicator = card.querySelector('.selection-indicator');
+        if (indicator) {
+            indicator.style.opacity = '0';
+            indicator.style.transform = 'scale(0.8)';
+        }
+    });
+
+    if (selectedRadio) {
+        // Mark the selected card
+        const selectedCard = selectedRadio.closest('.radio-card').querySelector('.radio-card-content');
+        selectedCard.classList.add('selected');
+
+        // Show check mark
+        const indicator = selectedCard.querySelector('.selection-indicator');
+        if (indicator) {
+            indicator.style.opacity = '1';
+            indicator.style.transform = 'scale(1)';
+        }
+
+        // Update status text
+        const selectedTitle = selectedCard.querySelector('h3').textContent;
+        selectionText.textContent = `✓ ${selectedTitle} Selected`;
+        statusElement.className = 'selection-status selected';
+
+        // Enable process button
+        processBtn.disabled = false;
+
+    } else {
+        // No selection
+        selectionText.textContent = '✗ No Processing Type Selected';
+        statusElement.className = 'selection-status not-selected';
+        processBtn.disabled = true;
+    }
 }
 
 async function handleModelChange(e) {
@@ -211,6 +272,10 @@ async function handleProcess() {
         alert('Please upload a file first');
         return;
     }
+
+    // Record processing start time
+    processingStartTime = new Date();
+    processingEndTime = null; // Reset end time
 
     // Get processing type and model
     const processingType = document.querySelector('input[name="processingType"]:checked').value;
@@ -253,6 +318,9 @@ async function handleProcess() {
             const result = await response.json();
 
             if (result.success) {
+                // Record processing end time and show summary
+                processingEndTime = new Date();
+                showProcessingSummary(result.total_processing_time_ms, [], processingStartTime, processingEndTime);
                 // For non-structured files, download as text
                 downloadText(result.result, `processed-${Date.now()}.txt`);
             } else {
@@ -335,8 +403,11 @@ async function processStructuredFile(file, processingType, customPrompt, model, 
                 // Download the first file (processed Excel/JSON)
                 downloadFile(result.downloads[0].url, result.downloads[0].filename);
 
+                // Record processing end time
+                processingEndTime = new Date();
+
                 // Show processing summary
-                showProcessingSummary(result.total_processing_time_ms / 1000, result.downloads);
+                showProcessingSummary(result.total_processing_time_ms, result.downloads, processingStartTime, processingEndTime);
             } else {
                 clearInterval(currentTimerInterval);
                 eventSource.close();
@@ -453,17 +524,36 @@ async function loadModels() {
 }
 
 // Show processing summary
-function showProcessingSummary(timeSeconds, downloads) {
+function showProcessingSummary(serverTimeMs, downloads, startTime, endTime) {
     const summary = document.getElementById('processingSummary');
     const timeElement = document.getElementById('processingTime');
     const downloadsElement = document.getElementById('summaryDownloads');
 
-    // Format time
-    const timeFormatted = timeSeconds >= 1 ?
-        `${timeSeconds.toFixed(2)} seconds` :
-        `${Math.round(timeSeconds * 1000)} ms`;
+    // Calculate actual processing time from start/end times if available
+    let processingTimeMs = serverTimeMs;
+    let processingTimeText = '';
 
-    timeElement.textContent = `Total processing time: ${timeFormatted}`;
+    if (startTime && endTime) {
+        processingTimeMs = endTime.getTime() - startTime.getTime();
+
+        // Format start and end times
+        const startFormatted = startTime.toLocaleString();
+        const endFormatted = endTime.toLocaleString();
+
+        // Calculate duration
+        const duration = processingTimeMs;
+        const seconds = Math.floor(duration / 1000);
+        const milliseconds = Math.floor(duration % 1000);
+
+        processingTimeText = `${startFormatted} - ${endFormatted}\nDuration: ${seconds}.${milliseconds.toString().padStart(3, '0')} seconds`;
+    } else {
+        // Fallback to server-provided time if client-side timing not available
+        const seconds = Math.floor(processingTimeMs / 1000);
+        const milliseconds = Math.floor(processingTimeMs % 1000);
+        processingTimeText = `Processing time: ${seconds}.${milliseconds.toString().padStart(3, '0')} seconds`;
+    }
+
+    timeElement.textContent = processingTimeText;
 
     // Clear previous downloads
     downloadsElement.innerHTML = '';

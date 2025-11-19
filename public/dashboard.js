@@ -116,8 +116,8 @@ function renderCharts(severityDistribution, moduleDistribution) {
           data: sevCounts,
           backgroundColor: backgroundColors,
           borderColor: borderColors,
-          borderWidth: 1,
-          hoverBorderWidth: 2,
+          borderWidth: 2,
+          hoverBorderWidth: 3,
         }]
       },
       options: {
@@ -127,11 +127,13 @@ function renderCharts(severityDistribution, moduleDistribution) {
           legend: {
             position: 'bottom',
             labels: {
-              padding: 25,
+              padding: 20,
               font: {
-                size: 12,
-                weight: '400'
-              }
+                size: 13,
+                weight: '500'
+              },
+              usePointStyle: true,
+              pointStyle: 'circle'
             }
           },
           tooltip: {
@@ -141,7 +143,16 @@ function renderCharts(severityDistribution, moduleDistribution) {
             borderColor: 'rgba(255, 255, 255, 0.3)',
             borderWidth: 1,
             cornerRadius: 8,
-            displayColors: false,
+            displayColors: true,
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / total) * 100);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         },
         animation: {
@@ -149,7 +160,12 @@ function renderCharts(severityDistribution, moduleDistribution) {
           animateRotate: false,
           duration: 0
         },
-        cutout: '60%', // Make donut have wider hole for better balance
+        cutout: '40%', // Smaller center hole for better data visibility
+        elements: {
+          arc: {
+            borderRadius: 4 // Rounded chart segments
+          }
+        }
       }
     });
   }
@@ -164,20 +180,31 @@ function renderCharts(severityDistribution, moduleDistribution) {
         datasets: [{
           label: 'Issue Count',
           data: modCounts,
-          backgroundColor: 'rgba(186, 85, 211, 0.8)', // Soft lavender
-          borderColor: 'rgba(186, 85, 211, 1)',
+          backgroundColor: modLabels.map((_, i) => `hsl(${(i * 137.5) % 360}, 70%, 60%)`), // Varied colors
+          borderColor: modLabels.map((_, i) => `hsl(${(i * 137.5) % 360}, 80%, 50%)`),
           borderWidth: 1,
-          borderRadius: 6,
+          borderRadius: 4,
           borderSkipped: false,
-          maxBarThickness: 35,
+          maxBarThickness: 30,
+          barThickness: 25,
         }]
       },
       options: {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 10,
+            right: 20,
+            bottom: 10,
+            left: 10
+          }
+        },
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: false // Hide legend for cleaner look
+          },
           tooltip: {
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
             titleColor: '#fff',
@@ -198,19 +225,45 @@ function renderCharts(severityDistribution, moduleDistribution) {
             beginAtZero: true,
             ticks: {
               precision: 0,
-              color: currentTheme === 'dark' ? '#bbb' : '#64748b'
+              color: currentTheme === 'dark' ? '#bbb' : '#64748b',
+              font: {
+                size: 11
+              }
             },
             grid: {
-              color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              drawBorder: false
+            },
+            title: {
+              display: true,
+              text: 'Number of Issues',
+              color: currentTheme === 'dark' ? '#bbb' : '#64748b',
+              font: {
+                size: 12,
+                weight: '600'
+              }
             }
           },
           y: {
             ticks: {
-              color: currentTheme === 'dark' ? '#bbb' : '#64748b'
+              color: currentTheme === 'dark' ? '#bbb' : '#64748b',
+              font: {
+                size: 11
+              },
+              callback: function(value, index) {
+                const label = this.getLabelForValue(index);
+                return label.length > 15 ? label.substring(0, 15) + '...' : label;
+              }
             },
             grid: {
-              color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              drawBorder: false
             }
+          }
+        },
+        elements: {
+          bar: {
+            borderRadius: 4
           }
         },
         animation: {

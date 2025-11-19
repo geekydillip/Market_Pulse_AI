@@ -14,6 +14,64 @@ const app = express();              // <-- IMPORTANT: app must be created BEFORE
 const PORT = process.env.PORT || 3001;
 const DEFAULT_OLLAMA_PORT = 11434;
 
+// Security constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.json'];
+const ALLOWED_MIME_TYPES = [
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+  'application/json',
+  'text/json'
+];
+
+// Input validation middleware
+function validateFileUpload(req, res, next) {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file provided' });
+  }
+
+  // Check file size
+  if (req.file.size > MAX_FILE_SIZE) {
+    // Clean up the uploaded file
+    if (req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    return res.status(400).json({ error: 'File too large. Maximum size is 10MB' });
+  }
+
+  // Check file extension
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  if (!ALLOWED_FILE_TYPES.includes(ext)) {
+    if (req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    return res.status(400).json({ error: 'Invalid file type. Only .xlsx, .xls, and .json files are allowed' });
+  }
+
+  // Check MIME type (basic validation)
+  if (req.file.mimetype && !ALLOWED_MIME_TYPES.includes(req.file.mimetype)) {
+    if (req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    return res.status(400).json({ error: 'Invalid file format' });
+  }
+
+  // Sanitize filename to prevent path traversal
+  req.file.safeFilename = req.file.filename.replace(/[^a-zA-Z0-9._-]/g, '');
+
+  next();
+}
+
+// Input sanitization function
+function sanitizeInput(input) {
+  if (typeof input !== 'string') return input;
+  // Remove any potential script tags and dangerous characters
+  return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+              .replace(/javascript:/gi, '')
+              .replace(/on\w+\s*=/gi, '')
+              .trim();
+}
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -25,25 +83,113 @@ const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/downloads', express.static('downloads'));
 
-// Configure multer for file uploads
+// Configure multer for file uploads with security
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+    // Ensure uploads directory exists
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+    // Generate safe filename
+    const safeName = sanitizeInput(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '');
+    const uniqueName = Date.now() + '-' + safeName;
+    cb(null, uniqueName);
   }
 });
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: MAX_FILE_SIZE },
+  fileFilter: (req, file, cb) => {
+    // Additional MIME type validation
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      return cb(new Error('Invalid file type'), false);
+    }
+    cb(null, true);
+  }
 });
 
 // simple health route (optional)
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 //// ---------------------- BEGIN: Robust Excel read + header detection ----------------------
+
+/**
+ * Shared header normalization utility - eliminates code duplication
+ */
+function normalizeHeaders(rows) {
+  // Map header name variants to canonical names
+  const headerMap = {
+    // Model variants
+    'model no': 'Model No.',
+    'model no.': 'Model No.',
+    'modelno': 'Model No.',
+    'model number': 'Model No.',
+    // Case Code
+    'case code': 'Case Code',
+    'caseno': 'Case Code',
+    'case no': 'Case Code',
+    // S/W Ver variants
+    's/w ver.': 'S/W Ver.',
+    's/w ver': 'S/W Ver.',
+    'sw ver': 'S/W Ver.',
+    'swversion': 'S/W Ver.',
+    // Occurrence stage
+    'occurr. stg.': 'Occurr. Stg.',
+    'occurr stg': 'Occurr. Stg.',
+    'occurrence stage': 'Occurr. Stg.',
+    // Title, Problem, Module, Sub-Module
+    'title': 'Title',
+    'problem': 'Problem',
+    'module': 'Module',
+    'sub-module': 'Sub-Module',
+    'sub module': 'Sub-Module',
+  };
+
+  // canonical columns you expect in the downstream processing
+  const canonicalCols = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.','Module','Sub-Module','Summarized Problem','Severity','Severity Reason'];
+
+  const normalizedRows = rows.map(orig => {
+    const out = {};
+    // Build a reverse map of original header -> canonical (if possible)
+    const keyMap = {}; // rawKey -> canonical
+    Object.keys(orig).forEach(rawKey => {
+      const norm = String(rawKey || '').trim().toLowerCase();
+      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
+      if (mapped) keyMap[rawKey] = mapped;
+      else {
+        // try exact match to canonical
+        for (const c of canonicalCols) {
+          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
+            keyMap[rawKey] = c;
+            break;
+          }
+        }
+      }
+    });
+    // Fill canonical fields
+    for (const tgt of canonicalCols) {
+      // find a source raw key that maps to this tgt
+      let found = null;
+      for (const rawKey of Object.keys(orig)) {
+        if (keyMap[rawKey] === tgt) {
+          found = orig[rawKey];
+          break;
+        }
+      }
+      // also if tgt exists exactly as a raw header name, use it
+      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
+      out[tgt] = (found !== undefined && found !== null) ? found : '';
+    }
+    return out;
+  });
+
+  return normalizedRows;
+}
 
 function readAndNormalizeExcel(uploadedPath) {
   const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
@@ -88,146 +234,13 @@ function readAndNormalizeExcel(uploadedPath) {
     return obj;
   });
 
-  // Map header name variants to canonical names
-  // Add any other variants you see in your files here
-  const headerMap = {
-    // Model variants
-    'model no': 'Model No.',
-    'model no.': 'Model No.',
-    'modelno': 'Model No.',
-    'model number': 'Model No.',
-    // Case Code
-    'case code': 'Case Code',
-    'caseno': 'Case Code',
-    'case no': 'Case Code',
-    // S/W Ver variants
-    's/w ver.': 'S/W Ver.',
-    's/w ver': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'swversion': 'S/W Ver.',
-    // Occurrence stage
-    'occurr. stg.': 'Occurr. Stg.',
-    'occurr stg': 'Occurr. Stg.',
-    'occurrence stage': 'Occurr. Stg.',
-    // Title, Problem, Module, Sub-Module
-    'title': 'Title',
-    'problem': 'Problem',
-    'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'sub module': 'Sub-Module',
-  };
-
-  // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.','Module','Sub-Module','Summarized Problem','Severity','Severity Reason'];
-
-  // For each row, build an object with canonical keys, trying to find matches from raw headers via headerMap
-  const normalizedRows = rows.map(orig => {
-    const out = {};
-    // Build a reverse map of original header -> canonical (if possible)
-    const keyMap = {}; // rawKey -> canonical
-    Object.keys(orig).forEach(rawKey => {
-      const norm = String(rawKey || '').trim().toLowerCase();
-      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
-      if (mapped) keyMap[rawKey] = mapped;
-      else {
-        // try exact match to canonical
-        for (const c of canonicalCols) {
-          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
-            keyMap[rawKey] = c;
-            break;
-          }
-        }
-      }
-    });
-    // Fill canonical fields
-    for (const tgt of canonicalCols) {
-      // find a source raw key that maps to this tgt
-      let found = null;
-      for (const rawKey of Object.keys(orig)) {
-        if (keyMap[rawKey] === tgt) {
-          found = orig[rawKey];
-          break;
-        }
-      }
-      // also if tgt exists exactly as a raw header name, use it
-      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
-      out[tgt] = (found !== undefined && found !== null) ? found : '';
-    }
-    return out;
-  });
-
-  return normalizedRows;
+  // Use shared normalization function
+  return normalizeHeaders(rows);
 }
 
-// normalizeRows - reusable function to normalize row objects with header mappings
+// normalizeRows - now just calls the shared function
 function normalizeRows(rows) {
-  // Map header name variants to canonical names (same mapping as in readAndNormalizeExcel)
-  const headerMap = {
-    // Model variants
-    'model no': 'Model No.',
-    'model no.': 'Model No.',
-    'modelno': 'Model No.',
-    'model number': 'Model No.',
-    // Case Code
-    'case code': 'Case Code',
-    'caseno': 'Case Code',
-    'case no': 'Case Code',
-    // S/W Ver variants
-    's/w ver.': 'S/W Ver.',
-    's/w ver': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'swversion': 'S/W Ver.',
-    // Occurrence stage
-    'occurr. stg.': 'Occurr. Stg.',
-    'occurr stg': 'Occurr. Stg.',
-    'occurrence stage': 'Occurr. Stg.',
-    // Title, Problem, Module, Sub-Module
-    'title': 'Title',
-    'problem': 'Problem',
-    'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'sub module': 'Sub-Module',
-  };
-
-  // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.','Module','Sub-Module','Summarized Problem','Severity','Severity Reason'];
-
-  const normalizedRows = rows.map(orig => {
-    const out = {};
-    // Build a reverse map of original header -> canonical (if possible)
-    const keyMap = {}; // rawKey -> canonical
-    Object.keys(orig).forEach(rawKey => {
-      const norm = String(rawKey || '').trim().toLowerCase();
-      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
-      if (mapped) keyMap[rawKey] = mapped;
-      else {
-        // try exact match to canonical
-        for (const c of canonicalCols) {
-          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
-            keyMap[rawKey] = c;
-            break;
-          }
-        }
-      }
-    });
-    // Fill canonical fields
-    for (const tgt of canonicalCols) {
-      // find a source raw key that maps to this tgt
-      let found = null;
-      for (const rawKey of Object.keys(orig)) {
-        if (keyMap[rawKey] === tgt) {
-          found = orig[rawKey];
-          break;
-        }
-      }
-      // also if tgt exists exactly as a raw header name, use it
-      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
-      out[tgt] = (found !== undefined && found !== null) ? found : '';
-    }
-    return out;
-  });
-
-  return normalizedRows;
+  return normalizeHeaders(rows);
 }
 
 // Cache for identical prompts
@@ -350,14 +363,17 @@ async function callOllama(prompt, model = 'gemma3:4b', opts = {}) {
 // Route removed - only processing structured files (Excel/JSON)
 
 // Route: Upload and process file (Excel or JSON only)
-app.post('/api/process', upload.single('file'), async (req, res) => {
+app.post('/api/process', upload.single('file'), validateFileUpload, async (req, res) => {
   try {
-    const processingType = req.body.processingType || 'voc'; // Default to VOC processing
-    const customPrompt = req.body.customPrompt || '';
-    const model = req.body.model || 'gemma3:4b';
+    // Sanitize input parameters to prevent injection
+    const processingType = sanitizeInput(req.body.processingType || 'voc');
+    const customPrompt = sanitizeInput(req.body.customPrompt || '');
+    const model = sanitizeInput(req.body.model || 'gemma3:4b');
 
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file provided' });
+    // Validate processing type
+    const validProcessingTypes = ['voc', 'custom', 'clean'];
+    if (!validProcessingTypes.includes(processingType)) {
+      return res.status(400).json({ error: 'Invalid processing type' });
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();

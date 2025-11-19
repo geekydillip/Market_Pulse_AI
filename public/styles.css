@@ -492,22 +492,119 @@ section {
 }
 
 .radio-card-content {
-    padding: 20px;
+    padding: 24px 20px;
     background: rgba(255, 255, 255, 0.03);
     border: 2px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 16px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 4px 8px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
 }
 
 .radio-card:hover .radio-card-content {
     background: rgba(255, 255, 255, 0.05);
+    box-shadow: 6px 6px 16px rgba(0,0,0,0.15);
     transform: translateY(-2px);
 }
 
 .radio-card input[type="radio"]:checked + .radio-card-content {
-    background: rgba(102, 126, 234, 0.1);
-    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: rgba(102, 126, 234, 0.8);
+    box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.1), 0 0 20px rgba(102, 126, 234, 0.4);
+    transform: scale(1.03);
+}
+
+.radio-card input[type="radio"]:checked + .radio-card-content .card-icon {
+    color: #4ade80;
+    transform: scale(1.1);
+}
+
+.radio-card input[type="radio"]:checked + .radio-card-content .selection-indicator {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.selection-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 20px;
+    color: #4ade80;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+/* Add this for unselected cards to have visible indicators */
+.radio-card-content .selection-indicator::before {
+    content: "○";
+}
+
+.radio-card input[type="radio"]:checked + .radio-card-content .selection-indicator::before {
+    content: "✓";
+}
+
+/* Selection Status Indicator */
+.selection-status {
+    text-align: center;
+    margin: 20px 0;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.selection-status.not-selected {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+    border: 2px solid rgba(220, 38, 38, 0.2);
+}
+
+.selection-status.selected {
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.1);
+    border: 2px solid rgba(22, 163, 74, 0.2);
+}
+
+/* Progress Bar Light Theme Overrides */
+.theme-light .progress-container {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border: 2px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 4px 4px 8px rgba(163,177,198,0.6) !important;
+}
+
+.theme-light .progress-fill {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed, #06b6d4) !important;
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.4) !important;
+}
+
+.theme-light .progress-text {
+    color: #1a202c !important;
+}
+
+/* Dark theme progress bar styles */
+.theme-dark .progress-container {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.theme-dark .progress-bar {
+    background: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.theme-dark .progress-fill {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) !important;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.5) !important;
+}
+
+.theme-dark .progress-text {
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .card-icon {
@@ -1000,6 +1097,8 @@ section {
     }
 }
 
+
+
 /* Animations */
 @keyframes fadeIn {
     from {
@@ -1014,6 +1113,24 @@ section {
 
 section {
     animation: fadeIn 0.5s ease;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.result-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.result-actions .btn-action {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
 }
 
 /* Success/Error Messages */
@@ -1329,6 +1446,7 @@ body.theme-dark, body.theme-dark html {
 .theme-light .model-selector label,
 .theme-light .radio-card-content h3,
 .theme-light .radio-card-content p,
+.theme-light .radio-card-content .small-dashboard-btn,
 .theme-light .processing-summary .summary-content h3,
 .theme-light .summary-time,
 .theme-light .message {
@@ -1394,6 +1512,66 @@ body.theme-dark, body.theme-dark html {
 .theme-dark .modal-table thead th,
 .theme-dark .modal-table tbody td {
   color: #e6eefc !important;
+}
+
+/* Dark theme model selector dropdown fixes */
+.theme-dark .model-select {
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    background: linear-gradient(135deg, rgba(25,20,44,0.9), rgba(18,14,36,0.9)) !important;
+    color: #e6eefc !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.theme-dark .model-select:focus {
+    border-color: rgba(99, 102, 241, 0.6) !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2), 0 4px 16px rgba(139, 92, 246, 0.3) !important;
+    background: linear-gradient(135deg, rgba(30,25,49,0.95), rgba(23,19,41,0.95)) !important;
+}
+
+.theme-dark .model-select:hover {
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 6px 20px rgba(139, 92, 246, 0.2) !important;
+}
+
+/* Critical fix: Ensure dropdown options are visible in dark mode */
+.theme-dark .model-select option {
+    background: linear-gradient(180deg, rgba(25,20,44,0.95), rgba(20,16,40,0.95)) !important; /* Match page card background */
+    color: #e6eefc !important; /* Match page text color - same as --text */
+    padding: 12px 16px !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.theme-dark .model-select option:hover {
+    background: linear-gradient(180deg, rgba(35,28,52,0.98), rgba(28,22,46,0.98)) !important; /* Slightly lighter hover */
+    color: #e6eefc !important; /* Maintain consistent text color */
+}
+
+.theme-dark .model-select option:checked,
+.theme-dark .model-select option:selected {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6)) !important; /* Softer blue for better contrast */
+    color: #e6eefc !important; /* Keep text color consistent */
+    font-weight: 600 !important;
+}
+
+/* Add webkit-specific prefix for better browser support */
+.theme-dark .model-select::-webkit-scrollbar {
+    width: 8px;
+}
+
+.theme-dark .model-select::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.theme-dark .model-select::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.theme-dark .model-select::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 
 @media (max-width:900px){

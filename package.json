@@ -1,20 +1,40 @@
 {
   "name": "ollama-web-processor",
   "version": "1.0.0",
-  "description": "Professional web interface for processing data with Ollama Qwen 3:8b",
+  "description": "Professional web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js --dev",
+    "test": "echo \"No tests specified\"",
+    "lint": "echo \"No linting configured\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geekydillip/Beta_UserData_Clean.git"
+  },
+  "homepage": "https://github.com/geekydillip/Beta_UserData_Clean#readme",
+  "bugs": {
+    "url": "https://github.com/geekydillip/Beta_UserData_Clean/issues"
   },
   "keywords": [
     "ollama",
     "qwen",
+    "gemma",
     "ai",
-    "file-processor"
+    "machine-learning",
+    "data-processing",
+    "voice-of-customer",
+    "voc-analysis",
+    "excel-processing",
+    "json-to-excel"
   ],
-  "author": "",
+  "author": "GeekyDillip",
   "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "exceljs": "^4.4.0",
@@ -22,5 +42,9 @@
     "multer": "^1.4.5-lts.1",
     "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.2.0"
-  }
+  },
+  "devDependencies": {},
+  "preferGlobal": false,
+  "private": false,
+  "contributors": []
 }
