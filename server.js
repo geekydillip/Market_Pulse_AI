@@ -243,6 +243,17 @@ function normalizeRows(rows) {
   return normalizeHeaders(rows);
 }
 
+// Mapping of frontend processingType to processor filenames
+const processorMap = {
+  'voc': 'betaIssues',
+  'qings': 'qings',
+  'qi': 'qualityIndex',
+  'blogger_issues': 'blogger',
+  'samsung_members': 'samsungMembers',
+  'plm_issues': 'plm',
+  'custom': 'customProcessor'
+};
+
 // Cache for identical prompts
 const aiCache = new Map();
 
@@ -371,7 +382,7 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     const model = sanitizeInput(req.body.model || 'gemma3:4b');
 
     // Validate processing type
-    const validProcessingTypes = ['voc', 'custom', 'clean'];
+    const validProcessingTypes = ['voc', 'qings', 'qi', 'blogger_issues', 'samsung_members', 'plm_issues', 'custom', 'clean'];
     if (!validProcessingTypes.includes(processingType)) {
       return res.status(400).json({ error: 'Invalid processing type' });
     }
@@ -429,11 +440,11 @@ const progressClients = new Map();
 // Process a single chunk
 async function processChunk(chunk, processingType, customPrompt, model, chunkId) {
   const startTime = Date.now();
-  try {
-    let processedRows;
+  let processedRows = null;
 
+  try {
+    // Handle clean processing separately
     if (processingType === 'clean') {
-      // Apply generic cleaning
       processedRows = chunk.rows.map(row => {
         const cleanedRow = {};
         for (const [key, value] of Object.entries(row)) {
@@ -441,135 +452,84 @@ async function processChunk(chunk, processingType, customPrompt, model, chunkId)
         }
         return cleanedRow;
       });
-    } else if (processingType === 'voc') {
-      // VOC processing using AI with specific data-cleaning prompt
-      const vocPrompt = `You are an assistant for cleaning and structuring "Voice of Customer" issue reports.
 
-For each row:
-1. Merge & Clean → Combine Title + Problem into one clear English sentence. Remove IDs, tags, usernames, timestamps, anything in [ ... ], non-English text, duplicates, and internal notes.
-2. Module → Identify product module from Title (e.g., Lock Screen, Camera, Battery, Network, Display, Settings, etc.).
-3. Sub-Module → The functional element affected (e.g., Now bar not working on Lock Screen → Module: Now bar, Sub-Module: Lock Screen).
-4. Summarized Problem → One clean sentence describing the actual issue.
-5. Severity:
-   - Critical: device unusable / crashes / freezing / data loss.
-   - High: major function not working.
-   - Medium: partial malfunction or intermittent failure.
-   - Low: minor UI issue or cosmetic/suggestion.
-6. Severity Reason → One sentence explaining the chosen severity.
+      return {
+        chunkId,
+        processedRows,
+        status: 'ok',
+        processingTime: Date.now() - startTime
+      };
+    }
 
-Rules:
-- Ignore all content inside brackets [ ... ].
-- Output must be only English.
-- Avoid duplicated wording when merging.
-- No internal diagnostic notes.
-- Preserve input row order.
+    // Dynamic processor loading for AI-based processing
+    const processorName = processorMap[processingType];
+    if (!processorName) {
+      return {
+        chunkId,
+        processedRows: chunk.rows.map((row) => ({ ...row, error: `Unknown processing type: ${processingType}` })),
+        status: 'failed',
+        processingTime: Date.now() - startTime,
+        error: `Unknown processing type: ${processingType}`
+      };
+    }
 
-Output:
-Return a **single valid JSON array**.
-Each object must contain EXACTLY these keys in this order:
+    let processor;
+    try {
+      processor = require(`./processors/${processorName}`);
+    } catch (err) {
+      return {
+        chunkId,
+        processedRows: chunk.rows.map((row) => ({ ...row, error: `Failed to load processor: ${err.message}` })),
+        status: 'failed',
+        processingTime: Date.now() - startTime,
+        error: err.message
+      };
+    }
 
-Case Code,
-Model No.,
-Title,
-Problem,
-Module,
-Sub-Module,
-Summarized Problem,
-Severity,
-Severity Reason
+    // Validate headers if processor supports it
+    if (processor.validateHeaders && !processor.validateHeaders(chunk.headers)) {
+      return {
+        chunkId,
+        processedRows: chunk.rows.map((row) => ({ ...row, error: 'Invalid data format for processing' })),
+        status: 'failed',
+        processingTime: Date.now() - startTime,
+        error: 'Invalid data format for processing'
+      };
+    }
 
-Input Data:
-${JSON.stringify(chunk.rows, null, 2)}
+    // Transform data if needed
+    const transformedRows = processor.transform ? processor.transform(chunk.rows) : chunk.rows;
 
-Return only the JSON array.`;
+    // Build prompt
+    const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows, customPrompt) : (customPrompt || JSON.stringify(transformedRows).slice(0, 1000));
 
-      // Send to AI for processing
-      const result = await callOllamaCached(vocPrompt, model, { timeoutMs: false });
-      const text = result.trim();
-      const firstBracket = text.indexOf('[');
-      const lastBracket = text.lastIndexOf(']');
-      if (firstBracket !== -1 && lastBracket > firstBracket) {
-        const jsonStr = text.substring(firstBracket, lastBracket + 1);
-        const parsed = JSON.parse(jsonStr);
-        if (Array.isArray(parsed) && parsed.length === chunk.rows.length) {
-          processedRows = parsed.map((row, idx) => {
-            // Ensure all required keys are present, fill with defaults if missing
-            // Include both VOC-specific keys and original data columns we want to preserve
-            const requiredKeys = ['Case Code', 'Model No.', 'S/W Ver.', 'Occurr. Stg.', 'Title', 'Problem', 'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'];
-            const processedRow = {};
-            requiredKeys.forEach(key => {
-              processedRow[key] = row[key] !== undefined ? row[key] : chunk.rows[idx][key] || ''; // fallback to original
-            });
-            return processedRow;
-          });
-        } else if (Array.isArray(parsed) && parsed.length === 0) {
-          // AI returned empty array, likely unable to process the row
-          // Create processedRows with original data, leaving new columns empty
-          processedRows = chunk.rows.map((row, idx) => {
-            const processedRow = {};
-            const requiredKeys = ['Case Code', 'Model No.', 'S/W Ver.', 'Occurr. Stg.', 'Title', 'Problem', 'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'];
-            requiredKeys.forEach(key => {
-              processedRow[key] = row[key] || ''; // Use original value directly
-            });
-            return processedRow;
-          });
-        } else {
-          throw new Error(`Invalid response: expected array of ${chunk.rows.length} objects, got ${JSON.stringify(parsed).slice(0, 200)}`);
-        }
-      } else {
-        throw new Error('No valid JSON array found in response: ' + text.slice(0, 500));
+    // Call AI (cached)
+    const result = await callOllamaCached(prompt, model, { timeoutMs: false });
+
+    // Format response
+    try {
+      processedRows = processor.formatResponse ? processor.formatResponse(result) : (typeof result === 'string' ? JSON.parse(result) : result);
+    } catch (err) {
+      // If formatting/parsing failed, return error per row
+      return {
+        chunkId,
+        processedRows: chunk.rows.map((row) => ({ ...row, error: `Failed to parse processor result: ${err.message}` })),
+        status: 'failed',
+        processingTime: Date.now() - startTime,
+        error: err.message
+      };
+    }
+
+    // Special handling for summary container response
+    let _plmFormat = false;
+    try {
+      const { isSummaryContainer } = require('./processors/_helpers');
+      if (isSummaryContainer(processedRows)) {
+        _plmFormat = true;
+        processedRows = processedRows.data || [];
       }
-    } else {
-      // Custom processing: send to AI for processing
-      const prompt = `${customPrompt}\n\nProcess this chunk of data and return the transformed rows in the following format. The output should be a JSON object with exactly this structure:
-{
-  "processed_rows": [
-    { /* cleaned/transformed row 1 */ },
-    { /* cleaned/transformed row 2 or null */ }
-  ],
-  "status": "ok"
-}
-
-Chunk Data:
-${JSON.stringify(chunk, null, 2)}
-
-Return only the JSON object.`;
-
-      let attempt = 0;
-      let lastError = null;
-
-      while (attempt < 2) { // Up to 1 retry
-        try {
-          const result = await callOllamaCached(prompt, model, { timeoutMs: false });
-          const text = result.trim();
-          const firstBrace = text.indexOf('{');
-          const lastBrace = text.lastIndexOf('}');
-          if (firstBrace !== -1 && lastBrace > firstBrace) {
-            const jsonStr = text.substring(firstBrace, lastBrace + 1);
-            const parsed = JSON.parse(jsonStr);
-            if (parsed.processed_rows && Array.isArray(parsed.processed_rows) && parsed.status === 'ok') {
-              if (parsed.processed_rows.length === chunk.rows.length) {
-                processedRows = parsed.processed_rows;
-                break;
-              } else {
-                throw new Error(`Invalid number of processed rows: expected ${chunk.rows.length}, got ${parsed.processed_rows.length}`);
-              }
-            } else {
-              throw new Error('Invalid response structure');
-            }
-          } else {
-            throw new Error('No valid JSON object found in response');
-          }
-        } catch (error) {
-          lastError = error;
-          attempt++;
-        }
-      }
-
-      if (lastError && !processedRows) {
-        // If failed after retry, mark with error
-        processedRows = chunk.rows.map((row, i) => ({ ...row, error: lastError.message || 'Processing failed' }));
-      }
+    } catch (e) {
+      // ignore if helpers not present
     }
 
     return {
@@ -577,12 +537,12 @@ Return only the JSON object.`;
       processedRows,
       status: processedRows ? 'ok' : 'failed',
       processingTime: Date.now() - startTime,
-      error: processedRows ? null : lastError?.message
+      _plmFormat
     };
   } catch (error) {
     return {
       chunkId,
-      processedRows: chunk.rows.map((row, i) => ({ ...row, error: error.message || 'Processing failed' })),
+      processedRows: chunk.rows.map((row) => ({ ...row, error: error.message || 'Processing failed' })),
       status: 'failed',
       processingTime: Date.now() - startTime,
       error: error.message
@@ -605,7 +565,9 @@ async function processJSON(req, res) {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-    const sanitizedModel = req.body.model.replace(/[^a-zA-Z0-9]/g, '_');
+
+    const modelRaw = (req.body.model || '').toString();
+    const sanitizedModel = modelRaw.replace(/[^a-zA-Z0-9]/g, '_');
     const processedJSONFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.json`;
     const logFilename = `${fileNameBase}_log.json`;
 
@@ -615,12 +577,16 @@ async function processJSON(req, res) {
     try {
       rows = JSON.parse(fileContent);
       if (!Array.isArray(rows)) {
+        // clean up uploaded file
+        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
         return res.status(400).json({ error: 'JSON file must contain an array of objects' });
       }
       if (rows.length === 0 || typeof rows[0] !== 'object') {
+        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
         return res.status(400).json({ error: 'JSON file must contain an array of non-empty objects' });
       }
     } catch (parseError) {
+      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
       return res.status(400).json({ error: 'Invalid JSON format: ' + parseError.message });
     }
 
@@ -638,10 +604,8 @@ async function processJSON(req, res) {
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
-    // Adaptive chunk size (replace existing fixed chunkSize)
     const ROWSCOUNT = rows.length || 0;
 
-    // If VOC strict per-row analysis required, use 1 row per chunk, but batch when file > threshold
     let chunkSize;
     if (processingType === 'voc') {
       chunkSize = ROWSCOUNT <= 50 ? 1
@@ -669,11 +633,16 @@ async function processJSON(req, res) {
       const startIdx = i * chunkSize;
       const endIdx = Math.min(startIdx + chunkSize, rows.length);
       const chunkRows = rows.slice(startIdx, endIdx);
-      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx-1], headers, rows: chunkRows };
+      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
         const result = await processChunk(chunk, processingType, customPrompt, model, i);
         // send per-chunk progress update
-        sendProgress(sessionId, { type: 'progress', percent: Math.round((i+1)/numberOfChunks*100), message: `Processed chunk ${i+1}/${numberOfChunks}`, chunkId: i });
+        sendProgress(sessionId, {
+          type: 'progress',
+          percent: Math.round((i + 1) / numberOfChunks * 100),
+          message: `Processed chunk ${i + 1}/${numberOfChunks}`,
+          chunkId: i
+        });
         return result;
       });
     }
@@ -686,22 +655,21 @@ async function processJSON(req, res) {
     const addedColumns = new Set();
 
     chunkResults.forEach(result => {
-      if (result.status === 'ok') {
+      if (!result) return;
+      if (result.status === 'ok' && Array.isArray(result.processedRows)) {
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = result.chunkId * chunkSize + idx;
+          const originalIdx = (result.chunkId * chunkSize) + idx;
           allProcessedRows[originalIdx] = row;
-          Object.keys(row).forEach(col => {
+          Object.keys(row || {}).forEach(col => {
             if (!headers.includes(col)) addedColumns.add(col);
           });
         });
-      } else {
-        // For failed chunks, still include rows with error
+      } else if (Array.isArray(result.processedRows)) {
+        // include failed chunk rows (they may contain error fields)
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = result.chunkId * chunkSize + idx;
+          const originalIdx = (result.chunkId * chunkSize) + idx;
           allProcessedRows[originalIdx] = row;
-          if (row.error) {
-            addedColumns.add('error');
-          }
+          if (row && row.error) addedColumns.add('error');
         });
       }
     });
@@ -709,12 +677,12 @@ async function processJSON(req, res) {
     // Filter out null entries if any (though shouldn't have)
     const finalRows = allProcessedRows.filter(row => row != null);
 
-    // Generate log
+    // Generate log (defensive)
     const failedRows = [];
-    chunkResults.forEach(cr => {
-      cr.processedRows.forEach((row, idx) => {
-        if (row.error) {
-          const originalIdx = cr.chunkId * chunkSize + idx;
+    (chunkResults || []).forEach(cr => {
+      (cr.processedRows || []).forEach((row, idx) => {
+        if (row && row.error) {
+          const originalIdx = (cr.chunkId * chunkSize) + idx;
           failedRows.push({
             row_index: originalIdx,
             chunk_id: cr.chunkId,
@@ -732,7 +700,7 @@ async function processJSON(req, res) {
       number_of_output_rows: finalRows.length,
       failed_row_details: failedRows,
       added_columns: Array.from(addedColumns),
-      chunks_processing_time: chunkResults.map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
+      chunks_processing_time: (chunkResults || []).map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
     };
 
     if (processingType === 'clean') {
@@ -745,26 +713,36 @@ async function processJSON(req, res) {
     const processedPath = path.join('downloads', processedJSONFilename);
     const logPath = path.join('downloads', logFilename);
 
+    // Ensure downloads directory exists
+    const dlDir = path.join(__dirname, 'downloads');
+    if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
+
     fs.writeFileSync(processedPath, JSON.stringify(finalRows, null, 2));
     fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
 
-    fs.unlinkSync(uploadedPath);
+    // Clean up uploaded file
+    try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
 
     res.json({
       success: true,
-      total_processing_time_ms: Date.now(),
+      total_processing_time_ms: Date.now() - tStart,
       processedRows: finalRows,
-      downloads: [{ url: `/downloads/${processedJSONFilename}`, filename: processedJSONFilename },
-                  { url: `/downloads/${logFilename}`, filename: logFilename }]
+      downloads: [
+        { url: `/downloads/${processedJSONFilename}`, filename: processedJSONFilename },
+        { url: `/downloads/${logFilename}`, filename: logFilename }
+      ]
     });
   } catch (error) {
     console.error('JSON processing error:', error);
+    // Attempt to remove uploaded file on unexpected error
+    try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
     res.status(500).json({
       success: false,
       error: error.message || 'Processing failed'
     });
   }
 }
+
 
 // Progress SSE endpoint
 app.get('/api/progress/:sessionId', (req, res) => {
@@ -819,12 +797,14 @@ async function processExcel(req, res) {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-    const sanitizedModel = req.body.model.replace(/[^a-zA-Z0-9]/g, '_');
+
+    const modelRaw = (req.body.model || '').toString();
+    const sanitizedModel = modelRaw.replace(/[^a-zA-Z0-9]/g, '_');
     const processedExcelFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.xlsx`;
     const logFilename = `${fileNameBase}_log.json`;
 
     // Use the robust Excel reading function
-    let rows = readAndNormalizeExcel(uploadedPath);
+    let rows = readAndNormalizeExcel(uploadedPath) || [];
 
     // Sanity check: verify we have meaningful rows with Title/Problem data
     const meaningful = rows.filter(r => String(r['Title']||'').trim() !== '' || String(r['Problem']||'').trim() !== '');
@@ -844,7 +824,6 @@ async function processExcel(req, res) {
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
-    // Adaptive chunk size (replace existing fixed chunkSize)
     const ROWSCOUNT = rows.length || 0;
 
     // If VOC strict per-row analysis required, use 1 row per chunk, but batch when file > threshold
@@ -885,29 +864,28 @@ async function processExcel(req, res) {
     }
 
     // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4);
+    const chunkResults = await runTasksWithLimit(tasks, 4) || [];
 
     // Process results
     const allProcessedRows = [];
     const addedColumns = new Set();
 
-    chunkResults.forEach(result => {
-      if (result.status === 'ok') {
+    (chunkResults || []).forEach(result => {
+      if (!result) return;
+      if (result.status === 'ok' && Array.isArray(result.processedRows)) {
         result.processedRows.forEach((row, idx) => {
           const originalIdx = result.chunkId * chunkSize + idx;
           allProcessedRows[originalIdx] = row;
-          Object.keys(row).forEach(col => {
+          Object.keys(row || {}).forEach(col => {
             if (!headers.includes(col)) addedColumns.add(col);
           });
         });
-      } else {
+      } else if (Array.isArray(result.processedRows)) {
         // For failed chunks, still include rows with error
         result.processedRows.forEach((row, idx) => {
           const originalIdx = result.chunkId * chunkSize + idx;
           allProcessedRows[originalIdx] = row;
-          if (row.error) {
-            addedColumns.add('error');
-          }
+          if (row && row.error) addedColumns.add('error');
         });
       }
     });
@@ -925,7 +903,7 @@ async function processExcel(req, res) {
     const schemaMergedRows = finalRows.map(row => {
       const mergedRow = {};
       for (const header of finalHeaders) {
-        mergedRow[header] = row[header] === undefined ? null : row[header];
+        mergedRow[header] = row && Object.prototype.hasOwnProperty.call(row, header) ? row[header] : null;
       }
       return mergedRow;
     });
@@ -936,26 +914,21 @@ async function processExcel(req, res) {
     xlsx.utils.book_append_sheet(newWb, newSheet, 'Data');
 
     // Add error column if there were failures
-    const hasErrors = chunkResults.some(cr => cr.status === 'failed' || chunkResults.some(cr => cr.processedRows.some(r => r.error)));
+    const hasErrors = (chunkResults || []).some(cr => cr && (cr.status === 'failed' || (Array.isArray(cr.processedRows) && cr.processedRows.some(r => r && r.error))));
     if (hasErrors && !finalHeaders.includes('error')) {
       finalHeaders.push('error');
     }
 
     // === Apply Column Widths ===
-    newSheet['!cols'] = [
-        { wch: 15 },  // Case Code
-        { wch: 15 },  // Occurr. Stg.
-        { wch: 41 },  // Title
-        { wch: 41 },  // Problem
-        { wch: 20 },  // Model No.
-        { wch: 15 },  // S/W Ver.
-        { wch: 15 },  // Module
-        { wch: 15 },  // Sub-Module (added column)
-        { wch: 41 },  // Summarized Problem
-        { wch: 15 },  // Severity
-        { wch: 41 },  // Severity Reason
-        { wch: 15 }   // error (if added)
-    ];
+    newSheet['!cols'] = finalHeaders.map((h, idx) => {
+      if (['Case Code','Occurr. Stg.'].includes(h)) return { wch: 15 };
+      if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
+      if (h === 'Model No.') return { wch: 20 };
+      if (h === 'S/W Ver.') return { wch: 15 };
+      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
+      if (h === 'error') return { wch: 15 };
+      return { wch: 20 };
+    });
 
     // === Apply Cell Styles (fonts, alignment, borders) ===
     const dataRows = schemaMergedRows.length;
@@ -966,58 +939,56 @@ async function processExcel(req, res) {
     // Case Code (0), Model (1), Grade (2), S/W Ver. (3), Severity (7) are centered
 
     Object.keys(newSheet).forEach((cellKey) => {
-        if (cellKey[0] === '!') return;
+      if (cellKey[0] === '!') return;
 
-        const colMatch = cellKey.match(/([A-Z]+)(\d+)/);
-        if (!colMatch) return;
+      // decode single cell like "A1"
+      const cellRef = xlsx.utils.decode_cell(cellKey);
+      const col = cellRef.c; // zero-based column index
+      const row = cellRef.r; // zero-based row index
 
-        const col = xlsx.utils.decode_range(cellKey).c; // column index
-        const row = xlsx.utils.decode_range(cellKey).r; // row index
+      let cellStyle = {
+        alignment: { vertical: "center", wrapText: true },
+        font: {
+          name: "Arial",
+          sz: 10,
+          color: { rgb: row === 0 ? "FFFFFF" : "000000" } // header row white, data black
+        }
+      };
 
-        let cellStyle = {
-            alignment: { vertical: "center", wrapText: true },
-            font: {
-                name: "Arial",
-                sz: 10,
-                color: { rgb: colMatch[2] === '1' ? "FFFFFF" : "000000" } // header white, data black
-            }
-        };
-
-        // Set horizontal alignment
-        if (row === 0) {
-            // Header row - always center
-            cellStyle.alignment.horizontal = "center";
+      if (row === 0) {
+        // Header row - always center
+        cellStyle.alignment.horizontal = "center";
+      } else {
+        // Data rows - center specific columns, left for others
+        if (centerAlignColumns.includes(col)) {
+          cellStyle.alignment.horizontal = "center";
         } else {
-            // Data rows - center specific columns, left for others
-            if (centerAlignColumns.includes(col)) {
-                cellStyle.alignment.horizontal = "center";
-            } else {
-                cellStyle.alignment.horizontal = "left";
-            }
+          cellStyle.alignment.horizontal = "left";
         }
+      }
 
-        // Add borders to data area only (not headers)
-        if (row > 0 && row <= dataRows) {
-            cellStyle.border = {
-                top: { style: "thin", color: { rgb: "CCCCCC" } },
-                bottom: { style: "thin", color: { rgb: "CCCCCC" } },
-                left: { style: "thin", color: { rgb: "CCCCCC" } },
-                right: { style: "thin", color: { rgb: "CCCCCC" } }
-            };
-        }
+      if (row > 0 && row <= dataRows) {
+        cellStyle.border = {
+          top: { style: "thin", color: { rgb: "CCCCCC" } },
+          bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+          left: { style: "thin", color: { rgb: "CCCCCC" } },
+          right: { style: "thin", color: { rgb: "CCCCCC" } }
+        };
+      }
 
-        newSheet[cellKey].s = cellStyle;
+      // Assign style back
+      if (newSheet[cellKey]) newSheet[cellKey].s = cellStyle;
     });
 
     // === Apply Header Styling ===
     finalHeaders.forEach((header, index) => {
-        const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
-        if (!newSheet[cellAddress]) return;
-        newSheet[cellAddress].s = {
-            fill: { patternType: "solid", fgColor: { rgb: "1E90FF" } },
-            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
-            alignment: { horizontal: "center", vertical: "center", wrapText: true }
-        };
+      const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
+      if (!newSheet[cellAddress]) return;
+      newSheet[cellAddress].s = {
+        fill: { patternType: "solid", fgColor: { rgb: "1E90FF" } },
+        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true }
+      };
     });
 
     const buf = xlsx.write(newWb, { bookType: 'xlsx', type: 'buffer' });
@@ -1029,9 +1000,9 @@ async function processExcel(req, res) {
 
     // Generate log
     const failedRows = [];
-    chunkResults.forEach(cr => {
-      cr.processedRows.forEach((row, idx) => {
-        if (row.error) {
+    (chunkResults || []).forEach(cr => {
+      (cr && cr.processedRows || []).forEach((row, idx) => {
+        if (row && row.error) {
           const originalIdx = cr.chunkId * chunkSize + idx;
           failedRows.push({
             row_index: originalIdx,
@@ -1050,7 +1021,7 @@ async function processExcel(req, res) {
       number_of_output_rows: schemaMergedRows.length,
       failed_row_details: failedRows,
       added_columns: Array.from(addedColumns),
-      chunks_processing_time: chunkResults.map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
+      chunks_processing_time: (chunkResults || []).map(cr => ({ chunk_id: cr && cr.chunkId, time_ms: cr && cr.processingTime }))
     };
 
     if (processingType === 'clean') {
@@ -1060,23 +1031,27 @@ async function processExcel(req, res) {
     }
 
     // Save files
-    const processedPath = path.join('downloads', processedExcelFilename);
-    const logPath = path.join('downloads', logFilename);
+    const dlDir = path.join(__dirname, 'downloads');
+    if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
+
+    const processedPath = path.join(dlDir, processedExcelFilename);
+    const logPath = path.join(dlDir, logFilename);
 
     fs.writeFileSync(processedPath, buf);
     fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
 
-    fs.unlinkSync(uploadedPath);
+    try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
 
     res.json({
       success: true,
-      total_processing_time_ms: Date.now(),
+      total_processing_time_ms: Date.now() - tStart,
       processedRows: schemaMergedRows,
       downloads: [{ url: `/downloads/${processedExcelFilename}`, filename: processedExcelFilename },
                   { url: `/downloads/${logFilename}`, filename: logFilename }]
     });
   } catch (error) {
     console.error('Excel processing error:', error);
+    try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch(e) {}
     res.status(500).json({
       success: false,
       error: error.message || 'Processing failed'
@@ -1671,6 +1646,5 @@ app.get('/api/module-details', async (req, res) => {
 app.listen(PORT, () => {
   console.log('\n🚀 Ollama Web Processor is running!');
   console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
-  console.log(`📊 Dashboard available at: http://localhost:${PORT}/dashboard.html`);
   console.log('🤖 Make sure Ollama is running (gemma3:4b or qwen3:4b-instruct preferred)\n');
 });

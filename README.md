@@ -1,30 +1,35 @@
-# Market Pulse AI
+# Ollama Web Processor
 
-A professional web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama (qwen3:4b-instruct or gemma3:4b preferred). Upload Excel or JSON files for automated data cleaning, VOC processing, custom transformations, and visualization - all processed locally on your machine.
+A comprehensive web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama. Supports Excel (.xlsx, .xls) and JSON (.json) files for automated data cleaning, specialized processing across multiple issue types, and interactive dashboards - with all processing happening locally for maximum privacy and security.
 
 ## 🚀 Features
 
-- **Professional UI**: Modern dark gradient theme with responsive design and tabbed interface
-- **File Upload**: Drag-and-drop support for Excel (.xls, .xlsx) and JSON (.json) files (structured data processing)
+- **Professional UI**: Modern neumorphic design with responsive dark/light themes and intuitive navigation
+- **File Upload**: Drag-and-drop support for Excel (.xls, .xlsx) and JSON (.json) files with preview and validation
 - **Multi-Format Processing**: Upload, process, and download Excel files; output JSON for further analysis
-- **Real-Time Progress**: Server-Sent Events (SSE) for live progress updates during processing
-- **Two Main Interfaces**:
-  - **Upload Tab**: Process files with AI using customer VOC analysis or custom prompts
-  - **Data Visualize Tab**: Aggregate and chart summary statistics from processed Excel files
+- **Real-Time Progress**: Server-Sent Events (SSE) for live progress updates during AI processing
+- **Specialized Processing Types**:
+  - **Beta User Issues**: Voice of Customer analysis for beta tester feedback
+  - **Blogger Issues**: Analysis of blogger-reported issues
+  - **Quality Index (QI)**: Quality metrics processing
+  - **Samsung Members**: Samsung Member feedback analysis
+  - **PLM Issues**: Product Lifecycle Management issue processing
+  - **Custom Prompt**: Flexible AI processing with user-defined prompts
 - **Processing Options**:
   - **VOC Analysis**: Specialized for Voice of Customer data (module identification, severity classification, problem summarization)
   - **Custom AI Processing**: Flexible prompts for custom transformations
   - **Generic Data Cleaning**: Basic data cleansing (trimming, date normalization, number conversion)
+- **Interactive Dashboards**: Dedicated dashboards for each processing type with charts, KPIs, and detailed tables
 - **Advanced Backend Features**:
   - Concurrent processing with configurable limits (default 4)
   - AI response caching for efficiency
-  - Chunked processing for large files
+  - Chunked processing for large files (adaptive sizing based on file size)
   - Keep-alive HTTP connections for Ollama
   - Automatic file cleanup and validation
-- **Visualization Dashboard**: Interactive charts using Chart.js showing module distribution and issue counts
+- **Visualization Dashboard**: Aggregate metrics from processed files with pagination, search, and CSV export
 - **Results Management**: Automatic download of processed files and detailed processing logs
 - **Connection Monitoring**: Real-time Ollama connectivity status
-- **Automation Scripts**: Python utilities for automated server startup and shutdown
+- **Automation Scripts**: Python utilities for automated Ollama and server startup/shutdown
 
 ## 📋 Prerequisites
 
@@ -123,6 +128,114 @@ A professional web interface for AI-powered data processing and Voice of Custome
 }
 ```
 
+### `/api/dashboard` - Individual Dashboard Data
+
+**Method**: `GET`
+
+**Parameters**:
+- `model`: string (optional) - Filter by specific model, or omit for all models
+
+**Description**: Returns aggregated dashboard data including totals, severity/module distributions, and sample rows from processed files.
+
+**Response Schema**:
+```json
+{
+  "success": boolean,
+  "model": string,
+  "totals": {
+    "totalCases": number,
+    "critical": number,
+    "high": number,
+    "medium": number,
+    "low": number
+  },
+  "severityDistribution": [
+    {
+      "severity": string,
+      "count": number
+    }
+  ],
+  "moduleDistribution": [
+    {
+      "module": string,
+      "count": number
+    }
+  ],
+  "rows": [
+    {
+      "caseId": string,
+      "title": string,
+      "problem": string,
+      "modelFromFile": string,
+      "module": string,
+      "severity": string,
+      "loadedDate": string
+    }
+  ]
+}
+```
+
+### `/api/models` - Available Models
+
+**Method**: `GET`
+
+**Description**: Returns list of unique model identifiers found in processed Excel files.
+
+**Response Schema**:
+```json
+{
+  "success": true,
+  "models": ["A366E", "SMS921BE", ...]
+}
+```
+
+### `/api/health` - Health Check
+
+**Method**: `GET`
+
+**Description**: Checks if the server is running and if Ollama is connected.
+
+**Response Schema**:
+```json
+{
+  "status": "ok",
+  "ollama": "connected" | "disconnected"
+}
+```
+
+### `/api/ollama-models` - Available Ollama Models
+
+**Method**: `GET`
+
+**Description**: Returns list of available AI models in local Ollama installation.
+
+**Response Schema**:
+```json
+{
+  "success": boolean,
+  "models": ["qwen3:4b-instruct", "gemma3:4b", ...]
+}
+```
+
+### `/api/process` - File Upload and Processing
+
+**Method**: `POST` (multipart/form-data)
+
+**Parameters**:
+- `file`: File (required) - Excel or JSON file to process
+- `processingType`: string (required) - 'voc', 'custom', or 'clean'
+- `customPrompt`: string (optional) - Custom AI prompt text
+- `model`: string (required) - Ollama model to use
+- `sessionId`: string (optional) - Session ID for progress tracking
+
+**Description**: Uploads and processes files using AI, returns processed data and download links.
+
+### `/api/progress/:sessionId` - Progress Stream
+
+**Method**: `GET`
+
+**Description**: Server-Sent Events stream for real-time processing progress updates.
+
 ### `/api/module-details` - Detailed Module Issues
 
 **Method**: `GET`
@@ -153,6 +266,18 @@ A professional web interface for AI-powered data processing and Voice of Custome
   ]
 }
 ```
+
+### `/api/visualize-raw-details` - Raw Details for Visualization
+
+**Method**: `GET`
+
+**Description**: Returns all individual issue rows from processed Excel files for detailed analysis.
+
+### `/api/visualize/export` - CSV Export
+
+**Method**: `GET`
+
+**Description**: Exports current visualization data as CSV file.
 
 ### How to Use Table Features
 
@@ -227,20 +352,48 @@ The aggregate count represents the number of individual issue reports grouped by
 
 ```
 Market Pulse AI/
-├── server.js                    # Main Express backend server (current)
-├── server_151120252129.js       # Older server version (backup)
+├── server.js                    # Main Express backend server
 ├── package.json                 # Node.js dependencies and scripts
 ├── package-lock.json           # Dependency lock file
 ├── json_to_excel_converter.py   # Python utility for JSON to Excel conversion
 ├── run_server.py               # Python script for automated Ollama + server startup
 ├── terminate_servers.py         # Python script for stopping running servers
+├── README.md                    # This file
+├── .gitignore                   # Git ignore patterns
+├── processors/                  # Modular processing types
+│   ├── betaIssues.js            # Beta User Issues processor
+│   ├── blogger.js               # Blogger Issues processor
+│   ├── customProcessor.js       # Custom Prompt processor
+│   ├── plm.js                   # PLM Issues processor
+│   ├── qings.js                 # QINGS processor
+│   ├── qualityIndex.js          # Quality Index processor
+│   └── samsungMembers.js        # Samsung Members processor
+├── prompts/                     # AI prompt templates
+│   ├── betaIssuesPrompt.js      # Beta User Issues prompt
+│   ├── bloggerPrompt.js         # Blogger Issues prompt
+│   ├── customProcessorPrompt.js # Custom Prompt template
+│   ├── plmPrompt.js             # PLM Issues prompt
+│   ├── qingsPrompt.js           # QINGS prompt
+│   ├── qualityIndexPrompt.js    # Quality Index prompt
+│   └── samsungMembersPrompt.js  # Samsung Members prompt
 ├── public/                      # Frontend static files
-│   ├── index.html              # Main HTML interface with tabs
-│   ├── styles.css              # Modern CSS with dark gradients
-│   └── script.js               # Frontend logic with SSE, Chart.js integration
-├── uploads/                    # Temporary file storage (auto-cleaned)
+│   ├── index.html              # Main HTML interface
+│   ├── dashboard.js             # Shared dashboard logic
+│   ├── script.js               # Main frontend logic
+│   ├── styles.css              # Modern CSS with neumorphic design
+│   ├── beta_user_issues_dashboard.html    # Beta Issues dashboard
+│   ├── blogger_issues_dashboard.html      # Blogger Issues dashboard
+│   ├── custom_prompt_dashboard.html       # Custom Prompt dashboard
+│   ├── plm_issues_dashboard.html          # PLM Issues dashboard
+│   ├── qings_dashboard.html               # QINGS dashboard
+│   ├── qi_dashboard.html                  # Quality Index dashboard
+│   ├── samsung_members_dashboard.html     # Samsung Members dashboard
+│   └── temp_extract_models.js             # Utility script for model extraction
 ├── downloads/                  # Processed file outputs and logs
-└── .gitignore                  # Git ignore patterns
+├── uploads/                    # Temporary file storage (auto-cleaned)
+└── Samsung_MemberVOC/          # Sample data files
+    ├── *.xlsx                  # Excel sample data
+    └── *.json                  # JSON sample data
 ```
 
 ## 🔧 Technical Implementation
@@ -331,12 +484,20 @@ Deterministic automated cleaning without AI:
 
 ## 📈 Recent Updates
 
-- **v1.2.0** - Added new features and improvements (November 2025)
-- **v1.1.0** - Switched to Gemma 3:4B model for improved performance
-- **v1.2.1** - Updated to prefer qwen3:4b-instruct model for Excel processing
-- **Automation Scripts** - Added Python scripts for automated Ollama and server startup
-- **Code Improvements** - Simplified Ollama API integration and enhanced file processing
-- **UI Enhancements** - Updated Excel file processing display messages
+- **v1.3.0** - (November 2025) Complete project restructure with modular processing architecture
+  - Added dedicated `processors/` and `prompts/` directories for different issue types
+  - Enhanced chunked processing for large files with adaptive sizing
+  - Implemented AI response caching for improved performance
+  - Added comprehensive dashboards for each processing type
+- **v1.2.1** - Prefer qwen3:4b-instruct model for Excel processing, gemma3:4b for general use
+- **v1.2.0** - Added real-time progress tracking with Server-Sent Events (SSE)
+  - Enhanced visualization dashboard with pagination, search, and CSV export
+  - Added concurrent processing limits (default 4) to prevent resource exhaustion
+  - Improved Excel output with proper column widths and styling
+- **v1.1.0** - Initial release with core AI processing functionality
+  - Basic VOC analysis, custom prompts, and data cleaning
+  - File upload/progress interface with drag-and-drop support
+  - Integration with Ollama API for local AI processing
 
 ## 🤝 Contributing
 
