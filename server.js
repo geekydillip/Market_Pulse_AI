@@ -13,6 +13,7 @@ const http = require('http');
 const app = express();              // <-- IMPORTANT: app must be created BEFORE routes
 const PORT = process.env.PORT || 3001;
 const DEFAULT_OLLAMA_PORT = 11434;
+const DEFAULT_AI_MODEL = 'qwen3:4b-instruct';
 
 // Security constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -116,142 +117,13 @@ const upload = multer({
 // simple health route (optional)
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-//// ---------------------- BEGIN: Robust Excel read + header detection ----------------------
 
-/**
- * Shared header normalization utility - eliminates code duplication
- */
-function normalizeHeaders(rows) {
-  // Map header name variants to canonical names
-  const headerMap = {
-    // Model variants
-    'model no': 'Model No.',
-    'model no.': 'Model No.',
-    'modelno': 'Model No.',
-    'model number': 'Model No.',
-    // Case Code
-    'case code': 'Case Code',
-    'caseno': 'Case Code',
-    'case no': 'Case Code',
-    // S/W Ver variants
-    's/w ver.': 'S/W Ver.',
-    's/w ver': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'swversion': 'S/W Ver.',
-    // Occurrence stage
-    'occurr. stg.': 'Occurr. Stg.',
-    'occurr stg': 'Occurr. Stg.',
-    'occurrence stage': 'Occurr. Stg.',
-    // Title, Problem, Module, Sub-Module
-    'title': 'Title',
-    'problem': 'Problem',
-    'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'sub module': 'Sub-Module',
-  };
-
-  // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.','Module','Sub-Module','Summarized Problem','Severity','Severity Reason'];
-
-  const normalizedRows = rows.map(orig => {
-    const out = {};
-    // Build a reverse map of original header -> canonical (if possible)
-    const keyMap = {}; // rawKey -> canonical
-    Object.keys(orig).forEach(rawKey => {
-      const norm = String(rawKey || '').trim().toLowerCase();
-      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
-      if (mapped) keyMap[rawKey] = mapped;
-      else {
-        // try exact match to canonical
-        for (const c of canonicalCols) {
-          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
-            keyMap[rawKey] = c;
-            break;
-          }
-        }
-      }
-    });
-    // Fill canonical fields
-    for (const tgt of canonicalCols) {
-      // find a source raw key that maps to this tgt
-      let found = null;
-      for (const rawKey of Object.keys(orig)) {
-        if (keyMap[rawKey] === tgt) {
-          found = orig[rawKey];
-          break;
-        }
-      }
-      // also if tgt exists exactly as a raw header name, use it
-      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
-      out[tgt] = (found !== undefined && found !== null) ? found : '';
-    }
-    return out;
-  });
-
-  return normalizedRows;
-}
-
-function readAndNormalizeExcel(uploadedPath) {
-  const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-
-  // Read sheet as 2D array so we can find header row robustly
-  const sheetRows = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-
-  // Find a header row: first row that contains at least one expected key or at least one non-empty cell
-  let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code', 'Occurr. Stg.','Title','Problem','Model No.','S/W Ver.']; // lowercase checks
-  for (let r = 0; r < sheetRows.length; r++) {
-    const row = sheetRows[r];
-    if (!Array.isArray(row)) continue;
-    const rowText = row.map(c => String(c || '').toLowerCase()).join(' | ');
-    // if the row contains any expected header keyword, choose it as header
-    if (expectedHeaderKeywords.some(k => rowText.includes(k))) {
-      headerRowIndex = r;
-      break;
-    }
-    // fallback: first non-empty row becomes header
-    if (row.some(cell => String(cell).trim() !== '')) {
-      headerRowIndex = r;
-      break;
-    }
-  }
-
-  // Build raw headers and trim
-  const rawHeaders = (sheetRows[headerRowIndex] || []).map(h => String(h || '').trim());
-
-  // Build data rows starting after headerRowIndex
-  const dataRows = sheetRows.slice(headerRowIndex + 1);
-
-  // Convert dataRows to array of objects keyed by rawHeaders
-  let rows = dataRows.map(r => {
-    const obj = {};
-    for (let ci = 0; ci < rawHeaders.length; ci++) {
-      const key = rawHeaders[ci] || `col_${ci}`;
-      obj[key] = r[ci] !== undefined && r[ci] !== null ? r[ci] : '';
-    }
-    return obj;
-  });
-
-  // Use shared normalization function
-  return normalizeHeaders(rows);
-}
-
-// normalizeRows - now just calls the shared function
-function normalizeRows(rows) {
-  return normalizeHeaders(rows);
-}
 
 // Mapping of frontend processingType to processor filenames
 const processorMap = {
-  'voc': 'betaIssues',
-  'qings': 'qings',
-  'qi': 'qualityIndex',
-  'blogger_issues': 'blogger',
-  'samsung_members': 'samsungMembers',
-  'plm_issues': 'plm',
-  'custom': 'customProcessor'
+  'beta_user_issues': 'betaIssues',
+  'samsung_members_plm': 'samsungMembersPlm',
+  'plm_issues': 'plmIssues'
 };
 
 // Cache for identical prompts
@@ -283,7 +155,7 @@ async function runTasksWithLimit(tasks, limit = 4) {
 /**
  * Cached version of callOllama
  */
-async function callOllamaCached(prompt, model = 'gemma3:4b', opts = {}) {
+async function callOllamaCached(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const key = `${model}|${typeof prompt === 'string' ? prompt : JSON.stringify(prompt)}`;
   if (aiCache.has(key)) {
     console.log('[callOllamaCached] cache hit for key length=%d', key.length);
@@ -297,10 +169,10 @@ async function callOllamaCached(prompt, model = 'gemma3:4b', opts = {}) {
 /**
  * callOllama - robust HTTP call to local Ollama server
  * prompt: string or object
- * model: string (e.g. "gemma3:4b")
+ * model: string (e.g. "qwen3:4b-instruct")
  * opts: { port:number, timeoutMs:number }
  */
-async function callOllama(prompt, model = 'gemma3:4b', opts = {}) {
+async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000; // default 5min, or false to disable
 
@@ -377,14 +249,14 @@ async function callOllama(prompt, model = 'gemma3:4b', opts = {}) {
 app.post('/api/process', upload.single('file'), validateFileUpload, async (req, res) => {
   try {
     // Sanitize input parameters to prevent injection
-    const processingType = sanitizeInput(req.body.processingType || 'voc');
+    const processingType = sanitizeInput(req.body.processingType || 'beta_user_issues');
     const customPrompt = sanitizeInput(req.body.customPrompt || '');
-    const model = sanitizeInput(req.body.model || 'gemma3:4b');
+    const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['voc', 'qings', 'qi', 'blogger_issues', 'samsung_members', 'plm_issues', 'custom', 'clean'];
+    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues']; // Supported processing types
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type' });
+      return res.status(400).json({ error: 'Invalid processing type.' });
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();
@@ -590,16 +462,13 @@ async function processJSON(req, res) {
       return res.status(400).json({ error: 'Invalid JSON format: ' + parseError.message });
     }
 
-    // Remove top 2 rows before pre-processing
-    rows = rows.slice(2);
-
     const tStart = Date.now();
     const headers = Object.keys(rows[0] || {});
 
-    // Use VOC processing type for JSON (since only structured data should be in JSON)
-    const processingType = req.body.processingType || 'voc';
+    // Use Beta user issues processing type for JSON (since only structured data should be in JSON)
+    const processingType = req.body.processingType || 'beta_user_issues';
     const customPrompt = req.body.customPrompt || '';
-    const model = req.body.model || 'gemma3:4b';
+    const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
     // Unified chunked processing (works for all types: clean, voc, custom)
@@ -607,7 +476,7 @@ async function processJSON(req, res) {
     const ROWSCOUNT = rows.length || 0;
 
     let chunkSize;
-    if (processingType === 'voc') {
+    if (processingType === 'beta_user_issues' || processingType === 'voc') {
       chunkSize = ROWSCOUNT <= 50 ? 1
                 : ROWSCOUNT <= 200 ? 2
                 : 4;
@@ -710,12 +579,11 @@ async function processJSON(req, res) {
     }
 
     // Save files
-    const processedPath = path.join('downloads', processedJSONFilename);
-    const logPath = path.join('downloads', logFilename);
-
-    // Ensure downloads directory exists
-    const dlDir = path.join(__dirname, 'downloads');
+    const dlDir = path.join(__dirname, 'downloads', processingType);
     if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
+
+    const processedPath = path.join(dlDir, processedJSONFilename);
+    const logPath = path.join(dlDir, logFilename);
 
     fs.writeFileSync(processedPath, JSON.stringify(finalRows, null, 2));
     fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
@@ -728,8 +596,8 @@ async function processJSON(req, res) {
       total_processing_time_ms: Date.now() - tStart,
       processedRows: finalRows,
       downloads: [
-        { url: `/downloads/${processedJSONFilename}`, filename: processedJSONFilename },
-        { url: `/downloads/${logFilename}`, filename: logFilename }
+        { url: `/downloads/${processingType}/${processedJSONFilename}`, filename: processedJSONFilename },
+        { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }
       ]
     });
   } catch (error) {
@@ -803,7 +671,18 @@ async function processExcel(req, res) {
     const processedExcelFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.xlsx`;
     const logFilename = `${fileNameBase}_log.json`;
 
-    // Use the robust Excel reading function
+    // Use the requested processing type for Excel
+    const processingType = req.body.processingType || 'clean';
+    const customPrompt = req.body.customPrompt || '';
+    const model = req.body.model || 'qwen3:4b-instruct';
+    const sessionId = req.body.sessionId || 'default';
+
+    // Load the dynamic processor for reading and processing
+    const processorName = processorMap[processingType];
+    const processor = require('./processors/' + processorName);
+
+    // Use processor's readAndNormalizeExcel if available, else fallback to betaIssues
+    const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/betaIssues').readAndNormalizeExcel;
     let rows = readAndNormalizeExcel(uploadedPath) || [];
 
     // Sanity check: verify we have meaningful rows with Title/Problem data
@@ -813,14 +692,8 @@ async function processExcel(req, res) {
       console.warn('No meaningful rows found - check header detection logic or the uploaded file.');
     }
 
-    // Set headers to the canonical columns from the function
-    const headers = ['Case Code','Occurr. Stg.','Title','Problem','Model No.','S/W Ver.'];
-
-    // Use the requested processing type for Excel
-    const processingType = req.body.processingType || 'clean';
-    const customPrompt = req.body.customPrompt || '';
-    const model = req.body.model || 'qwen3:4b-instruct';
-    const sessionId = req.body.sessionId || 'default';
+    // Set headers to the canonical columns (using processor's expectedHeaders if available)
+    const headers = processor.expectedHeaders || ['Case Code','Model No.','S/W Ver.','Title','Problem'];
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
@@ -828,7 +701,7 @@ async function processExcel(req, res) {
 
     // If VOC strict per-row analysis required, use 1 row per chunk, but batch when file > threshold
     let chunkSize;
-    if (processingType === 'voc') {
+    if (processingType === 'beta_user_issues' || processingType === 'voc') {
       chunkSize = ROWSCOUNT <= 50 ? 1
                 : ROWSCOUNT <= 200 ? 2
                 : 4;
@@ -919,23 +792,15 @@ async function processExcel(req, res) {
       finalHeaders.push('error');
     }
 
-    // === Apply Column Widths ===
-    newSheet['!cols'] = finalHeaders.map((h, idx) => {
-      if (['Case Code','Occurr. Stg.'].includes(h)) return { wch: 15 };
-      if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.') return { wch: 20 };
-      if (h === 'S/W Ver.') return { wch: 15 };
-      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
-      if (h === 'error') return { wch: 15 };
-      return { wch: 20 };
-    });
+    // === Apply Column Widths (moved to processor for better organization) ===
+    newSheet['!cols'] = processor.getColumnWidths(finalHeaders);
 
     // === Apply Cell Styles (fonts, alignment, borders) ===
     const dataRows = schemaMergedRows.length;
     const totalColumns = finalHeaders.length;
 
     // Define column alignments based on webpage table
-    const centerAlignColumns = [0, 1, 2, 3, 7]; // Case Code, Occurr. Stg., Title, Problem, Module (0-based)
+    const centerAlignColumns = [0, 1, 2, 3, 7]; // Case Code, Title, Problem, Module (0-based)
     // Case Code (0), Model (1), Grade (2), S/W Ver. (3), Severity (7) are centered
 
     Object.keys(newSheet).forEach((cellKey) => {
@@ -1031,7 +896,7 @@ async function processExcel(req, res) {
     }
 
     // Save files
-    const dlDir = path.join(__dirname, 'downloads');
+    const dlDir = path.join(__dirname, 'downloads', processingType);
     if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
 
     const processedPath = path.join(dlDir, processedExcelFilename);
@@ -1046,8 +911,8 @@ async function processExcel(req, res) {
       success: true,
       total_processing_time_ms: Date.now() - tStart,
       processedRows: schemaMergedRows,
-      downloads: [{ url: `/downloads/${processedExcelFilename}`, filename: processedExcelFilename },
-                  { url: `/downloads/${logFilename}`, filename: logFilename }]
+      downloads: [{ url: `/downloads/${processingType}/${processedExcelFilename}`, filename: processedExcelFilename },
+                  { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }]
     });
   } catch (error) {
     console.error('Excel processing error:', error);
@@ -1098,26 +963,39 @@ function getModelFromSheet(ws) {
   return '';
 }
 
-// Helper: read each Excel file in downloads/ and return an array of objects {file, modelFromFile, rows: [...]}
+// Helper: read each Excel file in downloads/ and subdirectories, return an array of objects {file, modelFromFile, rows: [...]}
 // Each row is the sheet_to_json row (defval '')
 function readAllFilesWithModel() {
   const dlDir = path.join(__dirname, 'downloads');
   if (!fs.existsSync(dlDir)) return [];
-  const files = fs.readdirSync(dlDir).filter(f => /\.(xlsx|xls)$/i.test(f));
-  const allFiles = [];
-  files.forEach(file => {
-    try {
-      const wb = xlsx.readFile(path.join(dlDir, file));
-      const sheetName = wb.SheetNames[0];
-      const ws = wb.Sheets[sheetName];
-      const modelFromFile = getModelFromSheet(ws) || '';
-      const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
-      allFiles.push({ file, modelFromFile, rows });
-    } catch (err) {
-      console.warn('[readAllFilesWithModel] skip', file, err.message);
-    }
-  });
-  return allFiles;
+
+  function readDirectoryRecursively(dir) {
+    const allFiles = [];
+    const items = fs.readdirSync(dir);
+    items.forEach(item => {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory()) {
+        // Recurse into subdirectory
+        allFiles.push(...readDirectoryRecursively(fullPath));
+      } else if (/\.(xlsx|xls)$/i.test(item)) {
+        // Process Excel file
+        try {
+          const wb = xlsx.readFile(fullPath);
+          const sheetName = wb.SheetNames[0];
+          const ws = wb.Sheets[sheetName];
+          const modelFromFile = getModelFromSheet(ws) || '';
+          const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+          allFiles.push({ file: fullPath, modelFromFile, rows });
+        } catch (err) {
+          console.warn('[readAllFilesWithModel] skip', fullPath, err.message);
+        }
+      }
+    });
+    return allFiles;
+  }
+
+  return readDirectoryRecursively(dlDir);
 }
 
 // GET /api/models -> returns unique model list (modelFromFile values). Includes 'All' as default.
@@ -1343,7 +1221,6 @@ async function getVisualizationData() {
         const swver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
         const grade = pickField(r, ['Grade', 'Garde', 'grade']);
         const critical_module = pickField(r, ['Critical Module', 'Cirital Module', 'Module', 'critical module', 'Module Name']);
-        const critical_voc = pickField(r, ['Critical VOC', 'Critical VOCs', 'Critical_VOC', 'Critical', 'VOC']);
         const title = pickField(r, ['Title', 'title']);
 
         // Build key for aggregation (group by model+grade+module to avoid duplicates)
@@ -1646,5 +1523,5 @@ app.get('/api/module-details', async (req, res) => {
 app.listen(PORT, () => {
   console.log('\n🚀 Ollama Web Processor is running!');
   console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
-  console.log('🤖 Make sure Ollama is running (gemma3:4b or qwen3:4b-instruct preferred)\n');
+  console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
 });

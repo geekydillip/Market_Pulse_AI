@@ -24,6 +24,7 @@ Each object must contain EXACTLY these keys in this order:
 
 Case Code,
 Model No.,
+S/W Ver.,
 Title,
 Problem,
 Module,

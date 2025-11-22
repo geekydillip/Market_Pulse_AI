@@ -1,4 +1,4 @@
-# Ollama Web Processor
+# Market Pulse AI
 
 A comprehensive web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama. Supports Excel (.xlsx, .xls) and JSON (.json) files for automated data cleaning, specialized processing across multiple issue types, and interactive dashboards - with all processing happening locally for maximum privacy and security.
 
@@ -361,34 +361,21 @@ Market Pulse AI/
 ├── README.md                    # This file
 ├── .gitignore                   # Git ignore patterns
 ├── processors/                  # Modular processing types
+│   ├── _helpers.js              # Shared utility functions
 │   ├── betaIssues.js            # Beta User Issues processor
-│   ├── blogger.js               # Blogger Issues processor
-│   ├── customProcessor.js       # Custom Prompt processor
-│   ├── plm.js                   # PLM Issues processor
-│   ├── qings.js                 # QINGS processor
-│   ├── qualityIndex.js          # Quality Index processor
-│   └── samsungMembers.js        # Samsung Members processor
+│   └── samsungMembersPlm.js     # Samsung Members PLM processor
 ├── prompts/                     # AI prompt templates
 │   ├── betaIssuesPrompt.js      # Beta User Issues prompt
-│   ├── bloggerPrompt.js         # Blogger Issues prompt
-│   ├── customProcessorPrompt.js # Custom Prompt template
-│   ├── plmPrompt.js             # PLM Issues prompt
-│   ├── qingsPrompt.js           # QINGS prompt
-│   ├── qualityIndexPrompt.js    # Quality Index prompt
-│   └── samsungMembersPrompt.js  # Samsung Members prompt
+│   └── samsungMembersPlmPrompt.js # Samsung Members PLM prompt
 ├── public/                      # Frontend static files
-│   ├── index.html              # Main HTML interface
+│   ├── index.html               # Main HTML interface
 │   ├── dashboard.js             # Shared dashboard logic
-│   ├── script.js               # Main frontend logic
-│   ├── styles.css              # Modern CSS with neumorphic design
-│   ├── beta_user_issues_dashboard.html    # Beta Issues dashboard
-│   ├── blogger_issues_dashboard.html      # Blogger Issues dashboard
-│   ├── custom_prompt_dashboard.html       # Custom Prompt dashboard
-│   ├── plm_issues_dashboard.html          # PLM Issues dashboard
-│   ├── qings_dashboard.html               # QINGS dashboard
-│   ├── qi_dashboard.html                  # Quality Index dashboard
-│   ├── samsung_members_dashboard.html     # Samsung Members dashboard
-│   └── temp_extract_models.js             # Utility script for model extraction
+│   ├── script.js                # Main frontend logic
+│   ├── styles.css               # CSS with neumorphic design
+│   ├── beta_user_issues_dashboard.html # Beta Issues dashboard
+│   ├── samsung_members_plm_dashboard.html # Samsung PLM dashboard
+│   ├── samsung_members_dashboard.html # Samsung Members dashboard
+│   └── temp_extract_models.js    # Utility script for model extraction
 ├── downloads/                  # Processed file outputs and logs
 ├── uploads/                    # Temporary file storage (auto-cleaned)
 └── Samsung_MemberVOC/          # Sample data files
