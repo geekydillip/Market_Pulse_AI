@@ -1,5 +1,5 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/betaIssuesPrompt');
+const promptTemplate = require('../prompts/plmIssuesPrompt');
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -8,29 +8,22 @@ function normalizeHeaders(rows) {
   // Map header name variants to canonical names
   const headerMap = {
     // Model variants
-    'model no': 'Model No.',
-    'model no.': 'Model No.',
-    'modelno': 'Model No.',
-    'model number': 'Model No.',
+    'Model No.':'Model No.',
     // Case Code
-    'case code': 'Case Code',
-    'caseno': 'Case Code',
-    'case no': 'Case Code',
+    'Case Code': 'Case Code',
     // S/W Ver variants
-    's/w ver.': 'S/W Ver.',
-    's/w ver': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'swversion': 'S/W Ver.',
+    'S/W Ver.': 'S/W Ver.',
     // Title, Problem, Module, Sub-Module
-    'title': 'Title',
-    'problem': 'Problem',
-    'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'sub module': 'Sub-Module',
+    'Title': 'Title',
+    'Progr.Stat.': 'Progr.Stat.',
+    'Problem': 'Problem',
+    'Module': 'Module',
+    'Sub-Module': 'Sub-Module',
+    'Dev. Mdl. Name/Item Name': 'Model No.'
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Problem'];
+  const canonicalCols = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','S/W Ver.','Title','Problem','Cause','Countermeasure'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -80,7 +73,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Model No.','S/W Ver.','Title','Problem']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','S/W Ver.','Title','Problem','Cause','Countermeasure']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -123,8 +116,8 @@ function normalizeRows(rows) {
 }
 
 module.exports = {
-  id: 'betaIssues',
-  expectedHeaders: ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem',  'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'],
+  id: 'plmIssuesPrompt',
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.','S/W Ver.', 'Title', 'Problem',  'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -161,7 +154,7 @@ module.exports = {
       if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
       if (h === 'Model No.') return { wch: 20 };
       if (h === 'S/W Ver.') return { wch: 15 };
-      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
+      if (h === 'Module' || h === 'Sub-Module' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
     });

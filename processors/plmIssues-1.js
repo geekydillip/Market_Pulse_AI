@@ -1,36 +1,51 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/betaIssuesPrompt');
+const promptTemplate = require('../prompts/plmIssuesPrompt');
 
 /**
  * Shared header normalization utility - eliminates code duplication
  */
 function normalizeHeaders(rows) {
-  // Map header name variants to canonical names
+  // Map header name variants to canonical names for PLM Issue processing
   const headerMap = {
-    // Model variants
-    'model no': 'Model No.',
-    'model no.': 'Model No.',
-    'modelno': 'Model No.',
-    'model number': 'Model No.',
-    // Case Code
-    'case code': 'Case Code',
-    'caseno': 'Case Code',
-    'case no': 'Case Code',
-    // S/W Ver variants
-    's/w ver.': 'S/W Ver.',
-    's/w ver': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'swversion': 'S/W Ver.',
-    // Title, Problem, Module, Sub-Module
+    // Title and Problem variants
     'title': 'Title',
     'problem': 'Problem',
-    'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'sub module': 'Sub-Module',
+    // Priority variants
+    'priority': 'Priority',
+    'pri': 'Priority',
+    // Occurrence Frequency variants
+    'occurr. freq.': 'Occurr. Freq.',
+    'occurr freq': 'Occurr. Freq.',
+    'occur. freq.': 'Occurr. Freq.',
+    'occur freq': 'Occurr. Freq.',
+    'occurrence frequency': 'Occurr. Freq.',
+    'occurrence freq.': 'Occurr. Freq.',
+    'freq.': 'Occurr. Freq.',
+    'frequency': 'Occurr. Freq.',
+    // Occurrence Frequency Details variants
+    'occur. freq.(details)': 'Occur. Freq.(Details)',
+    'occur freq details': 'Occur. Freq.(Details)',
+    'occurrence freq. details': 'Occur. Freq.(Details)',
+    'freq details': 'Occur. Freq.(Details)',
+    'occurr. freq.(detail)': 'Occur. Freq.(Details)',
+    'occurr. freq.(details)': 'Occur. Freq.(Details)',
+    // Cause and Counter Measure variants
+    'cause': 'Cause',
+    'counter measure': 'Counter Measure',
+    'countermeasure': 'Counter Measure',
+    'counter measures': 'Counter Measure',
+    'counter-measures': 'Counter Measure',
+    'solution': 'Counter Measure',
+    // Program Status variants
+    'progr.stat.': 'Progr.Stat.',
+    'progr stat': 'Progr.Stat.',
+    'program status': 'Progr.Stat.',
+    'status': 'Progr.Stat.',
+    'prog.status': 'Progr.Stat.',
   };
 
-  // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Problem'];
+  // canonical columns you expect in the downstream processing for PLM
+  const canonicalCols = ['Title','Progr.Stat.', 'Priority', 'Occurr. Freq.', 'Occur. Freq.(Details)', 'Problem', 'Cause', 'Counter Measure'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -80,7 +95,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Model No.','S/W Ver.','Title','Problem']; // lowercase checks
+  const expectedHeaderKeywords = ['Title','Progr.Stat.', 'Priority', 'Occurr. Freq.', 'Occur. Freq.(Details)', 'Problem', 'Cause', 'Counter Measure']; // lowercase checks for PLM
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -123,12 +138,12 @@ function normalizeRows(rows) {
 }
 
 module.exports = {
-  id: 'betaIssues',
-  expectedHeaders: ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem',  'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'],
+  id: 'plmIssues',
+  expectedHeaders: ['Module', 'Total', 'Open', 'Resolved', 'Closed'],
 
   validateHeaders(rawHeaders) {
-    // Check if required fields are present
-    const required = ['Title', 'Problem'];
+    // Check if required fields are present for PLM: Title and Priority are key indicators
+    const required = ['Title', 'Priority', 'Occurr. Freq.', 'Occur. Freq.(Details)', 'Problem',];
     return required.some(header =>
       rawHeaders.includes(header) ||
       rawHeaders.some(h => h.toLowerCase().trim() === header.toLowerCase().trim())
@@ -146,22 +161,31 @@ module.exports = {
 
   formatResponse(aiResult) {
     const text = aiResult.trim();
-    const firstBracket = text.indexOf('[');
-    const lastBracket = text.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket > firstBracket) {
-      const jsonStr = text.substring(firstBracket, lastBracket + 1);
-      return JSON.parse(jsonStr);
+    try {
+      // First attempt: parse the entire trimmed text as JSON
+      return JSON.parse(text);
+    } catch (err) {
+      // Second attempt: extract and parse the JSON array substring
+      const firstBracket = text.indexOf('[');
+      const lastBracket = text.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket > firstBracket) {
+        const jsonStr = text.substring(firstBracket, lastBracket + 1);
+        try {
+          return JSON.parse(jsonStr);
+        } catch (parseErr) {
+          throw new Error('No valid JSON array found in response: ' + parseErr.message);
+        }
+      }
+      throw new Error('No valid JSON array found in response');
     }
-    throw new Error('No valid JSON array found in response');
   },
 
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.') return { wch: 20 };
-      if (h === 'S/W Ver.') return { wch: 15 };
-      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
+      if (h === 'Severity') return { wch: 15 };
+      if (h === 'Module' || h === 'Sub-Module') return { wch: 20 };
+      if (['Total', 'Open', 'Resolved', 'Closed'].includes(h)) return { wch: 10 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
     });

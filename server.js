@@ -965,19 +965,26 @@ function getModelFromSheet(ws) {
 
 // Helper: read each Excel file in downloads/ and subdirectories, return an array of objects {file, modelFromFile, rows: [...]}
 // Each row is the sheet_to_json row (defval '')
-function readAllFilesWithModel() {
-  const dlDir = path.join(__dirname, 'downloads');
+// Helper: read each Excel file in downloads/<category>/ if category provided, else downloads/ and subdirectories
+function readAllFilesWithModel(category = null) {
+  let dlDir = path.join(__dirname, 'downloads');
+  if (category) {
+    dlDir = path.join(dlDir, category);
+  }
   if (!fs.existsSync(dlDir)) return [];
 
   function readDirectoryRecursively(dir) {
     const allFiles = [];
+    if (!fs.existsSync(dir)) return allFiles;
     const items = fs.readdirSync(dir);
     items.forEach(item => {
       const fullPath = path.join(dir, item);
       const stat = fs.statSync(fullPath);
       if (stat.isDirectory()) {
-        // Recurse into subdirectory
-        allFiles.push(...readDirectoryRecursively(fullPath));
+        // Recurse into subdirectory (if category not specified)
+        if (!category) {
+          allFiles.push(...readDirectoryRecursively(fullPath));
+        }
       } else if (/\.(xlsx|xls)$/i.test(item)) {
         // Process Excel file
         try {
@@ -998,10 +1005,11 @@ function readAllFilesWithModel() {
   return readDirectoryRecursively(dlDir);
 }
 
-// GET /api/models -> returns unique model list (modelFromFile values). Includes 'All' as default.
+// GET /api/models?category=<category> -> returns unique model list (modelFromFile values) scoped to category folder
 app.get('/api/models', (req, res) => {
   try {
-    const files = readAllFilesWithModel();
+    const category = req.query.category;
+    const files = readAllFilesWithModel(category);
     const models = new Set();
     files.forEach(f => {
       const m = (f.modelFromFile || '').toString().trim();
@@ -1014,28 +1022,55 @@ app.get('/api/models', (req, res) => {
   }
 });
 
-// GET /api/dashboard?model=<modelName>  (if model omitted or model=ALL -> aggregate across all files)
+// GET /api/dashboard?model=<modelName>&severity=<severity>&category=<category>  (all parameters optional)
+// Reads from downloads/<category>/ if category provided, otherwise whole downloads/
+// returns: { success:true, model:..., totals:{ totalCases, critical, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
+
+/**
+ * Helper function to get filtered rows for pagination
+ */
+function getFilteredRows(modelQuery, severityQuery, category) {
+  const files = readAllFilesWithModel(category);
+
+  // Build unified rows with an attached modelFromFile field for each row
+  let allRows = [];
+  files.forEach(f => {
+    const mFromFile = f.modelFromFile || '';
+    f.rows.forEach(r => {
+      // attach modelFromFile to each row so we can easily filter by model
+      const row = Object.assign({}, r);
+      row._modelFromFile = mFromFile;
+      allRows.push(row);
+    });
+  });
+
+  // Filter rows by model if specified
+  let filteredRows = modelQuery ? allRows.filter(r => String(r._modelFromFile || '').trim() === modelQuery) : allRows;
+
+  // Filter rows by severity if specified
+  if (severityQuery) {
+    filteredRows = filteredRows.filter(r => {
+      const sev = (r.Severity || r['Severity'] || r['Severity Level'] || '').toString().trim() || 'Unknown';
+      return String(sev).toLowerCase() === severityQuery.toLowerCase() || sev === severityQuery;
+    });
+  }
+
+  return filteredRows;
+}
+
+// GET /api/dashboard?model=<modelName>&severity=<severity>&category=<category>  (all parameters optional)
+// Reads from downloads/<category>/ if category provided, otherwise whole downloads/
 // returns: { success:true, model:..., totals:{ totalCases, critical, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
 app.get('/api/dashboard', (req, res) => {
   try {
     const modelQueryRaw = (req.query.model || '').toString().trim();
     const modelQuery = (modelQueryRaw === '' || /^(all|__all__|aggregate)$/i.test(modelQueryRaw)) ? null : modelQueryRaw;
-    const files = readAllFilesWithModel();
+    const severityQueryRaw = (req.query.severity || '').toString().trim();
+    const severityQuery = severityQueryRaw === '' ? null : severityQueryRaw;
+    const categoryQueryRaw = (req.query.category || '').toString().trim();
+    const category = categoryQueryRaw === '' ? null : categoryQueryRaw;
 
-    // Build unified rows with an attached modelFromFile field for each row
-    let allRows = [];
-    files.forEach(f => {
-      const mFromFile = f.modelFromFile || '';
-      f.rows.forEach(r => {
-        // attach modelFromFile to each row so we can easily filter by model
-        const row = Object.assign({}, r);
-        row._modelFromFile = mFromFile;
-        allRows.push(row);
-      });
-    });
-
-    // Filter rows if a model is selected
-    const filteredRows = modelQuery ? allRows.filter(r => String(r._modelFromFile || '').trim() === modelQuery) : allRows;
+    const filteredRows = getFilteredRows(modelQuery, severityQuery, category);
 
     // Aggregations
     const totals = { totalCases: filteredRows.length, critical: 0, high: 0, medium: 0, low: 0 };
@@ -1061,15 +1096,35 @@ app.get('/api/dashboard', (req, res) => {
     const moduleDistribution = Object.keys(moduleCounts).map(k => ({ module: k, count: moduleCounts[k] })).sort((a, b) => b.count - a.count);
 
     // Prepare table rows to return (limit to avoid huge payload)
-    const tableRows = filteredRows.slice(0, 500).map(r => ({
-      caseId: r['Case Code'] || r['CaseId'] || r['ID'] || '',
-      title: r['Title'] || r['Summary'] || r['Problem Title'] || '',
-      problem: r['Problem'] || r['Issue'] || '',
-      modelFromFile: r._modelFromFile || '',
-      module: r['Module'] || r['Module Name'] || '',
-      severity: r['Severity'] || '',
-      loadedDate: r['Loaded CV Date'] || r['Loaded Date'] || r['Date'] || ''
-    }));
+    let debugCount = 0;
+    const tableRows = filteredRows.slice(0, 500).map(r => {
+      // Debug logging to identify data mapping issues
+      const mappedRow = {
+        caseId: r['Case Code'] || r['CaseId'] || r['ID'] || '',
+        title: r['Title'] || r['Summary'] || r['Problem Title'] || '',
+        problem: r['Problem'] || r['Issue'] || '',
+        modelFromFile: r._modelFromFile || '',
+        module: r['Module'] || r['Module Name'] || '',
+        severity: r['Severity'] || '',
+        sWVer: r['S/W Ver.'] || r['S/W Version'] || r['Software Version'] || '',
+        subModule: r['Sub-Module'] || r['Sub Module'] || r['SubModule'] || '',
+        severityReason: r['Severity Reason'] || r['Severity_Reason'] || ''
+      };
+
+      // Log the first few rows to check data mapping
+      if (debugCount < 5 && mappedRow.title && mappedRow.problem) {
+        console.log('[DASHBOARD API] Sample row mapping:', {
+          excel_title: r['Title'] || 'NOT FOUND',
+          excel_problem: r['Problem'] || 'NOT FOUND',
+          mapped_title: mappedRow.title,
+          mapped_problem: mappedRow.problem,
+          raw_row_keys: Object.keys(r)
+        });
+        debugCount++;
+      }
+
+      return mappedRow;
+    });
 
     res.json({
       success: true,
@@ -1083,6 +1138,8 @@ app.get('/api/dashboard', (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
