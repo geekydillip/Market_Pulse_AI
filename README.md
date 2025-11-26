@@ -33,7 +33,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 ## 📋 Prerequisites
 
-- **Node.js** (v14 or higher) or **Python 3** (for automated setup)
+- **Node.js** (v14 or higher)
 - **Ollama** with qwen3:4b-instruct or gemma3:4b model installed
 - **Web Browser** (Chrome, Firefox, Edge, etc.)
 
@@ -64,14 +64,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 3. **Open your browser** and go to: `http://localhost:3001`
 
-### Option 2: Automated Setup (Python)
 
-1. **Run the Python script** (automatically handles Ollama and server startup):
-   ```bash
-   python run_server.py
-   ```
-
-2. **Open your browser** and go to: `http://localhost:3001`
 
 ### Processing Data
 
@@ -356,16 +349,17 @@ Market Pulse AI/
 ├── package.json                 # Node.js dependencies and scripts
 ├── package-lock.json           # Dependency lock file
 ├── json_to_excel_converter.py   # Python utility for JSON to Excel conversion
-├── run_server.py               # Python script for automated Ollama + server startup
 ├── terminate_servers.py         # Python script for stopping running servers
 ├── README.md                    # This file
 ├── .gitignore                   # Git ignore patterns
 ├── processors/                  # Modular processing types
 │   ├── _helpers.js              # Shared utility functions
 │   ├── betaIssues.js            # Beta User Issues processor
+│   ├── plmIssues.js             # PLM Issues processor
 │   └── samsungMembersPlm.js     # Samsung Members PLM processor
 ├── prompts/                     # AI prompt templates
 │   ├── betaIssuesPrompt.js      # Beta User Issues prompt
+│   ├── plmIssuesPrompt.js       # PLM Issues prompt
 │   └── samsungMembersPlmPrompt.js # Samsung Members PLM prompt
 ├── public/                      # Frontend static files
 │   ├── index.html               # Main HTML interface
@@ -409,10 +403,7 @@ Market Pulse AI/
 - **Custom Processing**: User-defined AI prompts for flexible transformations with retry logic
 - **Generic Cleaning**: Deterministic rules for data normalization (trim whitespace, date ISO format normalization, numeric string conversion)
 
-### Python Utilities
-- **run_server.py**: Automates Ollama startup, model loading, and Node.js server initialization
-- **terminate_servers.py**: Cross-platform server termination (Windows/Unix)
-- **json_to_excel_converter.py**: Standalone utility for JSON to Excel conversion with formatting
+
 
 ### Security & Performance
 - **Local Processing**: All AI inference stays on user machine - no data transmission
