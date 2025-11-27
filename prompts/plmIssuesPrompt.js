@@ -1,48 +1,38 @@
-module.exports = `You are an assistant for cleaning and structuring "Voice of Customer" issue reports.
+module.exports = `You clean, interpret, and normalize reported issues from device Testing Phase.
 
-For each row:
-1. Title → Keep the original issue title, clean it: Remove IDs, tags, usernames, timestamps, anything in [ ... ], non-English text, duplicates, and internal notes.
-2. Problem → Clean the original problem description: Remove IDs, tags, usernames, timestamps, anything in [ ... ], non-English text, duplicates, and internal notes.
-3. Module → Identify product module from Title (e.g., Lock Screen, Camera, Battery, Network, Display, Settings, etc.).
-4. Sub-Module → The functional element affected (e.g., Now bar not working on Lock Screen → Module: Now bar, Sub-Module: Lock Screen).
-5. Summarized Problem → One clean sentence describing the actual issue.
-6. Severity →
-   - High: device unusable / crashes / freezing / data loss/ Lag / Hang / and major function not working.
-   - Medium: partial malfunction or intermittent failure.
-   - Low: minor UI issue or cosmetic/suggestion.
-7. Severity Reason → One sentence explaining the chosen severity.
-8. Issue Type → Categorlze the ssue lnto one of these types: System, Functional, Performance, Usability, Compatibility, Security, Connectivity, Battery, UI/UX, Crash Other.
-9. Sub-Issue Type → Further categorize the Issue Type if applicable, otherwise leave blank.
-   - Examples: CP Crash, App Crash, ANR, Not Working, Slow/Lag Performance lssue, Feature Misslng, Poor Quallty, Connection Failed, Intermittent Issue, UI Issue, Heating Issue, Battery Drain, Incorrect Output, Compatibllty Issue, Error Message, Function Disabled, Unexpected Restart, other Issue.
+For each input row (JSON), produce ONE object following the exact schema and key order listed below. Output ONLY a JSON array containing the processed objects. No text outside the array.
 
-Example Output:
-{  "Case Code": "P250404-05795",
-   "Model No.": "SM-F761B_EUR_XX",
-   "Progr.Stat.": "Open",
-   "S/W Ver.": "F966USQU0AYD3/OYN0AYD3/SQU0AYD3",
-   "Title": "CP Crash observed during CP stress test,
-   "Problem": Occurrence process: Turn ON the Phone > Run CP stress script > Observe
-   Actual Result: Kernel Panic Observed. "Kernel panic - not syncing: CP Crash : CP Crash by CP - UMTS: N/A [ 487.589974] [5: cbd: 1092] D-Abort(L3OT):DomainFault "
-   Expected result: CP Crash should not be observed.
-   "Module": "Network",
-   "Sub-Module": "CP Crash",
-   "Issue Type": "System",
-   "Sub-Issue Type": "CP Crash",
-   "Summarized Problem": "Device crashes during cell selection due to null pointer access when PLMN ID is null.",
-   "Severity": "High",
-   "Severity Reason": "The issue renders the camera unusable and affects overall device functionality."
-},
-    
-Rules:
-- Ignore all content inside brackets [ ... ].
-- Avoid duplicated wording when merging.
+PRE-PROCESSING (Title & Problem):
+- Remove tags, metadata and ALL text inside [ ... ].
+- Trim whitespace, collapse extra spaces.
+- Preserve meaning; modify only to clean.
+- If missing or unclear, use "".
+
+FIELD RULES:
+1. Title: cleaned version of original.
+2. Problem: cleaned description; keep essential steps, actual/expected results.
+3. Module: infer from Title → then Problem. Use closest matching feature. If uncertain: "".
+4. Sub-Module: specific functional element inside Module. If none: "".
+5. Summarized Problem: one clear sentence (max 25 words) stating the core issue.
+6. Severity:
+   - High: unusable, crash, kernel panic, freeze, data loss, major function broken.
+   - Medium: partial/intermittent failure, ANR, noticeable slowdown.
+   - Low: UI glitch, cosmetic issue, rare minor fault.
+7. Severity Reason: one sentence (≤20 words) justifying severity.
+8. Issue Type: choose ONE:
+   System, Functional, Performance, Usability, Compatibility, Security, Connectivity, Battery, UI/UX, Crash, Heat.
+9. Sub-Issue Type: one of:
+   CP Crash, App Crash, ANR, Slow/Lag Performance Issue, Feature Missing, Poor Quality, UI Issue, Heating Issue, Battery Drain, Compatibility Issue, Restart, other Issue, or "".
+
+STRICT OUTPUT RULES:
+- Return a SINGLE JSON array.
+- No commentary, no formatting outside the array.
 - Preserve input row order.
-- Do not change the Title and Problem text more than necessary to clean it.
+- DO NOT reorder or rename keys.
+- Use "" for unknown fields.
+- Ensure all values are valid JSON strings (escape quotes/newlines).
 
-Output:
-Return a **single valid JSON array**.
-Each object must contain EXACTLY these keys in this order:
-
+SCHEMA (exact order):
 Case Code,
 Model No.,
 Progr.Stat.,
@@ -57,5 +47,5 @@ Summarized Problem,
 Severity,
 Severity Reason
 
-Input Data:
+INPUT:
 {INPUTDATA_JSON}`;

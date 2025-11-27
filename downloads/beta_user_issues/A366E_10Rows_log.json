@@ -1,0 +1,51 @@
+{
+  "total_processing_time_ms": 21994,
+  "total_processing_time_seconds": "21.994",
+  "number_of_input_rows": 10,
+  "number_of_chunks": 10,
+  "number_of_output_rows": 10,
+  "failed_row_details": [],
+  "added_columns": [],
+  "chunks_processing_time": [
+    {
+      "chunk_id": 0,
+      "time_ms": 7321
+    },
+    {
+      "chunk_id": 1,
+      "time_ms": 3204
+    },
+    {
+      "chunk_id": 2,
+      "time_ms": 5049
+    },
+    {
+      "chunk_id": 3,
+      "time_ms": 9093
+    },
+    {
+      "chunk_id": 4,
+      "time_ms": 8304
+    },
+    {
+      "chunk_id": 5,
+      "time_ms": 8531
+    },
+    {
+      "chunk_id": 6,
+      "time_ms": 8173
+    },
+    {
+      "chunk_id": 7,
+      "time_ms": 8548
+    },
+    {
+      "chunk_id": 8,
+      "time_ms": 8543
+    },
+    {
+      "chunk_id": 9,
+      "time_ms": 8397
+    }
+  ]
+}
