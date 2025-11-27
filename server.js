@@ -800,7 +800,7 @@ async function processExcel(req, res) {
     const totalColumns = finalHeaders.length;
 
     // Define column alignments based on webpage table
-    const centerAlignColumns = [0, 1, 2, 3, 7, 8, 9, 10, 11, 12, 14]; // Case Code, Title, Problem, Module (0-based)
+    const centerAlignColumns = [0, 1, 2, 6, 7, 8, 9, 10, 11, 13]; // Case Code, Title, Problem, Module (0-based)
     // Case Code (0), Model (1), Grade (2), S/W Ver. (3), Severity (7) are centered
 
     Object.keys(newSheet).forEach((cellKey) => {
@@ -846,11 +846,13 @@ async function processExcel(req, res) {
     });
 
     // === Apply Header Styling ===
+    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'];
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;
+      const isSpecialHeader = specialHeaders.includes(header);
       newSheet[cellAddress].s = {
-        fill: { patternType: "solid", fgColor: { rgb: "1E90FF" } },
+        fill: { patternType: "solid", fgColor: { rgb: isSpecialHeader ? "1E90FF" : "000080" } },
         font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
         alignment: { horizontal: "center", vertical: "center", wrapText: true }
       };

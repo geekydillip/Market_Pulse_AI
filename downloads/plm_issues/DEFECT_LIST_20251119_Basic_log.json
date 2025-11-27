@@ -1,6 +1,6 @@
 {
-  "total_processing_time_ms": 36692,
-  "total_processing_time_seconds": "36.692",
+  "total_processing_time_ms": 37220,
+  "total_processing_time_seconds": "37.220",
   "number_of_input_rows": 10,
   "number_of_chunks": 2,
   "number_of_output_rows": 10,
@@ -9,11 +9,11 @@
   "chunks_processing_time": [
     {
       "chunk_id": 0,
-      "time_ms": 18507
+      "time_ms": 19435
     },
     {
       "chunk_id": 1,
-      "time_ms": 36607
+      "time_ms": 37133
     }
   ]
 }
