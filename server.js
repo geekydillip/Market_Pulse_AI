@@ -800,7 +800,7 @@ async function processExcel(req, res) {
     const totalColumns = finalHeaders.length;
 
     // Define column alignments based on webpage table
-    const centerAlignColumns = [0, 1, 2, 3, 7]; // Case Code, Title, Problem, Module (0-based)
+    const centerAlignColumns = [0, 1, 2, 3, 7, 8, 9, 10, 11, 12, 14]; // Case Code, Title, Problem, Module (0-based)
     // Case Code (0), Model (1), Grade (2), S/W Ver. (3), Severity (7) are centered
 
     Object.keys(newSheet).forEach((cellKey) => {

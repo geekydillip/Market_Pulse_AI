@@ -19,11 +19,13 @@ function normalizeHeaders(rows) {
     'Problem': 'Problem',
     'Module': 'Module',
     'Sub-Module': 'Sub-Module',
-    'Dev. Mdl. Name/Item Name': 'Model No.'
+    'Dev. Mdl. Name/Item Name': 'Model No.',
+    'Priority':'Priority',
+    'Occurr. Freq.':'Occurr. Freq.'
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','S/W Ver.','Title','Problem'];
+  const canonicalCols = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -73,7 +75,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','S/W Ver.','Title','Problem']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -117,7 +119,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'plmIssuesPrompt',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.','S/W Ver.', 'Title', 'Problem',  'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.','S/W Ver.', 'Title', 'Problem', 'Priority', 'Occurr. Freq.', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -153,7 +155,7 @@ module.exports = {
     return finalHeaders.map((h, idx) => {
       if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
       if (h === 'Model No.') return { wch: 20 };
-      if (h === 'S/W Ver.') return { wch: 15 };
+      if (h === 'S/W Ver.' || h === 'Occurr. Freq.'|| h === 'Priority') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
