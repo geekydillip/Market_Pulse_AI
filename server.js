@@ -834,10 +834,10 @@ async function processExcel(req, res) {
 
       if (row > 0 && row <= dataRows) {
         cellStyle.border = {
-          top: { style: "thin", color: { rgb: "CCCCCC" } },
-          bottom: { style: "thin", color: { rgb: "CCCCCC" } },
-          left: { style: "thin", color: { rgb: "CCCCCC" } },
-          right: { style: "thin", color: { rgb: "CCCCCC" } }
+          top: { style: "thin", color: { rgb: "ADD8E6" } },
+          bottom: { style: "thin", color: { rgb: "ADD8E6" } },
+          left: { style: "thin", color: { rgb: "ADD8E6" } },
+          right: { style: "thin", color: { rgb: "ADD8E6" } }
         };
       }
 
