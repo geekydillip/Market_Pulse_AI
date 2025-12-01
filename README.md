@@ -14,10 +14,8 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
   - **Quality Index (QI)**: Quality metrics processing
   - **Samsung Members**: Samsung Member feedback analysis
   - **PLM Issues**: Product Lifecycle Management issue processing
-  - **Custom Prompt**: Flexible AI processing with user-defined prompts
 - **Processing Options**:
   - **VOC Analysis**: Specialized for Voice of Customer data (module identification, severity classification, problem summarization)
-  - **Custom AI Processing**: Flexible prompts for custom transformations
   - **Generic Data Cleaning**: Basic data cleansing (trimming, date normalization, number conversion)
 - **Interactive Dashboards**: Dedicated dashboards for each processing type with charts, KPIs, and detailed tables
 - **Advanced Backend Features**:
@@ -69,9 +67,8 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 ### Processing Data
 
 1. **Navigate to Upload Tab**: Select files with drag-and-drop or browse (.xls, .xlsx, .json)
-2. **Choose Processing Type**: 
+2. **Choose Processing Type**:
    - VOC for customer feedback analysis
-   - Custom for flexible AI prompts (enter custom prompt text)
    - Clean for deterministic data cleansing
 3. **Select AI Model**: Choose from available Ollama models (defaults to qwen3:4b-instruct)
 4. **Process File**: Click "Process with AI" and monitor real-time progress
@@ -216,8 +213,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 **Parameters**:
 - `file`: File (required) - Excel or JSON file to process
-- `processingType`: string (required) - 'voc', 'custom', or 'clean'
-- `customPrompt`: string (optional) - Custom AI prompt text
+- `processingType`: string (required) - 'voc' or 'clean'
 - `model`: string (required) - Ollama model to use
 - `sessionId`: string (optional) - Session ID for progress tracking
 
@@ -400,7 +396,6 @@ Market Pulse AI/
 
 ### Data Processing Options
 - **VOC Analysis**: Specialized prompts for customer feedback data cleaning and analysis (module identification, severity classification, problem summarization)
-- **Custom Processing**: User-defined AI prompts for flexible transformations with retry logic
 - **Generic Cleaning**: Deterministic rules for data normalization (trim whitespace, date ISO format normalization, numeric string conversion)
 
 
@@ -421,13 +416,6 @@ Specialized processing for customer feedback data from support tickets or produc
 - **Problem Summarization**: Combines Title + Problem fields into clear, concise English sentences
 - **Severity Assessment**: Classifies impact as Critical, High, Medium, or Low with detailed reasoning
 - **Output Structure**: Preserves original columns plus added analysis fields in structured JSON
-
-### Custom AI Processing
-User-defined prompt processing with flexible AI transformations:
-- Enter any custom prompt for content processing
-- AI generates structured output in expected JSON format
-- Built-in retry logic for failed attempts
-- Supports both Excel and JSON inputs/outputs
 
 ### Generic Data Cleaning
 Deterministic automated cleaning without AI:

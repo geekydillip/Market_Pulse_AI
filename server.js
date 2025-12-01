@@ -250,7 +250,6 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
   try {
     // Sanitize input parameters to prevent injection
     const processingType = sanitizeInput(req.body.processingType || 'beta_user_issues');
-    const customPrompt = sanitizeInput(req.body.customPrompt || '');
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
@@ -310,7 +309,7 @@ function applyGenericCleaning(value) {
 const progressClients = new Map();
 
 // Process a single chunk
-async function processChunk(chunk, processingType, customPrompt, model, chunkId) {
+async function processChunk(chunk, processingType, model, chunkId) {
   const startTime = Date.now();
   let processedRows = null;
 
@@ -373,7 +372,7 @@ async function processChunk(chunk, processingType, customPrompt, model, chunkId)
     const transformedRows = processor.transform ? processor.transform(chunk.rows) : chunk.rows;
 
     // Build prompt
-    const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows, customPrompt) : (customPrompt || JSON.stringify(transformedRows).slice(0, 1000));
+    const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
 
     // Call AI (cached)
     const result = await callOllamaCached(prompt, model, { timeoutMs: false });
@@ -467,7 +466,6 @@ async function processJSON(req, res) {
 
     // Use Beta user issues processing type for JSON (since only structured data should be in JSON)
     const processingType = req.body.processingType || 'beta_user_issues';
-    const customPrompt = req.body.customPrompt || '';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
@@ -476,7 +474,7 @@ async function processJSON(req, res) {
     const ROWSCOUNT = rows.length || 0;
 
     let chunkSize;
-    if (processingType === 'beta_user_issues' || processingType === 'voc') {
+    if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
       chunkSize = ROWSCOUNT <= 50 ? 1
                 : ROWSCOUNT <= 200 ? 2
                 : 4;
@@ -504,7 +502,7 @@ async function processJSON(req, res) {
       const chunkRows = rows.slice(startIdx, endIdx);
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
-        const result = await processChunk(chunk, processingType, customPrompt, model, i);
+        const result = await processChunk(chunk, processingType, model, i);
         // send per-chunk progress update
         sendProgress(sessionId, {
           type: 'progress',
@@ -673,7 +671,6 @@ async function processExcel(req, res) {
 
     // Use the requested processing type for Excel
     const processingType = req.body.processingType || 'clean';
-    const customPrompt = req.body.customPrompt || '';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
@@ -699,9 +696,9 @@ async function processExcel(req, res) {
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
 
-    // If VOC strict per-row analysis required, use 1 row per chunk, but batch when file > threshold
+    // If AI processing types require smaller chunks, use 1 row per chunk, but batch when file > threshold
     let chunkSize;
-    if (processingType === 'beta_user_issues' || processingType === 'voc') {
+    if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
       chunkSize = ROWSCOUNT <= 50 ? 1
                 : ROWSCOUNT <= 200 ? 2
                 : 4;
@@ -729,7 +726,7 @@ async function processExcel(req, res) {
       const chunkRows = rows.slice(startIdx, endIdx);
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx-1], headers, rows: chunkRows };
       tasks.push(async () => {
-        const result = await processChunk(chunk, processingType, customPrompt, model, i);
+        const result = await processChunk(chunk, processingType, model, i);
         // send per-chunk progress update
         sendProgress(sessionId, { type: 'progress', percent: Math.round((i+1)/numberOfChunks*100), message: `Processed chunk ${i+1}/${numberOfChunks}`, chunkId: i });
         return result;

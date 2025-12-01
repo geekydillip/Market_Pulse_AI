@@ -40,8 +40,7 @@ const fileContent = document.getElementById('fileContent');
 const removeFile = document.getElementById('removeFile');
 const processBtn = document.getElementById('processBtn');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const customPrompt = document.getElementById('customPrompt');
-const customPromptInput = document.getElementById('customPromptInput');
+
 const statusElement = document.getElementById('status');
 const progressContainer = document.getElementById('progressContainer');
 const progressFill = document.getElementById('progressFill');
@@ -192,12 +191,6 @@ function formatFileSize(bytes) {
 
 // Processing type change handler
 function handleProcessingTypeChange(e) {
-    if (e.target.value === 'custom') {
-        customPrompt.style.display = 'block';
-    } else {
-        customPrompt.style.display = 'none';
-    }
-
     // Update visual selection state
     updateSelectionState();
 }
@@ -279,14 +272,7 @@ async function handleProcess() {
 
     // Get processing type and model
     const processingType = document.querySelector('input[name="processingType"]:checked').value;
-    const customPromptValue = customPromptInput.value;
     const selectedModel = modelSelect.value;
-
-    // Validate custom prompt
-    if (processingType === 'custom' && !customPromptValue.trim()) {
-        alert('Please enter a custom prompt');
-        return;
-    }
 
     // Generate unique session ID for this processing request
     const sessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -296,14 +282,14 @@ async function handleProcess() {
             // Handle Excel/JSON processing with chunked progress
             progressContainer.style.display = 'block';
             updateProgress(0, 'Initializing...');
-            await processStructuredFile(currentFile, processingType, customPromptValue, selectedModel, sessionId);
+            await processStructuredFile(currentFile, processingType, selectedModel, sessionId);
         } else {
             // Process other files - show loading overlay
             showLoading(selectedModel);
             const formData = new FormData();
             formData.append('file', currentFile);
             formData.append('processingType', processingType);
-            formData.append('customPrompt', customPromptValue);
+
             formData.append('model', selectedModel);
 
             const response = await fetch('/api/process', {
@@ -337,7 +323,7 @@ async function handleProcess() {
     }
 }
 
-async function processStructuredFile(file, processingType, customPrompt, model, sessionId) {
+async function processStructuredFile(file, processingType, model, sessionId) {
     return new Promise(async (resolve, reject) => {
         try {
             const processStartTime = Date.now();
@@ -378,7 +364,7 @@ async function processStructuredFile(file, processingType, customPrompt, model, 
             const formData = new FormData();
             formData.append('file', file);
             formData.append('processingType', processingType);
-            formData.append('customPrompt', customPrompt);
+
             formData.append('model', model);
             formData.append('sessionId', sessionId);
 

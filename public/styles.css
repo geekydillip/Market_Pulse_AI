@@ -692,35 +692,7 @@ section {
     color: #e2e8f0;
 }
 
-/* Custom Prompt */
-.custom-prompt {
-    margin-bottom: 24px;
-}
 
-.custom-prompt label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    font-size: 14px;
-}
-
-.prompt-input {
-    width: 100%;
-    min-height: 100px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 14px;
-    resize: vertical;
-}
-
-.prompt-input:focus {
-    outline: none;
-    border-color: #667eea;
-}
 
 /* Buttons */
 .btn-process {
