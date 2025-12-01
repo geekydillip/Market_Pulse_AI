@@ -268,7 +268,7 @@ document.addEventListener('keydown', (e) => {
   }
 
   // If modal is open, don't handle pagination shortcuts
-  if (document.getElementById('moduleModal').style.display === 'flex') {
+  if (document.getElementById('issues-modal').style.display === 'flex') {
     return;
   }
 
@@ -839,11 +839,21 @@ function renderTable() {
   pageData.forEach((moduleData, index) => {
     const globalIndex = startIndex + index + 1;
     const tr = document.createElement('tr');
+
+    // Enhanced text truncation with better handling
+    const truncatedTitle = moduleData.topIssueTitle.length > 50
+      ? moduleData.topIssueTitle.substring(0, 50) + '...'
+      : moduleData.topIssueTitle;
+
+    const truncatedModel = moduleData.modelNo.length > 25
+      ? moduleData.modelNo.substring(0, 25) + '...'
+      : moduleData.modelNo;
+
     tr.innerHTML = `
       <td>${globalIndex}</td>
-      <td>${escapeHtml(moduleData.modelNo)}</td>
+      <td title="${escapeHtml(moduleData.modelNo)}">${escapeHtml(truncatedModel)}</td>
       <td><button class="module-name-link" data-module="${escapeHtml(moduleData.module)}" data-count="${moduleData.count}">${escapeHtml(moduleData.module)}</button></td>
-      <td title="${escapeHtml(moduleData.topIssueTitle)}">${escapeHtml(moduleData.topIssueTitle.slice(0, 60))}${moduleData.topIssueTitle.length > 60 ? '...' : ''}</td>
+      <td title="${escapeHtml(moduleData.topIssueTitle)}">${escapeHtml(truncatedTitle)}</td>
       <td>${moduleData.count}</td>
     `;
     tbody.appendChild(tr);
@@ -1215,38 +1225,29 @@ function handleModalExport() {
 
 // Modal management for module details
 function showModuleDetails(module, moduleData) {
-  const modalTable = document.getElementById('modalTable');
+  const modalTable = document.querySelector('#issues-modal table.issues-table');
 
-  // Set fixed table with S/N column
+  // Set table with column classes for exact widths - updated for 11-column structure
   modalTable.innerHTML = `
-    <colgroup>
-      <col style="width:5%" />
-      <col style="width:10%" />
-      <col style="width:10%" />
-      <col style="width:10%" />
-      <col style="width:20%" />
-      <col style="width:20%" />
-      <col style="width:8%" />
-      <col style="width:8%" />
-      <col style="width:9%" />
-    </colgroup>
     <thead>
       <tr>
-        <th>S/N</th>
-        <th>Case Code</th>
-        <th>Model No.</th>
-        <th>S/W Ver.</th>
-        <th>Title</th>
-        <th>Problem</th>
-        <th>Sub-Module</th>
-        <th>Severity</th>
-        <th>Severity Reason</th>
+        <th class="col-sn">S/N</th>
+        <th class="col-case">Case Code</th>
+        <th class="col-title">Title</th>
+        <th class="col-problem">Problem</th>
+        <th class="col-model">Model No.</th>
+        <th class="col-sw">S/W Ver.</th>
+        <th class="col-module">Module</th>
+        <th class="col-sub">Sub-Module</th>
+        <th class="col-summarized">Summarized Problem</th>
+        <th class="col-severity">Severity</th>
+        <th class="col-reason">Severity Reason</th>
       </tr>
     </thead>
     <tbody id="modalBody"></tbody>
   `;
 
-  const modal = document.getElementById('moduleModal');
+  const modal = document.getElementById('issues-modal');
   const modalTitle = document.getElementById('modalTitle');
   const modalBody = document.getElementById('modalBody');
   const modalContainer = modal.querySelector('.modal-container');
@@ -1268,25 +1269,60 @@ function showModuleDetails(module, moduleData) {
   if (!moduleRows.length) {
     modalBody.innerHTML = `<div class="modal-empty">No details available for this module.</div>`;
   } else {
-    moduleRows.forEach((row, index) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${escapeHtml(row.caseId || '')}</td>
-        <td>${escapeHtml(row.modelFromFile || '')}</td>
-        <td>${escapeHtml(row.sWVer || row['S/W Ver.'] || '')}</td>
-        <td class="truncate" title="${escapeHtml(row.title || '')}">${escapeHtml(row.title || '')}</td>
-        <td class="truncate" title="${escapeHtml(row.problem || '')}">${escapeHtml(row.problem || '')}</td>
-        <td>${escapeHtml(row.subModule || row['Sub-Module'] || '')}</td>
-        <td>${escapeHtml(row.severity || '')}</td>
-        <td>${escapeHtml(row.severityReason || row['Severity Reason'] || '')}</td>
-      `;
-      modalBody.appendChild(tr);
-    });
+  moduleRows.forEach((row, index) => {
+    const tr = document.createElement('tr');
+
+    // Format severity with colored badge
+    const severity = (row.severity || '').toLowerCase();
+    const severityPill = severity === 'high' ?
+      '<span class="pill high">High</span>' :
+      '<span class="pill">Medium</span>'; // Default fallback
+
+    // Truncate long text for display
+    const truncatedTitle = (row.title || '').length > 50 ? (row.title || '').substring(0, 50) + '...' : (row.title || '');
+    const truncatedProblem = (row.problem || '').length > 50 ? (row.problem || '').substring(0, 50) + '...' : (row.problem || '');
+    const truncatedReason = (row.severityReason || '').length > 40 ? (row.severityReason || '').substring(0, 40) + '...' : (row.severityReason || '');
+    const truncatedModel = (row.modelFromFile || '').length > 25 ? (row.modelFromFile || '').substring(0, 25) + '...' : (row.modelFromFile || '');
+    const truncatedCase = (row.caseId || '').length > 20 ? (row.caseId || '').substring(0, 20) + '...' : (row.caseId || '');
+    const truncatedModule = (row.module || '').length > 15 ? (row.module || '').substring(0, 15) + '...' : (row.module || '');
+    const truncatedSubModule = (row.subModule || '').length > 15 ? (row.subModule || '').substring(0, 15) + '...' : (row.subModule || '');
+    const truncatedSummarized = (row.summarizedProblem || '').length > 40 ? (row.summarizedProblem || '').substring(0, 40) + '...' : (row.summarizedProblem || '');
+
+    // Reorder columns to match EXPECTED COLUMNS order: S/N, Case Code, Title, Problem, Model No., S/W Ver., Module, Sub-Module, Summarized Problem, Severity, Severity Reason
+    tr.innerHTML = `
+      <td class="col-sn">${index + 1}</td>
+      <td class="col-case" data-full="${escapeHtml(row.caseId || '')}">${escapeHtml(truncatedCase)}</td>
+      <td class="col-title" data-full="${escapeHtml(row.title || '')}">${escapeHtml(truncatedTitle)}</td>
+      <td class="col-problem" data-full="${escapeHtml(row.problem || '')}">${escapeHtml(truncatedProblem)}</td>
+      <td class="col-model" data-full="${escapeHtml(row.modelFromFile || '')}">${escapeHtml(truncatedModel)}</td>
+      <td class="col-sw">${escapeHtml(row.sWVer || row['S/W Ver.'] || '')}</td>
+      <td class="col-module" data-full="${escapeHtml(row.module || '')}">${escapeHtml(truncatedModule)}</td>
+      <td class="col-sub" data-full="${escapeHtml(row.subModule || '')}">${escapeHtml(truncatedSubModule)}</td>
+      <td class="col-summarized" data-full="${escapeHtml(row.summarizedProblem || '')}">${escapeHtml(truncatedSummarized)}</td>
+      <td class="col-severity">${severityPill}</td>
+      <td class="col-reason" data-full="${escapeHtml(row.severityReason || '')}">${escapeHtml(truncatedReason)}</td>
+    `;
+    modalBody.appendChild(tr);
+  });
   }
 
   modal.classList.add('show');
   modal.style.display = 'flex';
+
+  // Remove modal overlay behavior for full-screen view
+  const modalOverlay = document.querySelector('#issues-modal .modal-overlay');
+  if (modalOverlay) {
+    modalOverlay.style.background = 'none';
+    modalOverlay.style.backdropFilter = 'none';
+  }
+
+  // Ensure full-screen layout
+  const fullScreenContainer = document.querySelector('#issues-modal .modal-container');
+  if (fullScreenContainer) {
+    fullScreenContainer.style.transform = 'none';
+    fullScreenContainer.style.width = '100%';
+    fullScreenContainer.style.height = '100vh';
+  }
 
   // Focus trap setup
   const focusableElements = modalContainer.querySelectorAll('a[href], button:not([disabled]), textarea, input[type="text"], input[type="radio"], input[type="checkbox"], select, [tabindex]:not([tabindex="-1"])');
@@ -1316,7 +1352,7 @@ function showModuleDetails(module, moduleData) {
 }
 
 function closeModal() {
-  const modal = document.getElementById('moduleModal');
+  const modal = document.getElementById('issues-modal');
   modal.classList.remove('show');
   setTimeout(() => {
     modal.style.display = 'none';
@@ -1337,11 +1373,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize modal close handlers
   document.getElementById('modalClose').addEventListener('click', closeModal);
-  document.getElementById('moduleModal').addEventListener('click', (e) => {
+  document.getElementById('issues-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) {
       closeModal();
     }
   });
+
+  // Enhanced legacy element cleanup for full-screen table
+  const removeLegacyElements = () => {
+    const legacySelectors = [
+      '.legacy-pagination',
+      '.page-info',
+      '.pagination-legacy',
+      '.modal-backdrop',
+      '.modal-fade'
+    ];
+    legacySelectors.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => el.remove());
+    });
+  };
+
+  // Call cleanup
+  removeLegacyElements();
+
+  // MutationObserver for dynamically injected legacy elements
+  const modal = document.getElementById('issues-modal');
+  if (modal) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) {
+            const legacyEls = node.querySelectorAll ?
+              node.querySelectorAll('.legacy-pagination, .page-info, .pagination-legacy, .modal-backdrop') : [];
+            legacyEls.forEach(el => el.remove());
+          }
+        });
+      });
+    });
+    observer.observe(modal, { childList: true, subtree: true });
+  }
 
   // Modal export button handler
   document.getElementById('exportBtn').addEventListener('click', handleModalExport);

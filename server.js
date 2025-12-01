@@ -1095,9 +1095,7 @@ app.get('/api/dashboard', (req, res) => {
     const moduleDistribution = Object.keys(moduleCounts).map(k => ({ module: k, count: moduleCounts[k] })).sort((a, b) => b.count - a.count);
 
     // Prepare table rows to return (limit to avoid huge payload)
-    let debugCount = 0;
     const tableRows = filteredRows.slice(0, 500).map(r => {
-      // Debug logging to identify data mapping issues
       const mappedRow = {
         caseId: r['Case Code'] || r['CaseId'] || r['ID'] || '',
         title: r['Title'] || r['Summary'] || r['Problem Title'] || '',
@@ -1109,18 +1107,6 @@ app.get('/api/dashboard', (req, res) => {
         subModule: r['Sub-Module'] || r['Sub Module'] || r['SubModule'] || '',
         severityReason: r['Severity Reason'] || r['Severity_Reason'] || ''
       };
-
-      // Log the first few rows to check data mapping
-      if (debugCount < 5 && mappedRow.title && mappedRow.problem) {
-        console.log('[DASHBOARD API] Sample row mapping:', {
-          excel_title: r['Title'] || 'NOT FOUND',
-          excel_problem: r['Problem'] || 'NOT FOUND',
-          mapped_title: mappedRow.title,
-          mapped_problem: mappedRow.problem,
-          raw_row_keys: Object.keys(r)
-        });
-        debugCount++;
-      }
 
       return mappedRow;
     });

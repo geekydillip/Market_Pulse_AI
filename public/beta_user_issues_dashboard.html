@@ -440,156 +440,391 @@
         flex-shrink: 0;
     }
 
-    /* Responsive Modal Styles */
-    .modal-overlay {
+    /* Full-Screen Layout for Issues Modal - HIDDEN BY DEFAULT */
+    #issues-modal {
         position: fixed;
         inset: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 100%;
+        height: 100vh;
+        max-width: none;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: var(--bg);
+        padding: 24px 36px;
+        display: none; /* Hidden by default */
+        flex-direction: column;
         z-index: 1000;
-        padding: 0;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
     }
 
-    .modal-overlay.show {
+    #issues-modal .modal-overlay {
+        position: static;
+        background: none;
+        backdrop-filter: none;
+        display: block;
         opacity: 1;
         visibility: visible;
     }
 
-    .modal-container {
-        width: calc(100vw - 40px);
-        max-width: calc(100vw - 40px);
-        height: calc(100vh - 40px);
-        max-height: calc(100vh - 40px);
-        overflow: auto;
+    #issues-modal .modal-container {
+        position: static;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
         margin: 0;
-        background: var(--card-bg);
-        border-radius: 16px;
-        padding: 24px;
-        position: relative;
-        transform: scale(0.9);
-        transition: transform 0.3s ease;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+        padding: 0;
+        transform: none;
         display: flex;
         flex-direction: column;
-        box-shadow: var(--shadow);
     }
 
-    @media (min-width: 640px) {
-        .modal-container {
-            margin: 0 24px;
-        }
-    }
-
-    @media (min-width: 768px) {
-        .modal-container {
-            margin: 0 40px;
-        }
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    #issues-modal .modal-header {
+        position: static;
+        background: var(--bg);
+        padding: 16px 0 24px 0;
         margin-bottom: 0;
+        border-bottom: 1px solid rgba(0,0,0,0.08);
     }
 
-    .modal-header h3 {
-        font-size: 20px;
+    #issues-modal .modal-header h3 {
+        font-size: 22px;
         font-weight: 600;
         color: var(--text-primary);
         margin: 0;
     }
 
-    .modal-header-actions {
+    #issues-modal .modal-header-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
     }
 
-    .btn-download {
-        background: var(--accent);
-        border: none;
-        border-radius: 6px;
-        color: white;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        padding: 8px 12px;
-        transition: all 0.2s ease;
+    #issues-modal .modal-body {
+        flex: 1;
+        padding: 24px 0 0 0;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
-    .btn-download:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    #issues-modal .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        background: var(--bg);
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
     }
 
-    .modal-close {
-        background: none;
-        border: 2px solid gray;
-        padding: 8px;
-        border-radius: 6px;
-        color: var(--text-primary);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        opacity: 0.7;
-    }
-
-    .modal-close:hover {
-        background: rgba(0, 0, 0, 0.1);
-        opacity: 1;
-    }
-
-    .sticky-header {
+    #issues-modal .issues-table thead th {
         position: sticky;
         top: 0;
         background: var(--card-bg);
-        z-index: 20;
-        padding: 16px 24px;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        z-index: 10;
     }
 
-    .modal-body {
-        padding: 16px 24px;
-        flex: 1;
-        overflow: auto;
+    /* Responsive: allow horizontal scroll instead of hiding columns */
+    @media (max-width: 900px) {
+        #issues-modal .table-wrap {
+            overflow-x: auto;
+        }
+
+        /* Keep all columns visible, allow scrolling */
+        #issues-modal .col-title,
+        #issues-modal .col-problem,
+        #issues-modal .col-summarized,
+        #issues-modal .col-reason {
+            display: table-cell;
+        }
     }
 
-    .modal-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-        margin: 0;
+    /* Issues table - optimized full-width layout with proper content distribution */
+    .issues-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      table-layout: fixed; /* Fixed layout for proper header/data alignment */
+      margin: 0;
+      border-spacing: 0;
     }
 
-    .modal-table th {
-        text-align: left;
-        padding: 16px 12px;
-        font-weight: 600;
-        color: var(--text-primary);
-        background: var(--card-bg);
-        border-bottom: 2px solid var(--border-color);
-        position: sticky;
-        top: 88px; /* Offset for sticky header */
-        z-index: 5;
+    .issues-table thead th {
+      padding: 16px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+      background: var(--card-bg);
+      border-bottom: 2px solid rgba(9,30,63,0.04);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      text-align: left;
+      vertical-align: bottom;
+      white-space: nowrap; /* Header text never wraps */
     }
 
-    .modal-table td {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.05));
-        color: var(--text-primary);
-        word-wrap: break-word;
+    .issues-table tbody td {
+      padding: 16px 14px; /* Reduced padding for tighter row spacing */
+      border-bottom: 1px solid rgba(9,30,63,0.04);
+      color: var(--text-primary);
+      vertical-align: top; /* Top align for consistent multi-line layout */
+      line-height: 1.6; /* Better line spacing for wrapped text */
+      height: auto; /* Allow auto height for wrapped content */
     }
 
-    .modal-table tbody tr:hover {
-        background: var(--hover-bg, rgba(59, 130, 246, 0.05));
+    /* Optimized column widths with content priority */
+    .col-sn {
+      width: 60px;
+      min-width: 60px;
+      max-width: 60px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .col-case {
+      width: 140px;
+      min-width: 140px;
+      max-width: 180px;
+    }
+    .col-title {
+      width: 200px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-problem {
+      width: 250px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-model {
+      width: 140px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-sw {
+      width: 120px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-module {
+      width: 120px;
+    }
+    .col-sub {
+      width: 110px;
+    }
+    .col-summarized {
+      width: 300px; /* Fixed width for proper alignment */
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-severity {
+      width: 100px;
+      text-align: center;
+    }
+    .col-reason {
+      width: 200px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Comprehensive text handling - NO forced truncation for content columns */
+    .col-title, .col-problem, .col-summarized, .col-reason {
+      overflow: visible;
+      text-overflow: unset;
+    }
+
+    /* Minimal truncation only for truly compact columns */
+    .col-case, .col-model, .col-sw, .col-module, .col-sub {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    /* Enhanced severity pills */
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .pill.high {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+
+    /* Clean hover effect - no left stripe */
+    .issues-table tbody tr:hover {
+      background-color: rgba(6,22,36,0.02);
+      transform: translateY(0);
+      transition: background-color 0.15s ease;
+    }
+
+    /* Enhanced sticky header */
+    .issues-table thead th {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Improved tooltips for fallback truncation */
+    .col-case:hover::after,
+    .col-model:hover::after,
+    .col-sw:hover::after,
+    .col-module:hover::after,
+    .col-sub:hover::after {
+      content: attr(data-full);
+      position: absolute;
+      z-index: 1000;
+      background: rgba(0,0,0,0.95);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: normal;
+      max-width: 350px;
+      word-wrap: break-word;
+      pointer-events: none;
+      opacity: 0;
+      animation: tooltipFadeIn 0.25s ease forwards;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      /* Smart positioning */
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 100%;
+      margin-bottom: 8px;
+    }
+
+    /* Tooltip positioning adjustments for edge cases */
+    .col-case:hover::after,
+    .col-model:hover::after,
+    .col-sw:hover::after {
+      left: 20px;
+      transform: none;
+    }
+
+    .col-module:hover::after,
+    .col-sub:hover::after {
+      right: 20px;
+      left: auto;
+      transform: none;
+    }
+
+    @keyframes tooltipFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive: maintain full readability on smaller screens */
+    @media (max-width: 900px) {
+      #issues-modal .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Ensure all columns remain accessible */
+      .issues-table {
+        min-width: 1200px; /* Minimum width for readability */
+      }
+
+      /* Allow even more generous padding on mobile for touch */
+      .issues-table tbody td {
+        padding: 24px 16px;
+        line-height: 1.7;
+      }
+    }
+
+    /* Print styles for exported tables */
+    @media print {
+      .issues-table {
+        font-size: 12px;
+      }
+
+      .issues-table tbody td {
+        padding: 8px 12px;
+      }
+    }
+
+    /* Tooltips for truncated text - positioned inside modal */
+    .col-case:hover::after,
+    .col-model:hover::after,
+    .col-sw:hover::after,
+    .col-module:hover::after,
+    .col-sub:hover::after,
+    .col-title:hover::after,
+    .col-problem:hover::after,
+    .col-summarized:hover::after,
+    .col-reason:hover::after {
+      content: attr(data-full);
+      position: absolute;
+      z-index: 1000;
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: normal;
+      max-width: 400px;
+      word-wrap: break-word;
+      pointer-events: none;
+      opacity: 0;
+      animation: tooltipFadeIn 0.2s ease forwards;
+      /* Auto-positioning to stay within modal */
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 100%;
+      margin-bottom: 4px;
+    }
+
+    /* Tooltip positioning fallback - shift if near edges */
+    .col-case:hover::after,
+    .col-model:hover::after,
+    .col-sw:hover::after {
+      left: 10px;
+      transform: none;
+    }
+
+    .col-module:hover::after,
+    .col-sub:hover::after,
+    .col-severity:hover::after {
+      right: 10px;
+      left: auto;
+      transform: none;
+    }
+
+    @keyframes tooltipFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive: hide long columns under 900px */
+    @media (max-width: 900px) {
+      .col-title, .col-problem, .col-summarized, .col-reason {
+        display: none;
+      }
+
+      /* Allow horizontal scroll for remaining content */
+      .table-wrap {
+        overflow-x: auto;
+      }
     }
 
     #tableWrapper { width: 100%; overflow:auto; border-radius:12px; flex: 1; min-height: 0; }
@@ -866,7 +1101,7 @@
               <div class="table-count" id="tableCount">0 of 0 cases</div>
             </div>
           </div>
-          <div id="tableWrapper" class="table-glass">
+          <div id="tableWrapper" class="cases-table-wrapper">
             <table id="dataTable" class="data-table">
               <thead>
                 <tr>
@@ -883,9 +1118,6 @@
           <div class="pagination-controls" id="paginationControls">
             <button id="firstPageBtn" class="pagination-btn" title="First page" aria-label="Go to first page">&laquo;&laquo;</button>
             <button id="prevPageBtn" class="pagination-btn" title="Previous page" aria-label="Go to previous page">&laquo;</button>
-            <span class="pagination-info">
-              Page <input type="number" id="pageInput" class="page-input" min="1" value="1" aria-label="Current page"> of <span id="totalPages">1</span>
-            </span>
             <button id="nextPageBtn" class="pagination-btn" title="Next page" aria-label="Go to next page">&raquo;</button>
             <button id="lastPageBtn" class="pagination-btn" title="Last page" aria-label="Go to last page">&raquo;&raquo;</button>
           </div>
@@ -895,12 +1127,12 @@
   </div>
 
   <!-- Modal Dialog -->
-  <div id="moduleModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div id="issues-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-container">
       <div class="modal-header sticky-header">
         <h3 id="modalTitle">Module Cases — Loading...</h3>
         <div class="modal-header-actions">
-          <button class="btn-download" id="exportBtn">
+          <button class="btn" id="exportBtn">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7,10 12,15 17,10"/>
@@ -908,26 +1140,30 @@
             </svg>
             Download Excel
           </button>
-          <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+          <button class="close" id="modalClose" aria-label="Close">&times;</button>
         </div>
       </div>
       <div class="modal-body">
-        <table class="modal-table" id="modalTable">
-          <thead>
-            <tr>
-              <th>S/N</th>
-              <th>Case Code</th>
-              <th>Model No.</th>
-              <th>S/W Ver.</th>
-              <th>Title</th>
-              <th>Problem</th>
-              <th>Sub-Module</th>
-              <th>Severity</th>
-              <th>Severity Reason</th>
-            </tr>
-          </thead>
-          <tbody id="modalBody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="issues-table" id="modalTable" aria-label="Issues in Performance">
+            <thead>
+              <tr>
+                <th class="col-sn">S/N</th>
+                <th class="col-case">Case Code</th>
+                <th class="col-title">Title</th>
+                <th class="col-problem">Problem</th>
+                <th class="col-model">Model No.</th>
+                <th class="col-sw">S/W Ver.</th>
+                <th class="col-module">Module</th>
+                <th class="col-sub">Sub-Module</th>
+                <th class="col-summarized">Summarized Problem</th>
+                <th class="col-severity">Severity</th>
+                <th class="col-reason">Severity Reason</th>
+              </tr>
+            </thead>
+            <tbody id="modalBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
