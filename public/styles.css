@@ -1357,20 +1357,7 @@ body.theme-dark .search-highlight {
   color: var(--pill-high-text, #b12b3a);
 }
 
-/* Tooltips using data-full attribute - exact mockup approach */
-td[data-full]:hover::after {
-  content: attr(data-full);
-  position: absolute;
-  z-index: 40;
-  background: #fff;
-  border: 1px solid rgba(9,30,63,0.06);
-  padding: 10px;
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(16,24,40,0.08);
-  white-space: normal;
-  max-width: 600px;
-  pointer-events: none;
-}
+/* Tooltips removed - text now wraps directly in cells */
 
 /* Table wrapper with border - exact mockup styling */
 .table-wrap {
@@ -2352,6 +2339,19 @@ body.theme-dark, body.theme-dark html {
   white-space: normal !important;
   word-break: break-word !important;
   overflow-wrap: break-word !important;
+}
+
+/* Technical columns styling for Model No. and S/W Ver. */
+.col-model,
+.col-sw {
+  min-width: 140px !important;
+  max-width: 180px !important;
+  font-family: 'Courier New', Consolas, 'Liberation Mono', Menlo, monospace !important;
+  font-size: 13px !important;
+  word-break: break-all !important;    /* Breaks long alphanumeric codes */
+  overflow-wrap: anywhere !important;  /* Alternative for better browser support */
+  white-space: normal !important;
+  line-height: 1.3 !important;
 }
 
 /* Override truncation for description columns */
