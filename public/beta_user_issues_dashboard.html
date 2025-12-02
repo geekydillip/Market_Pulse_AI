@@ -550,6 +550,10 @@
         overflow-x: hidden;
     }
 
+    #modalBody {
+        /* Additional styles if needed for modal body */
+    }
+
     #issues-modal .table-wrap {
         width: 100%;
         overflow-x: auto;
@@ -1029,14 +1033,14 @@
     /* --- COLUMN 3: MODULE (Reduce Size) --- */
     #dataTable th:nth-child(3),
     #dataTable td:nth-child(3) {
-        width: 10%; /* Reduced width (approx 60% of typical size) */
+        width: 8%; /* Further reduced width */
         text-align: left;
     }
 
     /* --- COLUMN 4: ISSUE TITLE (Give it more space) --- */
     #dataTable th:nth-child(4),
     #dataTable td:nth-child(4) {
-        width: 50%; /* Give the majority of space to the actual issue text */
+        width: 52%; /* Give more space to the actual issue text */
     }
 
     /* Add styles for Severity Pills */
@@ -1050,6 +1054,17 @@
     .status-high { background-color: #fee2e2; color: #991b1b; } /* Red */
     .status-medium { background-color: #fef3c7; color: #92400e; } /* Amber */
     .status-low { background-color: #d1fae5; color: #065f46; } /* Green */
+
+    /* Center S/N column in modal table */
+    #moduleDetailTable thead th:first-child {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #moduleDetailTable tbody td:first-child {
+        text-align: center;
+        vertical-align: middle;
+    }
   </style>
 </head>
 <body data-category="beta_user_issues">
@@ -1214,7 +1229,7 @@
           <button class="close" id="modalClose" aria-label="Close">&times;</button>
         </div>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" id="modalBody">
         <div class="modal-table-container">
           <table id="moduleDetailTable">
             <thead>

@@ -1190,20 +1190,28 @@ body.theme-dark .search-highlight {
 /* --- TABLE CONTAINER (Scrollable Area) --- */
 .modal-table-container {
     flex-grow: 1;    /* Fills ALL remaining space towards bottom */
-    overflow-y: auto; /* ENABLE VERTICAL SCROLL (Request #2) */
-    overflow-x: auto; /* ENABLE HORIZONTAL SCROLL (Request #2) */
+    overflow-y: auto; /* ENABLE VERTICAL SCROLL - Always visible */
+    overflow-x: auto; /* ENABLE HORIZONTAL SCROLL - Always visible */
     border: 1px solid #e5e7eb; /* Border helps define the scroll area */
     border-radius: 6px;
     position: relative; /* Context for sticky header */
+    max-height: 100%; /* Ensure container doesn't exceed modal height */
 }
 
-/* --- STICKY TABLE HEADERS (UX Fix) --- */
-.modal-table-container th {
+/* --- STICKY TABLE HEADERS (UX Fix) - Fixed positioning --- */
+.modal-table-container thead {
     position: sticky;
     top: 0;
     background-color: #f9fafb; /* Must have bg to cover scrolling text */
     z-index: 10;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow for depth */
+}
+
+/* Ensure table takes full width for proper scrolling */
+#moduleDetailTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Fixed layout for consistent column widths */
 }
 
 /* Issues table - exact mockup styling */
