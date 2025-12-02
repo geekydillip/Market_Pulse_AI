@@ -467,6 +467,29 @@ function escapeHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
+// Copy to clipboard utility
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    // Simple visual feedback - could be enhanced with toast notifications
+    console.log('Copied to clipboard:', text);
+  } catch (err) {
+    console.error('Failed to copy:', err);
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      console.log('Copied to clipboard (fallback):', text);
+    } catch (fallbackErr) {
+      console.error('Fallback copy failed:', fallbackErr);
+    }
+    document.body.removeChild(textArea);
+  }
+}
+
 // Enhanced Charts with Professional Styling
 function renderCharts(severityDistribution, moduleDistribution) {
   // Sort severity data to match desired order: Critical, High, Medium, Low
@@ -1234,12 +1257,12 @@ function showModuleDetails(module, moduleData) {
         <th class="col-sn">S/N</th>
         <th class="col-case">Case Code</th>
         <th class="col-title">Title</th>
-        <th class="col-problem">Problem</th>
+        <th class="col-problem table-cell-wrap">Problem</th>
         <th class="col-model">Model No.</th>
         <th class="col-sw">S/W Ver.</th>
         <th class="col-module">Module</th>
         <th class="col-sub">Sub-Module</th>
-        <th class="col-summarized">Summarized Problem</th>
+        <th class="col-summarized table-cell-wrap">Summarized Problem</th>
         <th class="col-severity">Severity</th>
         <th class="col-reason">Severity Reason</th>
       </tr>
@@ -1278,29 +1301,25 @@ function showModuleDetails(module, moduleData) {
       '<span class="pill high">High</span>' :
       '<span class="pill">Medium</span>'; // Default fallback
 
-    // Truncate long text for display
-    const truncatedTitle = (row.title || '').length > 50 ? (row.title || '').substring(0, 50) + '...' : (row.title || '');
-    const truncatedProblem = (row.problem || '').length > 50 ? (row.problem || '').substring(0, 50) + '...' : (row.problem || '');
-    const truncatedReason = (row.severityReason || '').length > 40 ? (row.severityReason || '').substring(0, 40) + '...' : (row.severityReason || '');
-    const truncatedModel = (row.modelFromFile || '').length > 25 ? (row.modelFromFile || '').substring(0, 25) + '...' : (row.modelFromFile || '');
-    const truncatedCase = (row.caseId || '').length > 20 ? (row.caseId || '').substring(0, 20) + '...' : (row.caseId || '');
-    const truncatedModule = (row.module || '').length > 15 ? (row.module || '').substring(0, 15) + '...' : (row.module || '');
-    const truncatedSubModule = (row.subModule || '').length > 15 ? (row.subModule || '').substring(0, 15) + '...' : (row.subModule || '');
-    const truncatedSummarized = (row.summarizedProblem || '').length > 40 ? (row.summarizedProblem || '').substring(0, 40) + '...' : (row.summarizedProblem || '');
+    // Handle empty summarized problem with pending badge
+    const summarizedProblem = row.summarizedProblem || '';
+    const summarizedDisplay = summarizedProblem.trim() ?
+      escapeHtml(summarizedProblem) :
+      '<span class="empty-badge">Pending</span>';
 
     // Reorder columns to match EXPECTED COLUMNS order: S/N, Case Code, Title, Problem, Model No., S/W Ver., Module, Sub-Module, Summarized Problem, Severity, Severity Reason
     tr.innerHTML = `
       <td class="col-sn">${index + 1}</td>
-      <td class="col-case" data-full="${escapeHtml(row.caseId || '')}">${escapeHtml(truncatedCase)}</td>
-      <td class="col-title" data-full="${escapeHtml(row.title || '')}">${escapeHtml(truncatedTitle)}</td>
-      <td class="col-problem" data-full="${escapeHtml(row.problem || '')}">${escapeHtml(truncatedProblem)}</td>
-      <td class="col-model" data-full="${escapeHtml(row.modelFromFile || '')}">${escapeHtml(truncatedModel)}</td>
-      <td class="col-sw">${escapeHtml(row.sWVer || row['S/W Ver.'] || '')}</td>
-      <td class="col-module" data-full="${escapeHtml(row.module || '')}">${escapeHtml(truncatedModule)}</td>
-      <td class="col-sub" data-full="${escapeHtml(row.subModule || '')}">${escapeHtml(truncatedSubModule)}</td>
-      <td class="col-summarized" data-full="${escapeHtml(row.summarizedProblem || '')}">${escapeHtml(truncatedSummarized)}</td>
+      <td class="col-case" data-full="${escapeHtml(row.caseId || '')}">${escapeHtml(row.caseId || '')}</td>
+      <td class="col-title" data-full="${escapeHtml(row.title || '')}">${escapeHtml(row.title || '')}</td>
+      <td class="col-problem" data-full="${escapeHtml(row.problem || '')}">${escapeHtml(row.problem || '')}</td>
+      <td class="col-model" data-full="${escapeHtml(row.modelFromFile || '')}" onclick="copyToClipboard('${escapeHtml(row.modelFromFile || '')}')">${escapeHtml(row.modelFromFile || '')}</td>
+      <td class="col-sw" onclick="copyToClipboard('${escapeHtml(row.sWVer || row['S/W Ver.'] || '')}')">${escapeHtml(row.sWVer || row['S/W Ver.'] || '')}</td>
+      <td class="col-module" data-full="${escapeHtml(row.module || '')}">${escapeHtml(row.module || '')}</td>
+      <td class="col-sub" data-full="${escapeHtml(row.subModule || '')}">${escapeHtml(row.subModule || '')}</td>
+      <td class="col-summarized" data-full="${escapeHtml(summarizedProblem)}">${summarizedDisplay}</td>
       <td class="col-severity">${severityPill}</td>
-      <td class="col-reason" data-full="${escapeHtml(row.severityReason || '')}">${escapeHtml(truncatedReason)}</td>
+      <td class="col-reason" data-full="${escapeHtml(row.severityReason || '')}">${escapeHtml(row.severityReason || '')}</td>
     `;
     modalBody.appendChild(tr);
   });

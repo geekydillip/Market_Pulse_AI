@@ -567,7 +567,7 @@
     }
 
     .issues-table tbody td {
-      padding: 16px 14px; /* Reduced padding for tighter row spacing */
+      padding: 20px 14px; /* Increased padding for better content breathing room */
       border-bottom: 1px solid rgba(9,30,63,0.04);
       color: var(--text-primary);
       vertical-align: top; /* Top align for consistent multi-line layout */
@@ -577,9 +577,9 @@
 
     /* Optimized column widths with content priority */
     .col-sn {
-      width: 60px;
-      min-width: 60px;
-      max-width: 60px;
+      width: 45px;
+      min-width: 45px;
+      max-width: 45px;
       text-align: center;
       font-weight: 600;
     }
@@ -595,7 +595,8 @@
       overflow-wrap: break-word;
     }
     .col-problem {
-      width: 250px;
+      width: 300px;
+      min-width: 250px;
       white-space: normal;
       word-break: break-word;
       overflow-wrap: break-word;
@@ -605,12 +606,24 @@
       white-space: normal;
       word-break: break-word;
       overflow-wrap: break-word;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .col-model:hover {
+      background-color: rgba(59, 130, 246, 0.1);
     }
     .col-sw {
       width: 120px;
       white-space: normal;
       word-break: break-word;
       overflow-wrap: break-word;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .col-sw:hover {
+      background-color: rgba(59, 130, 246, 0.1);
     }
     .col-module {
       width: 120px;
@@ -978,6 +991,47 @@
     }
 
     .truncate { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; line-clamp: 3; -webkit-line-clamp: 3; }
+
+    /* Empty state badge for summarized problem */
+    .empty-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background-color: rgba(156, 163, 175, 0.2);
+      color: #6b7280;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    /* Modern button styles for modal actions */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(34,197,94,0.1));
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(34,197,94,0.15));
+    }
+
+    .btn svg {
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body data-category="beta_user_issues">

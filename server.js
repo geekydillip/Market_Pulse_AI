@@ -1105,6 +1105,7 @@ app.get('/api/dashboard', (req, res) => {
         severity: r['Severity'] || '',
         sWVer: r['S/W Ver.'] || r['S/W Version'] || r['Software Version'] || '',
         subModule: r['Sub-Module'] || r['Sub Module'] || r['SubModule'] || '',
+        summarizedProblem: r['Summarized Problem'] || r['Summarized_Problem'] || r['Summary'] || '',
         severityReason: r['Severity Reason'] || r['Severity_Reason'] || ''
       };
 

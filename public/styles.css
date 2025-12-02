@@ -2334,6 +2334,36 @@ body.theme-dark, body.theme-dark html {
   background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(34,197,94,0.03));
 }
 
+/* Text wrapping and column width fixes for table cells */
+.table-cell-wrap {
+  white-space: normal !important;      /* Allows text to wrap to the next line */
+  word-break: break-word !important;   /* Prevents long words from overflowing */
+  min-width: 250px !important;         /* Ensures the column is wide enough to read */
+  vertical-align: top !important;      /* Aligns text to top for better readability */
+  padding: 12px 8px !important;        /* Adds breathing room */
+  line-height: 1.4 !important;         /* Improves readability */
+}
+
+/* Specific column styling for Problem and Summarized Problem */
+.col-problem,
+.col-summarized {
+  min-width: 280px !important;
+  max-width: 400px !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Override truncation for description columns */
+.issues-table .col-problem,
+.issues-table .col-summarized {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .cases-table-container {
@@ -2378,5 +2408,17 @@ body.theme-dark, body.theme-dark html {
     width: 32px !important;
     height: 32px !important;
     font-size: 12px !important;
+  }
+
+  /* Adjust text wrapping for mobile */
+  .table-cell-wrap {
+    min-width: 200px !important;
+    padding: 8px 6px !important;
+  }
+
+  .col-problem,
+  .col-summarized {
+    min-width: 200px !important;
+    max-width: 300px !important;
   }
 }
