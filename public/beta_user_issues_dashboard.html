@@ -691,60 +691,7 @@
       backdrop-filter: blur(8px);
     }
 
-    /* Improved tooltips for fallback truncation */
-    .col-case:hover::after,
-    .col-model:hover::after,
-    .col-sw:hover::after,
-    .col-module:hover::after,
-    .col-sub:hover::after {
-      content: attr(data-full);
-      position: absolute;
-      z-index: 1000;
-      background: rgba(0,0,0,0.95);
-      color: white;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      white-space: normal;
-      max-width: 350px;
-      word-wrap: break-word;
-      pointer-events: none;
-      opacity: 0;
-      animation: tooltipFadeIn 0.25s ease forwards;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      /* Smart positioning */
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 100%;
-      margin-bottom: 8px;
-    }
-
-    /* Tooltip positioning adjustments for edge cases */
-    .col-case:hover::after,
-    .col-model:hover::after,
-    .col-sw:hover::after {
-      left: 20px;
-      transform: none;
-    }
-
-    .col-module:hover::after,
-    .col-sub:hover::after {
-      right: 20px;
-      left: auto;
-      transform: none;
-    }
-
-    @keyframes tooltipFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    /* Tooltips removed - text now wraps directly in cells */
 
     /* Responsive: maintain full readability on smaller screens */
     @media (max-width: 900px) {
@@ -776,57 +723,7 @@
       }
     }
 
-    /* Tooltips for truncated text - positioned inside modal */
-    .col-case:hover::after,
-    .col-model:hover::after,
-    .col-sw:hover::after,
-    .col-module:hover::after,
-    .col-sub:hover::after,
-    .col-title:hover::after,
-    .col-problem:hover::after,
-    .col-summarized:hover::after,
-    .col-reason:hover::after {
-      content: attr(data-full);
-      position: absolute;
-      z-index: 1000;
-      background: rgba(0,0,0,0.9);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      white-space: normal;
-      max-width: 400px;
-      word-wrap: break-word;
-      pointer-events: none;
-      opacity: 0;
-      animation: tooltipFadeIn 0.2s ease forwards;
-      /* Auto-positioning to stay within modal */
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 100%;
-      margin-bottom: 4px;
-    }
-
-    /* Tooltip positioning fallback - shift if near edges */
-    .col-case:hover::after,
-    .col-model:hover::after,
-    .col-sw:hover::after {
-      left: 10px;
-      transform: none;
-    }
-
-    .col-module:hover::after,
-    .col-sub:hover::after,
-    .col-severity:hover::after {
-      right: 10px;
-      left: auto;
-      transform: none;
-    }
-
-    @keyframes tooltipFadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    /* All text hovering tooltips removed - content now wraps directly in cells */
 
     /* Responsive: hide long columns under 900px */
     @media (max-width: 900px) {
