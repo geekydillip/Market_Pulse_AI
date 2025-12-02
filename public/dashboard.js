@@ -467,6 +467,107 @@ function escapeHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
+// --- Utility: normalized lookup for field names from Excel row ---
+function getField(row, names) {
+  for (const n of names) {
+    if (Object.prototype.hasOwnProperty.call(row, n) && row[n] != null) return String(row[n]).trim();
+  }
+  return '';
+}
+
+// --- Aggregate rows by key name ---
+function aggregate(rows, keyNames) {
+  const counts = Object.create(null);
+  for (const row of rows) {
+    const key = getField(row, keyNames) || 'Unknown';
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return counts; // { "ModuleA": 12, "ModuleB": 3, ... }
+}
+
+// Donut (Severity) — remove "Critical"
+function buildSeverityDonutData(rows) {
+  // possible column names to try:
+  const severityCounts = aggregate(rows, ['severity', 'Severity', 'SEVERITY', 'Severity Level', 'level']);
+
+  // remove 'critical' entries (case-insensitive)
+  for (const k of Object.keys(severityCounts)) {
+    if (/^\s*critical\s*$/i.test(k)) {
+      delete severityCounts[k];
+    }
+  }
+
+  const labels = Object.keys(severityCounts);
+  const data = labels.map(l => severityCounts[l]);
+
+  // Optional: If you want a fixed order (High, Medium, Low) -- reorder:
+  const order = ['Critical','High','Medium','Low'];
+  const orderedLabels = [];
+  const orderedData = [];
+  for (const o of order) {
+    for (let i = 0; i < labels.length; i++) {
+      if (labels[i].toLowerCase() === o.toLowerCase() && severityCounts[labels[i]] != null) {
+        orderedLabels.push(labels[i]);
+        orderedData.push(severityCounts[labels[i]]);
+      }
+    }
+  }
+  // append remaining labels not in order:
+  for (let i = 0; i < labels.length; i++) {
+    if (!orderedLabels.includes(labels[i])) {
+      orderedLabels.push(labels[i]);
+      orderedData.push(severityCounts[labels[i]]);
+    }
+  }
+
+  return { labels: orderedLabels, data: orderedData };
+}
+
+// Module distribution — remove "Others" and keep top 10
+function buildTopModulesData(rows, topN = 10) {
+  // try common column names for module
+  const moduleCounts = aggregate(rows, ['module', 'Module', 'MODULE', 'Module Name', 'Sub-Module']);
+
+  // remove explicit "Others" entries (case-insensitive)
+  for (const k of Object.keys(moduleCounts)) {
+    if (/^\s*others?\s*$/i.test(k)) {
+      delete moduleCounts[k];
+    }
+  }
+
+  // convert to array and sort descending by count
+  const arr = Object.entries(moduleCounts)
+    .map(([k, v]) => ({ module: k, count: v }))
+    .sort((a, b) => b.count - a.count);
+
+  // keep only topN
+  const top = arr.slice(0, topN);
+
+  const labels = top.map(x => x.module);
+  const data = top.map(x => x.count);
+
+  return { labels, data };
+}
+
+// Combined function to rebuild both charts (optional convenience function)
+function rebuildCharts(rows) {
+  // severity donut
+  const severity = buildSeverityDonutData(rows);
+  if (severityChart) {
+    severityChart.data.labels = severity.labels;
+    severityChart.data.datasets[0].data = severity.data;
+    severityChart.update();
+  }
+
+  // modules top 10
+  const modules = buildTopModulesData(rows, 10);
+  if (moduleChart) {
+    moduleChart.data.labels = modules.labels;
+    moduleChart.data.datasets[0].data = modules.data;
+    moduleChart.update();
+  }
+}
+
 // Copy to clipboard utility
 async function copyToClipboard(text) {
   try {
@@ -492,40 +593,18 @@ async function copyToClipboard(text) {
 
 // Enhanced Charts with Professional Styling
 function renderCharts(severityDistribution, moduleDistribution) {
-  // Sort severity data to match desired order: Critical, High, Medium, Low
-  const severityOrder = ['Critical', 'High', 'Medium', 'Low'];
-  const sortedSeverityData = severityDistribution.sort((a, b) => {
-    return severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity);
-  });
+  // Use raw rows data to build custom charts
+  const rows = currentDashboardData.rows || [];
 
-  const sevLabels = sortedSeverityData.map(s => s.severity);
-  const sevCounts = sortedSeverityData.map(s => s.count);
+  // Build severity donut data (removes Critical)
+  const severityPayload = buildSeverityDonutData(rows);
+  const sevLabels = severityPayload.labels;
+  const sevCounts = severityPayload.data;
 
-  // Limit module distribution to top 20 + Others for better readability
-  const MAX_MODULES_IN_CHART = 20;
-  let modLabels = [];
-  let modCounts = [];
-
-  if (moduleDistribution.length > MAX_MODULES_IN_CHART) {
-    // Sort by count descending
-    const sortedModules = [...moduleDistribution].sort((a, b) => b.count - a.count);
-
-    // Take top 9 modules
-    const topModules = sortedModules.slice(0, MAX_MODULES_IN_CHART - 1);
-    const otherModules = sortedModules.slice(MAX_MODULES_IN_CHART - 1);
-
-    // Calculate others count
-    const othersCount = otherModules.reduce((sum, module) => sum + module.count, 0);
-
-    modLabels = [...topModules.map(m => m.module), 'Others'];
-    modCounts = [...topModules.map(m => m.count), othersCount];
-
-    // Add original full module distribution for legend tooltips
-    // Note: we'll store full data but only show limited in chart
-  } else {
-    modLabels = moduleDistribution.map(m => m.module);
-    modCounts = moduleDistribution.map(m => m.count);
-  }
+  // Build top 10 modules data (removes Others, keeps top 10)
+  const modulesPayload = buildTopModulesData(rows, 10);
+  const modLabels = modulesPayload.labels;
+  const modCounts = modulesPayload.data;
 
   // Use CSS custom properties for chart colors
   const computedStyle = getComputedStyle(document.body);
@@ -542,7 +621,6 @@ function renderCharts(severityDistribution, moduleDistribution) {
     'Low': [chartLowStart, chartLowEnd],
     'Medium': [chartMiddleStart, chartMiddleEnd],
     'High': [chartHighStart, chartHighEnd],
-    'Critical': [chartCriticalStart, chartCriticalEnd],
   };
 
   // Assign colors based on labels

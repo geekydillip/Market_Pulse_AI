@@ -1072,7 +1072,7 @@ app.get('/api/dashboard', (req, res) => {
     const filteredRows = getFilteredRows(modelQuery, severityQuery, category);
 
     // Aggregations
-    const totals = { totalCases: filteredRows.length, critical: 0, high: 0, medium: 0, low: 0 };
+    const totals = { totalCases: filteredRows.length, high: 0, medium: 0, low: 0 };
     const severityCounts = {};
     const moduleCounts = {};
 
@@ -1081,8 +1081,8 @@ app.get('/api/dashboard', (req, res) => {
       const sev = (r.Severity || r['Severity'] || r['Severity Level'] || '').toString().trim() || 'Unknown';
       const sevKey = sev || 'Unknown';
       severityCounts[sevKey] = (severityCounts[sevKey] || 0) + 1;
-      if (/crit/i.test(sevKey)) totals.critical++;
-      if (/high/i.test(sevKey)) totals.high++;
+      // Combine Critical and High into High
+      if (/crit/i.test(sevKey) || /high/i.test(sevKey)) totals.high++;
       if (/med/i.test(sevKey)) totals.medium++;
       if (/low/i.test(sevKey)) totals.low++;
 
