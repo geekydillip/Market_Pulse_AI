@@ -78,10 +78,45 @@
       --chart-low-end: #15803d;
     }
 
-    /* quick overrides specific to this page (kept minimal) - updated for neumorphic design */
-    .dashboard-container { width:100%; margin:70px auto 20px auto; padding: 0; display: grid; grid-template-columns: 280px 1fr; gap:24px; background: var(--bg); border-radius: 20px; box-shadow: inset 8px 8px 16px rgba(0,0,0,0.1), inset -8px -8px 16px rgba(255,255,255,0.1); }
-    .dashboard-main { padding:24px; }
-    .section.sidebar { padding:24px 16px; background: var(--card-bg); border-radius:8px; height: 100%; }
+    /* Improve Global Background for better contrast */
+    body {
+        background-color: #f3f4f6; /* Cool gray, slightly darker than before */
+        color: #1f2937; /* Dark gray text, never pure black */
+    }
+
+    /* Sidebar with fixed positioning */
+    .section.sidebar {
+        width: 220px; /* Reduced width */
+        position: fixed; /* Fixed positioning */
+        left: 0;
+        top: 80px; /* Below the top navigation bar */
+        height: calc(100vh - 80px); /* Full height minus top bar */
+        padding: 24px 16px;
+        background: #ffffff;
+        border-radius: 0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-right: 1px solid rgba(0,0,0,0.1); /* Add right border */
+        z-index: 10; /* Above main content */
+    }
+
+    /* Main content adjusted for sidebar */
+    .dashboard-main {
+        margin-left: 220px; /* Match sidebar width exactly */
+        padding: 20px; /* Reduced padding */
+        width: calc(100% - 220px); /* Take remaining width */
+        min-height: calc(100vh - 100px); /* Account for top bar and margins */
+    }
+
+    /* Remove the old container grid layout */
+    .dashboard-container {
+        width: 100%;
+        margin: 70px 0 20px 0; /* Remove auto horizontal margins */
+        padding: 0;
+        background: var(--bg);
+        border-radius: 20px;
+        box-shadow: inset 8px 8px 16px rgba(0,0,0,0.1), inset -8px -8px 16px rgba(255,255,255,0.1);
+    }
     .all-models {
         position: static;
         background: var(--card-bg);
@@ -232,7 +267,7 @@
         color: rgba(255,255,255,0.5);
     }
     .section { margin-bottom: 10px; }
-    .section h3 { margin: 0 0 16px 0; font-size: 20px; font-weight: 600; color: var(--accent); }
+    .section h3 { margin: 10px 0 15px 0; font-size: 1.5rem; font-weight: 600; color: var(--accent); }
     .model-indicator {
         font-size: 16px;
         font-weight: 500;
@@ -304,21 +339,21 @@
     .cards-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
+        gap: 20px; /* Reduced gap between cards */
         align-items: center;
         padding: 16px;
-        margin-bottom: 20px;
+        margin-bottom: 15px; /* Reduced from 30px */
     }
     .card {
-        padding: 16px;
-        border-radius: 8px;
-        background: var(--card-bg);
-        border: none;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        padding: 15px 20px; /* Reduced internal padding */
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         display: flex;
         align-items: center;
         gap: 20px;
-        min-height: 120px;
+        min-height: auto; /* Remove fixed height */
         transition: all 0.3s ease;
     }
     .card:hover {
@@ -327,10 +362,12 @@
     }
     .card-icon {
         font-size: 40px;
-        min-width: 40px;
+        width: 40px; /* Smaller icon container */
+        height: 40px;
         text-align: center;
         color: var(--accent);
         flex-shrink: 0;
+        margin-right: 15px; /* Adjusted margin */
     }
     .card-content {
         flex: 1;
@@ -345,10 +382,11 @@
         font-weight: 500;
     }
     .card-value {
-        font-size: 32px;
+        font-size: 1.8rem; /* Adjust font size to fit smaller card */
         font-weight: 700;
         color: var(--text-primary);
         line-height: 1.2;
+        margin-bottom: 0; /* Remove bottom margin to vertically center */
     }
     .charts-row { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
     .chart-card { border-radius:20px; background: var(--card-bg); box-shadow: var(--shadow); padding: 24px; height: 400px; position: relative; }
@@ -940,6 +978,78 @@
     .btn svg {
       flex-shrink: 0;
     }
+
+    /* Fix Table Text Wrapping */
+    table {
+        table-layout: fixed; /* Enforces strict column widths */
+        width: 100%;
+    }
+
+    td {
+        white-space: normal !important; /* Forces text to wrap */
+        word-break: break-word;
+        vertical-align: top; /* Aligns text to top if wrapping occurs */
+        padding: 12px 16px;
+    }
+
+    /* Interactive Table Rows */
+    tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    tbody tr:hover {
+        background-color: #f9fafb; /* Highlight on hover */
+        transform: scale(1.005); /* Micro-interaction: tiny zoom */
+    }
+
+    /* Table Layout Fixed allows precise column control */
+    #dataTable {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    /* --- COLUMN 2: MODEL NO (Fix Readability) --- */
+    #dataTable th:nth-child(2),
+    #dataTable td:nth-child(2) {
+        width: 18%; /* Set a reasonable fixed width */
+
+        /* Typography for Clarity */
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* Easier to read ID codes */
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151; /* Dark Grey */
+
+        /* Truncation Magic */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Adds '...' if text is too long */
+    }
+
+    /* --- COLUMN 3: MODULE (Reduce Size) --- */
+    #dataTable th:nth-child(3),
+    #dataTable td:nth-child(3) {
+        width: 10%; /* Reduced width (approx 60% of typical size) */
+        text-align: left;
+    }
+
+    /* --- COLUMN 4: ISSUE TITLE (Give it more space) --- */
+    #dataTable th:nth-child(4),
+    #dataTable td:nth-child(4) {
+        width: 50%; /* Give the majority of space to the actual issue text */
+    }
+
+    /* Add styles for Severity Pills */
+    .status-pill {
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .status-high { background-color: #fee2e2; color: #991b1b; } /* Red */
+    .status-medium { background-color: #fef3c7; color: #92400e; } /* Amber */
+    .status-low { background-color: #d1fae5; color: #065f46; } /* Green */
   </style>
 </head>
 <body data-category="beta_user_issues">
@@ -1010,11 +1120,9 @@
           <div class="chart-card charts-card">
             <h4>Severity Distribution</h4>
             <canvas id="severityChart" class="chart-canvas"></canvas>
-            <div class="sr-only" id="severityChart-summary">Chart showing distribution of issue severity levels</div>
           </div>
           <div class="chart-card charts-card">
             <h4>Top 10 Modules</h4>
-            <div style="text-align: center; margin-bottom: 12px; opacity: 0.7; font-size: 13px;" id="moduleCount">— modules</div>
             <canvas id="moduleChart" class="chart-canvas"></canvas>
           </div>
         </div>
@@ -1071,6 +1179,7 @@
                   <th>Model No.</th>
                   <th>Module</th>
                   <th>Top Issue Title</th>
+                  <th>Severity</th>
                   <th>Count</th>
                 </tr>
               </thead>

@@ -137,8 +137,6 @@ async function refreshDashboardOverview() {
     // Update charts
     renderCharts(resp.severityDistribution || [], resp.moduleDistribution || []);
 
-    document.getElementById('moduleCount').textContent = `${currentDashboardData.aggregatedData.length} modules`;
-
     // Render paginated table
     renderTable();
   } catch (err) {
@@ -349,8 +347,6 @@ async function refreshDashboard() {
 
     // Aggregate data by module (store for later use)
     const aggregatedData = aggregateByModule(resp.rows || []);
-
-    document.getElementById('moduleCount').textContent = `${aggregatedData.length} modules`;
 
     // Cache current data for consistent exports
     currentDashboardData = {
@@ -935,10 +931,49 @@ function aggregateByModule(rows) {
   }).sort((a, b) => b.count - a.count);
 }
 
-// Render aggregated table with pagination
-function renderTable() {
+// Render loading skeleton for table
+function renderLoadingTable() {
   const tbody = document.querySelector('#dataTable tbody');
   tbody.innerHTML = '';
+
+  // Show 5 skeleton rows
+  for (let i = 0; i < 5; i++) {
+    const tr = document.createElement('tr');
+    tr.className = 'table-loading';
+    tr.innerHTML = `
+      <td><div class="loading-skeleton"></div></td>
+      <td><div class="loading-skeleton"></div></td>
+      <td><div class="loading-skeleton"></div></td>
+      <td><div class="loading-skeleton"></div></td>
+      <td><div class="loading-skeleton"></div></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('tableCount').textContent = 'Loading...';
+}
+
+// Render aggregated table with pagination
+function renderTable() {
+  const table = document.getElementById('dataTable');
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+
+  // Update table headers based on filter state
+  const isFilteredToSingleModel = currentFilters.model && currentFilters.model !== null;
+
+  // Create header row
+  const headerRow = document.createElement('tr');
+  headerRow.innerHTML = `
+    <th>S/N</th>
+    ${!isFilteredToSingleModel ? '<th>Model No.</th>' : ''}
+    <th>Module</th>
+    <th>Top Issue Title</th>
+    <th>Count</th>
+  `;
+  thead.innerHTML = '';
+  thead.appendChild(headerRow);
 
   // Calculate paginated slice
   const startIndex = (paginationState.page - 1) * paginationState.pageSize;
@@ -949,22 +984,22 @@ function renderTable() {
     const globalIndex = startIndex + index + 1;
     const tr = document.createElement('tr');
 
-    // Enhanced text truncation with better handling
-    const truncatedTitle = moduleData.topIssueTitle.length > 50
-      ? moduleData.topIssueTitle.substring(0, 50) + '...'
-      : moduleData.topIssueTitle;
 
-    const truncatedModel = moduleData.modelNo.length > 25
-      ? moduleData.modelNo.substring(0, 25) + '...'
-      : moduleData.modelNo;
 
     tr.innerHTML = `
       <td>${globalIndex}</td>
-      <td title="${escapeHtml(moduleData.modelNo)}">${escapeHtml(truncatedModel)}</td>
+      ${!isFilteredToSingleModel ? `<td><div class="truncate-cell" title="${escapeHtml(moduleData.modelNo)}">${escapeHtml(moduleData.modelNo)}</div></td>` : ''}
       <td><button class="module-name-link" data-module="${escapeHtml(moduleData.module)}" data-count="${moduleData.count}">${escapeHtml(moduleData.module)}</button></td>
-      <td title="${escapeHtml(moduleData.topIssueTitle)}">${escapeHtml(truncatedTitle)}</td>
+      <td><div class="truncate-cell" title="${escapeHtml(moduleData.topIssueTitle)}">${escapeHtml(moduleData.topIssueTitle)}</div></td>
       <td>${moduleData.count}</td>
     `;
+
+    // Add row click handler
+    tr.addEventListener('click', () => {
+      const module = moduleData.module;
+      showModuleDetails(module, moduleData);
+    });
+
     tbody.appendChild(tr);
   });
 
@@ -974,6 +1009,7 @@ function renderTable() {
   document.querySelectorAll('.module-name-link').forEach(button => {
     button.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent row click when clicking module button
       const module = button.dataset.module;
       const count = parseInt(button.dataset.count);
       showModuleDetails(module, currentDashboardData.aggregatedData.find(m => m.module === module));

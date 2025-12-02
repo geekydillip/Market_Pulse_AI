@@ -1774,6 +1774,7 @@ body.theme-dark, body.theme-dark html {
   color: #1a202c !important;
   font-weight: 700 !important;
   -webkit-background-clip: unset !important;
+  background-clip: unset !important;
   -webkit-text-fill-color: #1a202c !important;
   background: none !important;
 }
@@ -1818,6 +1819,7 @@ body.theme-dark, body.theme-dark html {
   color: #e6eefc !important;
   font-weight: 600 !important;
   -webkit-background-clip: unset !important;
+  background-clip: unset !important;
   -webkit-text-fill-color: #e6eefc !important;
   background: none !important;
 }
@@ -2362,6 +2364,29 @@ body.theme-dark, body.theme-dark html {
   text-overflow: clip !important;
   word-break: break-word !important;
   overflow-wrap: break-word !important;
+}
+
+/* Ensure the table enforces strict widths */
+table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* 1. Set the fixed width on the cell */
+table th:nth-child(2),
+table td:nth-child(2) {
+    width: 15%; /* Keeps the column size fixed */
+    vertical-align: middle; /* Aligns text vertically */
+}
+
+/* 2. Apply text wrapping to the inner DIV */
+.truncate-cell {
+    width: 100%;             /* Fills the cell width */
+    white-space: normal;     /* Allows text wrapping */
+    word-break: break-word;  /* Breaks long words */
+    font-family: monospace;  /* Optional: Better for reading IDs */
+    display: block;          /* Ensures it behaves like a block */
 }
 
 /* Responsive adjustments */
