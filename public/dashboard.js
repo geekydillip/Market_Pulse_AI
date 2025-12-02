@@ -897,16 +897,20 @@ function aggregateByModule(rows) {
     }
   });
 
-  // Convert to array and find top title for each module
+  // Convert to array and find top titles for each module
   return Array.from(moduleMap.values()).map(moduleData => {
-    // Find most frequent title
-    let topTitle = 'N/A';
-    let maxCount = 0;
-    for (const [title, count] of moduleData.titleCount.entries()) {
-      if (count > maxCount) {
-        maxCount = count;
-        topTitle = title;
-      }
+    // Find top 2 most frequent titles
+    const titleEntries = Array.from(moduleData.titleCount.entries())
+      .sort((a, b) => b[1] - a[1]) // Sort by count descending
+      .slice(0, 2); // Take top 2
+
+    // Format the top titles
+    let topTitlesText = 'N/A';
+    if (titleEntries.length > 0) {
+      const formattedTitles = titleEntries.map(([title]) =>
+        cleanIssueTitle(title.charAt(0).toUpperCase() + title.slice(1))
+      );
+      topTitlesText = formattedTitles.join(' | ');
     }
 
     // Determine model display text
@@ -926,7 +930,7 @@ function aggregateByModule(rows) {
       ...moduleData,
       modelNo: modelDisplay, // For backward compatibility with table rendering
       models: modelsArray,   // Keep full list for future use
-      topIssueTitle: cleanIssueTitle(topTitle.charAt(0).toUpperCase() + topTitle.slice(1))
+      topIssueTitle: topTitlesText
     };
   }).sort((a, b) => b.count - a.count);
 }
@@ -1348,10 +1352,9 @@ function handleModalExport() {
           'Model No.': cells[1]?.textContent?.trim() || '',
           'S/W Ver.': cells[2]?.textContent?.trim() || '',
           'Title': cells[3]?.textContent?.trim() || '',
-          'Problem': cells[4]?.textContent?.trim() || '',
-          'Sub-Module': cells[5]?.textContent?.trim() || '',
-          'Severity': cells[6]?.textContent?.trim() || '',
-          'Severity Reason': cells[7]?.textContent?.trim() || ''
+          'Sub-Module': cells[4]?.textContent?.trim() || '',
+          'Summarized Problem': cells[5]?.textContent?.trim() || '',
+          'Severity': cells[6]?.textContent?.trim() || ''
         };
       });
 
@@ -1370,31 +1373,8 @@ function handleModalExport() {
 
 // Modal management for module details
 function showModuleDetails(module, moduleData) {
-  const modalTable = document.querySelector('#issues-modal table.issues-table');
-
-  // Set table with column classes for exact widths - updated for 11-column structure
-  modalTable.innerHTML = `
-    <thead>
-      <tr>
-        <th class="col-sn">S/N</th>
-        <th class="col-case">Case Code</th>
-        <th class="col-title">Title</th>
-        <th class="col-problem table-cell-wrap">Problem</th>
-        <th class="col-model">Model No.</th>
-        <th class="col-sw">S/W Ver.</th>
-        <th class="col-module">Module</th>
-        <th class="col-sub">Sub-Module</th>
-        <th class="col-summarized table-cell-wrap">Summarized Problem</th>
-        <th class="col-severity">Severity</th>
-        <th class="col-reason">Severity Reason</th>
-      </tr>
-    </thead>
-    <tbody id="modalBody"></tbody>
-  `;
-
   const modal = document.getElementById('issues-modal');
   const modalTitle = document.getElementById('modalTitle');
-  const modalBody = document.getElementById('modalBody');
   const modalContainer = modal.querySelector('.modal-container');
 
   // Store previous focus element before showing modal
@@ -1408,43 +1388,49 @@ function showModuleDetails(module, moduleData) {
     (row.module || 'Unknown') === module
   );
 
-  modalTitle.textContent = `Issues in ${module} (${moduleRows.length} issues)`;
-  modalBody.innerHTML = '';
+  // UI/UX: Update the Title to include the Module Name explicitly
+  modalTitle.textContent = `${module} Issues Detail`;
+
+  // Get the tbody for the new table structure
+  const tbody = document.querySelector('#moduleDetailTable tbody');
+  tbody.innerHTML = '';
 
   if (!moduleRows.length) {
-    modalBody.innerHTML = `<div class="modal-empty">No details available for this module.</div>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="modal-empty">No details available for this module.</td></tr>`;
   } else {
-  moduleRows.forEach((row, index) => {
-    const tr = document.createElement('tr');
+    moduleRows.forEach((row, index) => {
+      const tr = document.createElement('tr');
 
-    // Format severity with colored badge
-    const severity = (row.severity || '').toLowerCase();
-    const severityPill = severity === 'high' ?
-      '<span class="pill high">High</span>' :
-      '<span class="pill">Medium</span>'; // Default fallback
+      // CHECK: Ensure you use the exact property name from server data
+      // Server returns caseId, title, problem, modelFromFile, module, severity, sWVer, subModule, summarizedProblem, severityReason
+      const caseCode = row.caseId || 'N/A';
 
-    // Handle empty summarized problem with pending badge
-    const summarizedProblem = row.summarizedProblem || '';
-    const summarizedDisplay = summarizedProblem.trim() ?
-      escapeHtml(summarizedProblem) :
-      '<span class="empty-badge">Pending</span>';
+      // Format severity with colored badge
+      const severity = (row.severity || '').toLowerCase();
+      const severityPill = severity === 'high' ?
+        '<span class="pill high">High</span>' :
+        '<span class="pill">Medium</span>'; // Default fallback
 
-    // Reorder columns to match EXPECTED COLUMNS order: S/N, Case Code, Title, Problem, Model No., S/W Ver., Module, Sub-Module, Summarized Problem, Severity, Severity Reason
-    tr.innerHTML = `
-      <td class="col-sn">${index + 1}</td>
-      <td class="col-case" data-full="${escapeHtml(row.caseId || '')}">${escapeHtml(row.caseId || '')}</td>
-      <td class="col-title" data-full="${escapeHtml(row.title || '')}">${escapeHtml(row.title || '')}</td>
-      <td class="col-problem" data-full="${escapeHtml(row.problem || '')}">${escapeHtml(row.problem || '')}</td>
-      <td class="col-model" data-full="${escapeHtml(row.modelFromFile || '')}" onclick="copyToClipboard('${escapeHtml(row.modelFromFile || '')}')">${escapeHtml(row.modelFromFile || '')}</td>
-      <td class="col-sw" onclick="copyToClipboard('${escapeHtml(row.sWVer || row['S/W Ver.'] || '')}')">${escapeHtml(row.sWVer || row['S/W Ver.'] || '')}</td>
-      <td class="col-module" data-full="${escapeHtml(row.module || '')}">${escapeHtml(row.module || '')}</td>
-      <td class="col-sub" data-full="${escapeHtml(row.subModule || '')}">${escapeHtml(row.subModule || '')}</td>
-      <td class="col-summarized" data-full="${escapeHtml(summarizedProblem)}">${summarizedDisplay}</td>
-      <td class="col-severity">${severityPill}</td>
-      <td class="col-reason" data-full="${escapeHtml(row.severityReason || '')}">${escapeHtml(row.severityReason || '')}</td>
-    `;
-    modalBody.appendChild(tr);
-  });
+      // Handle empty summarized problem with pending badge
+      const summarizedProblem = row.summarizedProblem || '';
+      const summarizedDisplay = summarizedProblem.trim() ?
+        escapeHtml(summarizedProblem) :
+        '<span class="empty-badge">Pending</span>';
+
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td style="font-weight:bold; color:#4F46E5;">
+          ${escapeHtml(caseCode)}
+        </td>
+        <td>${escapeHtml(row.modelFromFile || row.model || 'N/A')}</td>
+        <td>${escapeHtml(row.sWVer || row['S/W Ver.'] || 'N/A')}</td>
+        <td>${escapeHtml(row.title || row.issueTitle || 'N/A')}</td>
+        <td>${escapeHtml(row.subModule || 'N/A')}</td>
+        <td>${summarizedDisplay}</td>
+        <td>${severityPill}</td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
 
   modal.classList.add('show');
