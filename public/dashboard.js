@@ -467,6 +467,15 @@ function escapeHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
+// Clean issue titles by fixing common formatting issues
+function cleanIssueTitle(title) {
+  if (!title) return "";
+  return title.replace(/([a-z])([A-Z])/g, '$1 $2') // Insert space between lowercase and uppercase
+              .replace(/Camerasays/gi, 'Camera says') // Specific override for common error
+              .replace(/camerassays/gi, 'Camera says') // Handle case variations
+              .trim();
+}
+
 // --- Utility: normalized lookup for field names from Excel row ---
 function getField(row, names) {
   for (const n of names) {
@@ -623,9 +632,16 @@ function renderCharts(severityDistribution, moduleDistribution) {
     'High': [chartHighStart, chartHighEnd],
   };
 
-  // Assign colors based on labels
-  const backgroundColors = sevLabels.map(label => severityColors[label] ? severityColors[label][0] : 'rgba(150, 150, 150, 0.8)');
-  const borderColors = sevLabels.map(label => severityColors[label] ? severityColors[label][1] : 'rgba(120, 120, 120, 1)');
+  // Professional color palette for severity levels
+  const severityColorPalette = {
+    'High': { bg: '#EF4444', hover: '#B91C1C' },
+    'Medium': { bg: '#F59E0B', hover: '#B45309' },
+    'Low': { bg: '#10B981', hover: '#047857' }
+  };
+
+  // Assign colors based on labels using the new palette
+  const backgroundColors = sevLabels.map(label => severityColorPalette[label] ? severityColorPalette[label].bg : '#6B7280');
+  const hoverBackgroundColors = sevLabels.map(label => severityColorPalette[label] ? severityColorPalette[label].hover : '#374151');
 
   const sevEl = document.getElementById('severityChart');
   const modEl = document.getElementById('moduleChart');
@@ -663,9 +679,9 @@ function renderCharts(severityDistribution, moduleDistribution) {
         datasets: [{
           data: sevCounts,
           backgroundColor: backgroundColors,
-          borderColor: borderColors,
-          borderWidth: 2,
-          hoverBorderWidth: 3,
+          hoverBackgroundColor: hoverBackgroundColors,
+          borderWidth: 0, // Removes the white border for a modern look
+          hoverOffset: 4
         }]
       },
       options: {
@@ -680,7 +696,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
                 size: 13,
                 weight: '500'
               },
-              usePointStyle: true,
+              usePointStyle: true, // Uses circles instead of squares in legend
               pointStyle: 'circle'
             },
             onClick: function(e, legendItem) {
@@ -721,7 +737,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
           animateRotate: false,
           duration: 0
         },
-        cutout: '40%', // Smaller center hole for better data visibility
+        cutout: '50%', // Makes the donut thinner and more elegant
         elements: {
           arc: {
             borderRadius: 4 // Rounded chart segments
@@ -762,15 +778,12 @@ function renderCharts(severityDistribution, moduleDistribution) {
       data: {
         labels: modLabels,
         datasets: [{
-          label: 'Issue Count',
+          label: 'Number of Issues',
           data: modCounts,
-          backgroundColor: modLabels.map((_, i) => `hsl(${(i * 137.5) % 360}, 70%, 60%)`), // Varied colors
-          borderColor: modLabels.map((_, i) => `hsl(${(i * 137.5) % 360}, 80%, 50%)`),
-          borderWidth: 1,
-          borderRadius: 4,
-          borderSkipped: false,
-          maxBarThickness: 30,
-          barThickness: 25,
+          backgroundColor: '#6366F1', // Single professional indigo color
+          hoverBackgroundColor: '#4F46E5', // Darker indigo for hover
+          barThickness: 20, // Consistent bar width
+          borderRadius: 4 // Softens edges
         }]
       },
       options: {
@@ -787,32 +800,33 @@ function renderCharts(severityDistribution, moduleDistribution) {
         },
         plugins: {
           legend: {
-            display: false // Hide legend for cleaner look
+            display: false // Remove redundant legend
           },
-            tooltip: {
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              titleColor: '#fff',
-              bodyColor: '#fff',
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              borderWidth: 1,
-              cornerRadius: 8,
-              callbacks: {
-                title: function(context) {
-                  return `Module: ${context[0].label}`;
-                },
-                label: function(context) {
-                  const value = context.parsed.x;
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = Math.round((value / total) * 100);
-                  return `Issues: ${value} (${percentage}%)`;
-                }
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            callbacks: {
+              title: function(context) {
+                return `Module: ${context[0].label}`;
+              },
+              label: function(context) {
+                const value = context.parsed.x;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / total) * 100);
+                return `Issues: ${value} (${percentage}%)`;
               }
             }
+          }
         },
         scales: {
           x: {
             beginAtZero: true,
             ticks: {
+              stepSize: 1, // Forces integers
               precision: 0,
               color: currentTheme === 'dark' ? '#bbb' : '#64748b',
               font: {
@@ -820,7 +834,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
               }
             },
             grid: {
-              color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              color: '#f3f4f6', // Very subtle grid lines
               drawBorder: false
             },
             title: {
@@ -845,14 +859,8 @@ function renderCharts(severityDistribution, moduleDistribution) {
               }
             },
             grid: {
-              color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-              drawBorder: false
+              display: false // Removes horizontal grid lines for cleanliness
             }
-          }
-        },
-        elements: {
-          bar: {
-            borderRadius: 4
           }
         },
         animation: {
@@ -922,7 +930,7 @@ function aggregateByModule(rows) {
       ...moduleData,
       modelNo: modelDisplay, // For backward compatibility with table rendering
       models: modelsArray,   // Keep full list for future use
-      topIssueTitle: topTitle.charAt(0).toUpperCase() + topTitle.slice(1)
+      topIssueTitle: cleanIssueTitle(topTitle.charAt(0).toUpperCase() + topTitle.slice(1))
     };
   }).sort((a, b) => b.count - a.count);
 }
