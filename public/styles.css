@@ -73,8 +73,6 @@ body.theme-light {
    Chart color variables (use these in JS to create gradients)
    ------------------------- */
 .theme-dark {
-  --chart-critical-start: #56B4E9;
-  --chart-critical-end:   #009E73;
   --chart-high-start:     #E69F00;
   --chart-high-end:       #F0E442;
   --chart-middle-start:   #D55E00;
@@ -87,8 +85,6 @@ body.theme-light {
 
 /* Light theme chart variables */
 .theme-light {
-  --chart-critical-start: #e53e3e;
-  --chart-critical-end:   #c53030;
   --chart-high-start:     #dc2626;
   --chart-high-end:       #b91c1c;
   --chart-middle-start:   #ea580c;
@@ -2471,4 +2467,132 @@ table td:nth-child(2) {
     min-width: 200px !important;
     max-width: 300px !important;
   }
+}
+
+/* =========================================
+   COMPACT KPI SECTION STYLES
+   ========================================= */
+
+/* 1. Reduce padding around the entire dashboard main area */
+/* This brings the white box closer to the edges */
+.dashboard-main {
+    padding: 12px !important; /* Formerly 20px */
+}
+
+/* 2. Reduce space around the "Beta User Issues Overview" title */
+.overview-section .section-title {
+    margin-top: 6px !important;    /* Formerly 10px */
+    margin-bottom: 10px !important; /* Formerly 15px */
+}
+
+/* 3. Reduce space inside the container holding the KPI buttons */
+/* This tightens the space between the title and the buttons */
+.overview-section .cards-row {
+    padding: 8px !important;      /* Formerly 16px */
+    gap: 12px !important;         /* Formerly 20px (space between buttons) */
+    margin-bottom: 10px !important; /* Formerly 15px (space below buttons) */
+}
+
+/* 4. Reduce padding inside the individual KPI buttons themselves */
+/* This makes the buttons look less "puffy" */
+.overview-section .card.kpi {
+    padding: 10px 14px !important; /* Formerly 15px 20px */
+}
+
+/* =========================================
+   SIDEBAR STYLING IMPROVEMENTS
+   ========================================= */
+
+/* Make the sidebar panel itself have rounded corners and be scrollable */
+.section.sidebar {
+    width: 220px;
+    position: fixed;
+    left: 0;
+    top: 80px;
+    height: calc(100vh - 80px);
+    padding: 24px 16px;
+    background: #ffffff;
+    border-radius: 20px; /* Changed from 0 to 20px for rounded corners */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-right: 1px solid rgba(0,0,0,0.1);
+    z-index: 10;
+    overflow-y: auto; /* Enable vertical scrolling for the entire sidebar */
+}
+
+/* Increase border-radius for buttons and inputs to make them fully rounded */
+.all-models,
+.model-chip,
+.model-search-input {
+    border-radius: 30px !important; /* Increased from 16px to 30px for a rounder look */
+}
+
+/* Remove internal scrolling from the model list container, as the parent sidebar now scrolls */
+.model-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    /* max-height: calc(100vh - 160px);  Removed to allow parent to scroll */
+    /* overflow-y: auto; Removed */
+}
+
+/* =================================================================
+   REDUCE WHITESPACE BETWEEN KPI CARDS AND ANALYTICS
+   ================================================================= */
+
+/* 1. Reduce space *below* the KPI cards row */
+/* Found in image_1.png fullText under .cards-row */
+.cards-row {
+    margin-bottom: 5px !important; /* Reduced from 15px */
+}
+
+/* 2. Reduce the bottom margin of the entire Overview Section container */
+/* Found in image_1.png fullText under .section */
+.overview-section.section {
+    margin-bottom: 5px !important; /* Reduced from 10px */
+}
+
+/* 3. Reduce space *above* the Analytics section title */
+/* Found in image_1.png fullText under .section h3 */
+.charts-section .section-title {
+    margin-top: 0px !important; /* Reduced from 10px */
+}
+
+/* =========================================
+   COMPACT KPI CARDS (MAKE GRAPHS VISIBLE)
+   ========================================= */
+
+/* 1. Reduce space around the card container */
+.overview-section .cards-row {
+    padding: 4px !important;       /* Reduced from 8px */
+    gap: 10px !important;          /* Reduced from 12px */
+    margin-bottom: 5px !important; /* Keep small margin below */
+}
+
+/* 2. Make the individual cards more compact */
+.overview-section .card.kpi {
+    padding: 8px 12px !important;  /* Reduced from 10px 14px */
+    gap: 12px !important;          /* Reduced gap between icon and text */
+    min-height: 0 !important;      /* Ensure no minimum height forces it open */
+}
+
+/* 3. Make the icons smaller */
+.overview-section .card.kpi .card-icon {
+    font-size: 32px !important;    /* Reduced from 40px */
+    width: 32px !important;        /* Reduced from 40px */
+    height: 32px !important;       /* Reduced from 40px */
+    margin-right: 0 !important;    /* Remove extra margin, gap handles it */
+}
+
+/* 4. Reduce the font size of the main number value */
+.overview-section .card.kpi .card-value {
+    font-size: 1.5rem !important;  /* Reduced from 1.8rem */
+    line-height: 1.1 !important;   /* Tighter line height */
+}
+
+/* 5. Reduce the font size of the label text */
+.overview-section .card.kpi .label {
+    font-size: 13px !important;    /* Slightly smaller label */
+    margin-top: 2px !important;    /* Small gap between value and label */
 }

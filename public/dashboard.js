@@ -506,7 +506,7 @@ function buildSeverityDonutData(rows) {
   const data = labels.map(l => severityCounts[l]);
 
   // Optional: If you want a fixed order (High, Medium, Low) -- reorder:
-  const order = ['Critical','High','Medium','Low'];
+  const order = ['High','Medium','Low'];
   const orderedLabels = [];
   const orderedData = [];
   for (const o of order) {

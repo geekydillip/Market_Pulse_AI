@@ -1081,8 +1081,8 @@ app.get('/api/dashboard', (req, res) => {
       const sev = (r.Severity || r['Severity'] || r['Severity Level'] || '').toString().trim() || 'Unknown';
       const sevKey = sev || 'Unknown';
       severityCounts[sevKey] = (severityCounts[sevKey] || 0) + 1;
-      // Combine Critical and High into High
-      if (/crit/i.test(sevKey) || /high/i.test(sevKey)) totals.high++;
+      // Only High (no Critical)
+      if (/high/i.test(sevKey)) totals.high++;
       if (/med/i.test(sevKey)) totals.medium++;
       if (/low/i.test(sevKey)) totals.low++;
 

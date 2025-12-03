@@ -93,11 +93,12 @@
         height: calc(100vh - 80px); /* Full height minus top bar */
         padding: 24px 16px;
         background: #ffffff;
-        border-radius: 0;
+        border-radius: 20px; /* Changed from 0 to 20px for rounded corners */
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.7);
         border-right: 1px solid rgba(0,0,0,0.1); /* Add right border */
         z-index: 10; /* Above main content */
+        overflow-y: auto; /* Enable vertical scrolling for the entire sidebar */
     }
 
     /* Main content adjusted for sidebar */
@@ -144,10 +145,7 @@
         flex-direction: column;
         gap: 12px;
         padding: 16px;
-        max-height: calc(100vh - 160px);
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0,0,0,0.3) rgba(0,0,0,0.1);
+        /* Removed max-height and overflow-y since parent sidebar now handles scrolling */
     }
     .model-list::-webkit-scrollbar {
         width: 6px;
