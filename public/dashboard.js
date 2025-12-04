@@ -18,6 +18,22 @@ let currentTheme = 'dark';
 // Get dashboard category from body data attribute
 const dashboardCategory = document.body.dataset.category;
 
+// Category display names
+const categoryTitles = {
+  'beta_user_issues': 'Beta User Issues',
+  'samsung_members_plm': 'Samsung Members PLM',
+  'samsung_members_voc': 'Samsung Members VOC',
+  'plm_issues': 'PLM Issues',
+  'blogger_issues': 'Blogger Issues',
+  'qi': 'Quality Index',
+  'qings': 'QINGS'
+};
+
+// Get display title for category
+function getCategoryTitle(category) {
+  return categoryTitles[category] || category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
 // Model search variables
 let allModels = [];
 let searchTimeout = null;
@@ -133,10 +149,11 @@ async function refreshDashboardOverview() {
     // Update the section title to include selected model name
     const sectionTitle = document.querySelector('.overview-section .section-title');
     if (sectionTitle) {
+      const baseTitle = getCategoryTitle(dashboardCategory) + ' Overview';
       if (currentFilters.model && currentFilters.model !== null) {
-        sectionTitle.textContent = `Beta User Issues Overview - ${currentFilters.model}`;
+        sectionTitle.textContent = `${baseTitle} - ${currentFilters.model}`;
       } else {
-        sectionTitle.textContent = 'Beta User Issues Overview';
+        sectionTitle.textContent = baseTitle;
       }
     }
 

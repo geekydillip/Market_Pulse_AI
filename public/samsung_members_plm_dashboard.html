@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard - Samsung Members PLM</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Navigation styles */
+    .top-bar { position:absolute; top:0; left:0; right:0; padding:0 24px; height:80px; display:flex; align-items:center; justify-content:space-between; z-index:100; }
+
+    .nav-button {
+        position: static;
+        background: var(--card-bg);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 16px;
+        width: 120px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 6px 6px 12px rgba(0,0,0,0.1), -6px -6px 12px rgba(255,255,255,0.9);
+        text-decoration: none;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -8px -8px 16px rgba(255,255,255,0.9);
+    }
+
+    /* Chart color overrides for strong severity contrast */
+    :root {
+      --chart-critical-start: #dc2626;
+      --chart-critical-end: #b91c1c;
+      --chart-high-start: #ef4444;
+      --chart-high-end: #dc2626;
+      --chart-middle-start: #dc2626;
+      --chart-middle-end: #dc2626;
+      --chart-low-start: #16a34a;
+      --chart-low-end: #15803d;
+    }
+
+    /* Improve Global Background for better contrast */
+    body {
+        background-color: #f3f4f6; /* Cool gray, slightly darker than before */
+        color: #1f2937; /* Dark gray text, never pure black */
+    }
+
+    /* Sidebar with fixed positioning */
+    .section.sidebar {
+        width: 300px; /* Increased for longer model names */
+        position: fixed; /* Fixed positioning */
+        left: 0;
+        top: 80px; /* Below the top navigation bar */
+        height: calc(100vh - 80px); /* Full height minus top bar */
+        padding: 24px 16px;
+        background: #ffffff;
+        border-radius: 20px; /* Changed from 0 to 20px for rounded corners */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-right: 1px solid rgba(0,0,0,0.1); /* Add right border */
+        z-index: 10; /* Above main content */
+        overflow-y: auto; /* Enable vertical scrolling for the entire sidebar */
+    }
+
+    /* Main content adjusted for sidebar */
+    .dashboard-main {
+        margin-left: 300px; /* Match sidebar width exactly */
+        padding: 20px; /* Reduced padding */
+        width: calc(100% - 300px); /* Take remaining width */
+        min-height: calc(100vh - 100px); /* Account for top bar and margins */
+    }
+
+    /* Remove the old container grid layout */
+    .dashboard-container {
+        width: 100%;
+        margin: 50px 0 20px 0; /* Remove auto horizontal margins */
+        padding: 0;
+        background: var(--bg);
+        border-radius: 20px;
+        box-shadow: inset 8px 8px 16px rgba(0,0,0,0.1), inset -8px -8px 16px rgba(255,255,255,0.1);
+    }
+    .all-models {
+        position: static;
+        background: var(--card-bg);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 16px;
+        width: 100%;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 6px 6px 12px rgba(0,0,0,0.1), -6px -6px 12px rgba(255,255,255,0.9);
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+        text-align: left;
+    }
+    .all-models:hover {
+        transform: translateY(-2px);
+        box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -8px -8px 16px rgba(255,255,255,0.9);
+    }
+    .model-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        /* Removed max-height and overflow-y since parent sidebar now handles scrolling */
+    }
+    .model-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    .model-list::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+        border-radius: 3px;
+    }
+    .model-list::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.3);
+        border-radius: 3px;
+    }
+    .model-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,0,0,0.5);
+    }
+    .model-chip {
+        padding: 14px 20px;
+        border-radius: 16px;
+        cursor: pointer;
+        font-weight: 600;
+        text-align: left;
+        background: var(--card-bg);
+        border: none;
+        box-shadow: 6px 6px 12px rgba(0,0,0,0.1), -6px -6px 12px rgba(255,255,255,0.9);
+        transition: all 0.3s ease;
+        color: var(--text-primary);
+        word-wrap: break-word;
+        line-height: 1.4;
+    }
+    .model-chip:hover {
+        transform: translateY(-2px);
+        box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -8px -8px 16px rgba(255,255,255,0.9);
+    }
+    .model-chip.active {
+        background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(34,197,94,0.15));
+        box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.1);
+        border: 2px solid rgba(59,130,246,0.5);
+        border-left: 4px solid #ef4444;
+        font-weight: bold;
+    }
+    .model-search-input {
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(0,0,0,0.15);
+        background: #f8f9fa;
+        box-shadow: 6px 6px 12px rgba(0,0,0,0.1), -6px -6px 12px rgba(255,255,255,0.9);
+        color: #1f2937;
+        margin: 12px 0;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .model-search-input:focus {
+        outline: none;
+        border: 2px solid rgba(59,130,246,0.5);
+        box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.1);
+        background: var(--card-bg);
+    }
+    .model-search-input::placeholder {
+        color: rgba(0,0,0,0.4);
+    }
+    .search-suggestions {
+        display: none;
+        position: relative;
+        background: var(--card-bg);
+        box-shadow: 6px 6px 12px rgba(0,0,0,0.15), -6px -6px 12px rgba(255,255,255,0.9);
+        border-radius: 12px;
+        margin-top: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.3) rgba(0,0,0,0.1);
+    }
+
+    .search-suggestions::-webkit-scrollbar {
+        width: 6px;
+    }
+    .search-suggestions::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+        border-radius: 3px;
+    }
+    .search-suggestions::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.3);
+        border-radius: 3px;
+    }
+    .search-suggestions::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,0,0,0.5);
+    }
+    .search-suggestion {
+        padding: 12px 16px;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        word-wrap: break-word;
+        line-height: 1.4;
+    }
+    .search-suggestion:hover,
+    .search-suggestion.selected {
+        background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(34,197,94,0.15));
+    }
+    .no-suggestions {
+        padding: 12px 16px;
+        color: rgba(0,0,0,0.5);
+        font-size: 14px;
+        text-align: center;
+        font-style: italic;
+    }
+    .section { margin-bottom: 5px; }
+    .section h3 { margin: 10px 0 15px 0; font-size: 1.5rem; font-weight: 600; color: var(--accent); }
+    .model-indicator {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+        opacity: 0.8;
+        display: inline-block;
+    }
+    #currentModelName {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .module-name-link {
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0;
+        font-size: inherit;
+        font-weight: inherit;
+        text-align: left;
+        word-wrap: break-word;
+        line-height: 1.4;
+        transition: color 0.2s ease;
+    }
+    .module-name-link:hover {
+        color: #ec4899; /* pink-400 */
+    }
+    .high-filter-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .high-filter-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 12px 12px 24px rgba(0,0,0,0.3), -12px -12px 24px rgba(255,255,255,0.9);
+    }
+    .high-filter-card[aria-pressed="true"] {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+        border: 2px solid #ef4444;
+        box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.1);
+    }
+    .high-filter-card[aria-pressed="true"] .card-icon {
+        color: #ef4444;
+    }
+    .inline-download-btn {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        padding: 4px 8px;
+        margin-left: 8px;
+        border-radius: 4px;
+        opacity: 0.7;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .inline-download-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    .high-filter-card:hover .inline-download-btn {
+        opacity: 1;
+    }
+    .chart-card h4 { margin:0 0 16px 0; font-size:18px; font-weight:600; color: var(--accent); }
+    .dashboard-main { display:flex; flex-direction:column; gap:5px; }
+    .cards-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px; /* Reduced gap between cards */
+        align-items: center;
+        padding: 16px;
+        margin-bottom: 15px; /* Reduced from 30px */
+    }
+    .card {
+        padding: 15px 20px; /* Reduced internal padding */
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        min-height: auto; /* Remove fixed height */
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 12px 12px 24px rgba(0,0,0,0.2), -12px -12px 24px rgba(255,255,255,0.9);
+    }
+    .card-icon {
+        font-size: 40px;
+        width: 40px; /* Smaller icon container */
+        height: 40px;
+        text-align: center;
+        color: var(--accent);
+        flex-shrink: 0;
+        margin-right: 15px; /* Adjusted margin */
+    }
+    .card-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .card-title {
+        font-size: 14px;
+        opacity: 0.7;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .card-value {
+        font-size: 1.8rem; /* Adjust font size to fit smaller card */
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.2;
+        margin-bottom: 0; /* Remove bottom margin to vertically center */
+    }
+    .charts-row { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    .chart-card { border-radius:20px; background: var(--card-bg); box-shadow: var(--shadow); padding: 24px; height: 400px; position: relative; }
+    .chart-card h4 { margin:0 0 16px 0; font-size:18px; font-weight:600; }
+    .chart-canvas { display: block; width: 100%; height: 100%; }
+    .table-section { border-radius:20px; background: var(--card-bg); box-shadow: 8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,0.1); padding: 24px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+    .table-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-shrink: 0; }
+    .table-header h4 { margin:0; font-size:18px; font-weight:600; }
+    .table-header-actions { display:flex; align-items:center; gap:12px; }
+    .table-count { opacity:0.7; font-size:14px; }
+
+    /* Export dropdown styles */
+    .export-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .export-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: var(--accent);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .export-toggle:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .dropdown-arrow {
+        transition: transform 0.2s ease;
+    }
+
+    .export-dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+
+    .export-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 8px 8px 16px rgba(0,0,0,0.2), -8px -8px 16px rgba(255,255,255,0.9);
+        min-width: 200px;
+        z-index: 1000;
+        margin-top: 4px;
+        overflow: hidden;
+    }
+
+    .export-dropdown.active .export-menu {
+        display: block;
+    }
+
+    .export-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px 12px;
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .export-option:last-child {
+        border-bottom: none;
+    }
+
+    .export-option:hover {
+        background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(34,197,94,0.1));
+    }
+
+    .export-option svg {
+        flex-shrink: 0;
+    }
+
+    /* Full-Screen Layout for Issues Modal - HIDDEN BY DEFAULT */
+    #issues-modal {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100vh;
+        max-width: none;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: var(--bg);
+        padding: 24px 36px;
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        z-index: 1000;
+    }
+
+    #issues-modal .modal-overlay {
+        position: static;
+        background: none;
+        backdrop-filter: none;
+        display: block;
+        opacity: 1;
+        visibility: visible;
+    }
+
+    #issues-modal .modal-container {
+        position: static;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+        padding: 0;
+        transform: none;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #issues-modal .modal-header {
+        position: static;
+        background: var(--bg);
+        padding: 16px 0 24px 0;
+        margin-bottom: 0;
+        border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+
+    #issues-modal .modal-header h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    #issues-modal .modal-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    #issues-modal .modal-body {
+        flex: 1;
+        padding: 24px 0 0 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    #issues-modal .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        background: var(--bg);
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    #issues-modal .issues-table thead th {
+        position: sticky;
+        top: 0;
+        background: var(--card-bg);
+        z-index: 10;
+    }
+
+    /* Responsive: allow horizontal scroll instead of hiding columns */
+    @media (max-width: 900px) {
+        #issues-modal .table-wrap {
+            overflow-x: auto;
+        }
+
+        /* Keep all columns visible, allow scrolling */
+        #issues-modal .col-title,
+        #issues-modal .col-problem,
+        #issues-modal .col-summarized,
+        #issues-modal .col-reason {
+            display: table-cell;
+        }
+    }
+
+    /* Issues table - optimized full-width layout with proper content distribution */
+    .issues-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      table-layout: fixed; /* Fixed layout for proper header/data alignment */
+      margin: 0;
+      border-spacing: 0;
+    }
+
+    .issues-table thead th {
+      padding: 16px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+      background: var(--card-bg);
+      border-bottom: 2px solid rgba(9,30,63,0.04);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      text-align: left;
+      vertical-align: bottom;
+      white-space: nowrap; /* Header text never wraps */
+    }
+
+    .issues-table tbody td {
+      padding: 20px 14px; /* Increased padding for better content breathing room */
+      border-bottom: 1px solid rgba(9,30,63,0.04);
+      color: var(--text-primary);
+      vertical-align: top; /* Top align for consistent multi-line layout */
+      line-height: 1.6; /* Better line spacing for wrapped text */
+      height: auto; /* Allow auto height for wrapped content */
+    }
+
+    /* Optimized column widths with content priority */
+    .col-sn {
+      width: 45px;
+      min-width: 45px;
+      max-width: 45px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .col-case {
+      width: 140px;
+      min-width: 140px;
+      max-width: 180px;
+    }
+    .col-title {
+      width: 200px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-problem {
+      width: 300px;
+      min-width: 250px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-model {
+      width: 140px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .col-model:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    .col-sw {
+      width: 120px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .col-sw:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    .col-module {
+      width: 120px;
+    }
+    .col-sub {
+      width: 110px;
+    }
+    .col-summarized {
+      width: 300px; /* Fixed width for proper alignment */
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .col-severity {
+      width: 100px;
+      text-align: center;
+    }
+    .col-reason {
+      width: 200px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Comprehensive text handling - NO forced truncation for content columns */
+    .col-title, .col-problem, .col-summarized, .col-reason {
+      overflow: visible;
+      text-overflow: unset;
+    }
+
+    /* Minimal truncation only for truly compact columns */
+    .col-case, .col-model, .col-sw, .col-module, .col-sub {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    /* Enhanced severity pills */
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .pill.high {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+
+    /* Clean hover effect - no left stripe */
+    .issues-table tbody tr:hover {
+      background-color: rgba(6,22,36,0.02);
+      transform: translateY(0);
+      transition: background-color 0.15s ease;
+    }
+
+    /* Enhanced sticky header */
+    .issues-table thead th {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Tooltips removed - text now wraps directly in cells */
+
+    /* Responsive: maintain full readability on smaller screens */
+    @media (max-width: 900px) {
+      #issues-modal .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Ensure all columns remain accessible */
+      .issues-table {
+        min-width: 1200px; /* Minimum width for readability */
+      }
+
+      /* Allow even generous padding on mobile for touch */
+      .issues-table tbody td {
+        padding: 24px 16px;
+        line-height: 1.7;
+      }
+    }
+
+    /* Print styles for exported tables */
+    @media print {
+      .issues-table {
+        font-size: 12px;
+      }
+
+      .issues-table tbody td {
+        padding: 8px 12px;
+      }
+    }
+
+    /* All text hovering tooltips removed - content now wraps directly in cells */
+
+    /* Responsive: hide long columns under 900px */
+    @media (max-width: 900px) {
+      .col-title, .col-problem, .col-summarized, .col-reason {
+        display: none;
+      }
+
+      /* Allow horizontal scroll for remaining content */
+      .table-wrap {
+        overflow-x: auto;
+      }
+    }
+
+    #tableWrapper { width: 100%; overflow:auto; border-radius:12px; flex: 1; min-height: 0; }
+    .table-glass table {
+        width:100%;
+        border-collapse:collapse;
+        font-size:14px;
+        background: rgba(0,0,0,0.02);
+        border-radius:12px;
+        overflow: hidden;
+        table-layout: fixed;
+    }
+    .table-glass thead th {
+        text-align: center;
+        padding:16px 12px;
+        font-weight:600;
+        color:var(--text-primary);
+        background: var(--card-bg);
+        position: sticky;
+        top:0;
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+    .table-glass tbody td {
+        padding:16px 12px;
+        border-bottom:1px solid rgba(0,0,0,0.05);
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+    .table-glass thead th:last-child,
+    .table-glass tbody td:last-child { text-align: center; width: 60px; }
+    .table-glass thead th:nth-child(1) { width: 60px; text-align: center; }
+    .table-glass thead th:nth-child(2) { width: 100px; }
+    .table-glass thead th:nth-child(3) { width: 100px; }
+    .table-glass thead th:nth-child(4) { width: 350px; }
+    .table-glass tbody td:nth-child(4) {
+        overflow: visible;
+        text-overflow: unset;
+        white-space: normal;
+        word-wrap: break-word;
+        line-height: 1.4;
+    }
+
+    /* Allow text wrapping for title column (4th column) in main table instead of truncation */
+    .table-section .data-table tbody td:nth-child(4) {
+        overflow: visible !important;
+        text-overflow: unset !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        text-align: left !important;
+    }
+    .table-glass thead th:nth-child(6) { width: 300px; }
+    .table-glass thead th:nth-child(7) { width: 100px; }
+    .table-glass thead th:nth-child(8) { width: 80px; }
+
+    /* Page size selector */
+    .page-size-select {
+        background: var(--card-bg);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 6px;
+        padding: 6px 12px;
+        color: var(--text-primary);
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .page-size-select:focus {
+        outline: none;
+        border-color: rgba(59,130,246,0.5);
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+    }
+
+    /* Pagination controls */
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .pagination-btn {
+        background: var(--card-bg);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 6px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-primary);
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+        background: rgba(59,130,246,0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .pagination-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .pagination-info {
+        display: none;
+    }
+
+    .page-input {
+        background: var(--card-bg);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 4px;
+        width: 60px;
+        height: 32px;
+        text-align: center;
+        font-size: 14px;
+        color: var(--text-primary);
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .page-input:focus {
+        border-color: rgba(59,130,246,0.5);
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+    }
+
+    /* Loading skeleton */
+    .loading-skeleton {
+        background: linear-gradient(90deg, rgba(0,0,0,0.1) 25%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.1) 75%);
+        background-size: 200% 100%;
+        animation: loading-shimmer 1.5s infinite;
+        border-radius: 4px;
+    }
+
+    @keyframes loading-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    .table-loading tr td {
+        height: 48px;
+        padding: 12px;
+    }
+
+    .table-loading tr td div {
+        height: 16px;
+        margin-bottom: 8px;
+    }
+
+    .table-loading tr td div:last-child {
+        width: 60%;
+        margin-bottom: 0;
+    }
+
+    .truncate { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; line-clamp: 3; -webkit-line-clamp: 3; }
+
+    /* Empty state badge for summarized problem */
+    .empty-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background-color: rgba(156, 163, 175, 0.2);
+      color: #6b7280;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    /* Modern button styles for modal actions */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(34,197,94,0.1));
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(34,197,94,0.15));
+    }
+
+    .btn svg {
+      flex-shrink: 0;
+    }
+
+    /* Fix Table Text Wrapping */
+    table {
+        table-layout: fixed; /* Enforces strict column widths */
+        width: 100%;
+    }
+
+    td {
+        white-space: normal !important; /* Forces text to wrap */
+        word-break: break-word;
+        vertical-align: top; /* Aligns text to top if wrapping occurs */
+        padding: 12px 16px;
+    }
+
+    /* Interactive Table Rows */
+    tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    tbody tr:hover {
+        background-color: #f9fafb; /* Highlight on hover */
+        transform: scale(1.005); /* Micro-interaction: tiny zoom */
+    }
+
+    /* Table Layout Fixed allows precise column control */
+    #dataTable {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    /* --- COLUMN 2: MODEL NO (Fix Readability) --- */
+    #dataTable th:nth-child(2),
+    #dataTable td:nth-child(2) {
+        width: 18%; /* Set a reasonable fixed width */
+
+        /* Typography for Clarity */
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* Easier to read ID codes */
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151; /* Dark Grey */
+
+        /* Truncation Magic */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Adds '...' if text is too long */
+    }
+
+    /* --- COLUMN 3: MODULE (Reduce Size) --- */
+    #dataTable th:nth-child(3),
+    #dataTable td:nth-child(3) {
+        width: 8%; /* Further reduced width */
+        text-align: left;
+    }
+
+    /* --- COLUMN 4: ISSUE TITLE (Give it more space) --- */
+    #dataTable th:nth-child(4),
+    #dataTable td:nth-child(4) {
+        width: 52%; /* Give more space to the actual issue text */
+    }
+
+    /* Add styles for Severity Pills */
+    .status-pill {
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .status-high { background-color: #fee2e2; color: #991b1b; } /* Red */
+    .status-medium { background-color: #fef3c7; color: #92400e; } /* Amber */
+    .status-low { background-color: #d1fae5; color: #065f46; } /* Green */
+
+    /* Center S/N column in modal table */
+    #moduleDetailTable thead th:first-child {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #moduleDetailTable tbody td:first-child {
+        text-align: center;
+        vertical-align: middle;
+    }
+  </style>
+</head>
+<body data-category="samsung_members_plm">
+  <!-- Navigation Top Bar -->
+  <div class="top-bar">
+    <a href="/" class="nav-button home-button" title="Back to Home" aria-label="Navigate back to home page">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12L21 12M3 12l6-6M3 12l6 6"/>
+      </svg>
+      <span>Home</span>
+    </a>
+
+
+  </div>
+
+  <div class="dashboard-container">
+    <aside class="section sidebar">
+      <h3 class="section-title">Models</h3>
+      <div id="modelButtons" class="model-list"></div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="overview-section section">
+        <h3 class="section-title">Samsung Members PLM Overview</h3>
+
+        <div class="cards-row kpi-grid" id="cardsRow">
+          <div class="card kpi">
+            <div class="card-icon">📊</div>
+            <div class="card-content">
+              <span class="card-value value" id="dashTotal">—</span>
+              <div class="label">Total Cases</div>
+            </div>
+          </div>
+          <div class="card kpi high-filter-card" id="highFilterCard" role="button" tabindex="0" aria-pressed="false">
+            <div class="card-icon">🚨</div>
+            <div class="card-content">
+              <span class="card-value value" id="dashHigh">—</span>
+              <div class="label">
+                High
+                <button class="inline-download-btn" id="highCardDownloadBtn" title="Download High Severity Cases" aria-label="Download High Severity Cases">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card kpi">
+            <div class="card-icon">🔧</div>
+            <div class="card-content">
+              <span class="card-value value" id="dashDistinct">—</span>
+              <div class="label">Distinct Modules</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="charts-section section">
+        <h3 class="section-title">Analytics</h3>
+        <div class="charts-row">
+          <div class="chart-card charts-card">
+            <h4>Severity Distribution</h4>
+            <canvas id="severityChart" class="chart-canvas"></canvas>
+          </div>
+          <div class="chart-card charts-card">
+            <h4>Top 10 Modules</h4>
+            <canvas id="moduleChart" class="chart-canvas"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="cases-section section">
+        <div class="table-section">
+          <div class="table-header">
+            <h4>Cases</h4>
+            <div class="table-header-actions">
+              <select id="pageSizeSelect" class="page-size-select" title="Page size" aria-label="Select page size">
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+              </select>
+              <div class="export-dropdown">
+                <button class="btn-export export-toggle" id="exportToggleBtn" title="Export options" aria-label="Export options menu">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17,8 12,3 7,8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Export
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="dropdown-arrow">
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </button>
+                <div class="export-menu" id="exportMenu">
+                  <button class="export-option" data-action="all" title="Export all filtered rows" aria-label="Export all filtered rows to Excel">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7,10 12,15 17,10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export All Filtered Rows
+                  </button>
+                  <button class="export-option" data-action="visible" title="Export current page" aria-label="Export current page to Excel">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <text x="12" y="13" font-size="10" fill="currentColor" text-anchor="middle">1</text>
+                    </svg>
+                    Export Current Page
+                  </button>
+                </div>
+              </div>
+              <div class="table-count" id="tableCount">0 of 0 cases</div>
+            </div>
+          </div>
+          <div id="tableWrapper" class="cases-table-wrapper">
+            <table id="dataTable" class="data-table">
+              <thead>
+                <tr>
+                  <th>S/N</th>
+                  <th>Model No.</th>
+                  <th>Module</th>
+                  <th>Top Issue Title</th>
+                  <th>Severity</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="pagination-controls" id="paginationControls">
+            <button id="firstPageBtn" class="pagination-btn" title="First page" aria-label="Go to first page">&laquo;&laquo;</button>
+            <button id="prevPageBtn" class="pagination-btn" title="Previous page" aria-label="Go to previous page">&laquo;</button>
+            <button id="nextPageBtn" class="pagination-btn" title="Next page" aria-label="Go to next page">&raquo;</button>
+            <button id="lastPageBtn" class="pagination-btn" title="Last page" aria-label="Go to last page">&raquo;&raquo;</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Dialog -->
+  <div id="issues-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-container">
+      <div class="modal-header sticky-header">
+        <h3 id="modalTitle">Module Cases — Loading...</h3>
+        <div class="modal-header-actions">
+          <button class="btn" id="exportBtn">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Excel
+          </button>
+          <button class="close" id="modalClose" aria-label="Close">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="modal-table-container">
+          <table id="moduleDetailTable">
+            <thead>
+              <tr>
+                <th>S/N</th>
+                <th>Case Code</th>
+                <th>Model No.</th>
+                <th>S/W Ver.</th>
+                <th>Issue Title</th>
+                <th>Sub-Module</th>
+                <th>Summarized Problem</th>
+                <th>Severity</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+</script>
+<script src="dashboard.js"></script>
+</body>
+</html>
