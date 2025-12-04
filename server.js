@@ -937,7 +937,8 @@ async function processExcel(req, res) {
     if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
       chunkSize = ROWSCOUNT <= 50 ? 1
                 : ROWSCOUNT <= 200 ? 2
-                : 4;
+                : ROWSCOUNT <= 500 ? 10  // New tier
+                : 20; // Increased from 4 to 20 for > 500 rows
     } else {
       chunkSize = ROWSCOUNT <= 200 ? 5
                 : ROWSCOUNT <= 1000 ? 10
@@ -1079,7 +1080,7 @@ async function processExcel(req, res) {
     });
 
     // === Apply Header Styling ===
-    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'];
+    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment'];
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;

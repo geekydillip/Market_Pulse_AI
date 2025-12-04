@@ -8,25 +8,16 @@ function normalizeHeaders(rows) {
   // Map header name variants to canonical names
   const headerMap = {
     // Model variants
-    'model no': 'Model No.',
     'model no.': 'Model No.',
-    'modelno': 'Model No.',
-    'model number': 'Model No.',
     // Case Code
     'case code': 'Case Code',
-    'caseno': 'Case Code',
-    'case no': 'Case Code',
     // S/W Ver variants
     's/w ver.': 'S/W Ver.',
-    's/w ver': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'swversion': 'S/W Ver.',
     // Title, Problem, Module, Sub-Module
     'title': 'Title',
     'problem': 'Problem',
     'module': 'Module',
     'sub-module': 'Sub-Module',
-    'sub module': 'Sub-Module',
   };
 
   // canonical columns you expect in the downstream processing
@@ -169,7 +160,7 @@ module.exports = {
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
       if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.') return { wch: 20 };
+      if (h === 'Model No.','Resolve Type','R&D Comment') return { wch: 20 };
       if (h === 'S/W Ver.') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
