@@ -15,8 +15,8 @@ let severityChart = null;
 let moduleChart = null;
 let currentTheme = 'dark';
 
-// Get dashboard category from body data attribute
-const dashboardCategory = document.body.dataset.category;
+// Dashboard category - will be set after DOM loads
+let dashboardCategory;
 
 // Category display names
 const categoryTitles = {
@@ -1548,6 +1548,9 @@ function closeModal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Set dashboard category from DOM after it's loaded
+  dashboardCategory = document.body.dataset.category;
+
   // Initialize theme
   initTheme();
 
