@@ -1,60 +1,30 @@
-// Theme Management
-let currentTheme = 'dark';
-
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    updateThemeToggleIcon();
-
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-}
-
-function setTheme(theme) {
-    currentTheme = theme;
-    document.body.className = `theme-${theme}`;
-    localStorage.setItem('theme', theme);
-    updateThemeToggleIcon();
-}
-
-function toggleTheme() {
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-}
-
-function updateThemeToggleIcon() {
-    const icon = document.querySelector('#themeToggle svg');
-    if (currentTheme === 'light') {
-        icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-    } else {
-        icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="m12 1v2m0 18v2M4.93 4.93l1.41 1.41m11.32 0l1.41 -1.41M1 12h2m18 0h2M4.93 19.07l1.41 -1.41m11.32 0l1.41 1.41"/>';
-    }
-}
-
-// DOM Elements
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-const filePreview = document.getElementById('filePreview');
-const fileName = document.getElementById('fileName');
-const fileSize = document.getElementById('fileSize');
-const fileContent = document.getElementById('fileContent');
-const removeFile = document.getElementById('removeFile');
-const processBtn = document.getElementById('processBtn');
-const loadingOverlay = document.getElementById('loadingOverlay');
-
-const statusElement = document.getElementById('status');
-const progressContainer = document.getElementById('progressContainer');
-const progressFill = document.getElementById('progressFill');
-const progressText = document.getElementById('progressText');
-const modelSelect = document.getElementById('modelSelect');
+// DOM Elements - declared globally but assigned after DOM loads
+let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, processBtn, loadingOverlay;
+let statusElement, progressContainer, progressFill, progressText, chunkInfo, modelSelect;
 
 // State
 let currentFile = null;
 let currentResult = '';
 
 // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-    // Initialize theme
-    initTheme();
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize DOM elements after DOM is loaded
+    dropzone = document.getElementById('dropzone');
+    fileInput = document.getElementById('fileInput');
+    filePreview = document.getElementById('filePreview');
+    fileName = document.getElementById('fileName');
+    fileSize = document.getElementById('fileSize');
+    fileContent = document.getElementById('fileContent');
+    removeFile = document.getElementById('removeFile');
+    processBtn = document.getElementById('processBtn');
+    loadingOverlay = document.getElementById('loadingOverlay');
+
+    statusElement = document.getElementById('status');
+    progressContainer = document.getElementById('progressContainer');
+    progressFill = document.getElementById('progressFill');
+    progressText = document.getElementById('progressText');
+    chunkInfo = document.getElementById('chunkInfo');
+    modelSelect = document.getElementById('modelSelect');
 
     setupEventListeners();
     loadModels();
@@ -76,6 +46,7 @@ let currentResult = '';
 function initializeProgressState() {
     progressFill.style.width = '0%';
     progressContainer.style.display = 'none';
+    chunkInfo.textContent = '';
 }
 
 // Global processing timing variables
@@ -338,6 +309,9 @@ async function processStructuredFile(file, processingType, model, sessionId) {
                     const data = JSON.parse(event.data);
                     if (data.type === 'progress') {
                         updateProgress(data.percent, data.message);
+                        if (data.message.includes('chunks')) {
+                            chunkInfo.textContent = data.message;
+                        }
                         console.log(`Progress: ${data.percent}% - ${data.message}`);
                     }
                 } catch (e) {

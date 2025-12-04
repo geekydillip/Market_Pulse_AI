@@ -314,6 +314,18 @@ function applyGenericCleaning(value) {
 // Store SSE clients for progress updates
 const progressClients = new Map();
 
+// Store processing sessions for timer estimation
+const processingSessions = new Map();
+
+// Helper function to format seconds to hh:mm:ss
+function formatSecondsToHHMMSS(seconds) {
+  if (!seconds || seconds < 0) return '00:00:00';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
 // Process a single chunk
 async function processChunk(chunk, processingType, model, chunkId) {
   const startTime = Date.now();
@@ -395,6 +407,11 @@ async function processChunk(chunk, processingType, model, chunkId) {
         processingTime: Date.now() - startTime,
         error: err.message
       };
+    }
+
+    // Ensure processedRows is an array
+    if (!Array.isArray(processedRows)) {
+      processedRows = chunk.rows.map((row) => ({ ...row, error: `Invalid response format from AI: ${JSON.stringify(processedRows).slice(0, 200)}` }));
     }
 
     // Special handling for summary container response
@@ -508,6 +525,9 @@ async function processCSV(req, res) {
     }
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
+    // Initialize session tracking
+    processingSessions.set(sessionId, { startTime: Date.now(), chunkTimes: [], completedCount: 0, totalChunks: numberOfChunks });
+
     // Send initial progress for CSV
     sendProgress(sessionId, {
       type: 'progress',
@@ -526,11 +546,21 @@ async function processCSV(req, res) {
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
         const result = await processChunk(chunk, processingType, model, i);
-        // send per-chunk progress update
+        const sessionData = processingSessions.get(sessionId);
+        sessionData.chunkTimes.push(result.processingTime);
+        sessionData.completedCount++;
+        const completed = sessionData.completedCount;
+        const total = sessionData.totalChunks;
+        const averageTime = sessionData.chunkTimes.reduce((a,b)=>a+b,0) / sessionData.chunkTimes.length;
+        const remainingChunks = total - completed;
+        const CONCURRENCY = 4;
+        const estimatedSeconds = (remainingChunks / CONCURRENCY) * (averageTime / 1000);
+        const formatted = formatSecondsToHHMMSS(estimatedSeconds);
+        const percent = Math.round(completed / total * 100);
         sendProgress(sessionId, {
           type: 'progress',
-          percent: Math.round((i + 1) / numberOfChunks * 100),
-          message: `Processed chunk ${i + 1}/${numberOfChunks}`,
+          percent,
+          message: `Processed ${completed}/${total} chunks (est. ${formatted} remaining)`,
           chunkId: i
         });
         return result;
@@ -721,6 +751,9 @@ async function processJSON(req, res) {
     }
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
+    // Initialize session tracking
+    processingSessions.set(sessionId, { startTime: Date.now(), chunkTimes: [], completedCount: 0, totalChunks: numberOfChunks });
+
     // Send initial progress for JSON
     sendProgress(sessionId, {
       type: 'progress',
@@ -739,11 +772,21 @@ async function processJSON(req, res) {
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
         const result = await processChunk(chunk, processingType, model, i);
-        // send per-chunk progress update
+        const sessionData = processingSessions.get(sessionId);
+        sessionData.chunkTimes.push(result.processingTime);
+        sessionData.completedCount++;
+        const completed = sessionData.completedCount;
+        const total = sessionData.totalChunks;
+        const averageTime = sessionData.chunkTimes.reduce((a,b)=>a+b,0) / sessionData.chunkTimes.length;
+        const remainingChunks = total - completed;
+        const CONCURRENCY = 4;
+        const estimatedSeconds = (remainingChunks / CONCURRENCY) * (averageTime / 1000);
+        const formatted = formatSecondsToHHMMSS(estimatedSeconds);
+        const percent = Math.round(completed / total * 100);
         sendProgress(sessionId, {
           type: 'progress',
-          percent: Math.round((i + 1) / numberOfChunks * 100),
-          message: `Processed chunk ${i + 1}/${numberOfChunks}`,
+          percent,
+          message: `Processed ${completed}/${total} chunks (est. ${formatted} remaining)`,
           chunkId: i
         });
         return result;
@@ -946,6 +989,9 @@ async function processExcel(req, res) {
     }
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
+    // Initialize session tracking
+    processingSessions.set(sessionId, { startTime: Date.now(), chunkTimes: [], completedCount: 0, totalChunks: numberOfChunks });
+
     // Send initial progress (0%)
     sendProgress(sessionId, {
       type: 'progress',
@@ -964,8 +1010,18 @@ async function processExcel(req, res) {
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx-1], headers, rows: chunkRows };
       tasks.push(async () => {
         const result = await processChunk(chunk, processingType, model, i);
-        // send per-chunk progress update
-        sendProgress(sessionId, { type: 'progress', percent: Math.round((i+1)/numberOfChunks*100), message: `Processed chunk ${i+1}/${numberOfChunks}`, chunkId: i });
+        const sessionData = processingSessions.get(sessionId);
+        sessionData.chunkTimes.push(result.processingTime);
+        sessionData.completedCount++;
+        const completed = sessionData.completedCount;
+        const total = sessionData.totalChunks;
+        const averageTime = sessionData.chunkTimes.reduce((a,b)=>a+b,0) / sessionData.chunkTimes.length;
+        const remainingChunks = total - completed;
+        const CONCURRENCY = 4;
+        const estimatedSeconds = (remainingChunks / CONCURRENCY) * (averageTime / 1000);
+        const formatted = formatSecondsToHHMMSS(estimatedSeconds);
+        const percent = Math.round(completed / total * 100);
+        sendProgress(sessionId, { type: 'progress', percent, message: `Processed ${completed}/${total} chunks (est. ${formatted} remaining)`, chunkId: i });
         return result;
       });
     }
@@ -1227,9 +1283,25 @@ function readAllFilesWithModel(category = null) {
           const wb = xlsx.readFile(fullPath);
           const sheetName = wb.SheetNames[0];
           const ws = wb.Sheets[sheetName];
-          const modelFromFile = getModelFromSheet(ws) || '';
-          const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
-          allFiles.push({ file: fullPath, modelFromFile, rows });
+
+          // Category-specific model reading logic
+          if (category === 'samsung_members_plm') {
+            // For Samsung Members PLM: Read models from individual rows
+            const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+            const processedRows = rows.map(row => {
+              const modelFromRow = (row['Model No.'] || row['Model No'] || row['Model'] || row['model'] || '').toString().trim();
+              return {
+                ...row,
+                modelFromFile: modelFromRow // Attach model from each row
+              };
+            });
+            allFiles.push({ file: fullPath, modelFromFile: '', rows: processedRows });
+          } else {
+            // For other categories (Beta User Issues, etc.): Use original sheet-based approach
+            const modelFromFile = getModelFromSheet(ws) || '';
+            const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+            allFiles.push({ file: fullPath, modelFromFile, rows });
+          }
         } catch (err) {
           console.warn('[readAllFilesWithModel] skip', fullPath, err.message);
         }
@@ -1241,15 +1313,18 @@ function readAllFilesWithModel(category = null) {
   return readDirectoryRecursively(dlDir);
 }
 
-// GET /api/models?category=<category> -> returns unique model list (modelFromFile values) scoped to category folder
+// GET /api/models?category=<category> -> returns unique model list from individual row "Model No." columns
 app.get('/api/models', (req, res) => {
   try {
     const category = req.query.category;
     const files = readAllFilesWithModel(category);
     const models = new Set();
     files.forEach(f => {
-      const m = (f.modelFromFile || '').toString().trim();
-      if (m) models.add(m);
+      // Extract models from each row's modelFromFile field
+      f.rows.forEach(row => {
+        const m = (row.modelFromFile || '').toString().trim();
+        if (m) models.add(m);
+      });
     });
     const arr = Array.from(models).sort();
     res.json({ success: true, models: arr });
@@ -1271,11 +1346,15 @@ function getFilteredRows(modelQuery, severityQuery, category) {
   // Build unified rows with an attached modelFromFile field for each row
   let allRows = [];
   files.forEach(f => {
-    const mFromFile = f.modelFromFile || '';
     f.rows.forEach(r => {
-      // attach modelFromFile to each row so we can easily filter by model
+      // For Samsung Members PLM, modelFromFile is already set at row level
+      // For other categories, use the file-level modelFromFile
       const row = Object.assign({}, r);
-      row._modelFromFile = mFromFile;
+      if (category === 'samsung_members_plm') {
+        row._modelFromFile = r.modelFromFile || '';
+      } else {
+        row._modelFromFile = f.modelFromFile || '';
+      }
       allRows.push(row);
     });
   });

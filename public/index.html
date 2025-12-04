@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Market Pulse AI</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1.4">
 </head>
 <body>
-    <!-- Theme Toggle -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
-        <svg width="24" height="24" fill="currentColor">
-            <circle cx="12" cy="12" r="5"/><path d="m12 1v2m0 18v2M4.93 4.93l1.41 1.41m11.32 0l1.41 -1.41M1 12h2m18 0h2M4.93 19.07l1.41 -1.41m11.32 0l1.41 1.41"/>
-        </svg>
-    </button>
+
 
     <div class="container">
         <!-- Header -->
@@ -275,6 +270,7 @@
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
                     <div class="progress-text" id="progressText">Initializing...</div>
+                    <div class="chunk-info" id="chunkInfo"></div>
                 </div>
 
                 <!-- Processing Summary -->
@@ -304,7 +300,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
-    <script src="dashboard.js"></script>
+    <script src="script.js?v=1.2"></script>
 </body>
 </html>
