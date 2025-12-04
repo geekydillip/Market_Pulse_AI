@@ -16,30 +16,12 @@
   --pill-high-text: #b12b3a;
 }
 
-/* -------------------------
-   DARK THEME VARIABLES
-   Apply these when body has .theme-dark class
-   ------------------------- */
-body.theme-dark {
-  --page-bg: #252046;           /* even lighter deep indigo */
-  --panel-bg: linear-gradient(180deg, rgba(28,24,45,0.96), rgba(35,30,56,0.98));
-  --card-bg: rgba(22,18,42,0.64); /* slightly lighter card */
-  --card-surface: rgba(20,17,36,0.62);
-  --card-border: rgba(255,255,255,0.03);
-  --glass-overlay: rgba(255,255,255,0.02);
-  --muted: rgba(229,239,255,0.8);    /* improved contrast: 0.45 -> 0.8 */
-  --text: #e6eefc;
-  --accent: #ff66b2;            /* pink/purple accent for headings */
-  --accent-2: #8b6bff;         /* secondary accent */
-  --kpi-text: #ffffff;
-  --kpi-muted: rgba(255,255,255,0.9); /* improved contrast: 0.7 -> 0.9 */
-  --shadow-soft: 0 12px 30px rgba(2,6,23,0.55);
-  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.02);
-  --card-radius: 14px;
-  --gap: 18px;
-  color-scheme: dark;
-  background-color: var(--page-bg);
+/* Utility classes */
+.section-hidden {
+  display: none !important;
 }
+
+
 
 /* -------------------------
    LIGHT THEME VARIABLES
@@ -72,19 +54,8 @@ body.theme-light {
 /* -------------------------
    Chart color variables (use these in JS to create gradients)
    ------------------------- */
-.theme-dark {
-  --chart-high-start:     #E69F00;
-  --chart-high-end:       #F0E442;
-  --chart-middle-start:   #D55E00;
-  --chart-middle-end:     #B54708;
-  --chart-low-start:      #10B981;
-  --chart-low-end:        #059669;
-  --chart-grid: rgba(255,255,255,0.04);
-  --chart-axes: rgba(255,255,255,0.4); /* improved contrast: 0.2 -> 0.4 */ /* improved contrast: 0.2 -> 0.4 */
-}
-
-/* Light theme chart variables */
-.theme-light {
+/* Chart variables */
+:root {
   --chart-high-start:     #dc2626;
   --chart-high-end:       #b91c1c;
   --chart-middle-start:   #ea580c;
@@ -241,7 +212,7 @@ body {
 section {
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 32px;
+    padding: 24px;
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
 }
@@ -592,27 +563,6 @@ section {
 
 .theme-light .progress-text {
     color: #1a202c !important;
-}
-
-/* Dark theme progress bar styles */
-.theme-dark .progress-container {
-    background: rgba(0, 0, 0, 0.2) !important;
-    border: 2px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}
-
-.theme-dark .progress-bar {
-    background: rgba(255, 255, 255, 0.05) !important;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-}
-
-.theme-dark .progress-fill {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) !important;
-    box-shadow: 0 0 10px rgba(99, 102, 241, 0.5) !important;
-}
-
-.theme-dark .progress-text {
-    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .card-icon {
@@ -1487,63 +1437,7 @@ section {
     color: var(--success-color);
 }
 
-/* Apply background full page */
-body.theme-dark, body.theme-dark html {
-  background: var(--page-bg);
-  color: var(--text);
-}
 
-/* page wrapper / outer container */
-.theme-dark .app-wrap {
-  background: linear-gradient(180deg, rgba(12,10,28,0.95), rgba(20,16,36,0.98));
-  padding: 28px;
-}
-
-/* Top header */
-.theme-dark .header {
-  color: var(--text);
-  border-bottom: 1px solid rgba(255,255,255,0.02);
-  padding-bottom: 18px;
-}
-
-/* Section headers */
-.theme-dark .section-title {
-  color: var(--accent);
-  font-weight:700;
-  font-size:1.05rem;
-  padding:14px 18px;
-  border-radius:12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-  box-shadow: var(--shadow-soft);
-  border: 1px solid rgba(255,255,255,0.02);
-}
-
-/* Cards */
-.theme-dark .card {
-  background: linear-gradient(180deg, rgba(30,24,50,0.76), rgba(20,16,40,0.70));
-  border-radius: var(--card-radius);
-  border: 1px solid var(--card-border);
-  box-shadow: 0 10px 30px rgba(6,8,18,0.45), inset 0 1px 0 rgba(255,255,255,0.02);
-  color: var(--text);
-}
-
-/* KPI cards */
-.theme-dark .kpi {
-  background: linear-gradient(180deg, rgba(22,18,42,0.6), rgba(12,8,30,0.4));
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(2,6,23,0.55);
-}
-.theme-dark .kpi .value { font-size: 28px; font-weight:700; color:var(--kpi-text); }
-.theme-dark .kpi .label { color:var(--kpi-muted); font-size:12px; }
-
-/* Highlight KPI cards on hover */
-.theme-dark .kpi:hover {
-  border: 4px solid linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) !important;
-  background: linear-gradient(180deg, rgba(40,32,58,0.98), rgba(35,28,52,0.98)) !important;
-  box-shadow: 0 0 40px rgba(99, 102, 241, 0.6), 0 0 80px rgba(139, 92, 246, 0.3), inset 0 4px 8px rgba(255,255,255,0.06);
-  transform: translateY(-4px);
-}
 
 .theme-light .kpi:hover {
   border: 3px solid linear-gradient(135deg, #4f46e5, #7c3aed, #06b6d4) !important;
@@ -1552,66 +1446,7 @@ body.theme-dark, body.theme-dark html {
   transform: translateY(-3px);
 }
 
-/* Sidebar */
-.theme-dark .sidebar {
-  background: linear-gradient(180deg, rgba(10,8,20,0.94), rgba(16,14,30,0.96));
-  border-right: 1px solid rgba(255,255,255,0.02);
-  box-shadow: 6px 0 30px rgba(2,6,23,0.45);
-}
-.theme-dark .sidebar .btn {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.03);
-  color: var(--muted);
-  border-radius: 10px;
-  padding: 10px 14px;
-}
 
-/* Charts card / container */
-.theme-dark .charts-card {
-  background: linear-gradient(180deg, rgba(25,20,44,0.6), rgba(18,14,36,0.6));
-  border: 1px solid rgba(255,255,255,0.02);
-  padding: 18px;
-  border-radius: 12px;
-}
-
-/* Chart legend (pill style) */
-.theme-dark .chart-legend {
-  display:flex;
-  gap:12px;
-  margin-top:12px;
-  align-items:center;
-}
-.theme-dark .legend-item {
-  display:flex; align-items:center; gap:8px; padding:6px 10px;
-  border-radius:999px; background: rgba(255,255,255,0.02); color:var(--muted);
-  border: 1px solid rgba(255,255,255,0.02);
-}
-.theme-dark .legend-pill {
-  width:34px; height:12px; border-radius:8px; box-shadow: 0 6px 14px rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.03);
-}
-
-/* Table styling */
-.theme-dark .data-table {
-  background: linear-gradient(180deg, rgba(20,16,36,0.56), rgba(10,8,22,0.54));
-  border-radius:12px;
-  color:var(--text);
-  border:1px solid rgba(255,255,255,0.02);
-}
-.theme-dark .data-table thead th { color: rgba(255,255,255,0.8); font-weight:600; background: var(--card-bg) !important; position: sticky !important; top: 0 !important; z-index: 10; }
-.theme-dark .data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.02); }
-.theme-dark .data-table td, .theme-dark .data-table th { padding:12px 14px; }
-
-/* scrollbar for tables (dark) */
-.theme-dark ::-webkit-scrollbar { width:10px; height:10px; }
-.theme-dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius:6px; border: 2px solid transparent; background-clip: padding-box; }
-.theme-dark ::-webkit-scrollbar-track { background: transparent; }
-
-/* small responsive tweaks */
-@media (max-width:900px){
-  .theme-dark .charts-grid { grid-template-columns: 1fr; }
-  .theme-dark .kpi-grid { grid-template-columns: 1fr; gap:14px; }
-}
 
 /* Light theme specific styles */
 .theme-light .section-title {
@@ -2481,8 +2316,8 @@ table td:nth-child(2) {
 
 /* 2. Reduce space around the "Beta User Issues Overview" title */
 .overview-section .section-title {
-    margin-top: 6px !important;    /* Formerly 10px */
-    margin-bottom: 10px !important; /* Formerly 15px */
+    margin-top: 6px !important;
+    margin-bottom: 5px !important;
 }
 
 /* 3. Reduce space inside the container holding the KPI buttons */
@@ -2505,7 +2340,7 @@ table td:nth-child(2) {
 
 /* Make the sidebar panel itself have rounded corners and be scrollable */
 .section.sidebar {
-    width: 220px;
+    width: 300px; /* Increased from 280px to accommodate longer model names */
     position: fixed;
     left: 0;
     top: 80px;
@@ -2518,6 +2353,31 @@ table td:nth-child(2) {
     border-right: 1px solid rgba(0,0,0,0.1);
     z-index: 10;
     overflow-y: auto; /* Enable vertical scrolling for the entire sidebar */
+}
+
+/* New style for the Home button in the sidebar */
+.sidebar-home-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    background: linear-gradient(145deg, #ffffff, #e6e6e6);
+    border: 1px solid #d1d9e6;
+    border-radius: 30px;
+    color: #4a5568;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 4px 4px 8px #d1d9e6, -4px -4px 8px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.sidebar-home-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff;
+    color: #4e54c8;
 }
 
 /* Increase border-radius for buttons and inputs to make them fully rounded */
@@ -2595,4 +2455,77 @@ table td:nth-child(2) {
 .overview-section .card.kpi .label {
     font-size: 13px !important;    /* Slightly smaller label */
     margin-top: 2px !important;    /* Small gap between value and label */
+}
+
+/* =========================================
+   CHART ENHANCEMENTS
+   ========================================= */
+
+/* Increase spacing between chart cards */
+.charts-row {
+    gap: 32px !important;
+}
+
+/* Add subtle borders to chart cards */
+.chart-card {
+    border: 1px solid rgba(0,0,0,0.08) !important;
+}
+
+/* =========================================
+   SIDEBAR ENHANCEMENTS
+   ========================================= */
+
+/* Sticky search bar for better UX */
+.model-search-input {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    background: var(--card-bg) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+/* Subtle hover effects instead of strong shadows */
+.model-chip:hover {
+    background: rgba(59,130,246,0.1) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* All models button hover effect */
+.all-models:hover {
+    background: rgba(59,130,246,0.1) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Badge format styles */
+.model-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(59,130,246,0.2);
+    color: var(--accent);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Full model name display with text wrapping */
+.model-chip {
+    white-space: normal !important;    /* Allow text wrapping */
+    word-break: break-word !important; /* Break long words */
+    overflow-wrap: break-word !important; /* Alternative for better browser support */
+    display: flex !important;          /* Use flexbox for alignment */
+    align-items: center !important;    /* Center align items */
+    justify-content: space-between !important; /* Space between name and badge */
+    line-height: 1.4 !important;       /* Better line height for wrapped text */
+}
+
+/* Stronger selected model background */
+.model-chip.active {
+    background: rgba(59,130,246,0.3) !important;
+    border: 2px solid rgba(59,130,246,0.6) !important;
+    box-shadow: inset 0 0 0 2px rgba(59,130,246,0.8) !important;
+    font-weight: bold !important;
 }

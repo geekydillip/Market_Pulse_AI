@@ -17,12 +17,15 @@ const DEFAULT_AI_MODEL = 'qwen3:4b-instruct';
 
 // Security constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.json'];
+const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.json', '.csv'];
 const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel',
   'application/json',
-  'text/json'
+  'text/json',
+  'text/csv',
+  'application/csv',
+  'text/plain'
 ];
 
 // Input validation middleware
@@ -46,7 +49,7 @@ function validateFileUpload(req, res, next) {
     if (req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    return res.status(400).json({ error: 'Invalid file type. Only .xlsx, .xls, and .json files are allowed' });
+    return res.status(400).json({ error: 'Invalid file type. Only .xlsx, .xls, .json, and .csv files are allowed' });
   }
 
   // Check MIME type (basic validation)
@@ -266,8 +269,11 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     } else if (ext === '.json') {
       // JSON files - parse and process like Excel rows
       return processJSON(req, res);
+    } else if (ext === '.csv') {
+      // CSV files - parse and process like JSON rows
+      return processCSV(req, res);
     } else {
-      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls) and JSON (.json) files are supported' });
+      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls), JSON (.json), and CSV (.csv) files are supported' });
     }
 
   } catch (error) {
@@ -418,6 +424,236 @@ async function processChunk(chunk, processingType, model, chunkId) {
       processingTime: Date.now() - startTime,
       error: error.message
     };
+  }
+}
+
+// CSV processing - parse and process like JSON rows
+async function processCSV(req, res) {
+  try {
+    const uploadedPath = req.file.path;
+    const originalName = req.file.originalname;
+    const fileNameBase = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+
+    const modelRaw = (req.body.model || '').toString();
+    const sanitizedModel = modelRaw.replace(/[^a-zA-Z0-9]/g, '_');
+    const processedCSVFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.csv`;
+    const logFilename = `${fileNameBase}_log.json`;
+
+    // Read and parse CSV file
+    const fileContent = fs.readFileSync(uploadedPath, 'utf-8');
+    let rows;
+    try {
+      // Simple CSV parser - split by lines and commas
+      const lines = fileContent.trim().split('\n');
+      if (lines.length < 2) {
+        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+        return res.status(400).json({ error: 'CSV file must contain at least a header row and one data row' });
+      }
+
+      // Parse header row
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+
+      // Parse data rows
+      rows = lines.slice(1).map((line, index) => {
+        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        if (values.length !== headers.length) {
+          console.warn(`Row ${index + 2}: Expected ${headers.length} columns, got ${values.length}`);
+        }
+        const row = {};
+        headers.forEach((header, i) => {
+          row[header] = values[i] || '';
+        });
+        return row;
+      });
+
+      if (rows.length === 0) {
+        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+        return res.status(400).json({ error: 'CSV file must contain at least one data row' });
+      }
+    } catch (parseError) {
+      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+      return res.status(400).json({ error: 'Invalid CSV format: ' + parseError.message });
+    }
+
+    const tStart = Date.now();
+    const headers = Object.keys(rows[0] || {});
+
+    // Use Beta user issues processing type for CSV (since only structured data should be in CSV)
+    const processingType = req.body.processingType || 'beta_user_issues';
+    const model = req.body.model || 'qwen3:4b-instruct';
+    const sessionId = req.body.sessionId || 'default';
+
+    // Unified chunked processing (works for all types: clean, voc, custom)
+    const numberOfInputRows = rows.length;
+    const ROWSCOUNT = rows.length || 0;
+
+    let chunkSize;
+    if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
+      chunkSize = ROWSCOUNT <= 50 ? 1
+                : ROWSCOUNT <= 200 ? 2
+                : 4;
+    } else {
+      chunkSize = ROWSCOUNT <= 200 ? 5
+                : ROWSCOUNT <= 1000 ? 10
+                : 20;
+    }
+    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
+
+    // Send initial progress for CSV
+    sendProgress(sessionId, {
+      type: 'progress',
+      percent: 0,
+      message: 'Starting CSV processing...',
+      chunksCompleted: 0,
+      totalChunks: numberOfChunks
+    });
+
+    // Build chunk tasks
+    const tasks = [];
+    for (let i = 0; i < numberOfChunks; i++) {
+      const startIdx = i * chunkSize;
+      const endIdx = Math.min(startIdx + chunkSize, rows.length);
+      const chunkRows = rows.slice(startIdx, endIdx);
+      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
+      tasks.push(async () => {
+        const result = await processChunk(chunk, processingType, model, i);
+        // send per-chunk progress update
+        sendProgress(sessionId, {
+          type: 'progress',
+          percent: Math.round((i + 1) / numberOfChunks * 100),
+          message: `Processed chunk ${i + 1}/${numberOfChunks}`,
+          chunkId: i
+        });
+        return result;
+      });
+    }
+
+    // Run with concurrency limit (4)
+    const chunkResults = await runTasksWithLimit(tasks, 4);
+
+    // Process results
+    const allProcessedRows = [];
+    const addedColumns = new Set();
+
+    chunkResults.forEach(result => {
+      if (!result) return;
+      if (result.status === 'ok' && Array.isArray(result.processedRows)) {
+        result.processedRows.forEach((row, idx) => {
+          const originalIdx = (result.chunkId * chunkSize) + idx;
+          allProcessedRows[originalIdx] = row;
+          Object.keys(row || {}).forEach(col => {
+            if (!headers.includes(col)) addedColumns.add(col);
+          });
+        });
+      } else if (Array.isArray(result.processedRows)) {
+        // include failed chunk rows (they may contain error fields)
+        result.processedRows.forEach((row, idx) => {
+          const originalIdx = (result.chunkId * chunkSize) + idx;
+          allProcessedRows[originalIdx] = row;
+          if (row && row.error) addedColumns.add('error');
+        });
+      }
+    });
+
+    // Filter out null entries if any (though shouldn't have)
+    const finalRows = allProcessedRows.filter(row => row != null);
+
+    // Create final headers: original + any added columns
+    const finalHeaders = [...headers];
+    addedColumns.forEach(col => {
+      if (!finalHeaders.includes(col)) finalHeaders.push(col);
+    });
+
+    // Convert back to CSV format
+    const csvLines = [];
+    // Add header row
+    csvLines.push(finalHeaders.map(h => `"${h}"`).join(','));
+    // Add data rows
+    finalRows.forEach(row => {
+      const csvRow = finalHeaders.map(header => {
+        const value = row[header] || '';
+        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      });
+      csvLines.push(csvRow.join(','));
+    });
+    const csvContent = csvLines.join('\n');
+
+    // Generate log (defensive)
+    const failedRows = [];
+    (chunkResults || []).forEach(cr => {
+      (cr.processedRows || []).forEach((row, idx) => {
+        if (row && row.error) {
+          const originalIdx = (cr.chunkId * chunkSize) + idx;
+          failedRows.push({
+            row_index: originalIdx,
+            chunk_id: cr.chunkId,
+            error_reason: row.error
+          });
+        }
+      });
+    });
+
+    const log = {
+      total_processing_time_ms: Date.now() - tStart,
+      total_processing_time_seconds: ((Date.now() - tStart) / 1000).toFixed(3),
+      number_of_input_rows: numberOfInputRows,
+      number_of_chunks: numberOfChunks,
+      number_of_output_rows: finalRows.length,
+      failed_row_details: failedRows,
+      added_columns: Array.from(addedColumns),
+      chunks_processing_time: (chunkResults || []).map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
+    };
+
+    if (processingType === 'clean') {
+      log.assumptions = [
+        "Applied generic cleaning: trimmed whitespace, normalized dates to ISO YYYY-MM-DD, converted numeric-looking strings to numbers, kept empty cells as empty strings."
+      ];
+    }
+
+    // Save files
+    const dlDir = path.join(__dirname, 'downloads', processingType);
+    if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
+
+    const processedPath = path.join(dlDir, processedCSVFilename);
+    const logPath = path.join(dlDir, logFilename);
+
+    fs.writeFileSync(processedPath, csvContent);
+    fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
+
+    // Clean up uploaded file
+    try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
+
+    res.json({
+      success: true,
+      total_processing_time_ms: Date.now() - tStart,
+      processedRows: finalRows,
+      downloads: [
+        { url: `/downloads/${processingType}/${processedCSVFilename}`, filename: processedCSVFilename },
+        { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }
+      ]
+    });
+  } catch (error) {
+    console.error('CSV processing error:', error);
+    // Attempt to remove uploaded file on unexpected error
+    try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Processing failed'
+    });
   }
 }
 

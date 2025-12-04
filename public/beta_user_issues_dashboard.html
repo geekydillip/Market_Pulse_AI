@@ -34,38 +34,6 @@
         box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -8px -8px 16px rgba(255,255,255,0.9);
     }
 
-    .theme-toggle {
-        position: static;
-        background: var(--card-bg);
-        border: 1px solid rgba(0,0,0,0.1);
-        border-radius: 16px;
-        width: 120px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 6px 6px 12px rgba(0,0,0,0.1), -6px -6px 12px rgba(255,255,255,0.9);
-        color: var(--text-primary);
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .theme-toggle:hover {
-        transform: translateY(-2px);
-        box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -8px -8px 16px rgba(255,255,255,0.9);
-    }
-
-    .theme-toggle::before {
-        content: "Light";
-    }
-
-    body.theme-dark .theme-toggle::before {
-        content: "Dark";
-    }
-
     /* Chart color overrides for strong severity contrast */
     :root {
       --chart-critical-start: #dc2626;
@@ -86,7 +54,7 @@
 
     /* Sidebar with fixed positioning */
     .section.sidebar {
-        width: 220px; /* Reduced width */
+        width: 300px; /* Increased for longer model names */
         position: fixed; /* Fixed positioning */
         left: 0;
         top: 80px; /* Below the top navigation bar */
@@ -103,16 +71,16 @@
 
     /* Main content adjusted for sidebar */
     .dashboard-main {
-        margin-left: 220px; /* Match sidebar width exactly */
+        margin-left: 300px; /* Match sidebar width exactly */
         padding: 20px; /* Reduced padding */
-        width: calc(100% - 220px); /* Take remaining width */
+        width: calc(100% - 300px); /* Take remaining width */
         min-height: calc(100vh - 100px); /* Account for top bar and margins */
     }
 
     /* Remove the old container grid layout */
     .dashboard-container {
         width: 100%;
-        margin: 70px 0 20px 0; /* Remove auto horizontal margins */
+        margin: 50px 0 20px 0; /* Remove auto horizontal margins */
         padding: 0;
         background: var(--bg);
         border-radius: 20px;
@@ -209,9 +177,6 @@
     .model-search-input::placeholder {
         color: rgba(0,0,0,0.4);
     }
-    body.theme-dark .model-search-input::placeholder {
-        color: rgba(255,255,255,0.4);
-    }
     .search-suggestions {
         display: none;
         position: relative;
@@ -261,10 +226,7 @@
         text-align: center;
         font-style: italic;
     }
-    body.theme-dark .no-suggestions {
-        color: rgba(255,255,255,0.5);
-    }
-    .section { margin-bottom: 10px; }
+    .section { margin-bottom: 5px; }
     .section h3 { margin: 10px 0 15px 0; font-size: 1.5rem; font-weight: 600; color: var(--accent); }
     .model-indicator {
         font-size: 16px;
@@ -388,7 +350,6 @@
     }
     .charts-row { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
     .chart-card { border-radius:20px; background: var(--card-bg); box-shadow: var(--shadow); padding: 24px; height: 400px; position: relative; }
-    body.theme-dark .chart-card { box-shadow: var(--shadow), 0 0 15px rgba(255, 255, 255, 0.1); }
     .chart-card h4 { margin:0 0 16px 0; font-size:18px; font-weight:600; }
     .chart-canvas { display: block; width: 100%; height: 100%; }
     .table-section { border-radius:20px; background: var(--card-bg); box-shadow: 8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,0.1); padding: 24px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
@@ -546,10 +507,6 @@
         padding: 24px 0 0 0;
         overflow-y: auto;
         overflow-x: hidden;
-    }
-
-    #modalBody {
-        /* Additional styles if needed for modal body */
     }
 
     #issues-modal .table-wrap {
@@ -747,7 +704,7 @@
         min-width: 1200px; /* Minimum width for readability */
       }
 
-      /* Allow even more generous padding on mobile for touch */
+      /* Allow even generous padding on mobile for touch */
       .issues-table tbody td {
         padding: 24px 16px;
         line-height: 1.7;
@@ -1075,12 +1032,7 @@
       <span>Home</span>
     </a>
 
-    <!-- Theme Toggle -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle Theme" aria-label="Toggle between light and dark theme">
-      <svg width="24" height="24" fill="currentColor">
-        <circle cx="12" cy="12" r="5"/><path d="m12 1v2m0 18v2M4.93 4.93l1.41 1.41m11.32 0l1.41 -1.41M1 12h2m18 0h2M4.93 19.07l1.41 -1.41m11.32 0l1.41 1.41"/>
-      </svg>
-    </button>
+
   </div>
 
   <div class="dashboard-container">

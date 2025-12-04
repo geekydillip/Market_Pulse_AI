@@ -15,8 +15,8 @@ import traceback
 
 # --------- CONFIGURATION (edit these if you want) ----------
 BASE_DIR = Path(__file__).parent.resolve()   # folder where script is located
-SOURCE_DIR = BASE_DIR / "Samsung_MemberVOC"         # default source folder
-DEST_DIR = BASE_DIR / "Samsung_MemberVOC"         # default destination folder
+SOURCE_DIR = BASE_DIR / "Samsung_Memver_VOC"         # default source folder
+DEST_DIR = BASE_DIR / "Samsung_Memver_VOC"         # default destination folder
 OVERWRITE = False                            # set True to overwrite existing .xlsx files
 # -----------------------------------------------------------
 

@@ -58,6 +58,16 @@ function updateFilters(newFilters) {
   paginationState.page = 1;
   updateURL();
 
+  // Update Cases Table visibility: show when specific model selected, hide when "All Models"
+  const casesSection = document.querySelector('.cases-section');
+  if (casesSection) {
+    if (currentFilters.model && currentFilters.model !== null) {
+      casesSection.classList.remove('section-hidden');
+    } else {
+      casesSection.classList.add('section-hidden');
+    }
+  }
+
   // Refresh dashboard overview with new filters
   refreshDashboardOverview();
 
@@ -118,6 +128,16 @@ async function refreshDashboardOverview() {
 
     if (!resp || resp.success === false) {
       throw new Error(resp && resp.error ? resp.error : 'dashboard error');
+    }
+
+    // Update the section title to include selected model name
+    const sectionTitle = document.querySelector('.overview-section .section-title');
+    if (sectionTitle) {
+      if (currentFilters.model && currentFilters.model !== null) {
+        sectionTitle.textContent = `Beta User Issues Overview - ${currentFilters.model}`;
+      } else {
+        sectionTitle.textContent = 'Beta User Issues Overview';
+      }
     }
 
     // Update totals
@@ -378,44 +398,11 @@ Chart.defaults.responsiveAnimationDuration = 0;
 
 
 
-// Theme Management
+// Theme Management (Removed - now permanently light theme)
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  setTheme(savedTheme);
-  updateThemeToggleIcon();
-
-  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-}
-
-function setTheme(theme) {
-  currentTheme = theme;
-  document.body.className = `theme-${theme}`;
-  localStorage.setItem('theme', theme);
-  updateThemeToggleIcon();
-}
-
-function toggleTheme() {
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  setTheme(newTheme);
-
-  // Re-render charts with new theme colors
-  if (severityChart || moduleChart) {
-    // Charts will re-render on next data load, but we can force update if needed
-    setTimeout(() => {
-      // Force re-render of existing charts if they exist
-      if (severityChart) severityChart.update();
-      if (moduleChart) moduleChart.update();
-    }, 100);
-  }
-}
-
-function updateThemeToggleIcon() {
-    const icon = document.querySelector('#themeToggle svg');
-    if (currentTheme === 'light') {
-        icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-    } else {
-        icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="m12 1v2m0 18v2M4.93 4.93l1.41 1.41m11.32 0l1.41 -1.41M1 12h2m18 0h2M4.93 19.07l1.41 -1.41m11.32 0l1.41 1.41"/>';
-    }
+  // Always set to light theme
+  currentTheme = 'light';
+  document.body.className = 'theme-light';
 }
 
 // Safe helpers for optional elements
@@ -642,7 +629,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
   const sevEl = document.getElementById('severityChart');
   const modEl = document.getElementById('moduleChart');
 
-    if (sevEl) {
+  if (sevEl) {
     // Add chart accessibility
     sevEl.setAttribute('role', 'img');
     sevEl.setAttribute('tabindex', '0');
@@ -733,7 +720,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
           animateRotate: false,
           duration: 0
         },
-        cutout: '50%', // Makes the donut thinner and more elegant
+        cutout: '60%', // Makes the donut thinner and more elegant
         elements: {
           arc: {
             borderRadius: 4 // Rounded chart segments
@@ -767,6 +754,19 @@ function renderCharts(severityDistribution, moduleDistribution) {
       }
     });
 
+    // Create colors that cycle through severity palette for each module
+    const moduleColors = modLabels.map((_, index) => {
+      const severityColors = ['#EF4444', '#F59E0B', '#10B981']; // High, Medium, Low colors
+      return severityColors[index % severityColors.length];
+    });
+
+    const moduleHoverColors = moduleColors.map(color => {
+      // Darken the color for hover
+      if (color === '#EF4444') return '#B91C1C'; // High hover
+      if (color === '#F59E0B') return '#B45309'; // Medium hover
+      return '#047857'; // Low hover
+    });
+
     const modCtx = modEl.getContext('2d');
     if (moduleChart) moduleChart.destroy();
     moduleChart = new Chart(modCtx, {
@@ -776,9 +776,9 @@ function renderCharts(severityDistribution, moduleDistribution) {
         datasets: [{
           label: 'Number of Issues',
           data: modCounts,
-          backgroundColor: '#6366F1', // Single professional indigo color
-          hoverBackgroundColor: '#4F46E5', // Darker indigo for hover
-          barThickness: 20, // Consistent bar width
+          backgroundColor: moduleColors,
+          hoverBackgroundColor: moduleHoverColors,
+          barThickness: 16, // Reduced bar thickness for more balanced visual
           borderRadius: 4 // Softens edges
         }]
       },
@@ -971,7 +971,7 @@ function renderTable() {
   const headerRow = document.createElement('tr');
   headerRow.innerHTML = `
     <th>S/N</th>
-    ${!isFilteredToSingleModel ? '<th>Model No.</th>' : ''}
+    <th>Model No.</th>
     <th>Module</th>
     <th>Top Issue Title</th>
     <th>Count</th>
@@ -992,7 +992,7 @@ function renderTable() {
 
     tr.innerHTML = `
       <td>${globalIndex}</td>
-      ${!isFilteredToSingleModel ? `<td><div class="truncate-cell" title="${escapeHtml(moduleData.modelNo)}">${escapeHtml(moduleData.modelNo)}</div></td>` : ''}
+      <td><div class="truncate-cell" title="${escapeHtml(moduleData.modelNo)}">${escapeHtml(moduleData.modelNo)}</div></td>
       <td><button class="module-name-link" data-module="${escapeHtml(moduleData.module)}" data-count="${moduleData.count}">${escapeHtml(moduleData.module)}</button></td>
       <td><div class="truncate-cell" title="${escapeHtml(moduleData.topIssueTitle)}">${escapeHtml(moduleData.topIssueTitle)}</div></td>
       <td>${moduleData.count}</td>
@@ -1160,24 +1160,60 @@ function selectSuggestion(model) {
 
 async function loadModels() {
   try {
-    const resp = await fetchJSON('/api/models?category=' + encodeURIComponent(dashboardCategory));
+    // Fetch full dataset from /api/dashboard to access all rows for model aggregation
+    const resp = await fetchJSON('/api/dashboard?category=' + encodeURIComponent(dashboardCategory));
     const container = document.getElementById('modelButtons');
     container.innerHTML = '';
 
-    // Add 'All Models' as the first chip
+    // Aggregate model counts from all rows
+    const modelCounts = {};
+    (resp.rows || []).forEach(row => {
+      const model = row.modelFromFile || row.model || 'Unknown';
+      modelCounts[model] = (modelCounts[model] || 0) + 1;
+    });
+
+    // Convert to array and sort by count descending
+    const sortedModels = Object.entries(modelCounts)
+      .map(([model, count]) => ({ model, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Store all models for search functionality
+    allModels = sortedModels.map(item => item.model);
+
+    // Setup model search with all models (including those not in top 10)
+    setupModelSearch(allModels);
+
+    // Add 'All Models' as the first button
     const allBtn = document.createElement('button');
     allBtn.className = 'all-models';
     allBtn.textContent = 'All Models';
-    allBtn.onclick = () => loadDashboard(null, allBtn); // Keep original for complete initial setup
+    allBtn.onclick = () => updateFilters({ model: null });
     container.appendChild(allBtn);
 
-    // Fetch models for search functionality, but don't display individual buttons
-    if (resp && Array.isArray(resp.models)) {
-      // Setup model search after models are loaded
-      setupModelSearch(resp.models);
-    }
+    // Add Top 10 model buttons with counts
+    const top10Models = sortedModels.slice(0, 10);
+    top10Models.forEach(({ model, count }) => {
+      const modelBtn = document.createElement('button');
+      modelBtn.className = 'model-chip';
 
-    // auto-click 'All Models' by default (aggregated)
+      // Create span for model name
+      const modelNameSpan = document.createElement('span');
+      modelNameSpan.textContent = model;
+
+      // Create badge for count
+      const countBadge = document.createElement('span');
+      countBadge.className = 'model-badge';
+      countBadge.textContent = `(${count})`;
+
+      // Append elements to button
+      modelBtn.appendChild(modelNameSpan);
+      modelBtn.appendChild(countBadge);
+
+      modelBtn.onclick = () => updateFilters({ model: model });
+      container.appendChild(modelBtn);
+    });
+
+    // auto-click 'All Models' by default
     allBtn.click();
   } catch (err) {
     console.error('loadModels error', err);
