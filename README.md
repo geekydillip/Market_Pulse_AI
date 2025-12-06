@@ -4,16 +4,16 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 ## 🚀 Features
 
-- **Professional UI**: Modern neumorphic design with responsive dark/light themes and intuitive navigation
-- **File Upload**: Drag-and-drop support for Excel (.xls, .xlsx) and JSON (.json) files with preview and validation
+- **Professional UI**: Modern neumorphic design with responsive light theme and intuitive navigation
+- **File Upload**: Drag-and-drop support for Excel (.xls, .xlsx), JSON (.json), and CSV (.csv) files with preview and validation
 - **Multi-Format Processing**: Upload, process, and download Excel files; output JSON for further analysis
 - **Real-Time Progress**: Server-Sent Events (SSE) for live progress updates during AI processing
 - **Specialized Processing Types**:
   - **Beta User Issues**: Voice of Customer analysis for beta tester feedback
-  - **Blogger Issues**: Analysis of blogger-reported issues
-  - **Quality Index (QI)**: Quality metrics processing
-  - **Samsung Members**: Samsung Member feedback analysis
+  - **Samsung Members PLM**: Samsung Member feedback analysis for PLM data
+  - **Samsung Members VOC**: Samsung Member feedback analysis for VOC data
   - **PLM Issues**: Product Lifecycle Management issue processing
+  - **Clean**: Generic data cleaning without AI processing
 - **Processing Options**:
   - **VOC Analysis**: Specialized for Voice of Customer data (module identification, severity classification, problem summarization)
   - **Generic Data Cleaning**: Basic data cleansing (trimming, date normalization, number conversion)
@@ -32,7 +32,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 ## 📋 Prerequisites
 
 - **Node.js** (v14 or higher)
-- **Ollama** with qwen3:4b-instruct or gemma3:4b model installed
+- **Ollama** with qwen3:4b-instruct model installed
 - **Web Browser** (Chrome, Firefox, Edge, etc.)
 
 ## 🛠️ Installation
@@ -48,11 +48,9 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 ### Option 1: Manual Setup (Node.js)
 
-1. **Start Ollama** with preferred model (qwen3:4b-instruct or gemma3:4b):
+1. **Start Ollama** with preferred model (qwen3:4b-instruct):
    ```bash
    ollama run qwen3:4b-instruct
-   # or
-   ollama run gemma3:4b
    ```
 
 2. **Start the web application**:
@@ -66,10 +64,13 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 ### Processing Data
 
-1. **Navigate to Upload Tab**: Select files with drag-and-drop or browse (.xls, .xlsx, .json)
+1. **Navigate to Upload Tab**: Select files with drag-and-drop or browse (.xls, .xlsx, .json, .csv)
 2. **Choose Processing Type**:
-   - VOC for customer feedback analysis
-   - Clean for deterministic data cleansing
+   - Beta User Issues for beta tester feedback analysis
+   - Samsung Members PLM for Samsung member PLM data
+   - Samsung Members VOC for Samsung member VOC data
+   - PLM Issues for Product Lifecycle Management
+   - Clean for deterministic data cleansing without AI
 3. **Select AI Model**: Choose from available Ollama models (defaults to qwen3:4b-instruct)
 4. **Process File**: Click "Process with AI" and monitor real-time progress
 5. **Download Results**: Automatically download processed files and processing logs
@@ -77,11 +78,11 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 ### Data Visualization Table
 
 1. **Switch to Data Visualize Tab**: Access client-side table visualization from processed Excel files
-2. **Auto-Load Summary**: Scans /downloads folder for all Excel files and aggregates by model/grade/critical module/top issue titles/count
+2. **Auto-Load Summary**: Scans /downloads folder for all Excel files and aggregates by model/grade/module/top issue titles/count
 3. **Table Features**:
    - **S/N Column**: Sequential numbering based on filtered results (1, 2, 3...)
    - **Pagination**: Choose page size (10, 25, 50 items), navigate with Prev/Next buttons
-   - **Search Filtering**: Search across model, grade, critical module, and top issue titles (debounced, 300ms)
+- **Search Filtering**: Search across model, grade, module, and top issue titles (debounced, 300ms)
    - **Client-side CSV Export**: Download filtered results as CSV with S/N numbering
 4. **Modal Drill-Down**: Click Count buttons to see detailed individual issue rows for that grouping
 5. **Keyboard Shortcuts**: Press "/" to focus search input field
@@ -89,7 +90,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 #### Table Columns (Fixed Layout, Specified Widths)
 - **S/N**: 64px (sequential number in filtered results)
 - **Model**: 140px (model identifier)
-- **Critical Module**: 160px (main affected component)
+- **Module**: 160px (main affected component)
 - **Top Issue Titles**: flex (truncated with ellipsis if long, title tooltip)
 - **Count**: 80px (number of issues in group, clickable for modal)
 
@@ -99,7 +100,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 **Method**: `GET`
 
-**Description**: Aggregates summary data from all processed Excel files in the `/downloads` folder, grouped by model/grade/critical module. Returns aggregated counts with top issue titles.
+**Description**: Aggregates summary data from all processed Excel files in the `/downloads` folder, grouped by model/grade/module. Returns aggregated counts with top issue titles.
 
 **Response Schema**:
 ```json
@@ -110,8 +111,8 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
     {
       "model": string,
       "grade": string,
-      "critical_module": string,
-      "critical_voc": string,
+      "module": string,
+      "voc": string,
       "count": number
     }
   ]
@@ -134,7 +135,6 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
   "model": string,
   "totals": {
     "totalCases": number,
-    "critical": number,
     "high": number,
     "medium": number,
     "low": number
@@ -203,7 +203,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 ```json
 {
   "success": boolean,
-  "models": ["qwen3:4b-instruct", "gemma3:4b", ...]
+  "models": ["qwen3:4b-instruct", ...]
 }
 ```
 
@@ -232,8 +232,8 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 **Parameters**:
 - `model`: string (required) - Model identifier
 - `grade`: string (required) - Product grade
-- `module`: string (required) - Critical module name
-- `voc`: string (required) - Critical VOC/titles
+- `module`: string (required) - Module name
+- `voc`: string (required) - VOC/titles
 
 **Description**: Returns detailed individual issue rows matching the specific model/grade/module grouping.
 
@@ -277,7 +277,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 
 #### Search Filtering
 - Type in search box to filter across all columns simultaneously
-- Search fields: model, grade, critical module, top issue titles
+- Search fields: model, grade, module, top issue titles
 - Debounced search (300ms delay) prevents excessive filtering
 - Keyboard shortcut: Press "/" anywhere to focus search input
 
@@ -289,7 +289,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 #### CSV Export
 - Filters current search results
 - Includes S/N column (1, 2, 3... based on current filter/sort)
-- Columns: S/N, Model, Grade, Critical Module, Top Issue Titles, Count
+- Columns: S/N, Model, Grade, Module, Top Issue Titles, Count
 - Quotes escaped properly for CSV format
 - Downloads as `visualize_summary_TIMESTAMP.csv`
 
@@ -307,35 +307,35 @@ Here are 3-5 sample records from typical processed data:
   {
     "model": "A366E",
     "grade": "SWA_16_DD",
-    "critical_module": "Camera",
-    "critical_voc": "Camera not focusing properly, blurry images in low light conditions",
+    "module": "Camera",
+    "voc": "Camera not focusing properly, blurry images in low light conditions",
     "count": 15
   },
   {
     "model": "SMS921BE",
     "grade": "SWA_16_DD_(OS+Beta)B+OS+Beta",
-    "critical_module": "Network",
-    "critical_voc": "WiFi connection drops frequently, cannot maintain stable connection",
+    "module": "Network",
+    "voc": "WiFi connection drops frequently, cannot maintain stable connection",
     "count": 8
   },
   {
     "model": "A366E",
     "grade": "SWA_16_DD",
-    "critical_module": "Battery",
-    "critical_voc": "Battery drains very fast, less than 2 hours usage time",
+    "module": "Battery",
+    "voc": "Battery drains very fast, less than 2 hours usage time",
     "count": 22
   },
   {
     "model": "SMS921BE",
     "grade": "SWA_16_DD_(OS+Beta)B+OS+Beta",
-    "critical_module": "Lock Screen",
-    "critical_voc": "Lock screen unresponsive, takes long time to unlock device",
+    "module": "Lock Screen",
+    "voc": "Lock screen unresponsive, takes long time to unlock device",
     "count": 6
   }
 ]
 ```
 
-The aggregate count represents the number of individual issue reports grouped by model/grade/module, with the most common issue titles combined into the `critical_voc` field.
+The aggregate count represents the number of individual issue reports grouped by model/grade/module, with the most common issue titles combined into the `voc` field.
 
 ## 📁 Project Structure
 
@@ -377,7 +377,7 @@ Market Pulse AI/
 
 ### Backend (server.js)
 - **Framework**: Node.js + Express.js with comprehensive middleware setup
-- **Dependencies**: cors, express, multer, xlsx, xlsx-js-style, exceljs
+- **Dependencies**: cors (^2.8.5), express (^4.22.1), multer (^2.0.2), xlsx (^0.18.5), xlsx-js-style (^1.2.0), exceljs (^4.4.0)
 - **AI Integration**: Direct HTTP calls to Ollama API (localhost:11434) with robust error handling
 - **Caching Layer**: In-memory Map-based caching for identical AI prompts to improve performance
 - **Concurrency Control**: Task limiting with configurable concurrency (default 4) to prevent resource exhaustion
@@ -414,7 +414,7 @@ Specialized processing for customer feedback data from support tickets or produc
 - **Module Identification**: Categorizes issues by product module (Lock Screen, Camera, Battery, Network, etc.)
 - **Sub-Module Classification**: Further subdivides modules (e.g., Heating → Heating)
 - **Problem Summarization**: Combines Title + Problem fields into clear, concise English sentences
-- **Severity Assessment**: Classifies impact as Critical, High, Medium, or Low with detailed reasoning
+- **Severity Assessment**: Classifies impact as High, Medium, or Low with detailed reasoning
 - **Output Structure**: Preserves original columns plus added analysis fields in structured JSON
 
 ### Generic Data Cleaning
@@ -435,7 +435,6 @@ Deterministic automated cleaning without AI:
 
 ### "Failed to connect to Ollama"
 - Ensure Ollama is running: `ollama serve`
-- Verify Gemma model is installed: `ollama pull gemma3:4b`
 - Check if Ollama is accessible on localhost:11434
 
 ### "File upload failed"
@@ -455,7 +454,7 @@ Deterministic automated cleaning without AI:
   - Enhanced chunked processing for large files with adaptive sizing
   - Implemented AI response caching for improved performance
   - Added comprehensive dashboards for each processing type
-- **v1.2.1** - Prefer qwen3:4b-instruct model for Excel processing, gemma3:4b for general use
+- **v1.2.1** - Prefer qwen3:4b-instruct model for Excel processing
 - **v1.2.0** - Added real-time progress tracking with Server-Sent Events (SSE)
   - Enhanced visualization dashboard with pagination, search, and CSV export
   - Added concurrent processing limits (default 4) to prevent resource exhaustion
@@ -480,7 +479,7 @@ MIT License - feel free to use and modify as needed.
 ## 🙏 Acknowledgments
 
 - **Ollama** for providing local AI capabilities
-- **Gemma** for the excellent language model
+- **Qwen AI** for the excellent language model
 - **Express.js** for the robust backend framework
 
 ---

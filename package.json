@@ -11,16 +11,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/geekydillip/Beta_UserData_Clean.git"
+    "url": "https://github.com/geekydillip/Market_Pulse_AI.git"
   },
-  "homepage": "https://github.com/geekydillip/Beta_UserData_Clean#readme",
+  "homepage": "https://github.com/geekydillip/Market_Pulse_AI#readme",
   "bugs": {
-    "url": "https://github.com/geekydillip/Beta_UserData_Clean/issues"
+    "url": "https://github.com/geekydillip/Market_Pulse_AI/issues"
   },
   "keywords": [
     "ollama",
     "qwen",
-    "gemma",
     "ai",
     "machine-learning",
     "data-processing",
@@ -38,8 +37,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "exceljs": "^4.4.0",
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
+    "express": "^4.22.1",
+    "multer": "^2.0.2",
     "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.2.0"
   },
