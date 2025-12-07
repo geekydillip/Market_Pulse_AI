@@ -8,25 +8,16 @@ function normalizeHeaders(rows) {
   // Map header name variants to canonical names
   const headerMap = {
     // Model variants
-    'model no': 'Model No.',
     'model no.': 'Model No.',
-    'modelno': 'Model No.',
-    'model number': 'Model No.',
     // Case Code
     'case code': 'Case Code',
-    'caseno': 'Case Code',
-    'case no': 'Case Code',
     // S/W Ver variants
     's/w ver.': 'S/W Ver.',
-    's/w ver': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'swversion': 'S/W Ver.',
     // Title, Problem, Module, Sub-Module
     'title': 'Title',
     'problem': 'Problem',
     'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'sub module': 'Sub-Module',
+    'sub-module': 'Sub-Module'
   };
 
   // canonical columns you expect in the downstream processing
@@ -145,14 +136,38 @@ module.exports = {
   },
 
   formatResponse(aiResult) {
-    const text = aiResult.trim();
-    const firstBracket = text.indexOf('[');
-    const lastBracket = text.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket > firstBracket) {
-      const jsonStr = text.substring(firstBracket, lastBracket + 1);
-      return JSON.parse(jsonStr);
+    // Handle different response formats: object, JSON string, or raw text
+    if (typeof aiResult === 'object' && aiResult !== null) {
+      return aiResult;
     }
-    throw new Error('No valid JSON array found in response');
+
+    if (typeof aiResult === 'string') {
+      const text = aiResult.trim();
+
+      // First try to parse as complete JSON
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        // If that fails, try to extract JSON array from text
+        const firstBracket = text.indexOf('[');
+        const lastBracket = text.lastIndexOf(']');
+        if (firstBracket !== -1 && lastBracket > firstBracket) {
+          const jsonStr = text.substring(firstBracket, lastBracket + 1);
+          try {
+            return JSON.parse(jsonStr);
+          } catch (e2) {
+            // If JSON parsing fails, return array with error info
+            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
+          }
+        }
+
+        // Last resort: return array with error info
+        return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
+      }
+    }
+
+    // Fallback for unexpected types - return array
+    return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
   },
 
   // Returns column width configurations for Excel export

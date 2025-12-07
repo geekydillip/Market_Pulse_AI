@@ -499,7 +499,7 @@ function buildSeverityDonutData(rows) {
   // possible column names to try:
   const severityCounts = aggregate(rows, ['severity', 'Severity', 'SEVERITY', 'Severity Level', 'level']);
 
-  // remove 'critical' entries (case-insensitive)
+  // remove 'critical' entries (case-insensitive) - keeping for backward compatibility but no longer needed
   for (const k of Object.keys(severityCounts)) {
     if (/^\s*critical\s*$/i.test(k)) {
       delete severityCounts[k];
@@ -617,8 +617,6 @@ function renderCharts(severityDistribution, moduleDistribution) {
 
   // Use CSS custom properties for chart colors
   const computedStyle = getComputedStyle(document.body);
-  const chartCriticalStart = computedStyle.getPropertyValue('--chart-critical-start').trim();
-  const chartCriticalEnd = computedStyle.getPropertyValue('--chart-critical-end').trim();
   const chartHighStart = computedStyle.getPropertyValue('--chart-high-start').trim();
   const chartHighEnd = computedStyle.getPropertyValue('--chart-high-end').trim();
   const chartMiddleStart = computedStyle.getPropertyValue('--chart-middle-start').trim();
@@ -1437,52 +1435,116 @@ function showModuleDetails(module, moduleData) {
   document.body.style.overflow = 'hidden';
 
   // Get individual cases for this module from raw data
-  const moduleRows = currentDashboardData.rows.filter(row =>
+  let moduleRows = currentDashboardData.rows.filter(row =>
     (row.module || 'Unknown') === module
   );
+
+  // Sorting state
+  let currentSortColumn = null;
+  let currentSortDirection = 'asc'; // 'asc' or 'desc'
+
+  // Function to get severity priority for sorting (High > Medium > Low)
+  function getSeverityPriority(severity) {
+    const sev = (severity || '').toLowerCase();
+    if (sev === 'high') return 3;
+    if (sev === 'medium') return 2;
+    if (sev === 'low') return 1;
+    return 0; // Unknown severities
+  }
+
+  // Function to sort rows
+  function sortRows(column, direction) {
+    if (column === 'severity') {
+      moduleRows.sort((a, b) => {
+        const aPriority = getSeverityPriority(a.severity);
+        const bPriority = getSeverityPriority(b.severity);
+        if (aPriority !== bPriority) {
+          return direction === 'asc' ? aPriority - bPriority : bPriority - aPriority;
+        }
+        // If same priority, sort by severity string as fallback
+        const aSev = (a.severity || '').toLowerCase();
+        const bSev = (b.severity || '').toLowerCase();
+        return direction === 'asc' ? aSev.localeCompare(bSev) : bSev.localeCompare(aSev);
+      });
+    }
+  }
+
+  // Function to render the table
+  function renderTable() {
+    // Get the tbody for the new table structure
+    const tbody = document.querySelector('#moduleDetailTable tbody');
+    tbody.innerHTML = '';
+
+    if (!moduleRows.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="modal-empty">No details available for this module.</td></tr>`;
+    } else {
+      moduleRows.forEach((row, index) => {
+        const tr = document.createElement('tr');
+
+        // CHECK: Ensure you use the exact property name from server data
+        // Server returns caseId, title, problem, modelFromFile, module, severity, sWVer, subModule, summarizedProblem, severityReason
+        const caseCode = row.caseId || 'N/A';
+
+        // Format severity with colored badge
+        const severity = (row.severity || '').toLowerCase();
+        const severityPill = severity === 'high' ?
+          '<span class="pill high">High</span>' :
+          severity === 'medium' ?
+          '<span class="pill">Medium</span>' :
+          '<span class="pill">Low</span>'; // Default fallback
+
+        // Handle empty summarized problem with pending badge
+        const summarizedProblem = row.summarizedProblem || '';
+        const summarizedDisplay = summarizedProblem.trim() ?
+          escapeHtml(summarizedProblem) :
+          '<span class="empty-badge">Pending</span>';
+
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td style="font-weight:bold; color:#4F46E5;">
+            ${escapeHtml(caseCode)}
+          </td>
+          <td>${escapeHtml(row.modelFromFile || row.model || 'N/A')}</td>
+          <td>${escapeHtml(row.sWVer || row['S/W Ver.'] || 'N/A')}</td>
+          <td>${escapeHtml(row.title || row.issueTitle || 'N/A')}</td>
+          <td>${escapeHtml(row.subModule || 'N/A')}</td>
+          <td>${summarizedDisplay}</td>
+          <td>${severityPill}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
 
   // UI/UX: Update the Title to include the Module Name explicitly
   modalTitle.textContent = `${module} Issues Detail`;
 
-  // Get the tbody for the new table structure
-  const tbody = document.querySelector('#moduleDetailTable tbody');
-  tbody.innerHTML = '';
+  // Initial render
+  renderTable();
 
-  if (!moduleRows.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="modal-empty">No details available for this module.</td></tr>`;
-  } else {
-    moduleRows.forEach((row, index) => {
-      const tr = document.createElement('tr');
+  // Add click handlers for sortable headers
+  const severityHeader = document.querySelector('#moduleDetailTable thead th.sortable');
+  if (severityHeader) {
+    severityHeader.addEventListener('click', () => {
+      // Remove existing sort classes
+      document.querySelectorAll('#moduleDetailTable thead th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+      });
 
-      // CHECK: Ensure you use the exact property name from server data
-      // Server returns caseId, title, problem, modelFromFile, module, severity, sWVer, subModule, summarizedProblem, severityReason
-      const caseCode = row.caseId || 'N/A';
+      // Toggle sort direction if same column, otherwise set to asc
+      if (currentSortColumn === 'severity') {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSortColumn = 'severity';
+        currentSortDirection = 'asc';
+      }
 
-      // Format severity with colored badge
-      const severity = (row.severity || '').toLowerCase();
-      const severityPill = severity === 'high' ?
-        '<span class="pill high">High</span>' :
-        '<span class="pill">Medium</span>'; // Default fallback
+      // Add sort class to header
+      severityHeader.classList.add(`sort-${currentSortDirection}`);
 
-      // Handle empty summarized problem with pending badge
-      const summarizedProblem = row.summarizedProblem || '';
-      const summarizedDisplay = summarizedProblem.trim() ?
-        escapeHtml(summarizedProblem) :
-        '<span class="empty-badge">Pending</span>';
-
-      tr.innerHTML = `
-        <td>${index + 1}</td>
-        <td style="font-weight:bold; color:#4F46E5;">
-          ${escapeHtml(caseCode)}
-        </td>
-        <td>${escapeHtml(row.modelFromFile || row.model || 'N/A')}</td>
-        <td>${escapeHtml(row.sWVer || row['S/W Ver.'] || 'N/A')}</td>
-        <td>${escapeHtml(row.title || row.issueTitle || 'N/A')}</td>
-        <td>${escapeHtml(row.subModule || 'N/A')}</td>
-        <td>${summarizedDisplay}</td>
-        <td>${severityPill}</td>
-      `;
-      tbody.appendChild(tr);
+      // Sort and re-render
+      sortRows(currentSortColumn, currentSortDirection);
+      renderTable();
     });
   }
 

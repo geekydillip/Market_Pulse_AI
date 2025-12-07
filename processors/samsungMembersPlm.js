@@ -136,24 +136,38 @@ module.exports = {
   },
 
   formatResponse(aiResult) {
-    const text = aiResult.trim();
-    try {
-      // First attempt: parse the entire trimmed text as JSON
-      return JSON.parse(text);
-    } catch (err) {
-      // Second attempt: extract and parse the JSON array substring
-      const firstBracket = text.indexOf('[');
-      const lastBracket = text.lastIndexOf(']');
-      if (firstBracket !== -1 && lastBracket > firstBracket) {
-        const jsonStr = text.substring(firstBracket, lastBracket + 1);
-        try {
-          return JSON.parse(jsonStr);
-        } catch (parseErr) {
-          throw new Error('No valid JSON array found in response: ' + parseErr.message);
-        }
-      }
-      throw new Error('No valid JSON array found in response');
+    // Handle different response formats: object, JSON string, or raw text
+    if (typeof aiResult === 'object' && aiResult !== null) {
+      return aiResult;
     }
+
+    if (typeof aiResult === 'string') {
+      const text = aiResult.trim();
+
+      // First try to parse as complete JSON
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        // If that fails, try to extract JSON array from text
+        const firstBracket = text.indexOf('[');
+        const lastBracket = text.lastIndexOf(']');
+        if (firstBracket !== -1 && lastBracket > firstBracket) {
+          const jsonStr = text.substring(firstBracket, lastBracket + 1);
+          try {
+            return JSON.parse(jsonStr);
+          } catch (e2) {
+            // If JSON parsing fails, return array with error info
+            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
+          }
+        }
+
+        // Last resort: return array with error info
+        return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
+      }
+    }
+
+    // Fallback for unexpected types - return array
+    return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
   },
 
   // Returns column width configurations for Excel export

@@ -10,7 +10,7 @@ PRE-PROCESSING (Title & Problem):
 
 FIELD RULES:
 1. Title: cleaned version of original.
-2. Problem: cleaned description; keep essential steps, actual/expected results.
+2. Problem: keep essential steps, actual/expected results.
 3. Module: infer from Title → then Problem. Use closest matching feature. If uncertain: "".
 4. Sub-Module: specific functional element inside Module. If none: "".
 5. Summarized Problem: one clear sentence (max 25 words) stating the core issue.

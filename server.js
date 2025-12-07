@@ -173,21 +173,24 @@ async function callOllamaCached(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
  * callOllama - robust HTTP call to local Ollama server
  * prompt: string or object
  * model: string (e.g. "qwen3:4b-instruct")
- * opts: { port:number, timeoutMs:number }
+ * opts: { port:number, timeoutMs:number, stream:boolean }
  */
 async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
-  const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000; // default 5min, or false to disable
+  const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
+  const useStream = opts.stream === true; // <-- allow control
 
   const callStart = Date.now();
 
-  try {
-    const payload = typeof prompt === 'string' ? { model, prompt, stream: false } : { model, ...prompt, stream: false };
-    const data = JSON.stringify(payload);
+  return new Promise((resolve, reject) => {
+    try {
+      const payload = typeof prompt === 'string'
+        ? { model, prompt, stream: useStream }
+        : { model, prompt, stream: useStream };
+      const data = JSON.stringify(payload);
 
-    console.log('[callOllama] port=%d model=%s byteLen=%d', port, model, Buffer.byteLength(data));
+      console.log('[callOllama] port=%d model=%s byteLen=%d stream=%s', port, model, Buffer.byteLength(data), useStream);
 
-    const response = await new Promise((resolve, reject) => {
       const options = {
         hostname: '127.0.0.1',
         port,
@@ -202,27 +205,86 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
       };
 
       const req = http.request(options, (res) => {
-        let raw = '';
         res.setEncoding('utf8');
 
-        res.on('data', (chunk) => raw += chunk);
-        res.on('end', () => {
-          if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
-          try {
-            const json = JSON.parse(raw);
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              console.log('[callOllama] success status=%d len=%d', res.statusCode, raw.length);
-              return resolve(json.response ?? json);
-            } else {
-              return reject(new Error(`Ollama ${res.statusCode}: ${JSON.stringify(json)}`));
+        // If not streaming, accumulate as before and parse once
+        if (!useStream) {
+          let raw = '';
+          res.on('data', (chunk) => raw += chunk);
+          res.on('end', () => {
+            if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
+            try {
+              const json = JSON.parse(raw);
+              const out = json.response ?? json; // prefer response field if present
+              aiRequestTimes.push(Date.now() - callStart);
+              aiRequestCount++;
+              return resolve(out);
+            } catch (err) {
+              return reject(new Error('Failed to parse Ollama response: ' + err.message + ' raw:' + raw.slice(0,2000)));
             }
-          } catch (err) {
-            return reject(new Error('Failed to parse Ollama response: ' + err.message + ' raw:' + raw.slice(0,2000)));
+          });
+          return;
+        }
+
+        // STREAMING: attempt to parse line-delimited JSON or accumulate response fields
+        let buffer = '';
+        let lastResponsePart = '';
+        res.on('data', (chunk) => {
+          buffer += chunk;
+
+          // Try to split by newline and parse per-line JSON when possible
+          const lines = buffer.split(/\r?\n/);
+          // keep incomplete last line in buffer
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              // some stream endpoints emit raw JSON objects per line
+              const obj = JSON.parse(line);
+              // If model sends a "response" field per event, prefer the last one
+              if (obj && (obj.response || obj.text || obj.output)) {
+                lastResponsePart = (obj.response ?? obj.text ?? obj.output);
+              } else if (typeof obj === 'string') {
+                lastResponsePart = obj;
+              } else {
+                // fallback: stringify object
+                lastResponsePart = JSON.stringify(obj);
+              }
+            } catch (e) {
+              // not JSON — append as raw text
+              lastResponsePart += line;
+            }
           }
+        });
+
+        res.on('end', () => {
+          // Use lastResponsePart if found, otherwise try to parse remaining buffer
+          if (lastResponsePart) {
+            aiRequestTimes.push(Date.now() - callStart);
+            aiRequestCount++;
+            return resolve(lastResponsePart);
+          }
+
+          // try parse buffer as JSON
+          if (buffer && buffer.trim()) {
+            try {
+              const json = JSON.parse(buffer);
+              aiRequestTimes.push(Date.now() - callStart);
+              aiRequestCount++;
+              return resolve(json.response ?? json);
+            } catch (err) {
+              // last-resort: return buffer as text
+              aiRequestTimes.push(Date.now() - callStart);
+              aiRequestCount++;
+              return resolve(buffer);
+            }
+          }
+
+          reject(new Error(`Empty stream end from Ollama (status ${res.statusCode})`));
         });
       });
 
-      // Client-side timeout
       if (timeoutMs !== false && timeoutMs !== 0) {
         req.setTimeout(timeoutMs, () => {
           req.destroy(new Error(`Client timeout after ${timeoutMs} ms`));
@@ -230,20 +292,15 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
       }
 
       req.on('error', (err) => {
-        console.error('[callOllama] request error:', err && err.message);
         reject(new Error('Failed to connect to Ollama: ' + (err && err.message)));
       });
 
       req.write(data);
       req.end();
-    });
-
-    aiRequestTimes.push(Date.now() - callStart);
-    aiRequestCount++;
-    return response;
-  } catch (error) {
-    throw error;
-  }
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
 
 // Route removed - only processing structured files (Excel/JSON)
@@ -380,8 +437,8 @@ async function processChunk(chunk, processingType, model, chunkId) {
     // Build prompt
     const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
 
-    // Call AI (cached)
-    const result = await callOllamaCached(prompt, model, { timeoutMs: false });
+    // Call AI (cached) - default to stream: false
+    const result = await callOllamaCached(prompt, model, { timeoutMs: false, stream: false });
 
     // Format response
     try {
@@ -1260,7 +1317,7 @@ app.get('/api/models', (req, res) => {
 
 // GET /api/dashboard?model=<modelName>&severity=<severity>&category=<category>  (all parameters optional)
 // Reads from downloads/<category>/ if category provided, otherwise whole downloads/
-// returns: { success:true, model:..., totals:{ totalCases, critical, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
+// returns: { success:true, model:..., totals:{ totalCases, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
 
 /**
  * Helper function to get filtered rows for pagination
@@ -1296,7 +1353,7 @@ function getFilteredRows(modelQuery, severityQuery, category) {
 
 // GET /api/dashboard?model=<modelName>&severity=<severity>&category=<category>  (all parameters optional)
 // Reads from downloads/<category>/ if category provided, otherwise whole downloads/
-// returns: { success:true, model:..., totals:{ totalCases, critical, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
+// returns: { success:true, model:..., totals:{ totalCases, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
 app.get('/api/dashboard', (req, res) => {
   try {
     const modelQueryRaw = (req.query.model || '').toString().trim();
@@ -1318,7 +1375,7 @@ app.get('/api/dashboard', (req, res) => {
       const sev = (r.Severity || r['Severity'] || r['Severity Level'] || '').toString().trim() || 'Unknown';
       const sevKey = sev || 'Unknown';
       severityCounts[sevKey] = (severityCounts[sevKey] || 0) + 1;
-      // Only High (no Critical)
+
       if (/high/i.test(sevKey)) totals.high++;
       if (/med/i.test(sevKey)) totals.medium++;
       if (/low/i.test(sevKey)) totals.low++;
@@ -1392,7 +1449,7 @@ app.get('/api/health', async (req, res) => {
 
 /**
  * Read all .xlsx/.xls files from candidate directories and aggregate summary
- * Returns an array of { model, swver, grade, critical_module, critical_voc, count }
+ * Returns an array of { model, swver, grade, module, voc, count }
  */
 app.get('/api/visualize', async (req, res) => {
   try {
@@ -1500,13 +1557,13 @@ async function getVisualizationData() {
         const model = pickField(r, ['Model', 'model', 'Model No.', 'Model No', 'ModelNo', 'Model No']);
         const swver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
         const grade = pickField(r, ['Grade', 'Garde', 'grade']);
-        const critical_module = pickField(r, ['Critical Module', 'Cirital Module', 'Module', 'critical module', 'Module Name']);
+        const module = pickField(r, ['Module', 'Module Name']);
         const title = pickField(r, ['Title', 'title']);
 
         // Build key for aggregation (group by model+grade+module to avoid duplicates)
-        const key = `${model}||${grade}||${critical_module}`;
+        const key = `${model}||${grade}||${module}`;
         if (!aggregation.has(key)) {
-          aggregation.set(key, { count: 0, titleMap: new Map(), voc: critical_voc });
+          aggregation.set(key, { count: 0, titleMap: new Map(), voc: '' });
         }
         const entry = aggregation.get(key);
         entry.count += 1;
@@ -1520,13 +1577,13 @@ async function getVisualizationData() {
 
   // Convert aggregation map to array
   const summary = Array.from(aggregation.entries()).map(([k, entry]) => {
-    const [model, grade, critical_module] = k.split('||');
+    const [model, grade, module] = k.split('||');
     const topTitles = Array.from(entry.titleMap.entries()).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([title,count])=>title).join(', ');
     return {
       model: model || '',
       grade: grade || '',
-      critical_module: critical_module || '',
-      critical_voc: topTitles || '',
+      module: module || '',
+      voc: topTitles || '',
       count: entry.count || 0
     };
   });
@@ -1542,6 +1599,16 @@ async function getVisualizationData() {
  */
 app.get('/api/visualize-raw-details', async (req, res) => {
   try {
+    function pickField(row, candidates) {
+      for (const c of candidates) {
+        if (row.hasOwnProperty(c) && row[c] !== undefined && row[c] !== null &&
+            String(row[c]).toString().trim() !== '') {
+          return String(row[c]).trim();
+        }
+      }
+      return '';
+    }
+
     const candidateDirs = [
       path.join(process.cwd(), 'downloads'),
       path.join(process.cwd(), 'Downloads'),
@@ -1590,15 +1657,15 @@ app.get('/api/visualize-raw-details', async (req, res) => {
         for (const r of rows) {
           // Extract all available fields for raw details
           allDetails.push({
-            caseCode: pickField(r, ['Case Code', 'CaseCode', 'Case']),
-            model: pickField(r, ['Model No.', 'Model No', 'Model', 'ModelNo', 'Model No']),
-            grade: pickField(r, ['Grade', 'Garde']),
-            swver: pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']),
+            caseCode: pickField(r, ['Case Code']),
+            model: pickField(r, ['Model No.']),
+            grade: pickField(r, ['Grade']),
+            swver: pickField(r, ['S/W Ver.']),
             title: pickField(r, ['Title']),
             problem: pickField(r, ['Problem']),
-            sub_module: pickField(r, ['Sub-Module', 'Sub Module', 'SubModule', 'sub-module', 'sub module', 'submodule']),
+            sub_module: pickField(r, ['Sub-Module']),
             severity: pickField(r, ['Severity']),
-            severity_reason: pickField(r, ['Severity Reason', 'Severity_Reason']),
+            severity_reason: pickField(r, ['Severity Reason']),
             count: 1 // Each row represents one case
           });
         }
@@ -1620,10 +1687,10 @@ app.get('/api/visualize/export', async (req, res) => {
   try {
     const resp = await getVisualizationData();
     // Build CSV header
-    const csvHeader = ['model','grade','critical_module','critical_issue','count'];
+    const csvHeader = ['model','grade','module','voc','count'];
     const lines = [csvHeader.join(',')];
     resp.summary.forEach(r => {
-      lines.push([r.model,r.grade,r.critical_module,r.critical_voc,r.count].map(v => `\"${String(v||'').replace(/\"/g,'\"\"')}\"`).join(','));
+      lines.push([r.model,r.grade,r.module,r.voc,r.count].map(v => `\"${String(v||'').replace(/\"/g,'\"\"')}\"`).join(','));
     });
     const csv = lines.join('\n');
     res.setHeader('Content-disposition', 'attachment; filename=visualize_summary.csv');
@@ -1706,7 +1773,7 @@ app.get('/api/ollama-models', async (req, res) => {
  */
 app.get('/api/module-details', async (req, res) => {
   try {
-    const {model, swver, grade, module: critical_module, voc: critical_voc} = req.query;
+    const {model, swver, grade, module, voc} = req.query;
 
     const candidateDirs = [
       path.join(process.cwd(), 'downloads'),
@@ -1762,16 +1829,15 @@ app.get('/api/module-details', async (req, res) => {
         const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
 
         for (const r of rows) {
-          const rmodel = pickField(r, ['Model No.', 'Model No', 'Model', 'ModelNo', 'Model No']);
-          const rswver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
-          const rgrade = pickField(r, ['Grade', 'Garde', 'grade']);
-          const critMod = pickField(r, ['Critical Module', 'Cirital Module', 'Module', 'critical module', 'Module Name']);
-          const critVoc = pickField(r, ['Critical VOC', 'Critical VOCs', 'Critical_VOC', 'Critical', 'VOC']);
+          const rmodel = pickField(r, ['Model No.']);
+          const rswver = pickField(r, ['S/W Ver.']);
+          const rgrade = pickField(r, ['Grade']);
+          const mod = pickField(r, ['Module']);
 
       // Match model, grade, and module (ignore swver and voc since we aggregated by model+grade+module)
       if (String(rmodel).toLowerCase().trim() !== String(model).toLowerCase().trim() ||
           String(rgrade).toLowerCase().trim() !== String(grade).toLowerCase().trim() ||
-          String(critMod).toLowerCase().trim() !== String(critical_module).toLowerCase().trim()) continue;
+          String(mod).toLowerCase().trim() !== String(module).toLowerCase().trim()) continue;
 
           // Collect the detailed fields for display
           details.push({
@@ -1779,7 +1845,6 @@ app.get('/api/module-details', async (req, res) => {
             model: pickField(r, ['Model No.', 'Model No', 'Model']),
             swver: pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version']),
             grade: pickField(r, ['Grade', 'Garde']),
-            critical_voc: pickField(r, ['Critical VOC', 'Critical VOCs']),
             title: pickField(r, ['Title']),
             problem: pickField(r, ['Problem']),
             sub_module: pickField(r, ['Sub-Module', 'Sub Module', 'SubModule', 'sub-module', 'sub module', 'submodule']),
