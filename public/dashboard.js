@@ -279,7 +279,7 @@ function updatePaginationControls() {
   const prevBtn = document.getElementById('prevPageBtn');
   const nextBtn = document.getElementById('nextPageBtn');
   const lastBtn = document.getElementById('lastPageBtn');
-  const pageInput = document.getElementById('pageInput');
+  const pageDisplay = document.getElementById('pageDisplay');
   const totalPages = document.getElementById('totalPages');
 
   if (firstBtn) firstBtn.disabled = paginationState.page <= 1;
@@ -287,9 +287,8 @@ function updatePaginationControls() {
   if (nextBtn) nextBtn.disabled = paginationState.page >= paginationState.totalPages;
   if (lastBtn) lastBtn.disabled = paginationState.page >= paginationState.totalPages;
 
-  if (pageInput) {
-    pageInput.value = paginationState.page;
-    pageInput.max = paginationState.totalPages;
+  if (pageDisplay) {
+    pageDisplay.textContent = paginationState.page;
   }
 
   if (totalPages) totalPages.textContent = paginationState.totalPages;
@@ -630,16 +629,23 @@ function renderCharts(severityDistribution, moduleDistribution) {
     'High': [chartHighStart, chartHighEnd],
   };
 
-  // Professional color palette for severity levels
+  // Professional color palette for severity levels - Updated colors
   const severityColorPalette = {
-    'High': { bg: '#EF4444', hover: '#B91C1C' },
-    'Medium': { bg: '#F59E0B', hover: '#B45309' },
-    'Low': { bg: '#10B981', hover: '#047857' }
+    'High': '#EF4444',    // Red
+    'Medium': '#F59E0B',  // Orange
+    'Low': '#10B981'      // Green
   };
 
   // Assign colors based on labels using the new palette
-  const backgroundColors = sevLabels.map(label => severityColorPalette[label] ? severityColorPalette[label].bg : '#6B7280');
-  const hoverBackgroundColors = sevLabels.map(label => severityColorPalette[label] ? severityColorPalette[label].hover : '#374151');
+  const backgroundColors = sevLabels.map(label => severityColorPalette[label] || '#6B7280');
+  const hoverBackgroundColors = sevLabels.map(label => {
+    const color = severityColorPalette[label] || '#6B7280';
+    // Darken the color for hover
+    if (color === '#EF4444') return '#B91C1C';
+    if (color === '#F59E0B') return '#B45309';
+    if (color === '#10B981') return '#047857';
+    return '#374151';
+  });
 
   const sevEl = document.getElementById('severityChart');
   const modEl = document.getElementById('moduleChart');
@@ -678,7 +684,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
           data: sevCounts,
           backgroundColor: backgroundColors,
           hoverBackgroundColor: hoverBackgroundColors,
-          borderWidth: 0, // Removes the white border for a modern look
+          borderWidth: 0,
           hoverOffset: 4
         }]
       },
@@ -694,7 +700,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
                 size: 13,
                 weight: '500'
               },
-              usePointStyle: true, // Uses circles instead of squares in legend
+              usePointStyle: true,
               pointStyle: 'circle'
             },
             onClick: function(e, legendItem) {
@@ -735,10 +741,10 @@ function renderCharts(severityDistribution, moduleDistribution) {
           animateRotate: false,
           duration: 0
         },
-        cutout: '60%', // Makes the donut thinner and more elegant
+        cutout: '70%', // Thinner ring as specified
         elements: {
           arc: {
-            borderRadius: 4 // Rounded chart segments
+            borderRadius: 4
           }
         }
       }
@@ -784,6 +790,16 @@ function renderCharts(severityDistribution, moduleDistribution) {
 
     const modCtx = modEl.getContext('2d');
     if (moduleChart) moduleChart.destroy();
+
+    // Create gradient colors for Red to Green effect
+    const gradientColors = modLabels.map((_, index) => {
+      const ratio = index / (modLabels.length - 1); // 0 to 1
+      const red = Math.round(239 - (239 - 34) * ratio);   // 239 (red) to 34 (green)
+      const green = Math.round(68 + (163 - 68) * ratio);  // 68 to 163
+      const blue = Math.round(68 - 68 * ratio);           // 68 to 0
+      return `rgb(${red}, ${green}, ${blue})`;
+    });
+
     moduleChart = new Chart(modCtx, {
       type: 'bar',
       data: {
@@ -791,14 +807,14 @@ function renderCharts(severityDistribution, moduleDistribution) {
         datasets: [{
           label: 'Number of Issues',
           data: modCounts,
-          backgroundColor: moduleColors,
-          hoverBackgroundColor: moduleHoverColors,
-          barThickness: 16, // Reduced bar thickness for more balanced visual
-          borderRadius: 4 // Softens edges
+          backgroundColor: gradientColors,
+          hoverBackgroundColor: gradientColors.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.8)')),
+          barThickness: 20,
+          borderRadius: 4
         }]
       },
       options: {
-        indexAxis: 'y',
+        indexAxis: 'y', // Horizontal bar chart
         responsive: true,
         maintainAspectRatio: false,
         layout: {
@@ -811,7 +827,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
         },
         plugins: {
           legend: {
-            display: false // Remove redundant legend
+            display: false
           },
           tooltip: {
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -837,21 +853,20 @@ function renderCharts(severityDistribution, moduleDistribution) {
           x: {
             beginAtZero: true,
             ticks: {
-              stepSize: 1, // Forces integers
+              stepSize: 1,
               precision: 0,
-              color: currentTheme === 'dark' ? '#bbb' : '#64748b',
+              color: '#64748b',
               font: {
                 size: 11
               }
             },
             grid: {
-              color: '#f3f4f6', // Very subtle grid lines
-              drawBorder: false
+              display: false // Minimize grid lines
             },
             title: {
               display: true,
               text: 'Number of Issues',
-              color: currentTheme === 'dark' ? '#bbb' : '#64748b',
+              color: '#64748b',
               font: {
                 size: 12,
                 weight: '600'
@@ -860,7 +875,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
           },
           y: {
             ticks: {
-              color: currentTheme === 'dark' ? '#bbb' : '#64748b',
+              color: '#64748b',
               font: {
                 size: 11
               },
@@ -870,7 +885,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
               }
             },
             grid: {
-              display: false // Removes horizontal grid lines for cleanliness
+              display: false // Minimize grid lines
             }
           }
         },
@@ -1023,6 +1038,9 @@ function renderTable() {
   });
 
   document.getElementById('tableCount').textContent = `${currentDashboardData.aggregatedData.length} modules`;
+
+  // Update pagination controls
+  updatePaginationControls();
 
   // Attach click handlers to module name buttons
   document.querySelectorAll('.module-name-link').forEach(button => {
@@ -1717,14 +1735,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const prevPageBtn = document.getElementById('prevPageBtn');
   const nextPageBtn = document.getElementById('nextPageBtn');
   const lastPageBtn = document.getElementById('lastPageBtn');
-  const pageInput = document.getElementById('pageInput');
   const pageSizeSelect = document.getElementById('pageSizeSelect');
 
   if (firstPageBtn) firstPageBtn.addEventListener('click', firstPage);
   if (prevPageBtn) prevPageBtn.addEventListener('click', prevPage);
   if (nextPageBtn) nextPageBtn.addEventListener('click', nextPage);
   if (lastPageBtn) lastPageBtn.addEventListener('click', lastPage);
-  if (pageInput) pageInput.addEventListener('change', goToPageFromInput);
   if (pageSizeSelect) pageSizeSelect.addEventListener('change', changePageSize);
 
   // Read initial page from URL and start
