@@ -1220,40 +1220,24 @@ async function processExcel(req, res) {
 // ---------- Dashboard endpoints: read model from sheet cell and aggregate ----------
 // (XLSX is already required above as 'xlsx')
 
-// Helper: find a cell that contains \"Model No\" (case-insensitive) and return the value of the cell below it
+// Helper: find all unique models in the sheet by scanning all rows
 function getModelFromSheet(ws) {
   if (!ws || !ws['!ref']) return '';
-  const range = xlsx.utils.decode_range(ws['!ref']);
-  for (let R = range.s.r; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const addr = xlsx.utils.encode_cell({ r: R, c: C });
-      const cell = ws[addr];
-      if (!cell || !cell.v) continue;
-      const txt = String(cell.v).trim();
-      if (/model\s*no/i.test(txt) || /^model\s*no\.?$/i.test(txt) || /^model$/i.test(txt)) {
-        // take the cell below if present
-        const belowAddr = xlsx.utils.encode_cell({ r: R + 1, c: C });
-        const belowCell = ws[belowAddr];
-        if (belowCell && typeof belowCell.v !== 'undefined') return String(belowCell.v).trim();
-        // fallback: try to read from column E row 1 (E1) if above not found
-        try {
-          const fallback = ws['E1'] && ws['E1'].v ? String(ws['E1'].v).trim() : '';
-          if (fallback) return fallback;
-        } catch (e) {}
-      }
+  const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+
+  // Collect all unique models using improved extraction logic
+  const models = new Set();
+
+  for (const row of rows) {
+    const modelValue = extractModelFromRow(row);
+    if (modelValue && modelValue !== 'Unknown') {
+      models.add(modelValue);
     }
   }
-  // fallback heuristics: if there is a header row with \"Model\" column, try sheet_to_json
-  try {
-    const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
-    if (rows.length) {
-      const first = rows[0];
-      if (first['Model'] && String(first['Model']).trim()) return String(first['Model']).trim();
-      if (first['Model No.'] && String(first['Model No.']).trim()) return String(first['Model No.']).trim();
-      if (first['Model No'] && String(first['Model No']).trim()) return String(first['Model No']).trim();
-    }
-  } catch (e) {}
-  return '';
+
+  // Return all unique models as a comma-separated string, or first model if only one
+  const modelArray = Array.from(models);
+  return modelArray.length > 0 ? modelArray.join(',') : '';
 }
 
 // Helper: read each Excel file in downloads/ and subdirectories, return an array of objects {file, modelFromFile, rows: [...]}
@@ -1298,6 +1282,56 @@ function readAllFilesWithModel(category = null) {
   return readDirectoryRecursively(dlDir);
 }
 
+// Helper: extract model from a single row (canonical extraction)
+function extractModelFromRow(row) {
+  const candidates = [
+    'Model No.', 'Model', 'modelFromFile', 'ModelNo', 'Model_No', 'model', 'model_no', 'Model Name',
+    'Device Model', 'Phone Model', 'Product Model', 'Model Number', 'Device', 'Phone'
+  ];
+  for (const candidate of candidates) {
+    if (row.hasOwnProperty(candidate) && row[candidate] !== null && row[candidate] !== undefined) {
+      const val = String(row[candidate]).trim();
+      if (val && isValidModelString(val)) {
+        return val;
+      }
+    }
+  }
+  return '';
+}
+
+// Helper function to validate if a string looks like a model name (not a case code)
+function isValidModelString(str) {
+  if (!str || typeof str !== 'string') return false;
+  const s = str.trim();
+  // Check if it looks like a Samsung model (starts with SM-, contains numbers, etc.)
+  if (s.match(/^SM[-_]?[A-Z0-9]+/i)) return true;
+  // Check for other common model patterns
+  if (s.match(/^[A-Z]+[-_]?[0-9]+/i)) return true;
+  // Avoid case codes that look like P123456-78901
+  if (s.match(/^P\d{6}-\d{5}$/)) return false;
+  // Allow if it contains typical model keywords
+  if (s.toLowerCase().includes('galaxy') || s.toLowerCase().includes('s24') || s.toLowerCase().includes('s23')) return true;
+  return true; // Allow by default if it passes basic checks
+}
+
+// Helper: normalize model string
+function normalizeModelString(s) {
+  if (s === null || s === undefined) return '';
+  let v = String(s);
+
+  // Trim and collapse whitespace, remove NBSP
+  v = v.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Remove invisible control characters
+  v = v.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+
+  // If everything is uppercase/lowercase inconsistent, preserve original but trim.
+  // Optionally, standardize common separator variety:
+  v = v.replace(/[_]+/g, '_').replace(/[-]{2,}/g, '-');
+
+  return v;
+}
+
 // GET /api/models?category=<category> -> returns unique model list (modelFromFile values) scoped to category folder
 app.get('/api/models', (req, res) => {
   try {
@@ -1328,17 +1362,28 @@ function getFilteredRows(modelQuery, severityQuery, category) {
   // Build unified rows with an attached modelFromFile field for each row
   let allRows = [];
   files.forEach(f => {
-    const mFromFile = f.modelFromFile || '';
     f.rows.forEach(r => {
-      // attach modelFromFile to each row so we can easily filter by model
+      // Extract the actual model for this specific row
+      const rowModel = extractModelFromRow(r) || '';
+      // attach modelFromFile to each row based on the row's actual model
       const row = Object.assign({}, r);
-      row._modelFromFile = mFromFile;
+      row._modelFromFile = rowModel;
       allRows.push(row);
     });
   });
 
   // Filter rows by model if specified
-  let filteredRows = modelQuery ? allRows.filter(r => String(r._modelFromFile || '').trim() === modelQuery) : allRows;
+  let filteredRows = modelQuery ? allRows.filter(r => {
+    const rowModel = String(r._modelFromFile || '').trim();
+    // Check exact match first
+    if (rowModel === modelQuery) return true;
+    // Check if modelQuery is contained in comma-separated models
+    if (rowModel.includes(',')) {
+      const models = rowModel.split(',').map(m => normalizeModelString(m.trim()));
+      return models.includes(normalizeModelString(modelQuery));
+    }
+    return false;
+  }) : allRows;
 
   // Filter rows by severity if specified
   if (severityQuery) {
@@ -1388,6 +1433,28 @@ app.get('/api/dashboard', (req, res) => {
     const severityDistribution = Object.keys(severityCounts).map(k => ({ severity: k, count: severityCounts[k] })).sort((a, b) => b.count - a.count);
     const moduleDistribution = Object.keys(moduleCounts).map(k => ({ module: k, count: moduleCounts[k] })).sort((a, b) => b.count - a.count);
 
+    // Calculate complete model counts from all rows (for sidebar)
+    let modelCounts = {};
+    if (category && !modelQuery) {
+      filteredRows.forEach(r => {
+        const modelValue = r._modelFromFile || '';
+        if (modelValue) {
+          // Handle comma-separated models
+          if (modelValue.includes(',')) {
+            const models = modelValue.split(',').map(m => normalizeModelString(m.trim())).filter(m => m && m !== 'Unknown');
+            models.forEach(model => {
+              modelCounts[model] = (modelCounts[model] || 0) + 1;
+            });
+          } else {
+            const normalizedModel = normalizeModelString(modelValue);
+            if (normalizedModel && normalizedModel !== 'Unknown') {
+              modelCounts[normalizedModel] = (modelCounts[normalizedModel] || 0) + 1;
+            }
+          }
+        }
+      });
+    }
+
     // Prepare table rows to return (limit to avoid huge payload)
     const tableRows = filteredRows.slice(0, 500).map(r => {
       const mappedRow = {
@@ -1406,14 +1473,21 @@ app.get('/api/dashboard', (req, res) => {
       return mappedRow;
     });
 
-    res.json({
+    const response = {
       success: true,
       model: modelQuery || 'All',
       totals,
       severityDistribution,
       moduleDistribution,
       rows: tableRows
-    });
+    };
+
+    // Include model counts if calculated
+    if (Object.keys(modelCounts).length > 0) {
+      response.modelCounts = modelCounts;
+    }
+
+    res.json(response);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

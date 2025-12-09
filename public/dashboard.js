@@ -579,22 +579,53 @@ function renderModelList(sortedModels, containerEl) {
 
 // canonical extraction that tries many header names then normalizes
 function extractModelFromRow(row) {
-  const candidates = ['Model No.','Model','modelFromFile','ModelNo','Model_No','model','model_no','Model Name'];
+  const candidates = [
+    'Model No.', 'Model', 'modelFromFile', 'ModelNo', 'Model_No', 'model', 'model_no', 'Model Name',
+    'Device Model', 'Phone Model', 'Product Model', 'Model Number', 'Device', 'Phone'
+  ];
   let raw = '';
   for (const c of candidates) {
-    if (Object.prototype.hasOwnProperty.call(row, c) && row[c] !== null && row[c] !== undefined && String(row[c]).trim() !== '') {
-      raw = row[c];
-      break;
+    if (Object.prototype.hasOwnProperty.call(row, c) && row[c] !== null && row[c] !== undefined) {
+      const val = String(row[c]).trim();
+      if (val !== '' && isValidModelString(val)) {
+        raw = val;
+        break;
+      }
     }
+  }
+  // If we have a comma-separated list in modelFromFile (from the updated server), split and count each model
+  if (raw && raw.includes(',')) {
+    // For aggregation purposes, we'll return the first model, but the server now returns all models
+    // The aggregation will happen in loadModels()
+    return raw.split(',')[0].trim(); // Return first model for compatibility
   }
   // fallback to first non-empty property if none of the candidates matched
   if (!raw) {
     for (const k of Object.keys(row)) {
-      if (String(row[k]).trim() !== '') { raw = row[k]; break; }
+      const val = String(row[k]).trim();
+      if (val !== '' && isValidModelString(val)) {
+        raw = val;
+        break;
+      }
     }
   }
   const normalized = normalizeModelString(raw);
   return normalized || 'Unknown';
+}
+
+// Helper function to validate if a string looks like a model name (not a case code)
+function isValidModelString(str) {
+  if (!str || typeof str !== 'string') return false;
+  const s = str.trim();
+  // Check if it looks like a Samsung model (starts with SM-, contains numbers, etc.)
+  if (s.match(/^SM[-_]?[A-Z0-9]+/i)) return true;
+  // Check for other common model patterns
+  if (s.match(/^[A-Z]+[-_]?[0-9]+/i)) return true;
+  // Avoid case codes that look like P123456-78901
+  if (s.match(/^P\d{6}-\d{5}$/)) return false;
+  // Allow if it contains typical model keywords
+  if (s.toLowerCase().includes('galaxy') || s.toLowerCase().includes('s24') || s.toLowerCase().includes('s23')) return true;
+  return true; // Allow by default if it passes basic checks
 }
 
 // --- Aggregate rows by key name ---
@@ -1306,22 +1337,57 @@ function selectSuggestion(model) {
 
 async function loadModels() {
   try {
-    // Fetch full dataset from /api/dashboard to access all rows for model aggregation
+    // Fetch dashboard data - server now provides complete model counts
     const resp = await fetchJSON('/api/dashboard?category=' + encodeURIComponent(dashboardCategory));
     const container = document.getElementById('modelButtons');
     container.innerHTML = '';
 
-    // Aggregate model counts from all rows using normalized extraction
-    const modelCounts = {};
-    (resp.rows || []).forEach(row => {
-      const model = extractModelFromRow(row);
-      modelCounts[model] = (modelCounts[model] || 0) + 1;
-    });
+    let sortedModels;
+    if (resp.modelCounts) {
+      // Use server-calculated complete model counts
+      sortedModels = Object.entries(resp.modelCounts)
+        .map(([model, count]) => ({ model, count }))
+        .sort((a, b) => b.count - a.count);
+    } else {
+      // Fallback to client-side counting (for backward compatibility)
+      const modelCounts = {};
+      (resp.rows || []).forEach(row => {
+        // Use the same extraction logic as extractModelFromRow for consistency
+        const candidates = [
+          'Model No.', 'Model', 'modelFromFile', 'ModelNo', 'Model_No', 'model', 'model_no', 'Model Name',
+          'Device Model', 'Phone Model', 'Product Model', 'Model Number', 'Device', 'Phone'
+        ];
+        let rawModelString = '';
+        for (const c of candidates) {
+          if (Object.prototype.hasOwnProperty.call(row, c) && row[c] !== null && row[c] !== undefined) {
+            const val = String(row[c]).trim();
+            if (val !== '' && isValidModelString(val)) {
+              rawModelString = val;
+              break;
+            }
+          }
+        }
 
-    // Convert to array and sort by count descending
-    const sortedModels = Object.entries(modelCounts)
-      .map(([model, count]) => ({ model, count }))
-      .sort((a, b) => b.count - a.count);
+        // If we have a comma-separated list, split and count each model
+        if (rawModelString && rawModelString.includes(',')) {
+          const models = rawModelString.split(',').map(m => normalizeModelString(m.trim())).filter(m => m && m !== 'Unknown' && isValidModelString(m));
+          models.forEach(model => {
+            modelCounts[model] = (modelCounts[model] || 0) + 1;
+          });
+        } else {
+          // Single model - use the validated normalized result
+          const normalizedModel = normalizeModelString(rawModelString);
+          if (normalizedModel && normalizedModel !== 'Unknown' && isValidModelString(normalizedModel)) {
+            modelCounts[normalizedModel] = (modelCounts[normalizedModel] || 0) + 1;
+          }
+        }
+      });
+
+      // Convert to array and sort by count descending
+      sortedModels = Object.entries(modelCounts)
+        .map(([model, count]) => ({ model, count }))
+        .sort((a, b) => b.count - a.count);
+    }
 
     // Store all models for search functionality
     allModels = sortedModels.map(item => item.model);
