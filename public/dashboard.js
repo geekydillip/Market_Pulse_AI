@@ -84,6 +84,9 @@ function updateFilters(newFilters) {
     }
   }
 
+  // Update active state of All Models button
+  updateAllModelsButtonState();
+
   // Refresh dashboard overview with new filters
   refreshDashboardOverview();
 
@@ -130,6 +133,18 @@ function updateModelIndicator() {
   }
 }
 
+// Update active state of All Models button
+function updateAllModelsButtonState() {
+  const allModelsBtn = document.getElementById('allModelsBtn');
+  if (allModelsBtn) {
+    if (currentFilters.model === null) {
+      allModelsBtn.classList.add('active');
+    } else {
+      allModelsBtn.classList.remove('active');
+    }
+  }
+}
+
 // Refresh dashboard overview data (charts and KPIs)
 async function refreshDashboardOverview() {
   try {
@@ -146,14 +161,14 @@ async function refreshDashboardOverview() {
       throw new Error(resp && resp.error ? resp.error : 'dashboard error');
     }
 
-    // Update the section title to include selected model name
-    const sectionTitle = document.querySelector('.overview-section .section-title');
-    if (sectionTitle) {
-      const baseTitle = getCategoryTitle(dashboardCategory) + ' Overview';
+    // Update the main header title to include selected model name
+    const headerTitle = document.querySelector('.header-title');
+    if (headerTitle) {
+      const baseTitle = 'Beta User Issues Overview';
       if (currentFilters.model && currentFilters.model !== null) {
-        sectionTitle.textContent = `${baseTitle} - ${currentFilters.model}`;
+        headerTitle.textContent = `${baseTitle} - ${currentFilters.model}`;
       } else {
-        sectionTitle.textContent = baseTitle;
+        headerTitle.textContent = baseTitle;
       }
     }
 
@@ -174,8 +189,10 @@ async function refreshDashboardOverview() {
     // Update charts
     renderCharts(resp.severityDistribution || [], resp.moduleDistribution || []);
 
-    // Render paginated table
-    renderTable();
+    // Only render table if a specific model is selected (not on initial "All Models" load)
+    if (currentFilters.model && currentFilters.model !== null) {
+      renderTable();
+    }
   } catch (err) {
     console.error('refreshDashboardOverview error', err);
     alert('Failed to refresh dashboard: ' + (err.message || err));
@@ -475,12 +492,109 @@ function cleanIssueTitle(title) {
               .trim();
 }
 
+// --- START: Normalize model helper ---
+function normalizeModelString(s) {
+  if (s === null || s === undefined) return '';
+  let v = String(s);
+
+  // Trim and collapse whitespace, remove NBSP
+  v = v.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Remove invisible control characters
+  v = v.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+
+  // If everything is uppercase/lowercase inconsistent, preserve original but trim.
+  // Optionally, standardize common separator variety:
+  v = v.replace(/[_]+/g, '_').replace(/[-]{2,}/g, '-');
+
+  return v;
+}
+// --- END: Normalize model helper ---
+
 // --- Utility: normalized lookup for field names from Excel row ---
 function getField(row, names) {
   for (const n of names) {
     if (Object.prototype.hasOwnProperty.call(row, n) && row[n] != null) return String(row[n]).trim();
   }
   return '';
+}
+
+function renderModelList(sortedModels, containerEl) {
+  // Clear existing content after the search input and suggestions
+  const searchInput = containerEl.querySelector('#modelSearchInput');
+  const suggestions = containerEl.querySelector('#searchSuggestions');
+  const elementsToKeep = [searchInput, suggestions].filter(el => el);
+
+  // Remove all children except the ones we want to keep
+  Array.from(containerEl.children).forEach(child => {
+    if (!elementsToKeep.includes(child)) {
+      containerEl.removeChild(child);
+    }
+  });
+
+  const top = sortedModels.slice(0, 10);
+  top.forEach(({model, count}) => {
+    const btn = document.createElement('button');
+    btn.className = 'model-chip';
+
+    // Create span for model name
+    const modelNameSpan = document.createElement('span');
+    modelNameSpan.textContent = model;
+
+    // Create badge for count
+    const countBadge = document.createElement('span');
+    countBadge.className = 'model-badge';
+    countBadge.textContent = `(${count})`;
+
+    // Append elements to button
+    btn.appendChild(modelNameSpan);
+    btn.appendChild(countBadge);
+
+    btn.onclick = () => updateFilters({ model: model });
+    containerEl.appendChild(btn);
+  });
+
+  if (sortedModels.length > 10) {
+    const moreBtn = document.createElement('button');
+    moreBtn.className = 'model-more-btn';
+    moreBtn.textContent = `More (${sortedModels.length - 10})`;
+    moreBtn.onclick = () => {
+      // simple inline dropdown: render the remainder below the button
+      let dropdown = containerEl.querySelector('.model-more-dropdown');
+      if (dropdown) { dropdown.remove(); return; } // toggle
+      dropdown = document.createElement('div');
+      dropdown.className = 'model-more-dropdown';
+      sortedModels.slice(10).forEach(({model, count}) => {
+        const item = document.createElement('div');
+        item.className = 'model-more-item';
+        item.textContent = `${model} (${count})`;
+        item.onclick = () => { updateFilters({ model: model }); };
+        dropdown.appendChild(item);
+      });
+      containerEl.appendChild(dropdown);
+    };
+    containerEl.appendChild(moreBtn);
+  }
+}
+
+// canonical extraction that tries many header names then normalizes
+function extractModelFromRow(row) {
+  const candidates = ['Model No.','Model','modelFromFile','ModelNo','Model_No','model','model_no','Model Name'];
+  let raw = '';
+  for (const c of candidates) {
+    if (Object.prototype.hasOwnProperty.call(row, c) && row[c] !== null && row[c] !== undefined && String(row[c]).trim() !== '') {
+      raw = row[c];
+      break;
+    }
+  }
+  // fallback to first non-empty property if none of the candidates matched
+  if (!raw) {
+    for (const k of Object.keys(row)) {
+      if (String(row[k]).trim() !== '') { raw = row[k]; break; }
+    }
+  }
+  const normalized = normalizeModelString(raw);
+  return normalized || 'Unknown';
 }
 
 // --- Aggregate rows by key name ---
@@ -690,12 +804,17 @@ function renderCharts(severityDistribution, moduleDistribution) {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: false, // Ensures it fills the new CSS height
+        layout: {
+          padding: {
+            bottom: 15  // <--- ADD THIS: Adds breathing room at the bottom
+          }
+        },
         plugins: {
           legend: {
             position: 'bottom',
             labels: {
-              padding: 20,
+              padding: 35, // INCREASED: Adds space between the chart and the legend text
               font: {
                 size: 13,
                 weight: '500'
@@ -741,7 +860,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
           animateRotate: false,
           duration: 0
         },
-        cutout: '70%', // Thinner ring as specified
+        cutout: '30%', // Thinner ring as specified
         elements: {
           arc: {
             borderRadius: 4
@@ -821,7 +940,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
           padding: {
             top: 10,
             right: 20,
-            bottom: 10,
+            bottom: 20,
             left: 10
           }
         },
@@ -853,11 +972,12 @@ function renderCharts(severityDistribution, moduleDistribution) {
           x: {
             beginAtZero: true,
             ticks: {
-              stepSize: 1,
+              autoSkip: true,    // PREVENTS OVERCROWDING
+              maxRotation: 0,    // PREVENTS TILT (keeps numbers straight)
               precision: 0,
               color: '#64748b',
               font: {
-                size: 11
+                size: 12
               }
             },
             grid: {
@@ -866,11 +986,12 @@ function renderCharts(severityDistribution, moduleDistribution) {
             title: {
               display: true,
               text: 'Number of Issues',
-              color: '#64748b',
+              color: '#0467f1ff',
               font: {
-                size: 12,
+                size: 13,
                 weight: '600'
-              }
+              },
+              padding: { top: 10 }  // <--- ADD THIS: Pushes title down away from numbers
             }
           },
           y: {
@@ -903,7 +1024,7 @@ function aggregateByModule(rows) {
 
   rows.forEach(row => {
     const module = row.module || 'Unknown';
-    const modelNo = row.modelFromFile || 'Unknown';
+    const modelNo = extractModelFromRow(row);
 
     if (!moduleMap.has(module)) {
       moduleMap.set(module, {
@@ -1059,17 +1180,9 @@ function renderTable() {
 function setupModelSearch(models) {
   allModels = models;
 
-  // Get container reference
-  const container = document.getElementById('modelButtons');
-
-  // Create search input
-  const searchInput = document.createElement('input');
-  searchInput.type = 'text';
-  searchInput.id = 'modelSearchInput';
-  searchInput.className = 'model-search-input';
-  searchInput.placeholder = 'Search models...';
-  searchInput.autocomplete = 'off';
-  container.appendChild(searchInput);
+  // Get search wrapper reference
+  const searchWrapper = document.querySelector('.search-wrapper');
+  const searchInput = document.getElementById('modelSearchInput');
 
   // Create suggestions container with ARIA attributes
   suggestionsContainer = document.createElement('div');
@@ -1077,7 +1190,7 @@ function setupModelSearch(models) {
   suggestionsContainer.className = 'search-suggestions';
   suggestionsContainer.setAttribute('role', 'listbox');
   suggestionsContainer.setAttribute('aria-label', 'Model suggestions');
-  container.appendChild(suggestionsContainer);
+  searchWrapper.appendChild(suggestionsContainer);
 
   // Event listeners
   searchInput.addEventListener('input', handleSearchInput);
@@ -1198,10 +1311,10 @@ async function loadModels() {
     const container = document.getElementById('modelButtons');
     container.innerHTML = '';
 
-    // Aggregate model counts from all rows
+    // Aggregate model counts from all rows using normalized extraction
     const modelCounts = {};
     (resp.rows || []).forEach(row => {
-      const model = row.modelFromFile || row.model || 'Unknown';
+      const model = extractModelFromRow(row);
       modelCounts[model] = (modelCounts[model] || 0) + 1;
     });
 
@@ -1216,38 +1329,14 @@ async function loadModels() {
     // Setup model search with all models (including those not in top 10)
     setupModelSearch(allModels);
 
-    // Add 'All Models' as the first button
-    const allBtn = document.createElement('button');
-    allBtn.className = 'all-models';
-    allBtn.textContent = 'All Models';
-    allBtn.onclick = () => updateFilters({ model: null });
-    container.appendChild(allBtn);
+    // Render model list with top 10 + More dropdown
+    renderModelList(sortedModels, container);
 
-    // Add Top 10 model buttons with counts
-    const top10Models = sortedModels.slice(0, 10);
-    top10Models.forEach(({ model, count }) => {
-      const modelBtn = document.createElement('button');
-      modelBtn.className = 'model-chip';
+    // Update active state of All Models button (it's already in the HTML)
+    updateAllModelsButtonState();
 
-      // Create span for model name
-      const modelNameSpan = document.createElement('span');
-      modelNameSpan.textContent = model;
-
-      // Create badge for count
-      const countBadge = document.createElement('span');
-      countBadge.className = 'model-badge';
-      countBadge.textContent = `(${count})`;
-
-      // Append elements to button
-      modelBtn.appendChild(modelNameSpan);
-      modelBtn.appendChild(countBadge);
-
-      modelBtn.onclick = () => updateFilters({ model: model });
-      container.appendChild(modelBtn);
-    });
-
-    // auto-click 'All Models' by default
-    allBtn.click();
+    // Load initial dashboard data
+    refreshDashboardOverview();
   } catch (err) {
     console.error('loadModels error', err);
     alert('Failed to load models: ' + (err.message || err));

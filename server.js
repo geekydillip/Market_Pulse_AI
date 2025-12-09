@@ -1829,10 +1829,10 @@ app.get('/api/module-details', async (req, res) => {
         const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
 
         for (const r of rows) {
-          const rmodel = pickField(r, ['Model No.']);
-          const rswver = pickField(r, ['S/W Ver.']);
-          const rgrade = pickField(r, ['Grade']);
-          const mod = pickField(r, ['Module']);
+          const rmodel = pickField(r, ['Model No.', 'Model No', 'Model', 'ModelNo', 'Model No']);
+          const rswver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
+          const rgrade = pickField(r, ['Grade', 'Garde', 'grade']);
+          const mod = pickField(r, ['Module', 'Module Name']);
 
       // Match model, grade, and module (ignore swver and voc since we aggregated by model+grade+module)
       if (String(rmodel).toLowerCase().trim() !== String(model).toLowerCase().trim() ||
