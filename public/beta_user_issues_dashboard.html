@@ -88,6 +88,11 @@
       border: 1px solid rgba(255, 255, 255, 0.7);
       z-index: 50;
       overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .floating-sidebar.sidebar-hidden {
+      transform: translateX(-100%);
     }
 
     .sidebar-sticky-header {
@@ -333,6 +338,11 @@
       margin-left: 380px;
       padding: 24px;
       min-height: calc(100vh - 100px);
+      transition: margin-left 0.3s ease;
+    }
+
+    .dashboard-main.sidebar-hidden {
+      margin-left: 0;
     }
 
     /* ===== MAIN HEADER ===== */

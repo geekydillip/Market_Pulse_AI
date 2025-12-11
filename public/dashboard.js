@@ -311,9 +311,16 @@ function updatePaginationControls() {
   if (totalPages) totalPages.textContent = paginationState.totalPages;
 }
 
-// Keyboard shortcuts for pagination
+// Keyboard shortcuts for pagination and sidebar toggle
 document.addEventListener('keydown', (e) => {
-  // Only handle if not in input field or modal
+  // Handle Ctrl+B for sidebar toggle
+  if (e.ctrlKey && e.key === 'b') {
+    e.preventDefault();
+    toggleSidebar();
+    return;
+  }
+
+  // Only handle pagination shortcuts if not in input field or modal
   if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') {
     return;
   }
@@ -334,6 +341,17 @@ document.addEventListener('keydown', (e) => {
       break;
   }
 });
+
+// Toggle sidebar visibility
+function toggleSidebar() {
+  const sidebar = document.querySelector('.floating-sidebar');
+  const mainContent = document.querySelector('.dashboard-main');
+
+  if (sidebar && mainContent) {
+    sidebar.classList.toggle('sidebar-hidden');
+    mainContent.classList.toggle('sidebar-hidden');
+  }
+}
 
 // Export current page (current page of modules)
 function exportCurrentPage() {
