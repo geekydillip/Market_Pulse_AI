@@ -1238,281 +1238,152 @@ body.theme-dark .search-highlight {
     height: auto;
 }
 
-/* --- MODAL WRAPPER --- */
-.modal {
-    display: none; /* Hidden by default */
+/* =========================================
+   MODAL WRAPPER (FULL SCREEN FIX)
+   ========================================= */
+#issues-modal {
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Prevents background body from scrolling */
-    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
-    backdrop-filter: blur(3px); /* Adds a modern "frosted glass" effect behind modal */
+    overflow: hidden;
+    background-color: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    padding: 0; /* Removed padding to allow full screen */
 }
 
-/* --- MODAL CONTENT BOX (The Window) --- */
-.modal-content {
+/* --- MODAL CONTENT BOX --- */
+.modal-container {
     background-color: #fefefe;
-    /* CENTERING & SIZING */
-    margin: 5vh auto; /* Adds more space outside the modal */
-    width: 90%;       /* Widen the window */
-    height: 80vh;     /* FORCE HEIGHT: Takes up 80% of screen height (more compact) */
-
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-
-    /* FLEXBOX MAGIC FOR SCROLLING */
+    margin: 0; /* Remove margins */
+    width: 100vw; /* Full Viewport Width */
+    height: 100vh; /* Full Viewport Height */
+    max-width: none; /* Remove max-width restriction */
+    border-radius: 0; /* Remove corners for full screen feel */
+    box-shadow: none;
     display: flex;
-    flex-direction: column; /* Stacks Header -> Table */
-    padding: 20px;
-    box-sizing: border-box;
+    flex-direction: column;
 }
 
-/* --- MODAL HEADER (Fixed at top) --- */
+/* --- MODAL HEADER --- */
 .modal-header {
-    flex-shrink: 0; /* Prevents header from shrinking */
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 15px;
-    margin-bottom: 10px;
+    padding: 16px 24px;
+    background-color: #ffffff;
     border-bottom: 1px solid #e5e7eb;
 }
 
-.modal-header h2 {
+.modal-header h3 {
     margin: 0;
-    font-size: 1.5rem;
-    color: #1f2937;
+    font-size: 1.25rem;
+    color: #111827;
+    font-weight: 700;
 }
 
-/* --- CLOSE BUTTON (Improved UX) --- */
-.close {
-    color: #9ca3af;
-    font-size: 28px;
-    font-weight: bold;
-    line-height: 1;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.2s;
+/* --- MODAL BODY (Scrollable Area) --- */
+.modal-body {
+    flex-grow: 1;
+    overflow: hidden; /* Handle scrolling in the table container */
+    padding: 0; /* Remove padding to let table hit edges */
+    background-color: #f9fafb;
 }
 
-.close:hover {
-    color: #ef4444; /* Red on hover */
-    background-color: #fee2e2;
-}
-
-/* --- TABLE CONTAINER (Scrollable Area) --- */
 .modal-table-container {
-    flex-grow: 1;    /* Fills ALL remaining space towards bottom */
-    overflow-y: auto; /* ENABLE VERTICAL SCROLL - Always visible */
-    overflow-x: auto; /* ENABLE HORIZONTAL SCROLL - Always visible */
-    border: 1px solid #e5e7eb; /* Border helps define the scroll area */
-    border-radius: 6px;
-    position: relative; /* Context for sticky header */
-    max-height: 100%; /* Ensure container doesn't exceed modal height */
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: auto;
 }
 
-/* --- STICKY TABLE HEADERS (UX Fix) - Fixed positioning --- */
-.modal-table-container thead {
-    position: sticky;
-    top: 0;
-    background-color: #f9fafb; /* Must have bg to cover scrolling text */
-    z-index: 10;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow for depth */
-}
+/* =========================================
+   MODAL TABLE UX FIXES (Unified Fonts)
+   ========================================= */
 
-/* Ensure table takes full width for proper scrolling */
 #moduleDetailTable {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed; /* Fixed layout for consistent column widths */
+    table-layout: fixed; /* STRICT column sizing */
 }
 
-/* Issues table - exact mockup styling */
-.issues-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  background: transparent;
-  margin: 0;
+/* Sticky Header */
+#moduleDetailTable thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f3f4f6;
+    z-index: 20;
+    padding: 14px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #4b5563;
+    border-bottom: 2px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    white-space: nowrap;
 }
 
-.issues-table thead th {
-  position: sticky;
-  top: 0;
-  background: linear-gradient(180deg, #ffffff, #fafbfd);
-  padding: 14px 12px;
-  text-align: left;
-  font-size: 13px;
-  color: var(--muted, #9aa3ad);
-  font-weight: 700;
-  border-bottom: 1px solid rgba(9, 30, 63, 0.04);
-  white-space: nowrap;
+/* Unified Cell Styling */
+#moduleDetailTable tbody td {
+    padding: 14px 12px;
+    vertical-align: top; /* Align all text to top */
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #f3f4f6;
+    color: #1f2937;
+
+    /* UNIFIED FONT SETTINGS */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13.5px; /* Consistent size for all columns */
+    line-height: 1.5;
 }
 
-.issues-table tbody tr {
-  background: var(--card, #ffffff);
-  height: 56px;
-  border-radius: 8px;
-  display: table-row;
-  vertical-align: middle;
-  transition: background .12s ease, transform .08s ease;
+/* Hover Effect */
+#moduleDetailTable tbody tr:hover td {
+    background-color: #eff6ff; /* Light blue hover */
 }
 
-.issues-table tbody tr:hover {
-  background: linear-gradient(90deg, #fbfdfe, #ffffff);
-  transform: translateY(-1px);
+/* --- TEXT WRAPPING CLASSES --- */
+.text-wrap-break {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important; /* Prevents "SM-S938..." from splitting mid-word */
 }
 
-/* Subtle row separators */
-.issues-table tbody tr + tr td {
-  border-top: 1px solid rgba(9,30,63,0.04);
+.text-wrap-normal {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
 }
 
-.issues-table tbody td {
-  padding: 12px 14px;
-  vertical-align: middle;
-  font-size: 14px;
-  color: #21323a;
-}
+/* --- COLUMN WIDTHS (Optimized for 100% Full Screen) --- */
+#moduleDetailTable th:nth-child(1), td:nth-child(1) { width: 4%; text-align: center; color: #6b7280; } /* S/N */
+#moduleDetailTable th:nth-child(2), td:nth-child(2) { width: 10%; font-weight: 600; color: #4f46e5; } /* Case Code */
+#moduleDetailTable th:nth-child(3), td:nth-child(3) { width: 13%; } /* Model No. */
+#moduleDetailTable th:nth-child(4), td:nth-child(4) { width: 11%; } /* S/W Ver. */
+#moduleDetailTable th:nth-child(5), td:nth-child(5) { width: 16%; font-weight: 600; } /* Issue Title */
+#moduleDetailTable th:nth-child(6), td:nth-child(6) { width: 9%; } /* Sub-Module */
+#moduleDetailTable th:nth-child(7), td:nth-child(7) { width: 28%; } /* Summarized Problem (Largest) */
+#moduleDetailTable th:nth-child(8), td:nth-child(8) { width: 9%; text-align: center; } /* Severity */
 
-/* Column-specific widths and truncation */
-.col-sn {
-  width: 60px;
-  text-align: left;
-  color: #3d4951;
-  font-weight: 600;
-}
-
-.col-case {
-  width: 140px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-model {
-  width: 180px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-sw {
-  width: 120px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-title {
-  width: 240px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-weight: 600;
-}
-
-.col-problem {
-  width: 260px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.col-sub {
-  width: 120px;
-}
-
-.col-severity {
-  width: 110px;
-}
-
-.col-reason {
-  width: 220px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* Severity pills - exact mockup styling */
+/* Severity Pills */
 .pill {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 12px;
-  text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    min-width: 70px;
 }
-
-.pill.high {
-  background: var(--pill-high, #ffdde0);
-  color: var(--pill-high-text, #b12b3a);
-}
-
-/* Tooltips removed - text now wraps directly in cells */
-
-/* Table wrapper with border - exact mockup styling */
-.table-wrap {
-  overflow: auto;
-  border-radius: 10px;
-  border: 1px solid #e9eef3;
-}
-
-/* Modal header controls alignment - exact mockup */
-.header-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-#issues-modal .modal-header-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-/* Responsive breakpoint - exact mockup */
-@media (max-width: 900px) {
-  .modal {
-    padding: 14px;
-  }
-
-  .col-title, .col-problem, .col-reason {
-    display: none;
-  }
-}
-
-.modal-empty {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-secondary);
-}
-
-@media (max-width: 768px) {
-    .modal-content {
-        margin: 20px;
-        width: calc(100vw - 40px);
-    }
-
-    .modal-table thead th,
-    .modal-table tbody td {
-        padding: 8px 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .processing-types {
-        grid-template-columns: 1fr;
-    }
-
-    .logo h1 {
-        font-size: 20px;
-    }
-}
+.pill.high { background-color: #fee2e2; color: #991b1b; }
+.pill.medium { background-color: #fef3c7; color: #92400e; }
+.pill.low { background-color: #d1fae5; color: #065f46; }
 
 
 
@@ -1758,24 +1629,38 @@ section {
   .theme-light .kpi-grid { grid-template-columns: 1fr; gap:14px; }
 }
 
-/* Modal Table Column Widths for Balanced Layout - 8 Columns */
-#moduleDetailTable th:nth-child(1) { width: 5%; text-align: center; }  /* S/N - Center aligned */
-#moduleDetailTable th:nth-child(2) { width: 8%; }  /* Case Code */
-#moduleDetailTable th:nth-child(3) { width: 8%; }  /* Model No. */
-#moduleDetailTable th:nth-child(4) { width: 13%; } /* S/W Ver. - Further increased */
-#moduleDetailTable th:nth-child(5) { width: 25%; } /* Issue Title */
-#moduleDetailTable th:nth-child(6) { width: 8%; text-align: center; }  /* Sub-Module - Center aligned */
-#moduleDetailTable th:nth-child(7) { width: 25%; } /* Summarized Problem */
-#moduleDetailTable th:nth-child(8) { width: 8%; text-align: center; } /* Severity - Center aligned & further reduced */
+/* --- COLUMN WIDTH CONFIGURATION (Total 100%) --- */
+/* S/N */
+#moduleDetailTable th:nth-child(1),
+#moduleDetailTable td:nth-child(1) { width: 5%; text-align: center; color: #6b7280; }
 
-#moduleDetailTable td:nth-child(1) { width: 5%; text-align: center; }  /* S/N - Center aligned */
-#moduleDetailTable td:nth-child(2) { width: 8%; }  /* Case Code */
-#moduleDetailTable td:nth-child(3) { width: 8%; }  /* Model No. */
-#moduleDetailTable td:nth-child(4) { width: 13%; } /* S/W Ver. - Further increased */
-#moduleDetailTable td:nth-child(5) { width: 25%; } /* Issue Title */
-#moduleDetailTable td:nth-child(6) { width: 8%; text-align: center; }  /* Sub-Module - Center aligned */
-#moduleDetailTable td:nth-child(7) { width: 25%; } /* Summarized Problem */
-#moduleDetailTable td:nth-child(8) { width: 8%; text-align: center; } /* Severity - Center aligned & further reduced */
+/* Case Code */
+#moduleDetailTable th:nth-child(2),
+#moduleDetailTable td:nth-child(2) { width: 11%; font-family: monospace; font-weight: 600; }
+
+/* Model No. - Increased width slightly */
+#moduleDetailTable th:nth-child(3),
+#moduleDetailTable td:nth-child(3) { width: 14%; font-family: 'Inter', sans-serif; font-size: 13px; }
+
+/* S/W Ver. */
+#moduleDetailTable th:nth-child(4),
+#moduleDetailTable td:nth-child(4) { width: 12%; font-size: 13px; }
+
+/* Issue Title */
+#moduleDetailTable th:nth-child(5),
+#moduleDetailTable td:nth-child(5) { width: 18%; font-weight: 600; color: #111827; }
+
+/* Sub-Module */
+#moduleDetailTable th:nth-child(6),
+#moduleDetailTable td:nth-child(6) { width: 9%; text-align: left; }
+
+/* Summarized Problem - Largest width for readability */
+#moduleDetailTable th:nth-child(7),
+#moduleDetailTable td:nth-child(7) { width: 23%; color: #374151; }
+
+/* Severity */
+#moduleDetailTable th:nth-child(8),
+#moduleDetailTable td:nth-child(8) { width: 8%; text-align: center; }
 
 @keyframes slideIn {
     from {
@@ -2550,4 +2435,52 @@ table td:nth-child(2) {
     border: 2px solid rgba(59,130,246,0.6) !important;
     box-shadow: inset 0 0 0 2px rgba(59,130,246,0.8) !important;
     font-weight: bold !important;
+}
+
+/* =========================================
+   MODAL TABLE UX FIXES - TEXT WRAPPING & SEVERITY
+   ========================================= */
+
+/* --- INTELLIGENT TEXT WRAPPING --- */
+/* This fixes the "Model No." breaking issue */
+.text-wrap-break {
+    white-space: normal !important;
+    word-break: break-word !important;    /* Standard break */
+    overflow-wrap: anywhere !important;   /* Browsers will break long strings like SM-G998... only if necessary */
+    hyphens: auto;
+}
+
+.text-wrap-normal {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+/* --- SEVERITY PILLS UI --- */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-width: 60px;
+}
+
+.pill.high {
+    background-color: #fee2e2; /* Red-100 */
+    color: #991b1b;           /* Red-800 */
+}
+
+.pill.medium {
+    background-color: #fef3c7; /* Amber-100 */
+    color: #92400e;           /* Amber-800 */
+}
+
+.pill.low {
+    background-color: #d1fae5; /* Emerald-100 */
+    color: #065f46;           /* Emerald-800 */
 }

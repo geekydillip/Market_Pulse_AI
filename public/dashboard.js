@@ -1676,34 +1676,44 @@ function showModuleDetails(module, moduleData) {
       moduleRows.forEach((row, index) => {
         const tr = document.createElement('tr');
 
-        // CHECK: Ensure you use the exact property name from server data
-        // Server returns caseId, title, problem, modelFromFile, module, severity, sWVer, subModule, summarizedProblem, severityReason
         const caseCode = row.caseId || 'N/A';
 
-        // Format severity with colored badge
-        const severity = (row.severity || '').toLowerCase();
-        const severityPill = severity === 'high' ?
-          '<span class="pill high">High</span>' :
-          severity === 'medium' ?
-          '<span class="pill">Medium</span>' :
-          '<span class="pill">Low</span>'; // Default fallback
+        // Format severity with colored badge logic matching CSS
+        const severityStr = (row.severity || '').toLowerCase();
+        let pillClass = '';
+        let pillText = 'Low';
 
-        // Handle empty summarized problem with pending badge
+        if (severityStr === 'high') {
+            pillClass = 'high';
+            pillText = 'HIGH';
+        } else if (severityStr === 'medium') {
+            pillClass = 'medium';
+            pillText = 'MEDIUM';
+        } else {
+            pillClass = 'low';
+            pillText = 'LOW';
+        }
+
+        const severityPill = `<span class="pill ${pillClass}">${pillText}</span>`;
+
+        // Handle empty summarized problem
         const summarizedProblem = row.summarizedProblem || '';
         const summarizedDisplay = summarizedProblem.trim() ?
           escapeHtml(summarizedProblem) :
-          '<span class="empty-badge">Pending</span>';
+          '<span style="color:#9ca3af; font-style:italic;">Pending analysis...</span>';
 
         tr.innerHTML = `
           <td>${index + 1}</td>
-          <td style="font-weight:bold; color:#4F46E5;">
-            ${escapeHtml(caseCode)}
+          <td>
+            <a href="#" style="color:#4F46E5; text-decoration:none; font-weight:600;">
+                ${escapeHtml(caseCode)}
+            </a>
           </td>
-          <td>${escapeHtml(row.modelFromFile || row.model || 'N/A')}</td>
-          <td>${escapeHtml(row.sWVer || row['S/W Ver.'] || 'N/A')}</td>
-          <td>${escapeHtml(row.title || row.issueTitle || 'N/A')}</td>
+          <td class="text-wrap-break">${escapeHtml(row.modelFromFile || row.model || 'N/A')}</td>
+          <td class="text-wrap-break">${escapeHtml(row.sWVer || row['S/W Ver.'] || 'N/A')}</td>
+          <td class="text-wrap-normal">${escapeHtml(row.title || row.issueTitle || 'N/A')}</td>
           <td>${escapeHtml(row.subModule || 'N/A')}</td>
-          <td>${summarizedDisplay}</td>
+          <td class="text-wrap-normal">${summarizedDisplay}</td>
           <td>${severityPill}</td>
         `;
         tbody.appendChild(tr);
