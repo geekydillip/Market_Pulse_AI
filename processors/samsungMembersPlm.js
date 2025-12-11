@@ -108,6 +108,51 @@ function readAndNormalizeExcel(uploadedPath) {
   return normalizeHeaders(rows);
 }
 
+/**
+ * Clean technical logs from text fields
+ * Removes timestamped log entries and technical patterns while preserving explanatory text
+ */
+function cleanTechnicalLogs(text) {
+  if (!text || typeof text !== 'string') return text;
+
+  // Split into lines
+  const lines = text.split('\n');
+
+  // Filter out technical log lines
+  const cleanedLines = lines.filter(line => {
+    const trimmed = line.trim();
+
+    // Skip empty lines
+    if (!trimmed) return false;
+
+    // Skip lines starting with timestamps (YYYY-MM-DD HH:MM:SS format)
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(trimmed)) return false;
+
+    // Skip lines containing technical log markers
+    const logPatterns = [
+      /\[PKG\]/, /\[COM\]/, /\[TOP\]/, /\[NET\]/, /\[SET\]/,
+      /CAM_ERR/, /CAM-UTIL/, /hw_bigdata_i2c_from_eeprom/,
+      /camxcslhw\.cpp/, /CSLAcquireDeviceHW/, /CAM_ERR/
+    ];
+    if (logPatterns.some(pattern => pattern.test(trimmed))) return false;
+
+    // Skip lines that look like technical data (containing many numbers/symbols)
+    // But keep lines that are explanatory text
+    const technicalChars = /[=<>[\]{}()|:-]/.test(trimmed);
+    const wordCount = trimmed.split(/\s+/).length;
+    const hasManyNumbers = (trimmed.match(/\d+/g) || []).length > 3;
+
+    // If line has many technical characters and numbers, likely a log
+    if (technicalChars && hasManyNumbers && wordCount < 10) return false;
+
+    // Keep lines that look like natural language or bullet points
+    return true;
+  });
+
+  // Join cleaned lines back
+  return cleanedLines.join('\n').trim();
+}
+
 // normalizeRows - now just calls the shared function
 function normalizeRows(rows) {
   return normalizeHeaders(rows);
@@ -128,7 +173,29 @@ module.exports = {
 
   transform(rows) {
     // Apply normalization using the local normalizeHeaders function
-    return normalizeHeaders(rows);
+    let normalizedRows = normalizeHeaders(rows);
+
+    // Clean technical logs from Cause and Countermeasure fields
+    normalizedRows = normalizedRows.map(row => {
+      const cleanedRow = { ...row };
+
+      // Clean Cause field
+      if (cleanedRow.Cause) {
+        cleanedRow.Cause = cleanTechnicalLogs(cleanedRow.Cause);
+      }
+
+      // Clean Countermeasure field (handle both "Countermeasure" and "Counter Measure")
+      if (cleanedRow.Countermeasure) {
+        cleanedRow.Countermeasure = cleanTechnicalLogs(cleanedRow.Countermeasure);
+      }
+      if (cleanedRow['Counter Measure']) {
+        cleanedRow['Counter Measure'] = cleanTechnicalLogs(cleanedRow['Counter Measure']);
+      }
+
+      return cleanedRow;
+    });
+
+    return normalizedRows;
   },
 
   buildPrompt(rows) {
@@ -183,5 +250,8 @@ module.exports = {
   },
 
   // Excel reading function used by server.js
-  readAndNormalizeExcel: readAndNormalizeExcel
+  readAndNormalizeExcel: readAndNormalizeExcel,
+
+  // Export the cleaning function for testing
+  cleanTechnicalLogs: cleanTechnicalLogs
 };
