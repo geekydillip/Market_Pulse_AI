@@ -1340,6 +1340,10 @@ async function loadModels() {
     // Fetch dashboard data - server now provides complete model counts
     const resp = await fetchJSON('/api/dashboard?category=' + encodeURIComponent(dashboardCategory));
     const container = document.getElementById('modelButtons');
+    if (!container) {
+      console.error('modelButtons container not found');
+      return;
+    }
     container.innerHTML = '';
 
     let sortedModels;
@@ -1783,6 +1787,11 @@ function closeModal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Only initialize dashboard-specific code if we're on a dashboard page
+  if (!document.body.dataset.category) {
+    return;
+  }
+
   // Initialize theme
   initTheme();
 

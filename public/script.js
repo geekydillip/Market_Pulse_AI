@@ -1,51 +1,9 @@
-// Theme Management
-let currentTheme = 'dark';
+// Set light theme permanently
+document.body.className = 'theme-light';
 
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    updateThemeToggleIcon();
-
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-}
-
-function setTheme(theme) {
-    currentTheme = theme;
-    document.body.className = `theme-${theme}`;
-    localStorage.setItem('theme', theme);
-    updateThemeToggleIcon();
-}
-
-function toggleTheme() {
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-}
-
-function updateThemeToggleIcon() {
-    const icon = document.querySelector('#themeToggle svg');
-    if (currentTheme === 'light') {
-        icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-    } else {
-        icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="m12 1v2m0 18v2M4.93 4.93l1.41 1.41m11.32 0l1.41 -1.41M1 12h2m18 0h2M4.93 19.07l1.41 -1.41m11.32 0l1.41 1.41"/>';
-    }
-}
-
-// DOM Elements
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-const filePreview = document.getElementById('filePreview');
-const fileName = document.getElementById('fileName');
-const fileSize = document.getElementById('fileSize');
-const fileContent = document.getElementById('fileContent');
-const removeFile = document.getElementById('removeFile');
-const processBtn = document.getElementById('processBtn');
-const loadingOverlay = document.getElementById('loadingOverlay');
-
-const statusElement = document.getElementById('status');
-const progressContainer = document.getElementById('progressContainer');
-const progressFill = document.getElementById('progressFill');
-const progressText = document.getElementById('progressText');
-const modelSelect = document.getElementById('modelSelect');
+// DOM Elements (will be defined inside DOMContentLoaded)
+let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, processBtn, loadingOverlay;
+let statusElement, progressContainer, progressFill, progressText, modelSelect;
 
 // State
 let currentFile = null;
@@ -53,19 +11,30 @@ let currentResult = '';
 
 // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-    // Initialize theme
-    initTheme();
+    // Initialize DOM elements after DOM is loaded
+    dropzone = document.getElementById('dropzone');
+    fileInput = document.getElementById('fileInput');
+    filePreview = document.getElementById('filePreview');
+    fileName = document.getElementById('fileName');
+    fileSize = document.getElementById('fileSize');
+    fileContent = document.getElementById('fileContent');
+    removeFile = document.getElementById('removeFile');
+    processBtn = document.getElementById('processBtn');
+    loadingOverlay = document.getElementById('loadingOverlay');
+    statusElement = document.getElementById('status');
+    progressContainer = document.getElementById('progressContainer');
+    progressFill = document.getElementById('progressFill');
+    progressText = document.getElementById('progressText');
+    modelSelect = document.getElementById('modelSelect');
 
     setupEventListeners();
     loadModels();
     checkOllamaConnection();
 
-    // Initialize processing options visibility - show only on upload tab
+    // Initialize processing options visibility - show by default (not hidden until file uploaded)
     const processingSection = document.querySelector('.processing-section');
-    const activeTab = document.querySelector('.tab-btn.active');
-    if (processingSection && activeTab) {
-        const activeTabName = activeTab.getAttribute('data-tab');
-        processingSection.style.display = activeTabName === 'upload' ? 'block' : 'none';
+    if (processingSection) {
+        processingSection.style.display = 'block';
     }
 
     // Initialize Desire Selector visual state
@@ -84,14 +53,14 @@ let processingEndTime = null;
 
 function setupEventListeners() {
     // Dropzone events
-    dropzone.addEventListener('click', () => fileInput.click());
-    dropzone.addEventListener('dragover', handleDragOver);
-    dropzone.addEventListener('dragleave', handleDragLeave);
-    dropzone.addEventListener('drop', handleDrop);
+    if (dropzone) dropzone.addEventListener('click', () => fileInput.click());
+    if (dropzone) dropzone.addEventListener('dragover', handleDragOver);
+    if (dropzone) dropzone.addEventListener('dragleave', handleDragLeave);
+    if (dropzone) dropzone.addEventListener('drop', handleDrop);
 
     // File input
-    fileInput.addEventListener('change', handleFileSelect);
-    removeFile.addEventListener('click', clearFile);
+    if (fileInput) fileInput.addEventListener('change', handleFileSelect);
+    if (removeFile) removeFile.addEventListener('click', clearFile);
 
     // Processing type change
     document.querySelectorAll('input[name="processingType"]').forEach(radio => {
@@ -99,10 +68,10 @@ function setupEventListeners() {
     });
 
     // Model change
-    modelSelect.addEventListener('change', handleModelChange);
+    if (modelSelect) modelSelect.addEventListener('change', handleModelChange);
 
     // Process button
-    processBtn.addEventListener('click', handleProcess);
+    if (processBtn) processBtn.addEventListener('click', handleProcess);
 }
 
 
@@ -161,6 +130,12 @@ function handleFile(file) {
         fileContent.textContent = 'Excel file - content will be extracted as XLSX format for processing.';
         dropzone.style.display = 'none';
         filePreview.style.display = 'block';
+
+        // Show processing section when Excel file is uploaded
+        const processingSection = document.querySelector('.processing-section');
+        if (processingSection) {
+            processingSection.style.display = 'block';
+        }
     } else {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -179,6 +154,12 @@ function clearFile() {
     dropzone.style.display = 'block';
     filePreview.style.display = 'none';
     fileContent.textContent = '';
+
+    // Hide processing section when file is cleared
+    const processingSection = document.querySelector('.processing-section');
+    if (processingSection) {
+        processingSection.style.display = 'none';
+    }
 }
 
 function formatFileSize(bytes) {
@@ -481,6 +462,12 @@ function updateStatus(status, text) {
 }
 
 async function loadModels() {
+    // Use the global modelSelect variable (already assigned in DOMContentLoaded)
+    if (!modelSelect) {
+        console.error('modelSelect element not found');
+        return;
+    }
+
     try {
         const response = await fetch('/api/ollama-models');
         const data = await response.json();
@@ -505,7 +492,9 @@ async function loadModels() {
     } catch (error) {
         console.error('Error loading models:', error);
         // Fallback
-        modelSelect.innerHTML = '<option value="gemma3:4b">gemma3:4b</option>';
+        if (modelSelect) {
+            modelSelect.innerHTML = '<option value="gemma3:4b">gemma3:4b</option>';
+        }
     }
 }
 
@@ -577,16 +566,6 @@ document.addEventListener('click', (e) => {
     btn.classList.add('active');
     const content = document.getElementById(tab + '-tab') || document.getElementById(tab);
     if (content) content.classList.add('active');
-
-    // Show/hide processing options based on active tab
-    const processingSection = document.querySelector('.processing-section');
-    if (processingSection) {
-        if (tab === 'upload') {
-            processingSection.style.display = 'block';
-        } else {
-            processingSection.style.display = 'none';
-        }
-    }
 });
 
 // Keyboard shortcuts
