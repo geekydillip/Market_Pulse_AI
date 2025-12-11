@@ -66,9 +66,14 @@ let currentDashboardData = {
 
 // Unified filter setter - ensures consistent behavior across all filter operations
 function updateFilters(newFilters) {
+  console.log('🔄 updateFilters called with:', newFilters);
+  console.log('📊 Old filters:', currentFilters);
+
   // Merge new filters with existing ones
   const oldFilters = { ...currentFilters };
   currentFilters = { ...currentFilters, ...newFilters };
+
+  console.log('📊 New filters:', currentFilters);
 
   // Reset to page 1 when filters change
   paginationState.page = 1;
@@ -87,6 +92,7 @@ function updateFilters(newFilters) {
   // Update active state of All Models button
   updateAllModelsButtonState();
 
+  console.log('🌐 Calling refreshDashboardOverview...');
   // Refresh dashboard overview with new filters
   refreshDashboardOverview();
 
@@ -155,7 +161,14 @@ async function refreshDashboardOverview() {
     if (currentFilters.severity) params.push(`severity=${encodeURIComponent(currentFilters.severity)}`);
     if (params.length > 0) url += '?' + params.join('&');
 
+    console.log('🌐 Making API request to:', url);
+    console.log('📊 Request filters:', currentFilters);
+
     const resp = await fetchJSON(url);
+
+    console.log('📊 API response received:', resp);
+    console.log('📊 Response totals:', resp.totals);
+    console.log('📊 Response row count:', resp.rows ? resp.rows.length : 'no rows');
 
     if (!resp || resp.success === false) {
       throw new Error(resp && resp.error ? resp.error : 'dashboard error');
@@ -550,19 +563,40 @@ function renderModelList(sortedModels, containerEl) {
     }
   });
 
+  // Ensure we show 10 models as requested
   const top = sortedModels.slice(0, 10);
+
+  // Empty state for search results
+  if (top.length === 0) {
+    containerEl.innerHTML = `
+      <div style="text-align:center; padding: 20px; color: #9ca3af; font-size: 14px;">
+        No models found
+      </div>`;
+    return;
+  }
+
   top.forEach(({model, count}) => {
     const btn = document.createElement('button');
     btn.className = 'model-chip';
 
+    // Check if this is the currently selected model to add active class
+    if (currentFilters.model === model) {
+      btn.classList.add('active');
+    }
+
     // Create span for model name
     const modelNameSpan = document.createElement('span');
     modelNameSpan.textContent = model;
+    modelNameSpan.style.whiteSpace = 'nowrap';
+    modelNameSpan.style.overflow = 'hidden';
+    modelNameSpan.style.textOverflow = 'ellipsis';
+    modelNameSpan.style.marginRight = '8px';
 
-    // Create badge for count
+    // Create CAPSULE badge for count
     const countBadge = document.createElement('span');
     countBadge.className = 'model-badge';
-    countBadge.textContent = `(${count})`;
+    // Removed parentheses for a cleaner capsule look
+    countBadge.textContent = count;
 
     // Append elements to button
     btn.appendChild(modelNameSpan);
@@ -993,6 +1027,20 @@ function renderCharts(severityDistribution, moduleDistribution) {
             left: 10
           }
         },
+        onHover: function(event, elements) {
+          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        },
+        onClick: function(event, elements) {
+          if (elements.length > 0) {
+            const clickedElement = elements[0];
+            const moduleName = this.data.labels[clickedElement.index];
+            // Use centralized filter management to select the module
+            updateFilters({ model: null, severity: null }); // Clear current filters first
+            setTimeout(() => {
+              showModuleDetails(moduleName, currentDashboardData.aggregatedData.find(m => m.module === moduleName));
+            }, 100);
+          }
+        },
         plugins: {
           legend: {
             display: false
@@ -1224,8 +1272,7 @@ function renderTable() {
   });
 }
 
-// Model search functions
-// Model search functions
+/* Updated setupModelSearch: Adds a click-outside listener to close the dropdown properly */
 function setupModelSearch(models) {
   allModels = models;
 
@@ -1233,23 +1280,31 @@ function setupModelSearch(models) {
   const searchWrapper = document.querySelector('.search-wrapper');
   const searchInput = document.getElementById('modelSearchInput');
 
-  // Create suggestions container with ARIA attributes
-  suggestionsContainer = document.createElement('div');
-  suggestionsContainer.id = 'searchSuggestions';
-  suggestionsContainer.className = 'search-suggestions';
-  suggestionsContainer.setAttribute('role', 'listbox');
-  suggestionsContainer.setAttribute('aria-label', 'Model suggestions');
-  searchWrapper.appendChild(suggestionsContainer);
+  // Create suggestions container if it doesn't exist
+  suggestionsContainer = document.getElementById('searchSuggestions');
+  if (!suggestionsContainer) {
+    suggestionsContainer = document.createElement('div');
+    suggestionsContainer.id = 'searchSuggestions';
+    suggestionsContainer.className = 'search-suggestions';
+    suggestionsContainer.setAttribute('role', 'listbox');
+    suggestionsContainer.setAttribute('aria-label', 'Model suggestions');
+    searchWrapper.appendChild(suggestionsContainer);
+  }
 
   // Event listeners
   searchInput.addEventListener('input', handleSearchInput);
   searchInput.addEventListener('keydown', handleSearchKeydown);
-  searchInput.addEventListener('focus', () => showSuggestions([]));
-  searchInput.addEventListener('blur', () => setTimeout(hideSuggestions, 150));
 
-  // Click outside to hide suggestions
+  // UX Improvement: Only show suggestions on focus if there is text
+  searchInput.addEventListener('focus', (e) => {
+    if (e.target.value.trim().length >= 2) {
+      handleSearchInput(e);
+    }
+  });
+
+  // CRITICAL FIX: Close dropdown when clicking outside
   document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+    if (!searchWrapper.contains(e.target)) {
       hideSuggestions();
     }
   });
@@ -1303,6 +1358,7 @@ function handleSearchKeydown(e) {
   }
 }
 
+/* Updated showSuggestions: Uses onmousedown to ensure click registers */
 function showSuggestions(suggestions) {
   if (!suggestionsContainer) return;
 
@@ -1320,7 +1376,14 @@ function showSuggestions(suggestions) {
     suggestionEl.textContent = model;
     suggestionEl.setAttribute('role', 'option');
     suggestionEl.setAttribute('aria-selected', 'false');
-    suggestionEl.onclick = () => selectSuggestion(model);
+
+    // CRITICAL FIX: Use 'onmousedown' instead of 'onclick'
+    // This fires BEFORE the input blur event, ensuring the selection is captured.
+    suggestionEl.onmousedown = (e) => {
+      e.preventDefault(); // Prevents the input from losing focus prematurely
+      selectSuggestion(model);
+    };
+
     suggestionEl.onmouseover = () => {
       selectedSuggestionIndex = index;
       updateSuggestionSelection(suggestionsContainer.querySelectorAll('.search-suggestion'));
@@ -1344,8 +1407,14 @@ function updateSuggestionSelection(suggestions) {
 }
 
 function selectSuggestion(model) {
+  console.log('🔍 selectSuggestion called with model:', model);
+  console.log('📊 Current filters before update:', currentFilters);
+
   // Update filters using centralized filter management
   updateFilters({ model: model });
+
+  console.log('📊 Current filters after update:', currentFilters);
+
   // Clear search input and hide suggestions
   const searchInput = document.getElementById('modelSearchInput');
   searchInput.value = '';

@@ -1310,21 +1310,22 @@ body.theme-dark .search-highlight {
     table-layout: fixed; /* STRICT column sizing */
 }
 
-/* Sticky Header */
+/* Sticky Header - All Bold, Consistent Font Size */
 #moduleDetailTable thead th {
     position: sticky;
     top: 0;
     background-color: #f3f4f6;
     z-index: 20;
-    padding: 14px 12px;
+    padding: 16px 12px;
     text-align: left;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 13px; /* Increased for better visibility */
+    font-weight: 800; /* Extra bold for emphasis */
     text-transform: uppercase;
-    color: #4b5563;
-    border-bottom: 2px solid #e5e7eb;
+    color: #374151; /* Darker color for better contrast */
+    border-bottom: 2px solid #d1d5db;
     border-right: 1px solid #e5e7eb;
     white-space: nowrap;
+    letter-spacing: 0.025em; /* Slight letter spacing for better readability */
 }
 
 /* Unified Cell Styling */
@@ -2243,21 +2244,24 @@ table td:nth-child(2) {
    SIDEBAR STYLING IMPROVEMENTS
    ========================================= */
 
-/* Make the sidebar panel itself have rounded corners and be scrollable */
-.section.sidebar {
-    width: 300px; /* Increased from 280px to accommodate longer model names */
+/* ===== FLOATING SIDEBAR UPDATES ===== */
+.floating-sidebar {
     position: fixed;
-    left: 0;
-    top: 80px;
-    height: calc(100vh - 80px);
-    padding: 24px 16px;
+    left: 12px;
+    top: 100px; /* Moved up slightly to give more room */
+    width: 350px;
+    /* Increase height to fill more screen space */
+    height: calc(100vh - 120px);
     background: #ffffff;
-    border-radius: 20px; /* Changed from 0 to 20px for rounded corners */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,0.9);
     border: 1px solid rgba(255, 255, 255, 0.7);
-    border-right: 1px solid rgba(0,0,0,0.1);
-    z-index: 10;
-    overflow-y: auto; /* Enable vertical scrolling for the entire sidebar */
+    z-index: 50;
+    /* Use flexbox to manage internal scrolling better */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
 }
 
 /* New style for the Home button in the sidebar */
@@ -2292,14 +2296,40 @@ table td:nth-child(2) {
     border-radius: 30px !important; /* Increased from 16px to 30px for a rounder look */
 }
 
-/* Remove internal scrolling from the model list container, as the parent sidebar now scrolls */
-.model-list {
+/* ===== MODEL LIST CONTAINER UPDATES ===== */
+/* Ensure the list takes up all available remaining space */
+.model-list-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-    /* max-height: calc(100vh - 160px);  Removed to allow parent to scroll */
-    /* overflow-y: auto; Removed */
+    gap: 10px;
+    /* Remove fixed max-height, let flexbox fill the sidebar */
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px; /* Room for scrollbar */
+    margin-top: 12px;
+}
+
+/* ===== STICKY SEARCH HEADER ===== */
+.sidebar-sticky-header {
+    background: #ffffff; /* Prevents text bleeding through */
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+/* Custom Scrollbar for the list */
+.model-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+.model-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.model-list-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 20px;
+}
+.model-list-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0,0,0,0.2);
 }
 
 /* =================================================================
@@ -2406,28 +2436,136 @@ table td:nth-child(2) {
     box-shadow: none !important;
 }
 
-/* Badge format styles */
+/* ===== CAPSULE BADGE UPDATES ===== */
 .model-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    background: rgba(59,130,246,0.2);
-    color: var(--accent);
-    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;         /* Horizontal padding makes it a capsule */
+    min-width: 40px;           /* Ensure consistent width for small numbers */
+    background: #e0e7ff;       /* Light Indigo background */
+    color: #4338ca;            /* Dark Indigo text */
+    border-radius: 9999px;     /* Full capsule roundness */
     font-size: 11px;
-    font-weight: 600;
-    margin-left: 8px;
-    vertical-align: middle;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* Full model name display with text wrapping */
+/* Change badge color when active */
+.model-chip.active .model-badge {
+    background: #ffffff;
+    color: #1d4ed8;
+    box-shadow: 0 1px 2px rgba(29, 78, 216, 0.1);
+}
+
+/* ===== HIGH FILTER CARD PRESSED STATE ===== */
+#highFilterCard[aria-pressed="true"] {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3), inset 0 2px 4px rgba(239, 68, 68, 0.1) !important;
+    transform: translateY(-1px) !important;
+}
+
+#highFilterCard[aria-pressed="true"] .kpi-value {
+    color: #dc2626 !important;
+}
+
+#highFilterCard[aria-pressed="true"] .kpi-label {
+    color: #b91c1c !important;
+}
+
+#highFilterCard[aria-pressed="true"] .high-icon {
+    color: #dc2626 !important;
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.4)) !important;
+}
+
+/* ===== MODEL CHIP (BUTTON) UPDATES ===== */
 .model-chip {
-    white-space: normal !important;    /* Allow text wrapping */
-    word-break: break-word !important; /* Break long words */
-    overflow-wrap: break-word !important; /* Alternative for better browser support */
-    display: flex !important;          /* Use flexbox for alignment */
-    align-items: center !important;    /* Center align items */
-    justify-content: space-between !important; /* Space between name and badge */
-    line-height: 1.4 !important;       /* Better line height for wrapped text */
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 16px; /* Slightly rounder */
+    border: 1px solid transparent;
+    background: #f8f9fa;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Pushes badge to right */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.model-chip:hover {
+    background: #ffffff;
+    border-color: rgba(59,130,246,0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Active State */
+.model-chip.active {
+    background: #eff6ff; /* Light Blue background */
+    color: #1d4ed8;       /* Dark Blue text */
+    border: 1px solid #bfdbfe;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.model-chip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.model-chip:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(59, 130, 246, 0.1) !important;
+    border-color: #3b82f6 !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
+}
+
+.model-chip:hover::before {
+    left: 100%;
+}
+
+.model-chip.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    color: white !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4), 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+    transform: translateY(-1px) !important;
+}
+
+.model-chip.active:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5), 0 6px 15px rgba(59, 130, 246, 0.3) !important;
+}
+
+.model-chip span:first-child {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: inherit !important;
+    flex: 1 !important;
+    margin-right: 12px !important;
+}
+
+.model-chip .model-badge {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: inherit !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    border-radius: 20px !important;
+    flex-shrink: 0 !important;
+    backdrop-filter: blur(4px) !important;
 }
 
 /* Stronger selected model background */
