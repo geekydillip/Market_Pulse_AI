@@ -307,6 +307,9 @@ async function handleProcess() {
 async function processStructuredFile(file, processingType, model, sessionId) {
     return new Promise(async (resolve, reject) => {
         try {
+            // Add processing class to enable shining animation
+            processBtn.classList.add('processing');
+
             const processStartTime = Date.now();
             let timerInterval;
             let eventSource;
@@ -386,6 +389,9 @@ async function processStructuredFile(file, processingType, model, sessionId) {
             if (timerInterval) clearInterval(timerInterval);
             if (eventSource) eventSource.close();
             reject(error);
+        } finally {
+            // Remove processing class to stop shining animation
+            processBtn.classList.remove('processing');
         }
     });
 }
@@ -430,11 +436,13 @@ function showLoading(model) {
     loadingText.textContent = `Processing with ${model}...`;
     loadingOverlay.style.display = 'flex';
     processBtn.disabled = true;
+    processBtn.classList.add('processing');
 }
 
 function hideLoading() {
     loadingOverlay.style.display = 'none';
     processBtn.disabled = false;
+    processBtn.classList.remove('processing');
 }
 
 // Connection status functions

@@ -668,7 +668,7 @@ section {
 
 /* Sparkle Button Styles */
 .button {
-  --button-bg: hsla(248 95% 66% / 1);
+  --button-bg: #1e40af;
   --border_radius: 9999px;
   --transtion: 0.3s ease-in-out;
   --offset: 2px;
@@ -690,7 +690,7 @@ section {
 
   border: none;
   border-radius: var(--border_radius);
-  transform: scale(calc(1 + (var(--active, 0) * 0.1)));
+  transform: scale(calc(1 + (var(--active, 0) * 0.03)));
 
   transition: transform var(--transtion);
 }
@@ -710,7 +710,7 @@ section {
   box-shadow: inset 0 0.5px hsl(0, 0%, 100%),
     inset 0 -1px 2px 0 hsl(0, 0%, 0%),
     0px 4px 10px -4px hsla(0 0% 0% / calc(1 - var(--active, 0))),
-    0 0 0 calc(var(--active, 0) * 0.375rem) hsl(248 95% 66% / 0.75);
+    0 0 0 calc(var(--active, 0) * 0.375rem) rgba(30, 64, 175, 0.5);
 
   transition: all var(--transtion);
   z-index: 0;
@@ -725,11 +725,11 @@ section {
 
   width: 100%;
   height: 100%;
-  background-color: hsla(260 97% 61% / 0.75);
+  background-color: rgba(30, 64, 175, 0.8);
   background-image:
-    radial-gradient(at 51% 89%, hsla(266, 45%, 74%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(266, 36%, 60%, 1) 0px, transparent 50%),
-    radial-gradient(at 22% 91%, hsla(266, 36%, 60%, 1) 0px, transparent 50%);
+    radial-gradient(at 51% 89%, rgba(37, 99, 235, 0.8) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.6) 0px, transparent 50%),
+    radial-gradient(at 22% 91%, rgba(37, 99, 235, 0.6) 0px, transparent 50%);
   background-position: top;
 
   opacity: var(--active, 0);
@@ -737,6 +737,8 @@ section {
   transition: opacity var(--transtion);
   z-index: 2;
 }
+
+
 
 .button:is(:hover, :focus-visible) {
   --active: 1;
@@ -807,9 +809,14 @@ section {
   color: hsl(0, 0%, 100%);
 }
 
-.button:is(:hover, :focus) .sparkle .path {
+.button:is(:hover, :focus) .sparkle .path,
+.button.processing .sparkle .path {
   animation: path 1.5s linear 0.5s infinite;
 }
+
+
+
+
 
 .button .sparkle .path:nth-child(1) {
   --scale_path_1: 1.2;
@@ -854,6 +861,17 @@ section {
 
   font-size: 1rem;
   color: transparent;
+}
+
+.button.processing .text_button {
+  color: rgba(255, 255, 255, 0.9);
+  background-clip: unset;
+  -webkit-background-clip: unset;
+  background-image: none;
+  animation: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.9);
 }
 
 .btn-icon {
@@ -2623,3 +2641,102 @@ table td:nth-child(2) {
     background-color: #d1fae5; /* Emerald-100 */
     color: #065f46;           /* Emerald-800 */
 }
+
+/* Galaxy-style button base */
+.galaxy-button {
+  position: relative;
+  display: inline-block;
+  padding: 14px 28px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 -2px 6px rgba(255,255,255,0.02);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  will-change: transform;
+}
+
+/* Press effect */
+.galaxy-button:active { transform: translateY(1px) scale(.997); }
+
+/* inner text face so we can animate independently */
+.galaxy-button .btn-face { position: relative; z-index: 5; pointer-events: none; }
+
+/* sparkles svg sits above button face but below the glow */
+.galaxy-button .sparkles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10%;
+  height: 140%;
+  width: 100%;
+  z-index: 3;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* sparkle shapes default */
+.galaxy-button .sparkle polygon {
+  fill: white;
+  opacity: 0;
+  transform-origin: center;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+}
+
+/* micro glow behind the button */
+.galaxy-button .glow {
+  position: absolute;
+  inset: -12%;
+  border-radius: inherit;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+/* Active / animating class toggles the sparkle animation */
+.galaxy-button.animating {
+  transform: scale(1.02);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+}
+.galaxy-button.animating .glow {
+  background: radial-gradient(circle at 30% 20%, rgba(120, 170, 255, 0.22), transparent 20%),
+              radial-gradient(circle at 70% 70%, rgba(180, 110, 255, 0.12), transparent 28%);
+  opacity: 1;
+}
+
+/* keyframes: pop & fade for sparkles */
+@keyframes sparkle-pop {
+  0% { opacity: 0; transform: translateY(0) scale(.6) rotate(0deg); }
+  30% { opacity: 1; transform: translateY(-6px) scale(1.05) rotate(8deg); }
+  100% { opacity: 0; transform: translateY(-20px) scale(.8) rotate(18deg); }
+}
+
+/* per-sparkle timing offsets */
+.galaxy-button.animating .sparkle.s1 polygon { animation: sparkle-pop 1100ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 0ms; }
+.galaxy-button.animating .sparkle.s2 polygon { animation: sparkle-pop 1000ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 120ms; }
+.galaxy-button.animating .sparkle.s3 polygon { animation: sparkle-pop 1200ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 260ms; }
+.galaxy-button.animating .sparkle.s4 polygon { animation: sparkle-pop 1000ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 380ms; }
+.galaxy-button.animating .sparkle.s5 polygon { animation: sparkle-pop 1150ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 520ms; }
+
+/* subtle shimmer on text while animating */
+.galaxy-button.animating .btn-face {
+  background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.45), rgba(255,255,255,0.9));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: text-shimmer 1600ms linear infinite;
+}
+@keyframes text-shimmer {
+  0% { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+
+/* disabled / processing finished states */
+.galaxy-button[disabled] { cursor: default; opacity: 0.8; pointer-events: none; transform: none; }
