@@ -992,14 +992,11 @@ async function processExcel(req, res) {
     // If AI processing types require smaller chunks, use 1 row per chunk, but batch when file > threshold
     let chunkSize;
     if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
-      chunkSize = ROWSCOUNT <= 50 ? 1
-                : ROWSCOUNT <= 200 ? 2
-                : ROWSCOUNT <= 500 ? 10  // New tier
-                : 20; // Increased from 4 to 20 for > 500 rows
+      chunkSize = ROWSCOUNT <= 200 ? 1
+                : 2;
     } else {
-      chunkSize = ROWSCOUNT <= 200 ? 5
-                : ROWSCOUNT <= 1000 ? 10
-                : 20;
+      chunkSize = ROWSCOUNT <= 200 ? 1
+                : 4;
     }
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 

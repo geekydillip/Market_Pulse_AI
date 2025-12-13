@@ -17,7 +17,7 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 - **Processing Options**:
   - **VOC Analysis**: Specialized for Voice of Customer data (module identification, severity classification, problem summarization)
   - **Generic Data Cleaning**: Basic data cleansing (trimming, date normalization, number conversion)
-- **Interactive Dashboards**: Dedicated dashboards for each processing type with charts, KPIs, and detailed tables
+- **Interactive Dashboards**: Dedicated dashboards for each processing type with charts, KPIs, and detailed tables (Beta User Issues, Samsung Members PLM)
 - **Advanced Backend Features**:
   - Concurrent processing with configurable limits (default 4)
   - AI response caching for efficiency
@@ -59,6 +59,19 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
    ```
 
 3. **Open your browser** and go to: `http://localhost:3001`
+
+### Accessing Dashboards
+
+After processing data with specialized processing types, access dedicated dashboards:
+
+- **Beta User Issues Dashboard**: `http://localhost:3001/beta_user_issues_dashboard.html`
+- **Samsung Members PLM Dashboard**: `http://localhost:3001/samsung_members_plm_dashboard.html`
+
+Each dashboard provides:
+- **KPI Metrics**: Total cases, severity breakdown, module distribution
+- **Interactive Charts**: Severity distribution (donut chart), top modules (bar chart)
+- **Detailed Tables**: Module-level analysis with pagination and search
+- **Modal Drill-Down**: Individual case details with sorting and export
 
 
 
@@ -363,10 +376,9 @@ Market Pulse AI/
 │   ├── script.js                # Main frontend logic
 │   ├── styles.css               # CSS with neumorphic design
 │   ├── beta_user_issues_dashboard.html # Beta Issues dashboard
-│   ├── samsung_members_plm_dashboard.html # Samsung PLM dashboard
-│   ├── samsung_members_dashboard.html # Samsung Members dashboard
-│   └── temp_extract_models.js    # Utility script for model extraction
+│   └── samsung_members_plm_dashboard.html # Samsung PLM dashboard
 ├── downloads/                  # Processed file outputs and logs
+│   └── samsung_members_plm/    # Samsung Members PLM processed files
 ├── uploads/                    # Temporary file storage (auto-cleaned)
 └── Samsung_MemberVOC/          # Sample data files
     ├── *.xlsx                  # Excel sample data
@@ -398,8 +410,6 @@ Market Pulse AI/
 - **VOC Analysis**: Specialized prompts for customer feedback data cleaning and analysis (module identification, severity classification, problem summarization)
 - **Generic Cleaning**: Deterministic rules for data normalization (trim whitespace, date ISO format normalization, numeric string conversion)
 
-
-
 ### Security & Performance
 - **Local Processing**: All AI inference stays on user machine - no data transmission
 - **File Validation**: Strict type checking, size limits, automatic cleanup
@@ -416,6 +426,15 @@ Specialized processing for customer feedback data from support tickets or produc
 - **Problem Summarization**: Combines Title + Problem fields into clear, concise English sentences
 - **Severity Assessment**: Classifies impact as High, Medium, or Low with detailed reasoning
 - **Output Structure**: Preserves original columns plus added analysis fields in structured JSON
+
+### Samsung Members PLM Processing
+Advanced processing specifically designed for Samsung Members Product Lifecycle Management data:
+- **Metadata Cleaning**: Removes bracketed metadata blocks and Samsung Members internal notices
+- **Technical Log Filtering**: Automatically detects and removes CP silent logs, timestamps, and technical patterns
+- **Cause & Countermeasure Processing**: Intelligent cleaning of R&D comments with CP log detection
+- **Enhanced Problem Summarization**: Combines Title + Problem with Samsung-specific context
+- **Resolve Type Mapping**: Processes Small/Medium resolve option classifications
+- **PLM-Specific Analytics**: Module/Sub-Module categorization for product development insights
 
 ### Generic Data Cleaning
 Deterministic automated cleaning without AI:
@@ -449,6 +468,12 @@ Deterministic automated cleaning without AI:
 
 ## 📈 Recent Updates
 
+- **v1.4.0** - (December 2025) Samsung Members PLM Dashboard & Enhanced Processing
+  - Added dedicated Samsung Members PLM dashboard with specialized analytics
+  - Enhanced Samsung Members PLM processor with advanced data cleaning functions
+  - Improved progress tracking with estimated time display
+  - Dashboard UI enhancements including sidebar show/hide functionality
+  - "Process with AI" button improvements for better user experience
 - **v1.3.0** - (November 2025) Complete project restructure with modular processing architecture
   - Added dedicated `processors/` and `prompts/` directories for different issue types
   - Enhanced chunked processing for large files with adaptive sizing

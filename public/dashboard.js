@@ -177,7 +177,7 @@ async function refreshDashboardOverview() {
     // Update the main header title to include selected model name
     const headerTitle = document.querySelector('.header-title');
     if (headerTitle) {
-      const baseTitle = 'Beta User Issues Overview';
+      const baseTitle = getCategoryTitle(dashboardCategory) + ' Overview';
       if (currentFilters.model && currentFilters.model !== null) {
         headerTitle.textContent = `${baseTitle} - ${currentFilters.model}`;
       } else {
@@ -1662,7 +1662,9 @@ function handleModalExport() {
 
       const data = rows.map(row => {
         const cells = Array.from(row.querySelectorAll('td'));
-        return {
+        const isPlm = dashboardCategory === 'samsung_members_plm';
+
+        const baseData = {
           'Case Code': cells[0]?.textContent?.trim() || '',
           'Model No.': cells[1]?.textContent?.trim() || '',
           'S/W Ver.': cells[2]?.textContent?.trim() || '',
@@ -1671,6 +1673,14 @@ function handleModalExport() {
           'Summarized Problem': cells[5]?.textContent?.trim() || '',
           'Severity': cells[6]?.textContent?.trim() || ''
         };
+
+        // Add PLM-specific columns if applicable
+        if (isPlm) {
+          baseData['Resolve Type'] = cells[7]?.textContent?.trim() || '';
+          baseData['R&D Comment'] = cells[8]?.textContent?.trim() || '';
+        }
+
+        return baseData;
       });
 
       const module = modalTitle.textContent.replace('Issues in ', '').replace(' — Loading...', '').replace(/ \([\d]+ issues\)$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
@@ -1739,8 +1749,12 @@ function showModuleDetails(module, moduleData) {
     const tbody = document.querySelector('#moduleDetailTable tbody');
     tbody.innerHTML = '';
 
+    // Determine colspan for empty state based on dashboard category
+    const isPlm = dashboardCategory === 'samsung_members_plm';
+    const colspan = isPlm ? '10' : '8';
+
     if (!moduleRows.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="modal-empty">No details available for this module.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${colspan}" class="modal-empty">No details available for this module.</td></tr>`;
     } else {
       moduleRows.forEach((row, index) => {
         const tr = document.createElement('tr');
@@ -1771,7 +1785,8 @@ function showModuleDetails(module, moduleData) {
           escapeHtml(summarizedProblem) :
           '<span style="color:#9ca3af; font-style:italic;">Pending analysis...</span>';
 
-        tr.innerHTML = `
+        // Base table row for all categories
+        let rowHtml = `
           <td>${index + 1}</td>
           <td>
             <a href="#" style="color:#4F46E5; text-decoration:none; font-weight:600;">
@@ -1785,6 +1800,16 @@ function showModuleDetails(module, moduleData) {
           <td class="text-wrap-normal">${summarizedDisplay}</td>
           <td>${severityPill}</td>
         `;
+
+        // Add PLM-specific columns
+        if (isPlm) {
+          rowHtml += `
+            <td>${escapeHtml(row['Resolve Type'] || row.resolveType || 'N/A')}</td>
+            <td class="text-wrap-normal">${escapeHtml(row['R&D Comment'] || row.rdComment || 'N/A')}</td>
+          `;
+        }
+
+        tr.innerHTML = rowHtml;
         tbody.appendChild(tr);
       });
     }

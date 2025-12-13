@@ -931,6 +931,20 @@ section {
     font-weight: 500;
 }
 
+/* Estimated Completion Time */
+.estimated-time {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-top: 8px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Results Section */
 .result-content {
     padding: 24px;

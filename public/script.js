@@ -50,6 +50,20 @@ function initializeProgressState() {
 // Global processing timing variables
 let processingStartTime = null;
 let processingEndTime = null;
+let processingStartTimestamp = null; // milliseconds timestamp for ETC calculations
+
+// Configurable parameters for ETC calculation
+const EST_ALPHA = 0.30;         // EWMA alpha (0.2-0.4 recommended)
+const DEFAULT_CONCURRENCY = 4;  // fallback concurrency (documented default)
+let OVERHEAD_MS = 0;            // optional extra overhead (T_read + T_write etc.) - now dynamic
+
+// Processing metrics for estimated completion time
+let processingMetrics = {
+    chunkCompletionTimes: [], // Track when each chunk completes
+    chunksCompleted: 0,
+    totalChunks: 0,
+    avgChunkInterval: null // Average time between chunk completions
+};
 
 function setupEventListeners() {
     // Dropzone events
@@ -240,6 +254,13 @@ async function handleModelChange(e) {
     }
 }
 
+// Make concurrency configurable / discoverable
+function getConcurrency() {
+    // TODO: read from server config or app settings if available.
+    // Fallback to documented default of 4.
+    return window.appConcurrency || DEFAULT_CONCURRENCY;
+}
+
 // Main processing function
 async function handleProcess() {
     if (!currentFile) {
@@ -249,7 +270,11 @@ async function handleProcess() {
 
     // Record processing start time
     processingStartTime = new Date();
+    processingStartTimestamp = processingStartTime.getTime(); // milliseconds timestamp for ETC calculations
     processingEndTime = null; // Reset end time
+
+    // Initialize processing metrics for estimated completion time
+    initializeProcessingMetrics();
 
     // Get processing type and model
     const processingType = document.querySelector('input[name="processingType"]:checked').value;
@@ -321,6 +346,24 @@ async function processStructuredFile(file, processingType, model, sessionId) {
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'progress') {
+                        // If server provides metadata up-front, cache it for better ETA
+                        if (data.totalChunks && Number.isFinite(data.totalChunks)) {
+                            processingMetrics.totalChunks = parseInt(data.totalChunks, 10);
+                        }
+                        if (data.concurrency && Number.isFinite(data.concurrency)) {
+                            // expose concurrency globally for getConcurrency()
+                            window.appConcurrency = parseInt(data.concurrency, 10);
+                        }
+                        if (data.overheadMs && Number.isFinite(data.overheadMs)) {
+                            // optional override for overhead
+                            // NOTE: OVERHEAD_MS is const; use a dynamic var if you want to update it here.
+                            window.appOverheadMs = parseInt(data.overheadMs, 10);
+                        }
+                        // prefer dynamic overhead var if set
+                        if (window.appOverheadMs) {
+                            // if you want to use dynamic overhead, set OVERHEAD_MS = window.appOverheadMs earlier or use it here
+                        }
+
                         updateProgress(data.percent, data.message);
                         console.log(`Progress: ${data.percent}% - ${data.message}`);
                     }
@@ -405,6 +448,9 @@ function updateProgress(percent, text, timerInterval) {
         return;
     }
     progressText.textContent = text;
+
+    // Update estimated completion time based on progress
+    updateEstimatedTime(text, percent);
 }
 
 // Store current timer for cleanup
@@ -525,15 +571,38 @@ function showProcessingSummary(serverTimeMs, downloads, startTime, endTime) {
 
         // Calculate duration
         const duration = processingTimeMs;
-        const seconds = Math.floor(duration / 1000);
-        const milliseconds = Math.floor(duration % 1000);
+        const totalSeconds = Math.floor(duration / 1000);
 
-        processingTimeText = `${startFormatted} - ${endFormatted}\nDuration: ${seconds}.${milliseconds.toString().padStart(3, '0')} seconds`;
+        let durationText;
+        if (totalSeconds >= 3600) {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            durationText = `${hours}h:${minutes}m:${secs.toString().padStart(2, '0')}s`;
+        } else {
+            const minutes = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            durationText = `${minutes}m:${secs.toString().padStart(2, '0')}s`;
+        }
+
+        processingTimeText = `${startFormatted} - ${endFormatted}\nDuration: ${durationText}`;
     } else {
         // Fallback to server-provided time if client-side timing not available
-        const seconds = Math.floor(processingTimeMs / 1000);
-        const milliseconds = Math.floor(processingTimeMs % 1000);
-        processingTimeText = `Processing time: ${seconds}.${milliseconds.toString().padStart(3, '0')} seconds`;
+        const totalSeconds = Math.floor(processingTimeMs / 1000);
+
+        let durationText;
+        if (totalSeconds >= 3600) {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            durationText = `${hours}h:${minutes}m:${secs.toString().padStart(2, '0')}s`;
+        } else {
+            const minutes = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            durationText = `${minutes}m:${secs.toString().padStart(2, '0')}s`;
+        }
+
+        processingTimeText = `Processing time: ${durationText}`;
     }
 
     timeElement.textContent = processingTimeText;
@@ -558,6 +627,163 @@ function showProcessingSummary(serverTimeMs, downloads, startTime, endTime) {
     });
 
     summary.style.display = 'block';
+}
+
+// Function to parse chunk information from progress messages
+function parseChunkInfo(message) {
+    // Look for patterns like "Processed chunk 2/5" or "Processing chunk 3 of 10"
+    const chunkMatch = message.match(/Processed chunk (\d+)\/(\d+)/i) ||
+                      message.match(/Processing chunk (\d+) of (\d+)/i) ||
+                      message.match(/chunk (\d+)\/(\d+)/i);
+
+    if (chunkMatch) {
+        return {
+            completed: parseInt(chunkMatch[1]),
+            total: parseInt(chunkMatch[2])
+        };
+    }
+    return null;
+}
+
+// Updated updateEstimatedTime to fix logic and use EWMA smoothing
+function updateEstimatedTime(progressMessage, percent) {
+    const estimatedTimeElement = document.getElementById('estimatedTime');
+    if (!estimatedTimeElement) return;
+
+    const chunkInfo = parseChunkInfo(progressMessage);
+
+    if (chunkInfo) {
+        // Update counts from message
+        processingMetrics.chunksCompleted = chunkInfo.completed;
+        processingMetrics.totalChunks = chunkInfo.total;
+
+        const now = Date.now();
+        // push the completion timestamp
+        processingMetrics.chunkCompletionTimes.push(now);
+
+        // compute latest interval: difference between last two timestamps
+        const len = processingMetrics.chunkCompletionTimes.length;
+        if (len >= 2) {
+            const latestInterval = processingMetrics.chunkCompletionTimes[len - 1] - processingMetrics.chunkCompletionTimes[len - 2];
+
+            // update EWMA
+            if (processingMetrics.ewmaIntervalMs == null) {
+                processingMetrics.ewmaIntervalMs = latestInterval;
+            } else {
+                processingMetrics.ewmaIntervalMs = EST_ALPHA * latestInterval + (1 - EST_ALPHA) * processingMetrics.ewmaIntervalMs;
+            }
+        }
+
+        // derive safe percent as number
+        percent = (typeof percent === 'string') ? parseFloat(percent) : percent;
+        percent = Number.isFinite(percent) ? percent : 0;
+
+        // Now compute ETC using smoothed T1
+        const T1 = processingMetrics.ewmaIntervalMs; // ms
+        const M_remaining = Math.max(0, processingMetrics.totalChunks - processingMetrics.chunksCompleted);
+
+        // compute concurrency to use: cannot be greater than remaining chunks
+        const declaredK = getConcurrency();
+        const effectiveK = Math.max(1, Math.min(declaredK, Math.max(1, M_remaining))); // at least 1
+        const k = effectiveK;
+
+        // If job finished, hide estimate
+        if (processingMetrics.chunksCompleted >= processingMetrics.totalChunks || (percent >= 100)) {
+            estimatedTimeElement.style.display = 'none';
+            return;
+        }
+
+        if (T1 != null && M_remaining > 0) {
+            // estimated remaining ms
+            let estimatedRemainingMs = (M_remaining / k) * T1 + OVERHEAD_MS;
+
+            const progressRatio = processingMetrics.chunksCompleted / processingMetrics.totalChunks;
+
+            // Conservative correction factor
+            let safetyFactor;
+
+            if (progressRatio < 0.15) {
+                safetyFactor = 2.2;   // very early → heavy underestimation risk
+            } else if (progressRatio < 0.30) {
+                safetyFactor = 1.8;
+            } else if (progressRatio < 0.50) {
+                safetyFactor = 1.4;
+            } else if (progressRatio < 0.70) {
+                safetyFactor = 1.2;
+            } else {
+                safetyFactor = 1.05;  // near completion → accurate
+            }
+
+            estimatedRemainingMs *= safetyFactor;
+
+            // compute completion timestamp
+            const completionTs = new Date(now + estimatedRemainingMs);
+
+            const formattedTime = completionTs.toLocaleTimeString('en-GB', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            // also show remaining duration (human friendly)
+            const sec = Math.round(estimatedRemainingMs / 1000);
+            const durationText = sec >= 60 ? Math.floor(sec / 60) + 'm ' + (sec % 60) + 's' : sec + 's';
+
+            estimatedTimeElement.textContent = `Estimated time remaining: ${durationText}`;
+            estimatedTimeElement.style.display = 'block';
+
+
+            console.log(`ETC debug: M=${processingMetrics.totalChunks}, completed=${processingMetrics.chunksCompleted}, remaining=${M_remaining}, T1=${(T1).toFixed(0)}ms, k=${k}, ETC=${(estimatedRemainingMs/1000).toFixed(1)}s`);
+        } else if (T1 == null && processingMetrics.chunkCompletionTimes.length === 2) {
+            // We have exactly one interval (first chunk), use it (already set via EWMA path)
+            // (This block may be redundant due to above condition)
+        }
+    } else if (percent > 0 && percent < 100) {
+        // Percent-based fallback — use processingStartTimestamp for elapsed time
+        if (!processingStartTimestamp) {
+            processingStartTimestamp = Date.now();
+        }
+
+        const elapsed = Date.now() - processingStartTimestamp; // ms
+        if (elapsed > 0) {
+            const estimatedTotal = (elapsed / percent) * 100;
+            const estimatedRemaining = estimatedTotal - elapsed;
+            if (estimatedRemaining > 0) {
+                const completionTs = new Date(Date.now() + estimatedRemaining);
+                const formattedTime = completionTs.toLocaleTimeString('en-GB', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                estimatedTimeElement.textContent = `Estimated completion: ${formattedTime}`;
+                estimatedTimeElement.style.display = 'block';
+            }
+        }
+    } else {
+        estimatedTimeElement.style.display = 'none';
+    }
+}
+
+// Function to initialize processing metrics
+function initializeProcessingMetrics() {
+    processingMetrics = {
+        chunkCompletionTimes: [], // timestamps in ms. first entry will be start time.
+        chunksCompleted: 0,
+        totalChunks: 0,
+        ewmaIntervalMs: null // EWMA-smoothed interval (T1)
+    };
+
+    // Capture processing start time (ms) so first interval is meaningful
+    processingStartTimestamp = Date.now();      // global var (already set in handleProcess)
+    processingMetrics.chunkCompletionTimes.push(processingStartTimestamp);
+
+    // Hide estimated time initially
+    const estimatedTimeElement = document.getElementById('estimatedTime');
+    if (estimatedTimeElement) {
+        estimatedTimeElement.style.display = 'none';
+    }
 }
 
 // Tab switching functionality

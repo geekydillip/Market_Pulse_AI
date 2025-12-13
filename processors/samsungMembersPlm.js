@@ -153,6 +153,96 @@ function cleanTechnicalLogs(text) {
   return cleanedLines.join('\n').trim();
 }
 
+/**
+ * Clean title by removing leading bracketed metadata blocks and ensuring proper formatting
+ */
+function cleanTitle(title) {
+  if (!title || typeof title !== 'string') return title;
+
+  let t = title;
+
+  // Remove leading bracketed metadata blocks
+  t = t.replace(/^(\[[^\]]*\]\s*)+/g, '');
+
+  // Trim whitespace
+  t = t.trim();
+
+  // Ensure sentence ends with a period (only if not already)
+  if (t && !/[.!?]$/.test(t)) {
+    t += '.';
+  }
+
+  return t;
+}
+
+/**
+ * Clean problem by removing internal notice blocks and limiting length
+ */
+function cleanProblem(problem) {
+  if (!problem || typeof problem !== 'string') return problem;
+
+  let t = problem;
+
+  // Remove Samsung Members internal notice block
+  t = t.replace(/\[Samsung Members Notice\][\s\S]*$/i, '');
+
+  // Trim whitespace
+  t = t.trim();
+
+  // Limit to 500 characters
+  if (t.length > 500) {
+    t = t.slice(0, 500);
+  }
+
+  return t;
+}
+
+/**
+ * Clean cause or countermeasure fields with unified rules
+ */
+function cleanCauseOrCounterMeasure(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let t = text.toLowerCase();
+
+  // RULE A: CP silent log request detection
+  const cpLogPatterns = [
+    'cp silent log',
+    'silent logs',
+    'logs are not available',
+    'debug level',
+    're-register',
+    '*#9900#'
+  ];
+
+  if (cpLogPatterns.some(p => t.includes(p))) {
+    return 'Please provide CP silent logs for the issue.';
+  }
+
+  // Remove technical logs using existing logic
+  let cleaned = cleanTechnicalLogs(text);
+
+  // Remove file names, attachments, separators
+  cleaned = cleaned
+    .replace(/-{3,}/g, '')
+    .replace(/={3,}/g, '')
+    .replace(/\b\d+_\d+\.(jpg|png|mp4)\b/gi, '')
+    .trim();
+
+  // RULE C: If no meaningful English content remains → blank
+  const englishWordCount = (cleaned.match(/[a-zA-Z]{3,}/g) || []).length;
+  if (englishWordCount < 5) {
+    return '';
+  }
+
+  // RULE B & D: Limit to 500 characters
+  if (cleaned.length > 500) {
+    cleaned = cleaned.slice(0, 500);
+  }
+
+  return cleaned;
+}
+
 // normalizeRows - now just calls the shared function
 function normalizeRows(rows) {
   return normalizeHeaders(rows);
@@ -179,17 +269,25 @@ module.exports = {
     normalizedRows = normalizedRows.map(row => {
       const cleanedRow = { ...row };
 
-      // Clean Cause field
-      if (cleanedRow.Cause) {
-        cleanedRow.Cause = cleanTechnicalLogs(cleanedRow.Cause);
+      // Clean Title field (remove metadata only)
+      if (cleanedRow.Title) {
+        cleanedRow.Title = cleanTitle(cleanedRow.Title);
       }
 
-      // Clean Countermeasure field (handle both "Countermeasure" and "Counter Measure")
-      if (cleanedRow.Countermeasure) {
-        cleanedRow.Countermeasure = cleanTechnicalLogs(cleanedRow.Countermeasure);
+      // Clean Problem field (remove internal notice, limit length)
+      if (cleanedRow.Problem) {
+        cleanedRow.Problem = cleanProblem(cleanedRow.Problem);
       }
+
+      // Clean Cause field
+      if (cleanedRow.Cause) {
+        cleanedRow.Cause = cleanCauseOrCounterMeasure(cleanedRow.Cause);
+      }
+
+      // Clean Counter Measure field
       if (cleanedRow['Counter Measure']) {
-        cleanedRow['Counter Measure'] = cleanTechnicalLogs(cleanedRow['Counter Measure']);
+        cleanedRow['Counter Measure'] =
+          cleanCauseOrCounterMeasure(cleanedRow['Counter Measure']);
       }
 
       return cleanedRow;
@@ -241,7 +339,8 @@ module.exports = {
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
       if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.','Resolve Type','R&D Comment') return { wch: 20 };
+      if (h === 'R&D Comment') return { wch: 50 };
+      if (h === 'Model No.' || h === 'Resolve Type') return { wch: 20 };
       if (h === 'S/W Ver.') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
@@ -252,6 +351,9 @@ module.exports = {
   // Excel reading function used by server.js
   readAndNormalizeExcel: readAndNormalizeExcel,
 
-  // Export the cleaning function for testing
-  cleanTechnicalLogs: cleanTechnicalLogs
+  // Export the cleaning functions for testing
+  cleanTechnicalLogs: cleanTechnicalLogs,
+  cleanTitle: cleanTitle,
+  cleanProblem: cleanProblem,
+  cleanCauseOrCounterMeasure: cleanCauseOrCounterMeasure
 };
