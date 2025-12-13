@@ -1011,7 +1011,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
           data: modCounts,
           backgroundColor: gradientColors,
           hoverBackgroundColor: gradientColors.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.8)')),
-          barThickness: 20,
+          barThickness: 25,
           borderRadius: 4
         }]
       },
