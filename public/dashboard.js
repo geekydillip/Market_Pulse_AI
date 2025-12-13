@@ -913,10 +913,10 @@ function renderCharts(severityDistribution, moduleDistribution) {
               ci.update();
             },
             onHover: function(e, legendItem) {
-              e.target.style.cursor = 'pointer';
+              if (e.target) e.target.style.cursor = 'pointer';
             },
             onLeave: function(e, legendItem) {
-              e.target.style.cursor = 'default';
+              if (e.target) e.target.style.cursor = 'default';
             }
           },
           tooltip: {
@@ -1850,20 +1850,7 @@ function showModuleDetails(module, moduleData) {
   modal.classList.add('show');
   modal.style.display = 'flex';
 
-  // Remove modal overlay behavior for full-screen view
-  const modalOverlay = document.querySelector('#issues-modal .modal-overlay');
-  if (modalOverlay) {
-    modalOverlay.style.background = 'none';
-    modalOverlay.style.backdropFilter = 'none';
-  }
-
-  // Ensure full-screen layout
-  const fullScreenContainer = document.querySelector('#issues-modal .modal-container');
-  if (fullScreenContainer) {
-    fullScreenContainer.style.transform = 'none';
-    fullScreenContainer.style.width = '100%';
-    fullScreenContainer.style.height = '100vh';
-  }
+  // Full-screen layout is now handled by CSS
 
   // Focus trap setup
   const focusableElements = modalContainer.querySelectorAll('a[href], button:not([disabled]), textarea, input[type="text"], input[type="radio"], input[type="checkbox"], select, [tabindex]:not([tabindex="-1"])');
