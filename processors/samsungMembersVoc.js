@@ -176,21 +176,25 @@ module.exports = {
   },
 
   buildPrompt(rows) {
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(rows, null, 2));
+    // Send only content field to AI for analysis
+    const aiInputRows = rows.map(row => ({
+      content: row.content || ''
+    }));
+    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
   },
 
-  formatResponse(aiResult) {
-    let processedRows;
+  formatResponse(aiResult, originalRows) {
+    let aiRows;
 
     // Handle different response formats: object, JSON string, or raw text
     if (typeof aiResult === 'object' && aiResult !== null) {
-      processedRows = aiResult;
+      aiRows = aiResult;
     } else if (typeof aiResult === 'string') {
       const text = aiResult.trim();
 
       // First try to parse as complete JSON
       try {
-        processedRows = JSON.parse(text);
+        aiRows = JSON.parse(text);
       } catch (e) {
         // If that fails, try to extract JSON array from text
         const firstBracket = text.indexOf('[');
@@ -198,7 +202,7 @@ module.exports = {
         if (firstBracket !== -1 && lastBracket > firstBracket) {
           const jsonStr = text.substring(firstBracket, lastBracket + 1);
           try {
-            processedRows = JSON.parse(jsonStr);
+            aiRows = JSON.parse(jsonStr);
           } catch (e2) {
             // If JSON parsing fails, return array with error info
             return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
@@ -213,22 +217,34 @@ module.exports = {
       return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
     }
 
-    // Ensure processedRows is an array
-    if (!Array.isArray(processedRows)) {
-      return [{ error: `AI response is not an array: ${typeof processedRows}` }];
+    // Ensure aiRows is an array
+    if (!Array.isArray(aiRows)) {
+      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
-    // TEMPORARILY COMMENTED OUT: Add sequential S/N numbering starting from 1 for this chunk
-    // Override any AI-generated S/N values with proper sequential numbering
-    /*
-    processedRows = processedRows.map((row, index) => {
-      const newRow = { ...row };
-      newRow['S/N'] = index + 1;
-      return newRow;
+    // Merge AI results with original core identifiers
+    const mergedRows = aiRows.map((aiRow, index) => {
+      const original = originalRows[index] || {};
+      return {
+        'S/N': index + 1,  // Add sequential numbering
+        'Model No.': original['Model No.'] || '',
+        'OS': original['OS'] || '',
+        'CSC': original['CSC'] || '',
+        'Category': original['Category'] || '',
+        'Application Name': original['Application Name'] || '',
+        'Application Type': original['Application Type'] || '',
+        'content': original['content'] || '',  // Reuse from input (already cleaned)
+        'Main Type': original['Main Type'] || '',
+        'Sub Type': original['Sub Type'] || '',
+        '3rd Party/Native': aiRow['3rd Party/Native'] || '',
+        'Module/Apps': aiRow['Module/Apps'] || '',
+        'Sub-Category': aiRow['Sub-Category'] || '',
+        'Remarks': aiRow['Remarks'] || '',
+        'Members': aiRow['Members'] || ''
+      };
     });
-    */
 
-    return processedRows;
+    return mergedRows;
   },
 
   // Returns column width configurations for Excel export

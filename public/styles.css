@@ -1271,7 +1271,7 @@ body.theme-dark .search-highlight {
 }
 
 /* =========================================
-   MODAL WRAPPER (FULL SCREEN - NO OVERLAY)
+   MODAL WRAPPER (FULL SCREEN - WITH OVERLAY)
    ========================================= */
 #issues-modal {
     display: none;
@@ -1282,8 +1282,8 @@ body.theme-dark .search-highlight {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: transparent; /* Removed overlay background */
-    backdrop-filter: none; /* Removed blur effect */
+    background-color: rgba(0,0,0,0.5); /* Semi-transparent overlay background */
+    backdrop-filter: blur(5px); /* Blur effect */
     padding: 0; /* Removed padding to allow full screen */
 }
 

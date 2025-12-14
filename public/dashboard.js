@@ -1698,9 +1698,20 @@ function handleModalExport() {
 
 // Modal management for module details
 function showModuleDetails(module, moduleData) {
+  console.log('🪟 showModuleDetails called with module:', module, 'data:', moduleData);
+
   const modal = document.getElementById('issues-modal');
+  if (!modal) {
+    console.error('❌ Modal element not found!');
+    return;
+  }
+
+  console.log('✅ Modal element found');
+
   const modalTitle = document.getElementById('modalTitle');
   const modalContainer = modal.querySelector('.modal-container');
+
+  console.log('📊 Modal elements:', { modal, modalTitle, modalContainer });
 
   // Store previous focus element before showing modal
   previousFocusElement = document.activeElement;
@@ -1817,6 +1828,26 @@ function showModuleDetails(module, moduleData) {
 
   // UI/UX: Update the Title to include the Module Name explicitly
   modalTitle.textContent = `${module} Issues Detail`;
+
+  // Update table headers based on category
+  const theadRow = document.querySelector('#moduleDetailTable thead tr');
+  theadRow.innerHTML = `
+    <th>S/N</th>
+    <th>Case Code</th>
+    <th>Model No.</th>
+    <th>S/W Ver.</th>
+    <th>Title</th>
+    <th>Sub-Module</th>
+    <th>Summarized Problem</th>
+    <th class="sortable">Severity</th>
+  `;
+
+  if (isPlm) {
+    theadRow.innerHTML += `
+      <th>Resolve Type</th>
+      <th>R&D Comment</th>
+    `;
+  }
 
   // Initial render
   renderTable();

@@ -27,17 +27,17 @@ FIELD RULES:
 9. Sub-Issue Type: one of:
    CP Crash, App Crash, ANR, Slow/Lag Performance Issue, Feature Missing, Poor Quality, UI Issue, Heating Issue, Battery Drain, Compatibility Issue, Restart, other Issue, or "".
 
-REFERENCE EXAMPLES (Extended) 
+REFERENCE EXAMPLES (Extended)
 
-Modules may include: Camera, Battery, Network, Display, Lock Screen, Settings, USB, Connectivity, System, UI, Performance, Power, Sensors, Charging, Audio, Call, Messaging, Storage, Security, Accessibility, Media. 
-Sub-Modules examples: 
-- Camera: Front Camera, Rear Camera, Zoom, HDR, Flash, Photo Capture, Video Recording. 
-- Battery: Charging, Discharging, Health, Extreme Drain, Power Saving Mode. 
-- Network: CP Crash, Signal, Data, Calling, IMS, SIM, PLMN Selection, Roaming. 
-- Display: Brightness, Flicker, Black Screen, Resolution, Touch, Rotation. 
-- Heating: Thermal Rise, Overheating, High Surface Temperature, Hot Back Panel, Thermal Throttling. 
+Modules may include: Camera, Battery, Network, Display, Lock Screen, Settings, USB, Connectivity, System, UI, Performance, Power, Sensors, Charging, Audio, Call, Messaging, Storage, Security, Accessibility, Media.
+Sub-Modules examples:
+- Camera: Front Camera, Rear Camera, Zoom, HDR, Flash, Photo Capture, Video Recording.
+- Battery: Charging, Discharging, Health, Extreme Drain, Power Saving Mode.
+- Network: CP Crash, Signal, Data, Calling, IMS, SIM, PLMN Selection, Roaming.
+- Display: Brightness, Flicker, Black Screen, Resolution, Touch, Rotation.
+- Heating: Thermal Rise, Overheating, High Surface Temperature, Hot Back Panel, Thermal Throttling.
 
-Issue Type examples: System (OS faults), Functional (feature not working), Performance (slow/lag), Usability (navigation/UX issue), Connectivity (Wi-Fi/Bluetooth/Network faults), Battery, UI/UX, Crash. 
+Issue Type examples: System (OS faults), Functional (feature not working), Performance (slow/lag), Usability (navigation/UX issue), Connectivity (Wi-Fi/Bluetooth/Network faults), Battery, UI/UX, Crash.
 Sub-Issue Type examples: Crash types (CP Crash, App Crash), Not Working, ANR, Slow/Lag Performance Issue, Intermittent Issue, UI Issue, Heating Issue, Battery Drain, Connection Failed, Incorrect Output, Error Message, Unexpected Restart.
 
 STRICT OUTPUT RULES:
@@ -49,14 +49,8 @@ STRICT OUTPUT RULES:
 - Ensure all values are valid JSON strings (escape quotes/newlines).
 
 SCHEMA (exact order):
-Case Code,
-Model No.,
-Progr.Stat.,
-S/W Ver.,
 Title,
 Problem,
-Priority,
-Occurr. Freq.,
 Module,
 Sub-Module,
 Issue Type,

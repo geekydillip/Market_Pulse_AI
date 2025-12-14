@@ -16,7 +16,7 @@ const DEFAULT_OLLAMA_PORT = 11434;
 const DEFAULT_AI_MODEL = 'qwen3:4b-instruct';
 
 // Security constants
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.json', '.csv'];
 const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -480,7 +480,7 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
 
     // Format response
     try {
-      processedRows = processor.formatResponse ? processor.formatResponse(result) : (typeof result === 'string' ? JSON.parse(result) : result);
+      processedRows = processor.formatResponse ? processor.formatResponse(result, chunk.rows) : (typeof result === 'string' ? JSON.parse(result) : result);
     } catch (err) {
       // If formatting/parsing failed, return error per row
       return {
@@ -599,16 +599,8 @@ async function processCSV(req, res) {
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
 
-    let chunkSize;
-    if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
-      chunkSize = ROWSCOUNT <= 50 ? 1
-                : ROWSCOUNT <= 200 ? 2
-                : 4;
-    } else {
-      chunkSize = ROWSCOUNT <= 200 ? 5
-                : ROWSCOUNT <= 1000 ? 10
-                : 20;
-    }
+    // 1:1 chunking - 1 row per chunk for maximum accuracy
+    const chunkSize = 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     // Initialize monotonically increasing completion counter
@@ -843,16 +835,8 @@ async function processJSON(req, res) {
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
 
-    let chunkSize;
-    if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
-      chunkSize = ROWSCOUNT <= 50 ? 1
-                : ROWSCOUNT <= 200 ? 2
-                : 4;
-    } else {
-      chunkSize = ROWSCOUNT <= 200 ? 5
-                : ROWSCOUNT <= 1000 ? 10
-                : 20;
-    }
+    // 1:1 chunking - 1 row per chunk for maximum accuracy
+    const chunkSize = 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     // Initialize monotonically increasing completion counter
@@ -1135,15 +1119,8 @@ async function processExcel(req, res) {
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
 
-    // If AI processing types require smaller chunks, use 1 row per chunk, but batch when file > threshold
-    let chunkSize;
-    if (processingType === 'beta_user_issues' || processingType === 'samsung_members_plm' || processingType === 'plm_issues') {
-      chunkSize = ROWSCOUNT <= 200 ? 1
-                : 2;
-    } else {
-      chunkSize = ROWSCOUNT <= 200 ? 1
-                : 4;
-    }
+    // 1:1 chunking - 1 row per chunk for maximum accuracy
+    const chunkSize = 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     // Initialize monotonically increasing completion counter

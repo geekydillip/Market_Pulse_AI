@@ -231,7 +231,7 @@ function cleanCauseOrCounterMeasure(text) {
 
   // RULE C: If no meaningful English content remains → blank
   const englishWordCount = (cleaned.match(/[a-zA-Z]{3,}/g) || []).length;
-  if (englishWordCount < 5) {
+  if (englishWordCount < 10) {
     return '';
   }
 
@@ -297,21 +297,30 @@ module.exports = {
   },
 
   buildPrompt(rows) {
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(rows, null, 2));
+    // Send only content fields to AI for analysis
+    const aiInputRows = rows.map(row => ({
+      Title: row.Title || '',
+      Problem: row.Problem || '',
+      Feature: row.Feature || '',
+      'Resolve Option(Small)': row['Resolve Option(Small)'] || '',
+      Cause: row.Cause || '',
+      'Counter Measure': row['Counter Measure'] || ''
+    }));
+    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
   },
 
-  formatResponse(aiResult) {
+  formatResponse(aiResult, originalRows) {
+    let aiRows;
+
     // Handle different response formats: object, JSON string, or raw text
     if (typeof aiResult === 'object' && aiResult !== null) {
-      return aiResult;
-    }
-
-    if (typeof aiResult === 'string') {
+      aiRows = aiResult;
+    } else if (typeof aiResult === 'string') {
       const text = aiResult.trim();
 
       // First try to parse as complete JSON
       try {
-        return JSON.parse(text);
+        aiRows = JSON.parse(text);
       } catch (e) {
         // If that fails, try to extract JSON array from text
         const firstBracket = text.indexOf('[');
@@ -319,20 +328,46 @@ module.exports = {
         if (firstBracket !== -1 && lastBracket > firstBracket) {
           const jsonStr = text.substring(firstBracket, lastBracket + 1);
           try {
-            return JSON.parse(jsonStr);
+            aiRows = JSON.parse(jsonStr);
           } catch (e2) {
             // If JSON parsing fails, return array with error info
             return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
           }
+        } else {
+          // Last resort: return array with error info
+          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
         }
-
-        // Last resort: return array with error info
-        return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
       }
+    } else {
+      // Fallback for unexpected types - return array
+      return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
     }
 
-    // Fallback for unexpected types - return array
-    return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
+    // Ensure aiRows is an array
+    if (!Array.isArray(aiRows)) {
+      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
+    }
+
+    // Merge AI results with original core identifiers
+    const mergedRows = aiRows.map((aiRow, index) => {
+      const original = originalRows[index] || {};
+      return {
+        'Case Code': original['Case Code'] || '',
+        'Model No.': original['Model No.'] || '',
+        'S/W Ver.': original['S/W Ver.'] || '',
+        'Title': aiRow['Title'] || '',  // From AI (cleaned)
+        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Resolve Type': original['Resolve Option(Small)'] || '',
+        'Module': aiRow['Module'] || '',
+        'Sub-Module': aiRow['Sub-Module'] || '',
+        'Summarized Problem': aiRow['Summarized Problem'] || '',
+        'Severity': aiRow['Severity'] || '',
+        'Severity Reason': aiRow['Severity Reason'] || '',
+        'R&D Comment': aiRow['R&D Comment'] || ''
+      };
+    });
+
+    return mergedRows;
   },
 
   // Returns column width configurations for Excel export

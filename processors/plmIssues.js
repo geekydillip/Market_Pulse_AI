@@ -8,24 +8,25 @@ function normalizeHeaders(rows) {
   // Map header name variants to canonical names
   const headerMap = {
     // Model variants
-    'Model No.':'Model No.',
-    // Case Code
-    'Case Code': 'Case Code',
-    // S/W Ver variants
-    'S/W Ver.': 'S/W Ver.',
-    // Title, Problem, Module, Sub-Module
-    'Title': 'Title',
-    'Progr.Stat.': 'Progr.Stat.',
-    'Problem': 'Problem',
-    'Module': 'Module',
-    'Sub-Module': 'Sub-Module',
     'Dev. Mdl. Name/Item Name': 'Model No.',
-    'Priority':'Priority',
-    'Occurr. Freq.':'Occurr. Freq.'
+    'dev. mdl. name/item name': 'Model No.',
+    // Case Code
+    'case code': 'Case Code',
+    // S/W Ver variants
+    's/w ver.': 'S/W Ver.',
+    // Title, Problem, Module, Sub-Module
+    'title': 'Title',
+    'progr.stat.': 'Progr.Stat.',
+    'progress status': 'Progr.Stat.',
+    'problem': 'Problem',
+    'module': 'Module',
+    'sub-module': 'Sub-Module',
+    'priority': 'Priority',
+    'occurr. freq.': 'Occurr. Freq.',
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem'];
+  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -136,21 +137,29 @@ module.exports = {
   },
 
   buildPrompt(rows) {
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(rows, null, 2));
+    // Send only content fields to AI for analysis
+    const aiInputRows = rows.map(row => ({
+      Title: row.Title || '',
+      Problem: row.Problem || '',
+      'Dev. Mdl. Name/Item Name': row['Model No.'] || '',
+      Priority: row.Priority || '',
+      'Occurr. Freq.': row['Occurr. Freq.'] || ''
+    }));
+    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
   },
 
-  formatResponse(aiResult) {
+  formatResponse(aiResult, originalRows) {
+    let aiRows;
+
     // Handle different response formats: object, JSON string, or raw text
     if (typeof aiResult === 'object' && aiResult !== null) {
-      return aiResult;
-    }
-
-    if (typeof aiResult === 'string') {
+      aiRows = aiResult;
+    } else if (typeof aiResult === 'string') {
       const text = aiResult.trim();
 
       // First try to parse as complete JSON
       try {
-        return JSON.parse(text);
+        aiRows = JSON.parse(text);
       } catch (e) {
         // If that fails, try to extract JSON array from text
         const firstBracket = text.indexOf('[');
@@ -158,20 +167,49 @@ module.exports = {
         if (firstBracket !== -1 && lastBracket > firstBracket) {
           const jsonStr = text.substring(firstBracket, lastBracket + 1);
           try {
-            return JSON.parse(jsonStr);
+            aiRows = JSON.parse(jsonStr);
           } catch (e2) {
             // If JSON parsing fails, return array with error info
             return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
           }
+        } else {
+          // Last resort: return array with error info
+          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
         }
-
-        // Last resort: return array with error info
-        return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
       }
+    } else {
+      // Fallback for unexpected types - return array
+      return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
     }
 
-    // Fallback for unexpected types - return array
-    return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
+    // Ensure aiRows is an array
+    if (!Array.isArray(aiRows)) {
+      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
+    }
+
+    // Merge AI results with original core identifiers
+    const mergedRows = aiRows.map((aiRow, index) => {
+      const original = originalRows[index] || {};
+      return {
+        'Case Code': original['Case Code'] || '',
+        'Model No.': original['Model No.'] || '',
+        'Progr.Stat.': original['Progr.Stat.'] || '',
+        'S/W Ver.': original['S/W Ver.'] || '',
+        'Title': aiRow['Title'] || '',  // From AI (cleaned)
+        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Priority': original['Priority'] || '',
+        'Occurr. Freq.': original['Occurr. Freq.'] || '',
+        'Module': aiRow['Module'] || '',
+        'Sub-Module': aiRow['Sub-Module'] || '',
+        'Issue Type': aiRow['Issue Type'] || '',
+        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
+        'Summarized Problem': aiRow['Summarized Problem'] || '',
+        'Severity': aiRow['Severity'] || '',
+        'Severity Reason': aiRow['Severity Reason'] || ''
+      };
+    });
+
+    return mergedRows;
   },
 
   // Returns column width configurations for Excel export

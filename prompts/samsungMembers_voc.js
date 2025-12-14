@@ -101,16 +101,6 @@ Do NOT include explanations, markdown, comments, or extra text.
 Each object MUST contain EXACTLY the following keys
 IN THIS EXACT ORDER:
 
-S/N,
-Model No.,
-OS,
-CSC,
-Category,
-Application Name,
-Application Type,
-content,
-Main Type,
-Sub Type,
 3rd Party/Native,
 Module/Apps,
 Sub-Category,
