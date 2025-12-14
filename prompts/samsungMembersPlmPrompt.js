@@ -21,7 +21,7 @@ For each input row, perform the following:
 7. Severity Reason → One sentence explaining WHY the above severity was selected.
 
 8. R&D Comment → Combine Cause + Countermeasure into one short sentence.
-   - If both are absent or empty, keep R&D Comment "Further investigation needed".
+   - If both are absent or empty, keep R&D Comment empty ("").
 
 Rules:
 - Output must be only English.
