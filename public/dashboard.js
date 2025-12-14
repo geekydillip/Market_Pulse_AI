@@ -605,28 +605,6 @@ function renderModelList(sortedModels, containerEl) {
     btn.onclick = () => updateFilters({ model: model });
     containerEl.appendChild(btn);
   });
-
-  if (sortedModels.length > 10) {
-    const moreBtn = document.createElement('button');
-    moreBtn.className = 'model-more-btn';
-    moreBtn.textContent = `More (${sortedModels.length - 10})`;
-    moreBtn.onclick = () => {
-      // simple inline dropdown: render the remainder below the button
-      let dropdown = containerEl.querySelector('.model-more-dropdown');
-      if (dropdown) { dropdown.remove(); return; } // toggle
-      dropdown = document.createElement('div');
-      dropdown.className = 'model-more-dropdown';
-      sortedModels.slice(10).forEach(({model, count}) => {
-        const item = document.createElement('div');
-        item.className = 'model-more-item';
-        item.textContent = `${model} (${count})`;
-        item.onclick = () => { updateFilters({ model: model }); };
-        dropdown.appendChild(item);
-      });
-      containerEl.appendChild(dropdown);
-    };
-    containerEl.appendChild(moreBtn);
-  }
 }
 
 // canonical extraction that tries many header names then normalizes
@@ -1486,7 +1464,7 @@ async function loadModels() {
     // Setup model search with all models (including those not in top 10)
     setupModelSearch(allModels);
 
-    // Render model list with top 10 + More dropdown
+    // Render model list with top 10 models (search handles additional models)
     renderModelList(sortedModels, container);
 
     // Update active state of All Models button (it's already in the HTML)
@@ -1724,6 +1702,9 @@ function showModuleDetails(module, moduleData) {
     (row.module || 'Unknown') === module
   );
 
+  // Determine if this is a PLM dashboard
+  const isPlm = dashboardCategory === 'samsung_members_plm';
+
   // Sorting state
   let currentSortColumn = null;
   let currentSortDirection = 'asc'; // 'asc' or 'desc'
@@ -1761,7 +1742,6 @@ function showModuleDetails(module, moduleData) {
     tbody.innerHTML = '';
 
     // Determine colspan for empty state based on dashboard category
-    const isPlm = dashboardCategory === 'samsung_members_plm';
     const colspan = isPlm ? '10' : '8';
 
     if (!moduleRows.length) {
