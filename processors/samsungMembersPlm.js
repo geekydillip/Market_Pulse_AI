@@ -21,7 +21,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Resolve Option(Medium)','Resolve Option(Small)','Cause','Counter Measure'];
+  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Resolve Option(Small)','Cause','Counter Measure'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -71,7 +71,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Resolve Option(Medium)','Resolve Option(Small)','Cause','Counter Measure']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Resolve Option(Small)','Cause','Counter Measure']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;

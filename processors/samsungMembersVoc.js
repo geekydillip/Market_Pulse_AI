@@ -51,7 +51,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['S/N','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','3rd Party/Native','Module/Apps','Sub-Category','Remarks','Members'];
+  const canonicalCols = ['Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','3rd Party/Native','Module/Apps','Sub-Category','Remarks','Members'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -149,7 +149,7 @@ module.exports = {
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
-    const required = ['Model No.', 'content'];
+    const required = ['content'];
     return required.some(header =>
       rawHeaders.includes(header) ||
       rawHeaders.some(h => h.toLowerCase().trim() === header.toLowerCase().trim())
@@ -218,13 +218,15 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof processedRows}` }];
     }
 
-    // Add sequential S/N numbering starting from 1 for this chunk
+    // TEMPORARILY COMMENTED OUT: Add sequential S/N numbering starting from 1 for this chunk
     // Override any AI-generated S/N values with proper sequential numbering
+    /*
     processedRows = processedRows.map((row, index) => {
       const newRow = { ...row };
       newRow['S/N'] = index + 1;
       return newRow;
     });
+    */
 
     return processedRows;
   },

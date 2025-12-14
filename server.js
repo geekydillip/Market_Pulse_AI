@@ -1243,6 +1243,13 @@ async function processExcel(req, res) {
       return mergedRow;
     });
 
+    // Global S/N numbering for processors that expect it (like samsung_members_voc)
+    if (processor.expectedHeaders && processor.expectedHeaders[0] === 'S/N') {
+      schemaMergedRows.forEach((row, index) => {
+        row['S/N'] = index + 1;
+      });
+    }
+
     // Convert back to Excel
     const newWb = xlsx.utils.book_new();
     const newSheet = xlsx.utils.json_to_sheet(schemaMergedRows);
