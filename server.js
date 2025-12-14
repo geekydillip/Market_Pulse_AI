@@ -126,7 +126,8 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 const processorMap = {
   'beta_user_issues': 'betaIssues',
   'samsung_members_plm': 'samsungMembersPlm',
-  'plm_issues': 'plmIssues'
+  'plm_issues': 'plmIssues',
+  'samsung_members_voc': 'samsungMembersVoc'
 };
 
 // Cache for identical prompts
@@ -170,26 +171,42 @@ async function callOllamaCached(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
 }
 
 /**
- * callOllama - robust HTTP call to local Ollama server
+ * callOllama - robust HTTP call to local Ollama server with cancellation support
  * prompt: string or object
  * model: string (e.g. "qwen3:4b-instruct")
- * opts: { port:number, timeoutMs:number, stream:boolean }
+ * opts: { port:number, timeoutMs:number, stream:boolean, sessionId:string }
  */
 async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
-  const useStream = opts.stream === true; // <-- allow control
+  const useStream = opts.stream === true;
+  const sessionId = opts.sessionId;
 
   const callStart = Date.now();
 
   return new Promise((resolve, reject) => {
     try {
+      // Check if session is already cancelled
+      const session = activeSessions.get(sessionId);
+      if (session && session.cancelled) {
+        return reject(new Error('Request cancelled'));
+      }
+
+      // Create AbortController for this request
+      const controller = new AbortController();
+
+      // Add to session's active requests if session exists
+      if (session) {
+        session.activeRequests.add(controller);
+      }
+
       const payload = typeof prompt === 'string'
         ? { model, prompt, stream: useStream }
         : { model, prompt, stream: useStream };
       const data = JSON.stringify(payload);
 
-      console.log('[callOllama] port=%d model=%s byteLen=%d stream=%s', port, model, Buffer.byteLength(data), useStream);
+      console.log('[callOllama] port=%d model=%s byteLen=%d stream=%s session=%s',
+        port, model, Buffer.byteLength(data), useStream, sessionId);
 
       const options = {
         hostname: '127.0.0.1',
@@ -201,7 +218,8 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(data),
           'Connection': 'keep-alive'
-        }
+        },
+        signal: controller.signal  // Attach abort signal
       };
 
       const req = http.request(options, (res) => {
@@ -285,6 +303,12 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
         });
       });
 
+      // Handle abortion
+      controller.signal.addEventListener('abort', () => {
+        console.log('[callOllama] Request aborted for session', sessionId);
+        req.destroy(new Error('Request aborted'));
+      });
+
       if (timeoutMs !== false && timeoutMs !== 0) {
         req.setTimeout(timeoutMs, () => {
           req.destroy(new Error(`Client timeout after ${timeoutMs} ms`));
@@ -292,7 +316,18 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
       }
 
       req.on('error', (err) => {
+        // Remove from active requests on error
+        if (session) {
+          session.activeRequests.delete(controller);
+        }
         reject(new Error('Failed to connect to Ollama: ' + (err && err.message)));
+      });
+
+      req.on('close', () => {
+        // Clean up when request completes
+        if (session) {
+          session.activeRequests.delete(controller);
+        }
       });
 
       req.write(data);
@@ -371,8 +406,11 @@ function applyGenericCleaning(value) {
 // Store SSE clients for progress updates
 const progressClients = new Map();
 
+// Store active processing sessions for cancellation
+const activeSessions = new Map(); // sessionId -> { cancelled, startTime, abortController, activeRequests }
+
 // Process a single chunk
-async function processChunk(chunk, processingType, model, chunkId) {
+async function processChunk(chunk, processingType, model, chunkId, sessionId) {
   const startTime = Date.now();
   let processedRows = null;
 
@@ -438,7 +476,7 @@ async function processChunk(chunk, processingType, model, chunkId) {
     const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
 
     // Call AI (cached) - default to stream: false
-    const result = await callOllamaCached(prompt, model, { timeoutMs: false, stream: false });
+    const result = await callOllamaCached(prompt, model, { timeoutMs: false, stream: false, sessionId });
 
     // Format response
     try {
@@ -549,6 +587,14 @@ async function processCSV(req, res) {
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
+    // Initialize session tracking for cancellation
+    activeSessions.set(sessionId, {
+      cancelled: false,
+      startTime: Date.now(),
+      abortController: new AbortController(),
+      activeRequests: new Set()
+    });
+
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
@@ -565,11 +611,14 @@ async function processCSV(req, res) {
     }
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
+    // Initialize monotonically increasing completion counter
+    let completedChunks = 0;
+
     // Send initial progress for CSV
     sendProgress(sessionId, {
       type: 'progress',
       percent: 0,
-      message: 'Starting CSV processing...',
+      message: 'Preparing data...',
       chunksCompleted: 0,
       totalChunks: numberOfChunks
     });
@@ -582,13 +631,33 @@ async function processCSV(req, res) {
       const chunkRows = rows.slice(startIdx, endIdx);
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
-        const result = await processChunk(chunk, processingType, model, i);
-        // send per-chunk progress update
+        // Check for cancellation before processing
+        const session = activeSessions.get(sessionId);
+        if (session && session.cancelled) {
+          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
+          return { chunkId: i, status: 'cancelled', processedRows: [] };
+        }
+
+        const result = await processChunk(chunk, processingType, model, i, sessionId);
+
+        // Check for cancellation after processing
+        if (session && session.cancelled) {
+          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
+          return result; // Still return the result but mark as potentially cancelled
+        }
+
+        // Increment counter and send monotonically increasing progress
+        completedChunks++;
+        const percent = Math.round((completedChunks / numberOfChunks) * 100);
+        const message = percent < 90
+          ? `Processing Data… ${percent}% completed`
+          : `Finalizing output… ${percent}% completed`;
         sendProgress(sessionId, {
           type: 'progress',
-          percent: Math.round((i + 1) / numberOfChunks * 100),
-          message: `Processed chunk ${i + 1}/${numberOfChunks}`,
-          chunkId: i
+          percent,
+          message,
+          chunksCompleted: completedChunks,
+          totalChunks: numberOfChunks
         });
         return result;
       });
@@ -762,6 +831,14 @@ async function processJSON(req, res) {
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
+    // Initialize session tracking for cancellation
+    activeSessions.set(sessionId, {
+      cancelled: false,
+      startTime: Date.now(),
+      abortController: new AbortController(),
+      activeRequests: new Set()
+    });
+
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
@@ -778,11 +855,14 @@ async function processJSON(req, res) {
     }
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
+    // Initialize monotonically increasing completion counter
+    let completedChunks = 0;
+
     // Send initial progress for JSON
     sendProgress(sessionId, {
       type: 'progress',
       percent: 0,
-      message: 'Starting JSON processing...',
+      message: 'Preparing data...',
       chunksCompleted: 0,
       totalChunks: numberOfChunks
     });
@@ -795,13 +875,33 @@ async function processJSON(req, res) {
       const chunkRows = rows.slice(startIdx, endIdx);
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
-        const result = await processChunk(chunk, processingType, model, i);
-        // send per-chunk progress update
+        // Check for cancellation before processing
+        const session = activeSessions.get(sessionId);
+        if (session && session.cancelled) {
+          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
+          return { chunkId: i, status: 'cancelled', processedRows: [] };
+        }
+
+        const result = await processChunk(chunk, processingType, model, i, sessionId);
+
+        // Check for cancellation after processing
+        if (session && session.cancelled) {
+          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
+          return result; // Still return the result but mark as potentially cancelled
+        }
+
+        // Increment counter and send monotonically increasing progress
+        completedChunks++;
+        const percent = Math.round((completedChunks / numberOfChunks) * 100);
+        const message = percent < 90
+          ? `Processing Data… ${percent}% complete`
+          : `Finalizing output… ${percent}% complete`;
         sendProgress(sessionId, {
           type: 'progress',
-          percent: Math.round((i + 1) / numberOfChunks * 100),
-          message: `Processed chunk ${i + 1}/${numberOfChunks}`,
-          chunkId: i
+          percent,
+          message,
+          chunksCompleted: completedChunks,
+          totalChunks: numberOfChunks
         });
         return result;
       });
@@ -939,6 +1039,37 @@ function sendProgress(sessionId, data) {
   }
 }
 
+// POST /api/cancel/:sessionId -> marks a session as cancelled and aborts active requests
+app.post('/api/cancel/:sessionId', (req, res) => {
+  const sessionId = req.params.sessionId;
+  const session = activeSessions.get(sessionId);
+
+  if (session) {
+    session.cancelled = true;
+
+    // Abort master controller (for future requests)
+    if (session.abortController) {
+      session.abortController.abort();
+    }
+
+    // Abort all active requests immediately
+    let abortedCount = 0;
+    session.activeRequests.forEach(controller => {
+      try {
+        controller.abort();
+        abortedCount++;
+      } catch (e) {
+        console.warn(`Failed to abort request for session ${sessionId}:`, e.message);
+      }
+    });
+
+    console.log(`Session ${sessionId} cancelled, aborted ${abortedCount} active requests`);
+    res.json({ success: true, message: `Processing cancelled, aborted ${abortedCount} active requests` });
+  } else {
+    res.status(404).json({ success: false, error: 'Session not found' });
+  }
+});
+
 // Excel processing with chunking
 async function processExcel(req, res) {
   try {
@@ -967,6 +1098,14 @@ async function processExcel(req, res) {
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
+    // Initialize session tracking for cancellation
+    activeSessions.set(sessionId, {
+      cancelled: false,
+      startTime: Date.now(),
+      abortController: new AbortController(),
+      activeRequests: new Set()
+    });
+
     // Load the dynamic processor for reading and processing
     const processorName = processorMap[processingType];
     const processor = require('./processors/' + processorName);
@@ -975,9 +1114,16 @@ async function processExcel(req, res) {
     const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/betaIssues').readAndNormalizeExcel;
     let rows = readAndNormalizeExcel(uploadedPath) || [];
 
-    // Sanity check: verify we have meaningful rows with Title/Problem data
-    const meaningful = rows.filter(r => String(r['Title']||'').trim() !== '' || String(r['Problem']||'').trim() !== '');
-    console.log(`Read ${rows.length} rows; ${meaningful.length} rows with Title/Problem data.`);
+    // Sanity check: verify we have meaningful rows with relevant data based on processor type
+    let meaningful;
+    if (processingType === 'samsung_members_voc') {
+      meaningful = rows.filter(r => String(r['content']||'').trim() !== '');
+      console.log(`Read ${rows.length} rows; ${meaningful.length} rows with content data.`);
+    } else {
+      // Default check for Title/Problem (beta_user_issues, etc.)
+      meaningful = rows.filter(r => String(r['Title']||'').trim() !== '' || String(r['Problem']||'').trim() !== '');
+      console.log(`Read ${rows.length} rows; ${meaningful.length} rows with Title/Problem data.`);
+    }
     if (meaningful.length === 0) {
       console.warn('No meaningful rows found - check header detection logic or the uploaded file.');
     }
@@ -1000,11 +1146,14 @@ async function processExcel(req, res) {
     }
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
+    // Initialize monotonically increasing completion counter
+    let completedChunks = 0;
+
     // Send initial progress (0%)
     sendProgress(sessionId, {
       type: 'progress',
       percent: 0,
-      message: 'Starting Excel processing...',
+      message: 'Preparing data...',
       chunksCompleted: 0,
       totalChunks: numberOfChunks
     });
@@ -1015,11 +1164,36 @@ async function processExcel(req, res) {
       const startIdx = i * chunkSize;
       const endIdx = Math.min(startIdx + chunkSize, rows.length);
       const chunkRows = rows.slice(startIdx, endIdx);
-      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx-1], headers, rows: chunkRows };
+      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
-        const result = await processChunk(chunk, processingType, model, i);
-        // send per-chunk progress update
-        sendProgress(sessionId, { type: 'progress', percent: Math.round((i+1)/numberOfChunks*100), message: `Processed chunk ${i+1}/${numberOfChunks}`, chunkId: i });
+        // Check for cancellation before processing
+        const session = activeSessions.get(sessionId);
+        if (session && session.cancelled) {
+          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
+          return { chunkId: i, status: 'cancelled', processedRows: [] };
+        }
+
+        const result = await processChunk(chunk, processingType, model, i, sessionId);
+
+        // Check for cancellation after processing
+        if (session && session.cancelled) {
+          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
+          return result; // Still return the result but mark as potentially cancelled
+        }
+
+        // Increment counter and send monotonically increasing progress
+        completedChunks++;
+        const percent = Math.round((completedChunks / numberOfChunks) * 100);
+        const message = percent < 90
+          ? `Processing Data… ${percent}% complete`
+          : `Finalizing output… ${percent}% complete`;
+        sendProgress(sessionId, {
+          type: 'progress',
+          percent,
+          message,
+          chunksCompleted: completedChunks,
+          totalChunks: numberOfChunks
+        });
         return result;
       });
     }
@@ -1134,7 +1308,7 @@ async function processExcel(req, res) {
     });
 
     // === Apply Header Styling ===
-    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment'];
+    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment', '3rd Party/Native', 'Module/Apps', 'Sub-Category', 'Remarks', 'Members'];
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;

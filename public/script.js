@@ -3,7 +3,7 @@ document.body.className = 'theme-light';
 
 // DOM Elements (will be defined inside DOMContentLoaded)
 let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, processBtn, loadingOverlay;
-let statusElement, progressContainer, progressFill, progressText, modelSelect;
+let statusElement, progressContainer, progressFill, progressText, modelSelect, stopBtn;
 
 // State
 let currentFile = null;
@@ -26,6 +26,7 @@ let currentResult = '';
     progressFill = document.getElementById('progressFill');
     progressText = document.getElementById('progressText');
     modelSelect = document.getElementById('modelSelect');
+    stopBtn = document.getElementById('stopBtn');
 
     setupEventListeners();
     loadModels();
@@ -86,6 +87,9 @@ function setupEventListeners() {
 
     // Process button
     if (processBtn) processBtn.addEventListener('click', handleProcess);
+
+    // Stop button
+    if (stopBtn) stopBtn.addEventListener('click', handleStop);
 }
 
 
@@ -332,8 +336,14 @@ async function handleProcess() {
 async function processStructuredFile(file, processingType, model, sessionId) {
     return new Promise(async (resolve, reject) => {
         try {
+            // Set global session tracking
+            currentSessionId = sessionId;
+
             // Add processing class to enable shining animation
             processBtn.classList.add('processing');
+
+            // Show stop button
+            stopBtn.style.display = 'inline-block';
 
             const processStartTime = Date.now();
             let timerInterval;
@@ -341,27 +351,18 @@ async function processStructuredFile(file, processingType, model, sessionId) {
 
             // Connect to SSE for real-time progress updates
             eventSource = new EventSource(`/api/progress/${sessionId}`);
+            currentEventSource = eventSource;
 
             eventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'progress') {
-                        // If server provides metadata up-front, cache it for better ETA
+                        // Cache metadata for better ETA calculations
                         if (data.totalChunks && Number.isFinite(data.totalChunks)) {
                             processingMetrics.totalChunks = parseInt(data.totalChunks, 10);
                         }
-                        if (data.concurrency && Number.isFinite(data.concurrency)) {
-                            // expose concurrency globally for getConcurrency()
-                            window.appConcurrency = parseInt(data.concurrency, 10);
-                        }
-                        if (data.overheadMs && Number.isFinite(data.overheadMs)) {
-                            // optional override for overhead
-                            // NOTE: OVERHEAD_MS is const; use a dynamic var if you want to update it here.
-                            window.appOverheadMs = parseInt(data.overheadMs, 10);
-                        }
-                        // prefer dynamic overhead var if set
-                        if (window.appOverheadMs) {
-                            // if you want to use dynamic overhead, set OVERHEAD_MS = window.appOverheadMs earlier or use it here
+                        if (data.chunksCompleted && Number.isFinite(data.chunksCompleted)) {
+                            processingMetrics.chunksCompleted = parseInt(data.chunksCompleted, 10);
                         }
 
                         updateProgress(data.percent, data.message);
@@ -382,7 +383,9 @@ async function processStructuredFile(file, processingType, model, sessionId) {
                 const elapsedSec = Math.floor(elapsedMs / 1000);
                 const message = `Processing... (${elapsedSec}s)`;
                 // Update timer display, but allow current progress message to show if it's detailed
-                if (!progressText.textContent.includes('Processed chunk')) {
+                if (!progressText.textContent.includes('Processing Data') &&
+                    !progressText.textContent.includes('Finalizing output') &&
+                    !progressText.textContent.includes('Processing complete')) {
                     progressText.textContent = message;
                 }
             }, 1000);
@@ -435,6 +438,13 @@ async function processStructuredFile(file, processingType, model, sessionId) {
         } finally {
             // Remove processing class to stop shining animation
             processBtn.classList.remove('processing');
+
+            // Hide stop button when processing completes
+            stopBtn.style.display = 'none';
+
+            // Clear session tracking
+            currentSessionId = null;
+            currentEventSource = null;
         }
     });
 }
@@ -801,6 +811,94 @@ document.addEventListener('click', (e) => {
     const content = document.getElementById(tab + '-tab') || document.getElementById(tab);
     if (content) content.classList.add('active');
 });
+
+// Stop processing function
+async function handleStop() {
+    console.log('Stop button clicked, currentSessionId:', currentSessionId);
+
+    if (!currentSessionId) {
+        console.warn('No active session to stop');
+        alert('No active processing session to cancel');
+        return;
+    }
+
+    try {
+        console.log('Calling cancel endpoint for session:', currentSessionId);
+
+        // Call cancel endpoint
+        const response = await fetch(`/api/cancel/${currentSessionId}`, {
+            method: 'POST'
+        });
+
+        console.log('Cancel response status:', response.status);
+
+        const result = await response.json();
+        console.log('Cancel response:', result);
+
+        if (result.success) {
+            console.log('Processing cancelled successfully');
+
+            // Reset UI state
+            resetProcessingState();
+
+            // Show cancellation message
+            updateProgress(0, 'Processing cancelled by user');
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressFill.style.width = '0%';
+            }, 2000);
+
+        } else {
+            console.error('Failed to cancel processing:', result.error);
+            alert('Failed to cancel processing: ' + result.error);
+        }
+
+    } catch (error) {
+        console.error('Error cancelling processing:', error);
+        alert('Error cancelling processing: ' + error.message);
+    }
+}
+
+// Reset processing state after cancellation
+function resetProcessingState() {
+    // Clear timers
+    if (currentTimerInterval) {
+        clearInterval(currentTimerInterval);
+        currentTimerInterval = null;
+    }
+
+    // Close event source
+    if (currentEventSource) {
+        currentEventSource.close();
+        currentEventSource = null;
+    }
+
+    // Reset processing metrics
+    processingMetrics = {
+        chunkCompletionTimes: [],
+        chunksCompleted: 0,
+        totalChunks: 0,
+        ewmaIntervalMs: null
+    };
+
+    // Hide progress elements
+    progressContainer.style.display = 'none';
+    stopBtn.style.display = 'none';
+
+    // Reset progress bar
+    progressFill.style.width = '0%';
+
+    // Re-enable process button
+    processBtn.disabled = false;
+    processBtn.classList.remove('processing');
+
+    // Clear session ID
+    currentSessionId = null;
+}
+
+// Global variables for cleanup
+let currentSessionId = null;
+let currentEventSource = null;
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
