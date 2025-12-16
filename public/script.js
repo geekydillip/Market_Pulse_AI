@@ -2,12 +2,16 @@
 document.body.className = 'theme-light';
 
 // DOM Elements (will be defined inside DOMContentLoaded)
-let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, processBtn, loadingOverlay;
+let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, fileActions, processBtn, loadingOverlay;
 let statusElement, progressContainer, progressFill, progressText, modelSelect, stopBtn;
 
 // State
 let currentFile = null;
 let currentResult = '';
+let fileQueue = []; // Array of file objects with id, file, status, etc.
+let queueCounter = 0; // For unique IDs
+let isProcessingQueue = false;
+let currentProcessingIndex = -1;
 
 // Initialize
     document.addEventListener('DOMContentLoaded', () => {
@@ -18,6 +22,7 @@ let currentResult = '';
     fileName = document.getElementById('fileName');
     fileSize = document.getElementById('fileSize');
     fileContent = document.getElementById('fileContent');
+    fileActions = document.getElementById('fileActions');
     removeFile = document.getElementById('removeFile');
     processBtn = document.getElementById('processBtn');
     loadingOverlay = document.getElementById('loadingOverlay');
@@ -41,6 +46,9 @@ let currentResult = '';
     // Initialize Desire Selector visual state
     updateSelectionState();
     initializeProgressState();
+
+    // Setup drag and drop for Processing Queue
+    setupQueueDragDrop();
 });
 
 function initializeProgressState() {
@@ -90,6 +98,11 @@ function setupEventListeners() {
 
     // Stop button
     if (stopBtn) stopBtn.addEventListener('click', handleStop);
+
+    // Queue buttons
+    const clearQueueBtn = document.getElementById('clearQueueBtn');
+
+    if (clearQueueBtn) clearQueueBtn.addEventListener('click', () => clearQueue());
 }
 
 
@@ -108,16 +121,71 @@ function handleDragLeave(e) {
 function handleDrop(e) {
     e.preventDefault();
     dropzone.classList.remove('drag-over');
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-        handleFile(files[0]);
+        Array.from(files).forEach(file => addFileToQueue(file));
+        toggleUIState();
+        updateQueueUI();
     }
 }
 
 function handleFileSelect(e) {
-    if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
+    console.log('=== FILE SELECT START ===');
+    const files = Array.from(e.target.files);
+    console.log('Total files selected:', files.length);
+    console.log('Files:', files.map(f => ({name: f.name, size: f.size, type: f.type})));
+
+    if (files.length > 0) {
+        const excelFiles = [];
+        const otherFiles = [];
+
+        // Separate Excel and other files
+        files.forEach(file => {
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+            console.log(`File: ${file.name} → extension: ${fileExt}`);
+            if (fileExt === '.xls' || fileExt === '.xlsx') {
+                excelFiles.push(file);
+                console.log(`  → Added to Excel files (${excelFiles.length} total)`);
+            } else {
+                otherFiles.push(file);
+                console.log(`  → Added to other files (${otherFiles.length} total)`);
+            }
+        });
+
+        console.log(`Final counts - Excel: ${excelFiles.length}, Other: ${otherFiles.length}`);
+
+        // Handle other files (go directly to queue)
+        console.log('Adding other files to queue...');
+        otherFiles.forEach(file => {
+            console.log(`  Adding ${file.name} to queue...`);
+            addFileToQueue(file);
+        });
+
+        // Handle Excel files (add to queue directly like other files)
+        if (excelFiles.length > 0) {
+            console.log('Adding Excel files to queue...');
+            excelFiles.forEach(file => {
+                console.log(`  Adding ${file.name} to queue...`);
+                addFileToQueue(file);
+            });
+        }
+
+        console.log('Current fileQueue length:', fileQueue.length);
+        console.log('FileQueue contents:', fileQueue.map(item => ({name: item.file.name, status: item.status})));
+
+        // Update queue display first
+        console.log('Updating queue UI...');
+        updateQueueUI();
+
+        // Now show Processing Queue (after cards are created)
+        console.log('Toggling UI state...');
+        toggleUIState();
+
+        console.log('File select process complete');
+        console.log('=== FILE SELECT END ===');
+    } else {
+        console.log('No files selected');
     }
 }
 
@@ -138,11 +206,11 @@ function handleFile(file) {
     }
 
     currentFile = file;
-    
+
     // Display file info
     fileName.textContent = file.name;
     fileSize.textContent = formatFileSize(file.size);
-    
+
     // Read and display file content
     if (fileExt === '.xls' || fileExt === '.xlsx') {
         fileContent.textContent = 'Excel file - content will be extracted as XLSX format for processing.';
@@ -186,6 +254,225 @@ function formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Queue management functions
+function addFileToQueue(file) {
+    // Validate file type
+    const validTypes = ['.json', '.csv', '.log', '.xls', '.xlsx'];
+    const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+
+    if (!validTypes.includes(fileExt)) {
+        alert(`Invalid file type: ${file.name}. Please upload valid file types: .json, .csv, .log, .xls, or .xlsx`);
+        return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+        alert(`File too large: ${file.name}. Maximum size is 10MB`);
+        return;
+    }
+
+    // Check if file already exists in queue
+    const existingFile = fileQueue.find(item => item.file.name === file.name && item.file.size === file.size);
+    if (existingFile) {
+        alert(`File ${file.name} is already in the queue`);
+        return;
+    }
+
+    // Add to queue
+    const queueItem = {
+        id: ++queueCounter,
+        file: file,
+        status: 'queued', // queued, processing, completed, failed
+        progress: 0, // Real-time progress percentage
+        processingTime: null, // Time taken to process the file
+        rows: 0, // Number of rows (for Excel/CSV files)
+        chunks: 0, // Number of chunks processed
+        addedAt: new Date()
+    };
+
+    fileQueue.push(queueItem);
+}
+
+function removeFromQueue(itemId) {
+    const index = fileQueue.findIndex(item => item.id === itemId);
+    if (index !== -1) {
+        fileQueue.splice(index, 1);
+        updateQueueUI();
+    }
+}
+
+function moveQueueItem(itemId, direction) {
+    const index = fileQueue.findIndex(item => item.id === itemId);
+    if (index === -1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= fileQueue.length) return;
+
+    // Only allow moving non-processing items
+    if (fileQueue[index].status === 'processing') return;
+
+    // Swap items
+    [fileQueue[index], fileQueue[newIndex]] = [fileQueue[newIndex], fileQueue[index]];
+    updateQueueUI();
+}
+
+function clearQueue() {
+    // Only clear non-processing items
+    fileQueue = fileQueue.filter(item => item.status === 'processing');
+    updateQueueUI();
+    updateFileCount();
+}
+
+function updateQueueUI() {
+    const queueGrid = document.getElementById('queueGrid');
+
+    // Clear existing items
+    queueGrid.innerHTML = '';
+
+    // Render queue items
+    fileQueue.forEach((item, index) => {
+        const cardElement = createFileCardElement(item, index);
+        queueGrid.appendChild(cardElement);
+    });
+}
+
+function createFileCardElement(item, index) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'file-card';
+
+    // Determine status for display
+    let statusPill = '';
+    let progressSection = '';
+    let actionButtons = '';
+
+    if (item.status === 'processing') {
+        statusPill = '<span class="status-pill status-processing">Processing...</span>';
+        progressSection = `
+            <div class="progress-container">
+                <div class="progress-bar" data-progress="${Math.round(item.progress)}"></div>
+                <span class="progress-text">${Math.round(item.progress)}%</span>
+            </div>
+        `;
+        actionButtons = `
+            <div class="action-buttons">
+                <button class="action-btn download-btn" disabled>⬇️ Download</button>
+                <button class="action-btn remove-btn">🗑️ Remove</button>
+            </div>
+        `;
+    } else if (item.status === 'completed') {
+        statusPill = '<span class="status-pill status-completed">✓ Completed</span>';
+        progressSection = '';
+        actionButtons = `
+            <div class="action-buttons">
+                <button class="action-btn download-btn">⬇️ Download</button>
+                <button class="action-btn remove-btn">🗑️ Remove</button>
+            </div>
+        `;
+    } else if (item.status === 'queued') {
+        statusPill = '<span class="status-pill status-queued">Queued</span>';
+        progressSection = '';
+        actionButtons = `
+            <div class="action-buttons">
+                <button class="action-btn download-btn" disabled>⬇️ Download</button>
+                <button class="action-btn remove-btn">🗑️ Remove</button>
+            </div>
+        `;
+    }
+
+    cardDiv.innerHTML = `
+        <div class="card-header">
+            <div class="file-info">
+                <span class="file-icon">📄</span>
+                <span class="filename">${item.file.name}</span>
+            </div>
+            ${statusPill}
+        </div>
+        <div class="card-meta">
+            <span>Size: ${formatFileSize(item.file.size)}</span>
+            <span>Rows: ${item.rows || 0}</span>
+            <span>Chunks: ${item.chunks || 0}</span>
+            ${item.status === 'completed' && item.processingTime ? `<span>Processed in ${item.processingTime}</span>` : ''}
+        </div>
+        ${progressSection}
+        ${actionButtons}
+    `;
+
+    return cardDiv;
+}
+
+// Drag and drop variables
+let draggedElement = null;
+let draggedIndex = -1;
+
+function handleDragStart(e) {
+    draggedElement = e.target;
+    draggedIndex = Array.from(draggedElement.parentNode.children).indexOf(draggedElement);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', draggedElement.outerHTML);
+    draggedElement.classList.add('dragging');
+}
+
+function handleDragEnd(e) {
+    draggedElement.classList.remove('dragging');
+    draggedElement = null;
+    draggedIndex = -1;
+
+    // Remove drop indicators
+    document.querySelectorAll('.queue-item.drop-above, .queue-item.drop-below').forEach(item => {
+        item.classList.remove('drop-above', 'drop-below');
+    });
+}
+
+function handleDragOverQueue(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const target = e.target.closest('.queue-item');
+    if (!target || target === draggedElement) return;
+
+    const rect = target.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+
+    // Remove previous indicators
+    document.querySelectorAll('.queue-item.drop-above, .queue-item.drop-below').forEach(item => {
+        item.classList.remove('drop-above', 'drop-below');
+    });
+
+    if (e.clientY < midpoint) {
+        target.classList.add('drop-above');
+    } else {
+        target.classList.add('drop-below');
+    }
+}
+
+function handleDropQueue(e) {
+    e.preventDefault();
+
+    const target = e.target.closest('.queue-item');
+    if (!target || target === draggedElement) return;
+
+    const targetIndex = Array.from(target.parentNode.children).indexOf(target);
+    const rect = target.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+
+    let newIndex;
+    if (e.clientY < midpoint) {
+        newIndex = targetIndex;
+    } else {
+        newIndex = targetIndex + 1;
+    }
+
+    // Reorder the queue
+    if (draggedIndex !== -1 && newIndex !== draggedIndex && newIndex !== draggedIndex + 1) {
+        const [movedItem] = fileQueue.splice(draggedIndex, 1);
+        fileQueue.splice(newIndex > draggedIndex ? newIndex - 1 : newIndex, 0, movedItem);
+        updateQueueUI();
+    }
+
+    // Clean up
+    handleDragEnd(e);
 }
 
 // Processing type change handler
@@ -265,8 +552,17 @@ function getConcurrency() {
     return window.appConcurrency || DEFAULT_CONCURRENCY;
 }
 
-// Main processing function
+// Main processing function - Unified for single files and queue processing
 async function handleProcess() {
+    // Check if there are queued files to process
+    const pendingItems = fileQueue.filter(item => item.status === 'queued');
+    if (pendingItems.length > 0) {
+        // Process the queue
+        await handleProcessQueue();
+        return;
+    }
+
+    // Fallback: single file processing (for backward compatibility)
     if (!currentFile) {
         alert('Please upload a file first');
         return;
@@ -299,7 +595,6 @@ async function handleProcess() {
             const formData = new FormData();
             formData.append('file', currentFile);
             formData.append('processingType', processingType);
-
             formData.append('model', selectedModel);
 
             const response = await fetch('/api/process', {
@@ -459,8 +754,45 @@ function updateProgress(percent, text, timerInterval) {
     }
     progressText.textContent = text;
 
+    // Update currently processing queue item progress if in queue mode
+    updateCurrentQueueItemProgress(percent, text);
+
     // Update estimated completion time based on progress
     updateEstimatedTime(text, percent);
+}
+
+// Update the currently processing queue item's progress bar
+function updateCurrentQueueItemProgress(percent, text) {
+    // Find the currently processing queue item
+    const processingItem = fileQueue.find(item => item.status === 'processing');
+    if (!processingItem) return;
+
+    // Update the progress in the queue item data
+    processingItem.progress = Math.max(0, Math.min(100, percent));
+
+    // Find the corresponding DOM element and update it
+    const queueGrid = document.getElementById('queueGrid');
+    if (!queueGrid) return;
+
+    const fileCards = queueGrid.querySelectorAll('.file-card');
+    for (let card of fileCards) {
+        const filenameElement = card.querySelector('.filename');
+        if (filenameElement && filenameElement.textContent === processingItem.file.name) {
+            // Update progress bar
+            const progressBar = card.querySelector('.progress-bar');
+            const progressText = card.querySelector('.progress-text');
+
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                progressBar.setAttribute('data-progress', percent);
+            }
+
+            if (progressText) {
+                progressText.textContent = Math.round(percent) + '%';
+            }
+            break;
+        }
+    }
 }
 
 // Store current timer for cleanup
@@ -896,9 +1228,309 @@ function resetProcessingState() {
     currentSessionId = null;
 }
 
+// Queue processing function
+async function handleProcessQueue() {
+    if (isProcessingQueue) return;
+
+    const pendingItems = fileQueue.filter(item => item.status === 'queued');
+    if (pendingItems.length === 0) return;
+
+    isProcessingQueue = true;
+    const processBtn = document.getElementById('processBtn');
+    processBtn.disabled = true;
+    const textSpan = processBtn.querySelector('.text_button');
+    if (textSpan) textSpan.textContent = 'Processing Queue...';
+
+    // Get processing type and model
+    const processingType = document.querySelector('input[name="processingType"]:checked').value;
+    const selectedModel = modelSelect.value;
+
+    // Record batch start time
+    const batchStartTime = new Date();
+
+    // Process files sequentially
+    for (let i = 0; i < fileQueue.length; i++) {
+        const item = fileQueue[i];
+        if (item.status !== 'queued') continue;
+
+        // Update status to processing
+        item.status = 'processing';
+        updateQueueUI();
+
+        // Update next item to "up-next" if exists
+        const nextItem = fileQueue[i + 1];
+        if (nextItem && nextItem.status === 'queued') {
+            nextItem.status = 'up-next';
+            updateQueueUI();
+        }
+
+        try {
+            // Record start time for this file
+            const fileStartTime = Date.now();
+
+            // Process the file
+            const sessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+            if (item.file.name.endsWith('.xlsx') || item.file.name.endsWith('.xls') || item.file.name.endsWith('.json')) {
+                // Handle Excel/JSON processing with chunked progress
+                progressContainer.style.display = 'block';
+                updateProgress(0, `Processing ${item.file.name}...`);
+                await processStructuredFile(item.file, processingType, selectedModel, sessionId);
+            } else {
+                // Process other files - show loading overlay
+                showLoading(selectedModel);
+                const formData = new FormData();
+                formData.append('file', item.file);
+                formData.append('processingType', processingType);
+                formData.append('model', selectedModel);
+
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to process file');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // For non-structured files, download as text
+                    downloadText(result.result, `processed-${Date.now()}.txt`);
+                } else {
+                    throw new Error(result.error || 'Processing failed');
+                }
+            }
+
+            // Calculate processing time
+            const fileEndTime = Date.now();
+            const processingTimeMs = fileEndTime - fileStartTime;
+            const processingTimeText = processingTimeMs >= 1000 ?
+                `${Math.round(processingTimeMs / 1000)}s` :
+                `${processingTimeMs}ms`;
+
+            // Update metadata
+            item.processingTime = processingTimeText;
+            item.chunks = processingMetrics.totalChunks || 0;
+            item.rows = 0; // Would need server response for actual row count
+
+            // Mark as completed
+            item.status = 'completed';
+
+        } catch (error) {
+            console.error(`Error processing ${item.file.name}:`, error);
+            item.status = 'failed';
+            // Continue with next file
+        }
+
+        // Reset next item status
+        if (nextItem) {
+            nextItem.status = 'queued';
+        }
+
+        updateQueueUI();
+        hideLoading();
+        progressContainer.style.display = 'none';
+    }
+
+    // Batch completed
+    isProcessingQueue = false;
+    processBtn.disabled = false;
+    const finalTextSpan = processBtn.querySelector('.text_button');
+    if (finalTextSpan) finalTextSpan.textContent = 'Process with AI';
+
+    // Show batch completion summary
+    const batchEndTime = new Date();
+    const completedCount = fileQueue.filter(item => item.status === 'completed').length;
+    const failedCount = fileQueue.filter(item => item.status === 'failed').length;
+
+    alert(`Batch processing completed!\nCompleted: ${completedCount}\nFailed: ${failedCount}\nDuration: ${Math.round((batchEndTime - batchStartTime) / 1000)}s`);
+}
+
 // Global variables for cleanup
 let currentSessionId = null;
 let currentEventSource = null;
+
+// Processing Queue JS
+document.addEventListener('DOMContentLoaded', function() {
+  // Update progress bars based on data attributes
+  const progressBars = document.querySelectorAll('.progress-bar');
+  progressBars.forEach(bar => {
+    const progress = bar.getAttribute('data-progress');
+    if (progress) {
+      bar.style.setProperty('--progress', progress + '%');
+      bar.style.width = progress + '%';
+    }
+  });
+
+  // Add event listeners for Processing Queue buttons
+  setupQueueButtonListeners();
+});
+
+function setupQueueButtonListeners() {
+  // Download buttons
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('download-btn') && !e.target.disabled) {
+      handleDownload(e.target);
+    }
+  });
+
+  // Remove buttons
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-btn')) {
+      handleRemove(e.target);
+    }
+  });
+
+  // Clear All button
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('clear-all-btn')) {
+      handleClearAll();
+    }
+  });
+}
+
+function handleDownload(button) {
+  // Find the card this button belongs to
+  const card = button.closest('.file-card');
+  const filename = card.querySelector('.filename').textContent;
+
+  // Create sample processed data based on file type
+  let content = '';
+  let mimeType = 'text/plain';
+
+  if (filename.endsWith('.xlsx')) {
+    content = 'Sample processed Excel data\nRow 1, Column A, Column B\nRow 2, Data 1, Data 2\nRow 3, Data 3, Data 4';
+    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  } else if (filename.endsWith('.csv')) {
+    content = 'id,name,value\n1,Sample Data,100\n2,Another Row,200\n3,Final Row,300';
+    mimeType = 'text/csv';
+  } else {
+    content = 'Sample processed text data\nThis is the result of AI processing\nContaining analyzed information and insights';
+  }
+
+  // Create and trigger download
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `processed_${filename}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Visual feedback
+  button.textContent = '✅ Downloaded';
+  setTimeout(() => {
+    button.innerHTML = '⬇️ Download';
+  }, 2000);
+}
+
+function handleRemove(button) {
+  // Find the card this button belongs to
+  const card = button.closest('.file-card');
+
+  // Add fade out animation
+  card.style.transition = 'opacity 0.3s ease';
+  card.style.opacity = '0';
+
+  // Remove after animation
+  setTimeout(() => {
+    card.remove();
+    updateFileCount();
+  }, 300);
+}
+
+function handleClearAll() {
+  const queueGrid = document.querySelector('.queue-grid');
+  const cards = queueGrid.querySelectorAll('.file-card');
+
+  if (cards.length === 0) return;
+
+  // Add fade out animation to all cards
+  cards.forEach(card => {
+    card.style.transition = 'opacity 0.3s ease';
+    card.style.opacity = '0';
+  });
+
+  // Remove all cards after animation and clear the array
+  setTimeout(() => {
+    cards.forEach(card => card.remove());
+    fileQueue = []; // Clear the fileQueue array
+    updateFileCount();
+  }, 300);
+}
+
+
+
+function updateFileCount() {
+  const fileCountElement = document.getElementById('fileCount');
+  const cards = document.querySelectorAll('.file-card');
+
+  if (cards.length === 0) {
+    fileCountElement.textContent = '0 files';
+    // Show dropzone when no files
+    toggleUIState();
+  } else {
+    fileCountElement.textContent = `${cards.length} file${cards.length !== 1 ? 's' : ''}`;
+  }
+}
+
+// Toggle UI state between dropzone and Processing Queue
+function toggleUIState() {
+  const dropzone = document.getElementById('dropzone');
+  const processingQueue = document.getElementById('processingQueue');
+  const cards = document.querySelectorAll('.file-card');
+
+  if (cards.length > 0) {
+    // Show Processing Queue, hide dropzone
+    dropzone.style.display = 'none';
+    processingQueue.style.display = 'block';
+  } else {
+    // Show dropzone, hide Processing Queue
+    dropzone.style.display = 'block';
+    processingQueue.style.display = 'none';
+  }
+}
+
+// Add drag and drop to Processing Queue section
+function setupQueueDragDrop() {
+  const processingQueue = document.getElementById('processingQueue');
+  const queueGrid = document.getElementById('queueGrid');
+
+  if (!processingQueue) return;
+
+  // Drag over handler for the queue section
+  processingQueue.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    processingQueue.classList.add('drag-over-queue');
+  });
+
+  processingQueue.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only remove class if leaving the queue area entirely
+    if (!processingQueue.contains(e.relatedTarget)) {
+      processingQueue.classList.remove('drag-over-queue');
+    }
+  });
+
+  processingQueue.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    processingQueue.classList.remove('drag-over-queue');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      Array.from(files).forEach(file => addFileToQueue(file));
+      toggleUIState();
+      updateQueueUI();
+    }
+  });
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {

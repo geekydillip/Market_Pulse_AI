@@ -9,6 +9,8 @@ function normalizeHeaders(rows) {
   const headerMap = {
     // Model variants
     'model no.': 'Model No.',
+    'Dev. Mdl. Name/Item Name': 'Model No.',
+    'dev. mdl. name/item name': 'Model No.',
     // Case Code
     'case code': 'Case Code',
     // S/W Ver variants
@@ -71,7 +73,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Model No.','S/W Ver.','Title','Problem']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','S/W Ver.','Title','Problem']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;

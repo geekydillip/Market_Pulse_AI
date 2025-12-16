@@ -54,14 +54,14 @@
                 </div>
 
                 <div class="dropzone" id="dropzone">
-                    <input type="file" id="fileInput" accept=".xls,.xlsx,.json,.csv" hidden>
+                    <input type="file" id="fileInput" accept=".xls,.xlsx,.json,.csv" multiple hidden>
                     <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
-                    <h3>Drop your file here</h3>
-                    <p>or click to browse</p>
+                    <h3>Drop your files here</h3>
+                    <p>or click to browse multiple files</p>
                     <span class="file-types">Supported: .xlsx, .xls, .json, .csv</span>
                 </div>
 
@@ -85,9 +85,20 @@
                     <div class="file-content" id="fileContent"></div>
                 </div>
 
+                <!-- Processing Queue Section -->
+                <section class="processing-queue" id="processingQueue" style="display: none;">
+                    <div class="queue-header">
+                        <h2>Processing Queue</h2>
+                        <div class="header-controls">
+                            <span class="file-count" id="fileCount">0 files</span>
+                            <button class="clear-all-btn">Clear All</button>
+                        </div>
+                    </div>
 
-
-
+                    <div class="queue-grid" id="queueGrid">
+                        <!-- File cards will be dynamically added here -->
+                    </div>
+                </section>
 
             </section>
 

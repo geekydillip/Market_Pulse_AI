@@ -922,7 +922,8 @@ section {
     height: 100%;
     background: var(--primary-gradient);
     width: 0%;
-    transition: width 0.3s ease;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left;
 }
 
 .progress-text {
@@ -2817,3 +2818,573 @@ table td:nth-child(2) {
 
 /* disabled / processing finished states */
 .galaxy-button[disabled] { cursor: default; opacity: 0.8; pointer-events: none; transform: none; }
+
+/* ========================
+   QUEUE SYSTEM STYLES
+   ======================== */
+
+/* Queue Section */
+.queue-section {
+    margin-top: 24px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.3s ease;
+}
+
+.queue-section.has-files {
+    border-style: solid;
+    border-color: var(--success-color);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.queue-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.queue-count {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #667eea;
+}
+
+/* Queue List */
+.queue-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.queue-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    cursor: grab;
+    position: relative;
+}
+
+.queue-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.queue-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    transform: rotate(2deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.queue-item.processing {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.05));
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.queue-item.completed {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+    opacity: 0.7;
+}
+
+.queue-item.failed {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--error-color);
+}
+
+.queue-item.up-next {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05));
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.queue-item-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.queue-item.processing .queue-item-number {
+    background: var(--accent);
+    animation: pulse 2s infinite;
+}
+
+.queue-item.completed .queue-item-number {
+    background: var(--success-color);
+}
+
+.queue-item.failed .queue-item-number {
+    background: var(--error-color);
+}
+
+.queue-item.up-next .queue-item-number {
+    background: #f59e0b;
+}
+
+.queue-item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.queue-item-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.queue-item-size {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.queue-item-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.queue-item.processing .queue-item-status {
+    color: var(--accent);
+}
+
+.queue-item.completed .queue-item-status {
+    color: var(--success-color);
+}
+
+.queue-item.failed .queue-item-status {
+    color: var(--error-color);
+}
+
+.queue-item.up-next .queue-item-status {
+    color: #f59e0b;
+}
+
+.queue-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-queue-control {
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-queue-control:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-queue-control svg {
+    width: 16px;
+    height: 16px;
+}
+
+.drag-handle {
+    cursor: grab;
+    color: var(--text-secondary);
+    padding: 2px;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.drag-handle:active,
+.queue-item.dragging .drag-handle {
+    cursor: grabbing;
+}
+
+/* Queue Actions */
+.queue-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Light theme overrides for queue */
+.theme-light .queue-section {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.theme-light .queue-section.has-files {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: var(--success-color);
+}
+
+.theme-light .queue-item {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.theme-light .queue-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-light .btn-secondary {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #1a202c;
+}
+
+.theme-light .btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.theme-light .btn-queue-control:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Drag and drop indicators */
+.queue-item.drop-above::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 1;
+}
+
+.queue-item.drop-below::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 1;
+}
+
+/* Adjust queue item layout for drag handle */
+.queue-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.queue-item .drag-handle {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.queue-item .drag-handle:hover {
+    opacity: 1;
+}
+
+.queue-item-number {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    line-height: 24px;
+}
+
+.queue-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.queue-item-controls {
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+}
+
+/* Processing Queue Styles */
+.processing-queue {
+    background-color: #ecfdf5;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px 0;
+}
+
+/* Filename text wrapping for queue cards */
+.filename {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+    display: block;
+    margin-bottom: 4px;
+    min-height: 1.4em; /* Ensure minimum line height */
+}
+
+/* Ensure file cards can expand for multi-line filenames */
+.file-card {
+    min-height: auto; /* Allow cards to expand */
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    flex-shrink: 0; /* Keep header from shrinking */
+    margin-bottom: 12px;
+}
+
+.card-meta {
+    flex-shrink: 0; /* Keep meta info from shrinking */
+    margin-bottom: 12px;
+}
+
+.queue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.queue-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.file-count {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.clear-all-btn {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-all-btn:hover {
+    background-color: #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.queue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.file-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    transition: box-shadow 0.2s;
+}
+
+.file-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-icon {
+    font-size: 16px;
+}
+
+.filename {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.3;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.status-pill {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-processing {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-completed {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.card-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    background-color: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    background-color: #f59e0b;
+    width: attr(data-progress '%');
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 12px;
+    color: #6b7280;
+    min-width: 30px;
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.action-btn {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.action-btn:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dashboard-btn:not(:disabled) {
+    background-color: #ecfdf5;
+    border-color: #10b981;
+    color: #065f46;
+}
+
+/* Drag and drop over Processing Queue */
+.processing-queue.drag-over-queue {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    transform: scale(1.01);
+}
+
+@media (max-width: 768px) {
+    .queue-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .action-buttons {
+        justify-content: center;
+    }
+}
