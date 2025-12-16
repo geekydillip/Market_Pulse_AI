@@ -1985,6 +1985,152 @@ document.addEventListener('DOMContentLoaded', () => {
     handleHighCardExport();
   });
 
+  // DSR download button handler
+  document.getElementById('dsrDownloadBtn').addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggering the card click
+    handleDSRExport();
+  });
+
+// DSR Export function - generates formatted text report
+function handleDSRExport() {
+  setTimeout(() => {
+    try {
+      const rows = currentDashboardData.rows || [];
+      if (rows.length === 0) {
+        alert('No PLM issues data available to generate DSR report.');
+        return;
+      }
+
+      console.log('DSR Debug: First 3 rows of data:', rows.slice(0, 3));
+      console.log('DSR Debug: Available keys in first row:', Object.keys(rows[0] || {}));
+
+      // Group issues by category (using Module field as primary category)
+      const categories = {};
+
+      rows.forEach((row, index) => {
+        const module = (row.module || row.Module || 'Unknown').trim();
+        const severity = (row.severity || row.Severity || 'Unknown').toLowerCase();
+
+        // Only include high severity issues for DSR
+        if (severity === 'high') {
+          if (!categories[module]) {
+            categories[module] = [];
+          }
+
+          const caseCode = row.caseId || row['Case Code'] || row.caseCode || row['case code'] || row.CaseCode || row.case_id || row.CaseID || 'N/A';
+          const title = (row.title || row.Title || 'N/A').trim();
+          const model = row.modelFromFile || row['Model No.'] || 'N/A';
+
+          if (index < 5) { // Debug first 5 high severity issues
+            console.log(`DSR Debug: Row ${index} - Case Code fields:`, {
+              'Case Code': row['Case Code'],
+              caseCode: row.caseCode,
+              'case code': row['case code'],
+              CaseCode: row.CaseCode,
+              case_id: row.case_id,
+              CaseID: row.CaseID,
+              final: caseCode
+            });
+          }
+
+          categories[module].push({
+            caseCode,
+            title,
+            model
+          });
+        }
+      });
+
+      // Generate formatted text report
+      let report = 'PLM Major Issues Summary\n\n';
+
+      // Map modules to standard categories
+      const categoryMapping = {
+        'System': ['System', 'Kernel', 'OS', 'Android'],
+        'GPS': ['GPS', 'Location', 'Navigation'],
+        'Current': ['Current', 'Battery', 'Power'],
+        'Function': ['Function', 'UI', 'UX', 'Camera', 'Audio', 'Network'],
+        'AI': ['AI', 'Bixby', 'Assistant', 'Intelligence']
+      };
+
+      const standardCategories = ['System', 'GPS', 'Current', 'Function', 'AI'];
+      let categoryCounter = 1;
+
+      standardCategories.forEach(categoryName => {
+        const matchingModules = categoryMapping[categoryName] || [];
+        let categoryIssues = [];
+
+        // Collect issues from matching modules
+        matchingModules.forEach(moduleKeyword => {
+          Object.keys(categories).forEach(module => {
+            if (module.toLowerCase().includes(moduleKeyword.toLowerCase())) {
+              categoryIssues = categoryIssues.concat(categories[module]);
+            }
+          });
+        });
+
+        // Also check if module name matches category
+        if (categories[categoryName]) {
+          categoryIssues = categoryIssues.concat(categories[categoryName]);
+        }
+
+        if (categoryIssues.length > 0) {
+          report += `${categoryCounter}. ${categoryName}\n`;
+
+          categoryIssues.forEach((issue, index) => {
+            const issueNumber = index + 1;
+            const formattedTitle = cleanIssueTitle(issue.title);
+            report += `    ${categoryCounter}.${issueNumber} ${issue.caseCode}: ${formattedTitle}\n`;
+          });
+
+          report += '\n';
+          categoryCounter++;
+        }
+      });
+
+      // Add any remaining categories not in standard list
+      Object.keys(categories).forEach(module => {
+        const isStandard = standardCategories.some(cat =>
+          categoryMapping[cat] && categoryMapping[cat].some(keyword =>
+            module.toLowerCase().includes(keyword.toLowerCase())
+          )
+        );
+
+        if (!isStandard && categories[module].length > 0) {
+          report += `${categoryCounter}. ${module}\n`;
+          categories[module].forEach((issue, index) => {
+            const issueNumber = index + 1;
+            const formattedTitle = cleanIssueTitle(issue.title);
+            report += `    ${categoryCounter}.${issueNumber} ${issue.caseCode}: ${formattedTitle}\n`;
+          });
+          report += '\n';
+          categoryCounter++;
+        }
+      });
+
+      // Generate filename with timestamp
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+      const fileName = `PLM_DSR_Report_${timestamp}.txt`;
+
+      // Download the text file
+      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('DSR export error:', error);
+      alert('DSR report generation failed. Please try again.');
+    }
+  }, 100);
+}
+
   // Close modal on ESC key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
