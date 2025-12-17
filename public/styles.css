@@ -469,8 +469,8 @@ section {
 /* Processing Types */
 .processing-types {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
     margin-bottom: 24px;
 }
 
@@ -485,7 +485,7 @@ section {
 }
 
 .radio-card-content {
-    padding: 24px 20px;
+    padding: 16px 14px;
     background: rgba(255, 255, 255, 0.03);
     border: 2px solid var(--border-color);
     border-radius: 16px;
@@ -587,13 +587,13 @@ section {
 }
 
 .radio-card-content h3 {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .radio-card-content p {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
 }
 

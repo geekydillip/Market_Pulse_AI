@@ -9,9 +9,7 @@ import subprocess
 import time
 import requests
 import os
-import signal
 import sys
-from pathlib import Path
 
 OLLAMA_CMD = "ollama"  # must be on PATH, or use full path like "/usr/local/bin/ollama"
 API_BASE = "http://localhost:11434"

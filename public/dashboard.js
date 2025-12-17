@@ -1959,37 +1959,47 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Modal export button handler
-  document.getElementById('exportBtn').addEventListener('click', handleModalExport);
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) exportBtn.addEventListener('click', handleModalExport);
 
   // Export dropdown is handled by exportToggleBtn and export-options
 
   // High card filter toggle handler
-  document.getElementById('highFilterCard').addEventListener('click', (e) => {
-    // Don't trigger if clicking the download button itself
-    if (!e.target.closest('.inline-download-btn')) {
-      toggleHighSeverityFilter();
-    }
-  });
+  const highFilterCard = document.getElementById('highFilterCard');
+  if (highFilterCard) {
+    highFilterCard.addEventListener('click', (e) => {
+      // Don't trigger if clicking the download button itself
+      if (!e.target.closest('.inline-download-btn')) {
+        toggleHighSeverityFilter();
+      }
+    });
 
-  // Handle Enter and Space key for accessibility
-  document.getElementById('highFilterCard').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggleHighSeverityFilter();
-    }
-  });
+    // Handle Enter and Space key for accessibility
+    highFilterCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleHighSeverityFilter();
+      }
+    });
+  }
 
   // High card download button handler
-  document.getElementById('highCardDownloadBtn').addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent triggering the card click
-    handleHighCardExport();
-  });
+  const highCardDownloadBtn = document.getElementById('highCardDownloadBtn');
+  if (highCardDownloadBtn) {
+    highCardDownloadBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent triggering the card click
+      handleHighCardExport();
+    });
+  }
 
   // DSR download button handler
-  document.getElementById('dsrDownloadBtn').addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent triggering the card click
-    handleDSRExport();
-  });
+  const dsrDownloadBtn = document.getElementById('dsrDownloadBtn');
+  if (dsrDownloadBtn) {
+    dsrDownloadBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent triggering the card click
+      handleDSRExport();
+    });
+  }
 
 // DSR Export function - generates formatted text report
 function handleDSRExport() {
