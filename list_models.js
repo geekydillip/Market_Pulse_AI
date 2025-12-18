@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const xlsx = require('xlsx');
 
+// Debug configuration
+const DEBUG = false;
+
 const downloads = path.join(__dirname, 'downloads','beta_user_issues'); // adjust if needed
 if (!fs.existsSync(downloads)) { console.error('path not found:', downloads); process.exit(1); }
 
@@ -26,5 +29,5 @@ files.forEach(fname => {
     console.warn('skip', fname, e.message);
   }
 });
-console.log('Files scanned:', files.length);
-console.log('Unique raw model strings:\n', Array.from(found).sort().join('\n'));
+if (DEBUG) console.log('Files scanned:', files.length);
+if (DEBUG) console.log('Unique raw model strings:\n', Array.from(found).sort().join('\n'));

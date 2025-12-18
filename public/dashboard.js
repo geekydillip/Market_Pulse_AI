@@ -1,6 +1,10 @@
 /*
   Dashboard with Pagination - Individual Cases View
 */
+
+// Debug configuration
+const DEBUG = false;
+
 async function fetchJSON(url) {
   const r = await fetch(url);
   if (!r.ok) {
@@ -469,40 +473,7 @@ function initTheme() {
   document.body.className = 'theme-light';
 }
 
-// Safe helpers for optional elements
-function updateProgress(percent, text, timerInterval) {
-    const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    const progressContainer = document.getElementById('progressContainer');
-    if (progressFill) progressFill.style.width = percent + '%';
-    if (progressText && !timerInterval) progressText.textContent = text;
-    if (progressContainer) progressContainer.style.display = 'block';
-}
-
-function initializeProgressState() {
-    const progressFill = document.getElementById('progressFill');
-    const progressContainer = document.getElementById('progressContainer');
-    if (progressFill) progressFill.style.width = '0%';
-    if (progressContainer) progressContainer.style.display = 'none';
-}
-
-function showLoading(model) {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'flex';
-        const loadingText = loadingOverlay.querySelector('p');
-        if (loadingText) loadingText.textContent = `Processing with ${model}...`;
-    }
-    const processBtn = document.getElementById('processBtn');
-    if (processBtn) processBtn.disabled = true;
-}
-
-function hideLoading() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) loadingOverlay.style.display = 'none';
-    const processBtn = document.getElementById('processBtn');
-    if (processBtn) processBtn.disabled = false;
-}
+// Helper functions are now imported from script.js to avoid duplicates
 
 // Safe escape
 function escapeHtml(s) {

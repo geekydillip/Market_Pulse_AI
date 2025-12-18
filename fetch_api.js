@@ -1,5 +1,8 @@
 const http = require('http');
 
+// Debug configuration
+const DEBUG = false;
+
 const options = {
   hostname: 'localhost',
   port: 3001,
@@ -13,13 +16,13 @@ const req = http.request(options, (res) => {
   res.on('end', () => {
     try {
       const json = JSON.parse(data);
-      console.log('Series data from API:');
+      if (DEBUG) console.log('Series data from API:');
       if (json.data) {
         json.data.slice(3).filter(row => row[3] && row[3].includes('Series')).forEach(row => {
-          console.log(row[3] + ': ' + (row[4] || '0'));
+          if (DEBUG) console.log(row[3] + ': ' + (row[4] || '0'));
         });
       } else {
-        console.log('No data found');
+        if (DEBUG) console.log('No data found');
       }
     } catch (e) {
       console.error('Error parsing JSON:', e.message);
