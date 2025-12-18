@@ -1735,6 +1735,9 @@ function showModuleDetails(module, moduleData) {
     }
   }
 
+  // Default sort by Severity DESC on modal open
+  sortRows('severity', 'desc');
+
   // Function to render the table
   function renderTable() {
     // Get the tbody for the new table structure

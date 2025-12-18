@@ -21,7 +21,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Resolve Option(Small)','Cause','Counter Measure'];
+  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Progr.Stat.','Resolve Option(Small)','Cause','Counter Measure'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -250,7 +250,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'samsungMembersPlm',
-  expectedHeaders: ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem',  'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment'],
+  expectedHeaders: ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem', 'Progr.Stat.', 'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -357,6 +357,7 @@ module.exports = {
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Progr.Stat.': aiRow['Progr.Stat.'] || '',
         'Resolve Type': original['Resolve Option(Small)'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
@@ -377,6 +378,7 @@ module.exports = {
       if (h === 'R&D Comment') return { wch: 50 };
       if (h === 'Model No.' || h === 'Resolve Type') return { wch: 20 };
       if (h === 'S/W Ver.') return { wch: 15 };
+      if (h === 'Progr.Stat.') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };

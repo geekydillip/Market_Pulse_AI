@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard - Samsung Members PLM</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ===== GLOBAL STYLES ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f3f5f8;
+      color: #1f2937;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    /* ===== DASHBOARD CONTAINER ===== */
+    .dashboard-container {
+      width: 100%;
+      margin: 20px 0;
+      padding: 0;
+    }
+
+    /* ===== MAIN HEADER - STICKY ===== */
+    .main-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 14px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+      transform: translateY(-10px);
+    }
+
+    .header-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-button {
+      position: static;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      width: 120px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      text-decoration: none;
+      color: #1f2937;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+
+    /* ===== DASHBOARD SECTIONS ===== */
+    .dashboard-sections {
+      display: grid;
+      gap: 12px;
+    }
+
+    .section-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 14px 0;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+      letter-spacing: 0.2px;
+    }
+
+    /* ===== KPI CARDS - SUBTLE SUPPORTING ELEMENTS ===== */
+    .kpi-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 6px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #6b7280;
+      opacity: 0.7;
+      margin: 0;
+    }
+
+    /* Status specific colors - subtle, no gradients */
+    .kpi-card.total { background: #e0f2fe; border-left: 4px solid #3b82f6; }
+    .kpi-card.total .kpi-value,
+    .kpi-card.total .kpi-label { color: #1e40af; }
+
+    .kpi-card.closed { background: #f0fdf4; border-left: 4px solid #10b981; }
+    .kpi-card.closed .kpi-value,
+    .kpi-card.closed .kpi-label { color: #166534; }
+
+    .kpi-card.open { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .kpi-card.open .kpi-value,
+    .kpi-card.open .kpi-label { color: #92400e; }
+
+    .kpi-card.resolved { background: #faf5ff; border-left: 4px solid #8b5cf6; }
+    .kpi-card.resolved .kpi-value,
+    .kpi-card.resolved .kpi-label { color: #6b21a8; }
+
+    /* ===== DATA CARDS ===== */
+    .data-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .data-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1), inset -2px -2px 4px rgba(255,255,255,0.9);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .data-card:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 4px 4px 8px rgba(0,0,0,0.15), inset -4px -4px 8px rgba(255,255,255,0.9);
+    }
+
+    .data-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .data-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #3b82f6;
+    }
+
+    /* ===== DATA TABLES - PRIMARY VISUAL FOCUS ===== */
+    .data-table {
+      width: 100%;
+      max-width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 10px 8px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+      background: #f8f9fa;
+      font-weight: 700;
+      color: #1f2937;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #d1d5db;
+    }
+
+    .data-table td {
+      font-size: 13px;
+      color: #374151;
+    }
+
+    /* Column visual hierarchy */
+    .data-table th:nth-child(1),
+    .data-table td:nth-child(1) {
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2) {
+      font-weight: 700;
+      color: #3b82f6;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      opacity: 0.6;
+      font-weight: 400;
+    }
+
+    /* Zebra striping for better readability */
+    .data-table tbody tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+
+    .data-table tbody tr:hover {
+      background-color: #e3f2fd;
+    }
+
+    .data-table .numeric-value {
+      font-weight: 700;
+      color: #3b82f6;
+      font-size: 14px;
+    }
+
+    /* ===== SIDE-BY-SIDE TABLES ===== */
+    .tables-side-by-side {
+      display: grid;
+      grid-template-columns: 0.7fr 0.7fr 1.2fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .tables-side-by-side {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    /* ===== LOADING STATE ===== */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+      font-size: 16px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .main-header {
+        padding: 16px;
+        text-align: center;
+      }
+
+      .header-title {
+        font-size: 20px;
+      }
+
+      .dashboard-container {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Main Header Area -->
+    <header class="main-header">
+      <h1 class="header-title">Samsung Members PLM Data</h1>
+      <div class="header-actions">
+        <a href="/" class="nav-button" title="Back to Home" aria-label="Navigate back to home page">
+          <svg width="24" height="24" fill="none" stroke="blue" stroke-width="3">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+          <span>Home</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Dashboard Sections -->
+    <div class="dashboard-sections" id="dashboardSections">
+      <div class="loading">Loading Samsung Members PLM data...</div>
+    </div>
+  </div>
+
+  <script>
+    // Fetch data from API and render dashboard cards
+    async function fetchDataAndRender() {
+      try {
+        const response = await fetch('/api/samsung-members-plm');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.error || 'API returned success=false');
+        }
+
+        renderDashboardCards(data.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        const container = document.getElementById('dashboardSections');
+        container.innerHTML = '<div class="loading" style="color: #ef4444;">Error loading data: ' + error.message + '</div>';
+      }
+    }
+
+    // Render dashboard with individual cards for each section
+    function renderDashboardCards(rows) {
+      if (!rows || rows.length < 10) {
+        const container = document.getElementById('dashboardSections');
+        container.innerHTML = '<div class="loading">No data available</div>';
+        return;
+      }
+
+      // Parse data from the Excel structure
+      const plmStatusData = parsePLMStatusData(rows);
+      const seriesData = parseSeriesData(rows);
+      const modelData = parseModelData(rows);
+      const moduleData = parseModuleData(rows);
+
+      // Create dashboard sections
+      const container = document.getElementById('dashboardSections');
+      container.innerHTML = '';
+
+      // Combined PLM Status and Series Distribution Section
+      container.appendChild(createOverviewSection(plmStatusData, seriesData));
+
+      // Combined Models and Module Analysis Section
+      container.appendChild(createModelsAndModulesSection(modelData, moduleData));
+    }
+
+    // Parse PLM Status data from rows
+    function parsePLMStatusData(rows) {
+      // PLM Status data starts from row 3 onwards (0-based index)
+      const statusData = [];
+      for (let i = 3; i < rows.length; i++) {
+        const row = rows[i];
+        if (row && row[0] && ['Total', 'Close', 'Open', 'Resolved'].includes(row[0])) {
+          statusData.push({
+            status: row[0],
+            count: parseInt(row[1]) || 0
+          });
+        }
+      }
+      return statusData;
+    }
+
+    // Parse Series data from rows
+    function parseSeriesData(rows) {
+      const seriesData = [];
+      for (let i = 4; i < rows.length; i++) {
+        const row = rows[i];
+        // Identify series rows by empty columns 0,1,2 and non-empty 3,4
+        if (row && row[0] === "" && row[1] === "" && row[2] === "" && row[3] && row[4]) {
+          seriesData.push({
+            series: row[3],
+            count: parseInt(row[4]) || 0
+          });
+        }
+      }
+      return seriesData;
+    }
+
+    // Parse Model data from rows
+    function parseModelData(rows) {
+      const modelData = [];
+      for (let i = 4; i < rows.length; i++) {
+        const row = rows[i];
+        if (row && row[5] && row[6] && !row[5].includes('Series') && !isNaN(parseInt(row[6]))) {
+          modelData.push({
+            model: row[5],
+            count: parseInt(row[6]) || 0
+          });
+        }
+      }
+      // Sort by count descending (show all models)
+      return modelData.sort((a, b) => b.count - a.count);
+    }
+
+    // Parse Module data from rows
+    function parseModuleData(rows) {
+      const moduleData = [];
+      for (let i = 4; i < rows.length; i++) {
+        const row = rows[i];
+        if (row && row[8] && row[9] && !row[8].includes('Count') && !isNaN(parseInt(row[9]))) {
+          moduleData.push({
+            module: row[8],
+            total: parseInt(row[9]) || 0,
+            active: parseInt(row[10]) || 0
+          });
+        }
+      }
+      // Sort by total count descending
+      return moduleData.sort((a, b) => b.total - a.total);
+    }
+
+    // Create combined PLM Status and Series Distribution section
+    function createOverviewSection(statusData, seriesData) {
+      const section = document.createElement('div');
+      section.className = 'section-card';
+
+      section.innerHTML = `
+        <h2 class="section-title">PLM Overview & Series Distribution</h2>
+        <div class="tables-side-by-side">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">PLM Status Overview</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${statusData.map(item => `
+                  <tr>
+                    <td>${item.status}</td>
+                    <td class="numeric-value">${item.count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Series Distribution</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Series</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${seriesData.map(item => `
+                  <tr>
+                    <td>${item.series}</td>
+                    <td class="numeric-value">${item.count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Series Distribution Chart</h3>
+            <canvas id="seriesChart" style="max-height: 220px; width: 100%;"></canvas>
+          </div>
+        </div>
+      `;
+
+      // Create the chart after the HTML is set
+      const ctx = section.querySelector('#seriesChart');
+      if (ctx && seriesData.length > 0) {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: seriesData.map(item => item.series),
+            datasets: [{
+              label: 'Count',
+              data: seriesData.map(item => item.count),
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+              barThickness: 16
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      }
+
+      return section;
+    }
+
+    // Create PLM Status section with table
+    function createStatusSection(statusData) {
+      const section = document.createElement('div');
+      section.className = 'section-card';
+
+      section.innerHTML = `
+        <h2 class="section-title">PLM Status Overview</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${statusData.map(item => `
+              <tr>
+                <td>${item.status}</td>
+                <td class="numeric-value">${item.count}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      return section;
+    }
+
+    // Create Series Distribution section
+    function createSeriesSection(seriesData) {
+      const section = document.createElement('div');
+      section.className = 'section-card';
+
+      section.innerHTML = `
+        <h2 class="section-title">Series Distribution</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Series</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${seriesData.map(item => `
+              <tr>
+                <td>${item.series}</td>
+                <td class="numeric-value">${item.count}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      return section;
+    }
+
+    // Create Top Models section
+    function createModelsSection(modelData) {
+      const section = document.createElement('div');
+      section.className = 'section-card';
+
+      section.innerHTML = `
+        <h2 class="section-title">Top Affected Models</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${modelData.map(item => `
+              <tr>
+                <td>${item.model}</td>
+                <td class="numeric-value">${item.count}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      return section;
+    }
+
+    // Create combined Top Models and Module Analysis section
+    function createModelsAndModulesSection(modelData, moduleData) {
+      const section = document.createElement('div');
+      section.className = 'section-card';
+
+      section.innerHTML = `
+        <h2 class="section-title">Models & Module Analysis</h2>
+        <div class="tables-side-by-side">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Top Affected Models</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${modelData.map(item => `
+                  <tr>
+                    <td>${item.model}</td>
+                    <td class="numeric-value">${item.count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Module Analysis</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Total</th>
+                  <th>Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${moduleData.map(item => `
+                  <tr>
+                    <td>${item.module}</td>
+                    <td class="numeric-value">${item.total}</td>
+                    <td class="numeric-value">${item.active}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      return section;
+    }
+
+    // Create Module Analysis section
+    function createModulesSection(moduleData) {
+      const section = document.createElement('div');
+      section.className = 'section-card';
+
+      section.innerHTML = `
+        <h2 class="section-title">Module Analysis</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Total</th>
+              <th>Active</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${moduleData.map(item => `
+              <tr>
+                <td>${item.module}</td>
+                <td class="numeric-value">${item.total}</td>
+                <td class="numeric-value">${item.active}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      return section;
+    }
+
+    // Get CSS class for status cards
+    function getStatusClass(status) {
+      switch (status.toLowerCase()) {
+        case 'total': return 'total';
+        case 'close': case 'closed': return 'closed';
+        case 'open': return 'open';
+        case 'resolved': return 'resolved';
+        default: return '';
+      }
+    }
+
+    // Initialize on DOM load
+    document.addEventListener('DOMContentLoaded', fetchDataAndRender);
+  </script>
+</body>
+</html>
