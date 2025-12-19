@@ -1998,6 +1998,58 @@ app.get('/api/central/high-issues', async (req, res) => {
   }
 });
 
+// GET /api/central/top-models/:source -> Returns top 10 models for specific data source (beta, plm, voc)
+app.get('/api/central/top-models/:source', async (req, res) => {
+  try {
+    const source = req.params.source;
+    const validSources = ['beta', 'plm', 'voc'];
+    if (!validSources.includes(source)) {
+      return res.status(400).json({ error: 'Invalid source. Must be beta, plm, or voc' });
+    }
+
+    const commandMap = {
+      'beta': 'top-models-beta',
+      'plm': 'top-models-plm',
+      'voc': 'top-models-voc'
+    };
+
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py', commandMap[source]]);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error(`Central aggregator error for ${source}:`, stderr);
+        return res.status(500).json({ error: 'Central aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result);
+      } catch (e) {
+        console.error(`JSON parse error from central aggregator for ${source}:`, e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error(`Central top models ${req.params.source} error:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/analytics/:module -> returns pre-aggregated analytics for dashboards
 app.get('/api/analytics/:module', async (req, res) => {
   const module = req.params.module;

@@ -250,6 +250,30 @@
             letter-spacing: 0.5px;
         }
 
+        .filter-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .filter-btn.active {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
         .processor-pill.beta {
             background-color: #3498db;
             color: white;
@@ -353,7 +377,15 @@
             <!-- Bottom Section -->
             <div class="bottom-container">
                 <div class="sidebar-card">
-                    <h3>Top 10 Models by Issue Count</h3>
+                    <h3>
+                        Top 10 Model
+                        <div style="margin-top: 10px; margin-bottom: 15px;">
+                            <button id="filter-all" class="filter-btn" onclick="filterModels('all')" style="background: #6c757d; color: white; margin-right: 5px;">ALL</button>
+                            <button id="filter-plm" class="filter-btn" onclick="filterModels('plm')" style="background: #9b59b6; color: white; margin-right: 5px;">PLM</button>
+                            <button id="filter-beta" class="filter-btn" onclick="filterModels('beta')" style="background: #3498db; color: white; margin-right: 5px;">BETA</button>
+                            <button id="filter-voc" class="filter-btn" onclick="filterModels('voc')" style="background: #27ae60; color: white;">VOC</button>
+                        </div>
+                    </h3>
                     <div class="models-list" id="models-list">
                         <!-- Models will be populated here -->
                     </div>
@@ -385,6 +417,8 @@
         // Global variables
         let modulesChart = null;
         let seriesChart = null;
+        let allModels = [];
+        let currentFilter = 'all';
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
@@ -424,6 +458,7 @@
                 updateSeriesChart(seriesDistribution);
 
                 // Update Models List
+                allModels = topModels;
                 updateModelsList(topModels);
 
                 // Update Issues Table
@@ -676,10 +711,50 @@
                 div.className = 'model-item';
                 div.innerHTML = `
                     <span class="model-name" title="${model.label}">${index + 1}. ${model.label}</span>
-                    <span class="model-count">${model.value}</span>
+                    <span class="model-count" style="background: rgba(52, 152, 219, 0.2); color: #3498db; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">${model.value}</span>
                 `;
                 container.appendChild(div);
             });
+        }
+
+        async function filterModels(type) {
+            currentFilter = type;
+
+            // Update button active states
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+
+            if (type !== 'all') {
+                document.getElementById(`filter-${type}`).classList.add('active');
+            } else {
+                document.getElementById('filter-all').classList.add('active');
+            }
+
+            // Fetch filtered models from server if not 'all'
+            if (type === 'all') {
+                updateModelsList(allModels);
+            } else {
+                try {
+                    const response = await fetch(`/api/central/top-models/${type}`);
+                    const filteredModels = await response.json();
+                    updateModelsList(filteredModels);
+                } catch (error) {
+                    console.error('Error fetching filtered models:', error);
+                    // Fallback to local filtering
+                    updateModelsList(getFilteredModels());
+                }
+            }
+        }
+
+        function getFilteredModels() {
+            if (currentFilter === 'all') {
+                return allModels;
+            }
+
+            // For filtered views, show "Model No: [model]" format for all models
+            return allModels.map(model => ({
+                label: `Model No: ${model.label}`,
+                value: model.value
+            }));
         }
 
         function updateIssuesTable(issues) {

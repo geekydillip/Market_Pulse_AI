@@ -216,6 +216,22 @@ def compute_top_models(data: dict) -> list:
     sorted_models = sorted(all_models.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_models[:10]]
 
+def compute_top_models_by_source(data: dict, source_folder: str) -> list:
+    """
+    Top 10 models by issue count for a specific data source.
+    """
+    all_models = {}
+    if source_folder in data:
+        combined = combine_dataframes(data[source_folder])
+        if 'Model No.' in combined.columns:
+            models = combined['Model No.'].value_counts()
+            for model, count in models.items():
+                if pd.notna(model) and str(model).strip():
+                    model_str = str(model).strip()
+                    all_models[model_str] = all_models.get(model_str, 0) + count
+    sorted_models = sorted(all_models.items(), key=lambda x: x[1], reverse=True)
+    return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_models[:10]]
+
 def compute_high_issues(data: dict) -> list:
     """
     Top 10 high issues from the module with maximum issue count.
@@ -268,6 +284,27 @@ def compute_high_issues(data: dict) -> list:
     return module_high_issues[:10]
 
 if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        # Handle specific requests
+        command = sys.argv[1]
+        if command == "top-models-beta":
+            data = load_all_excels("./downloads")
+            models = compute_top_models_by_source(data, 'beta_user_issues')
+            print(json.dumps(models))
+        elif command == "top-models-plm":
+            data = load_all_excels("./downloads")
+            models = compute_top_models_by_source(data, 'samsung_members_plm')
+            print(json.dumps(models))
+        elif command == "top-models-voc":
+            data = load_all_excels("./downloads")
+            models = compute_top_models_by_source(data, 'samsung_members_voc')
+            print(json.dumps(models))
+        else:
+            print(json.dumps({"error": f"Unknown command: {command}"}))
+        sys.exit(0)
+
+    # Default behavior - return all data
     base_path = "./downloads"
     try:
         data = load_all_excels(base_path)
