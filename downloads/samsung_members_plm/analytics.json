@@ -1,0 +1,1776 @@
+{
+  "kpis": {
+    "total_rows": 3858,
+    "unique_models": 314,
+    "high_issues": 2336,
+    "severity_distribution": {
+      "High": 2336,
+      "Medium": 1502,
+      "Low": 20
+    }
+  },
+  "top_models": [
+    {
+      "label": "SM-S928BE_SWA_15_DD",
+      "count": 294
+    },
+    {
+      "label": "SM-S938BE_SWA_DD",
+      "count": 210
+    },
+    {
+      "label": "SM-S911BE_SWA_15_DD",
+      "count": 206
+    },
+    {
+      "label": "SM-S918BE_SWA_15_DD",
+      "count": 152
+    },
+    {
+      "label": "SM-S938BE_SWA_16_DD",
+      "count": 107
+    },
+    {
+      "label": "SM-S921BE_SWA_15_DD",
+      "count": 100
+    },
+    {
+      "label": "SM-S928BE_SWA_16_DD",
+      "count": 98
+    },
+    {
+      "label": "SM-M356B_SWA_15_INS",
+      "count": 83
+    },
+    {
+      "label": "SM-S908E_SWA_15_DD",
+      "count": 78
+    },
+    {
+      "label": "SM-S711BE_SWA_15_INS",
+      "count": 77
+    },
+    {
+      "label": "SM-S931BE_SWA_DD",
+      "count": 74
+    },
+    {
+      "label": "SM-G990B2_SWA_15_DD",
+      "count": 70
+    },
+    {
+      "label": "SM-G990E_SWA_15_DD",
+      "count": 69
+    },
+    {
+      "label": "SM-A356E_SWA_15_INS",
+      "count": 66
+    },
+    {
+      "label": "SM-A346E_SWA_15_INS",
+      "count": 65
+    },
+    {
+      "label": "SM-S926BE_SWA_15_DD",
+      "count": 61
+    },
+    {
+      "label": "SM-S721BE_SWA_15_INS",
+      "count": 59
+    },
+    {
+      "label": "SM-A556E_SWA_15_INS",
+      "count": 52
+    },
+    {
+      "label": "SM-S911BE_SWA_14_DD",
+      "count": 47
+    },
+    {
+      "label": "SM-S921E_SWA_16_DD",
+      "count": 46
+    },
+    {
+      "label": "SM-S921BE_SWA_16_DD",
+      "count": 45
+    },
+    {
+      "label": "SM-M346B_SWA_15_INS",
+      "count": 43
+    },
+    {
+      "label": "SM-S721BE_SWA_16_INS",
+      "count": 41
+    },
+    {
+      "label": "SM-S931BE_SWA_16_DD",
+      "count": 40
+    },
+    {
+      "label": "SM-S901E_SWA_15_DD",
+      "count": 37
+    },
+    {
+      "label": "SM-S928BE_SWA_DD",
+      "count": 37
+    },
+    {
+      "label": "SM-S911BE_SWA_16_DD",
+      "count": 37
+    },
+    {
+      "label": "SM-S918BE_SWA_14_DD",
+      "count": 35
+    },
+    {
+      "label": "SM-S918BE_SWA_16_DD",
+      "count": 35
+    },
+    {
+      "label": "SM-E236B_SWA_14_INS",
+      "count": 33
+    },
+    {
+      "label": "SM-A366E_SWA_INS",
+      "count": 31
+    },
+    {
+      "label": "SM-E156B_SWA_15_INS",
+      "count": 27
+    },
+    {
+      "label": "SM-A146B_SWA_15_INS",
+      "count": 27
+    },
+    {
+      "label": "SM-G781B_SWA_13_DD",
+      "count": 27
+    },
+    {
+      "label": "SM-A166P_SWA_15_INS",
+      "count": 26
+    },
+    {
+      "label": "SM-F966BE_SWA_DD",
+      "count": 25
+    },
+    {
+      "label": "SM-E556B_SWA_15_INS",
+      "count": 25
+    },
+    {
+      "label": "SM-A546E_SWA_15_INS",
+      "count": 24
+    },
+    {
+      "label": "SM-A156E_SWA_15_INS",
+      "count": 24
+    },
+    {
+      "label": "SM-A346E_SWA_14_INS",
+      "count": 22
+    },
+    {
+      "label": "SM-X610_EUR_15_XX",
+      "count": 22
+    },
+    {
+      "label": "SM-A566E_SWA_INS",
+      "count": 21
+    },
+    {
+      "label": "SM-S926BE_SWA_16_DD",
+      "count": 20
+    },
+    {
+      "label": "SM-A736B_SWA_15_INU",
+      "count": 20
+    },
+    {
+      "label": "SM-A336E_SWA_15_INS",
+      "count": 20
+    },
+    {
+      "label": "SM-A366E_SWA_16_INS",
+      "count": 19
+    },
+    {
+      "label": "SM-A356E_SWA_INS",
+      "count": 19
+    },
+    {
+      "label": "SM-M356B_SWA_INS",
+      "count": 18
+    },
+    {
+      "label": "SM-E146B_SWA_15_INS",
+      "count": 18
+    },
+    {
+      "label": "SM-A356E_SWA_16_INS",
+      "count": 18
+    },
+    {
+      "label": "SM-S906E_SWA_15_DD",
+      "count": 18
+    },
+    {
+      "label": "SM-S916BE_SWA_15_DD",
+      "count": 17
+    },
+    {
+      "label": "SM-M336BU_SWA_15_INS",
+      "count": 17
+    },
+    {
+      "label": "SM-S908E_SWA_14_DD",
+      "count": 16
+    },
+    {
+      "label": "SM-E546B_SWA_15_INS",
+      "count": 15
+    },
+    {
+      "label": "SM-F731BE_SWA_15_DD",
+      "count": 15
+    },
+    {
+      "label": "SM-X216B_SWA_15_DD",
+      "count": 15
+    },
+    {
+      "label": "SM-A536E_SWA_15_INS",
+      "count": 15
+    },
+    {
+      "label": "SM-A346E_SWA_16_INS",
+      "count": 14
+    },
+    {
+      "label": "SM-A556E_SWA_INS",
+      "count": 14
+    },
+    {
+      "label": "SM-S711BE_SWA_16_INS",
+      "count": 14
+    },
+    {
+      "label": "SM-A556E_SWA_16_INS",
+      "count": 13
+    },
+    {
+      "label": "SM-A528B_SWA_14_INS",
+      "count": 13
+    },
+    {
+      "label": "SM-X810_EUR_15_XX",
+      "count": 13
+    },
+    {
+      "label": "SM-S908E_SWA_16_DD",
+      "count": 12
+    },
+    {
+      "label": "SM-A546E_SWA_14_INS",
+      "count": 12
+    },
+    {
+      "label": "SM-A566E_SWA_16_INS",
+      "count": 12
+    },
+    {
+      "label": "SM-M346B_SWA_14_INS",
+      "count": 12
+    },
+    {
+      "label": "SM-M346B_SWA_16_INS",
+      "count": 12
+    },
+    {
+      "label": "SM-S711BE_SWA_14_INS",
+      "count": 11
+    },
+    {
+      "label": "SM-X510_EUR_15_XX",
+      "count": 11
+    },
+    {
+      "label": "SM-E556B_SWA_INS",
+      "count": 11
+    },
+    {
+      "label": "SM-A156E_SWA_INS",
+      "count": 11
+    },
+    {
+      "label": "SM-A166P_SWA_INS",
+      "count": 10
+    },
+    {
+      "label": "SM-E346B_SWA_15_INS",
+      "count": 10
+    },
+    {
+      "label": "SM-M356B_SWA_16_INS",
+      "count": 10
+    },
+    {
+      "label": "SM-M566B_SWA_INS",
+      "count": 10
+    },
+    {
+      "label": "SM-X820_EUR_15_XX",
+      "count": 10
+    },
+    {
+      "label": "SM-A266BE_SWA_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-F946BE_SWA_15_DD",
+      "count": 9
+    },
+    {
+      "label": "SM-S926BE_SWA_DD",
+      "count": 9
+    },
+    {
+      "label": "SM-F936BE_SWA_15_DD",
+      "count": 9
+    },
+    {
+      "label": "SM-M558B_SWA_15_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-M146B_SWA_15_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-A236E_SWA_14_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-M536B_SWA_15_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-F956BE_SWA_15_DD",
+      "count": 9
+    },
+    {
+      "label": "SM-S921BE_SWA_DD",
+      "count": 9
+    },
+    {
+      "label": "SM-M556B_SWA_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-E156B_SWA_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-M146B_SWA_14_INS",
+      "count": 8
+    },
+    {
+      "label": "SM-G998B_SWA_15_DD",
+      "count": 8
+    },
+    {
+      "label": "SM-X216B_EUR_15_XX",
+      "count": 8
+    },
+    {
+      "label": "SM-S901E_SWA_14_DD",
+      "count": 8
+    },
+    {
+      "label": "SM-A146B_SWA_14_INS",
+      "count": 8
+    },
+    {
+      "label": "SM-A336E_SWA_14_INS",
+      "count": 8
+    },
+    {
+      "label": "SM-E066B_SWA_INS",
+      "count": 8
+    },
+    {
+      "label": "SM-S936BE_SWA_DD",
+      "count": 8
+    },
+    {
+      "label": "SM-M215F_SWA_12_INS",
+      "count": 7
+    },
+    {
+      "label": "SM-M558B_SWA_INS",
+      "count": 7
+    },
+    {
+      "label": "SM-G990E_SWA_14_DD",
+      "count": 7
+    },
+    {
+      "label": "SM-X210_EUR_15_XX",
+      "count": 6
+    },
+    {
+      "label": "SM-E055F_SWA_15_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-S721BE_SWA_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-E146B_SWA_14_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-F766BE_SWA_DD",
+      "count": 6
+    },
+    {
+      "label": "SM-M166P_SWA_15_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-S906E_SWA_14_DD",
+      "count": 6
+    },
+    {
+      "label": "SM-M536B_SWA_14_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-A235F_SWA_14_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-X710_EUR_15_XX",
+      "count": 6
+    },
+    {
+      "label": "SM-X510_EUR_14_XX",
+      "count": 5
+    },
+    {
+      "label": "SM-A226B_SWA_13_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-A066B_SWA_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-S901E_SWA_16_DD",
+      "count": 5
+    },
+    {
+      "label": "SM-M366B_SWA_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-M366B_SWA_16_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-E346B_SWA_14_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-G990E_SWA_16_DD",
+      "count": 5
+    },
+    {
+      "label": "SM-G990B2_SWA_14_DD",
+      "count": 5
+    },
+    {
+      "label": "SM-F926B_SWA_15_DD",
+      "count": 5
+    },
+    {
+      "label": "SM-E166P_SWA_15_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-M156B_SWA_15_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-E625F_SWA_13_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-A127F_SWA_13_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-M556B_SWA_15_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-A156E_SWA_16_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-A536E_SWA_14_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-A736B_SWA_14_INU",
+      "count": 4
+    },
+    {
+      "label": "SM-T735_SWA_14_DD",
+      "count": 4
+    },
+    {
+      "label": "SM-P615_SWA_13_DD",
+      "count": 4
+    },
+    {
+      "label": "SM-X920_EUR_15_XX",
+      "count": 4
+    },
+    {
+      "label": "SM-A256E_SWA_15_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-M136B_SWA_14_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-F741BE_SWA_15_DD",
+      "count": 4
+    },
+    {
+      "label": "SM-A066B_SWA_16_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-E366B_SWA_16_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-M526B_SWA_13_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-F946BE_SWA_14_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-S921E_SWA_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-M166P_SWA_16_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-A546E_SWA_16_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-X710_EUR_16_XX",
+      "count": 3
+    },
+    {
+      "label": "SM-A176BE_SWA_16_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-X820_EUR_16_XX",
+      "count": 3
+    },
+    {
+      "label": "SM-E346B_SWA_16_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-M515F_SWA_12_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-A135F_SWA_14_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-S936BE_SWA_16_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-G990B2_SWA_16_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-L705F_EUR_XX",
+      "count": 3
+    },
+    {
+      "label": "SM-M127G_SWA_13_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-A176BE_SWA_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-E566B_SWA_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-S711BE_SWA_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-F127G_SWA_13_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-M315F_SWA_12_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-L315F_EUR_XX",
+      "count": 3
+    },
+    {
+      "label": "SM-G996B_SWA_15_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-E566B_SWA_16_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-A166P_SWA_16_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-G998B_SWA_14_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-M145F_SWA_15_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-G991B_SWA_15_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-M325F_SWA_13_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-E135F_SWA_14_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-X516B_SWA_15_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-M326B_SWA_13_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-M336BU_SWA_14_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-F956BE_SWA_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-X916B_SWA_15_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-X806B_SWA_15_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-X516B_EUR_15_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-F731BE_SWA_14_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-A525F_SWA_14_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-M215G_SWA_13_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-R875F_EUR_E0_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-M317F_SWA_12_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-A256E_SWA_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-E546B_SWA_14_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-A125F_SWA_12_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-M558B_SWA_16_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-M066B_SWA_16_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-M346B_SWA_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-X826B_SWA_16_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-F946BE_SWA_16_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-A336E_SWA_16_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-X820_EUR_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-E055F_SWA_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-E546B_SWA_16_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-M025F_SWA_12_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-X210_EUR_14_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-X926B_EUR_16_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-T733_EUR_14_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-A055F_SWA_15_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-X115_EUR_15_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-X110_EUR_15_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-N980F_SWA_13_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-X216B_SWA_14_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-M066B_SWA_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-X610_EUR_14_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-G991B_SWA_14_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-A217F_SWA_12_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-A325F_SWA_13_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-X700_EUR_15_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-N770F_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-G780F_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-F711B_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-R870X_NA_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-X616B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X816B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-G985F_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-M307F_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X816B_EUR_15_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-E426B_SWA_13_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-S916BE_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-A035F_SWA_13_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-F711B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-R510_NA_XAR",
+      "count": 1
+    },
+    {
+      "label": "SM-X926B_SWA_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-M315F_SWA_RR_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-M307F_SWA_RR_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-R960_NA_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-F731BE_SWA_16_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-F926B_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-A256E_SWA_16_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-E156B_SWA_16_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-M136B_SWA_13_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X620_EUR_16_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X810_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-N975F_SWA_12_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-E066B_SWA_16_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-R960_NA_E0_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-M017F_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-M166P_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-A207F_SWA_RR_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-T225_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-R860X_NA_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-X826B_EUR_15_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-A715F_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-M135FU_SWA_14_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-A047F_SWA_14_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X910_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X800_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-M156B_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-T225_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-M115F_SWA_12_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-G975F_SWA_12_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X916B_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X516B_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X616B_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X926B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-T970_EUR_13_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-N960F_SWA_QQ_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X906B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X205_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X716B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X910_EUR_15_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X706B_EUR_15_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X520_EUR_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-E145F_SWA_15_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X620_EUR_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X616B_EUR_15_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-L330_ALL_WW",
+      "count": 1
+    },
+    {
+      "label": "SM-R820_EUR_TE_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-R945F_EUR_E0_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X115_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-L300_ALL_F0_WW",
+      "count": 1
+    },
+    {
+      "label": "SM-A566B_EUR_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X216B_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-F721BE_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-A065F_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-F956U_NA_USC",
+      "count": 1
+    },
+    {
+      "label": "SM-A055F_SWA_14_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-A065F_SWA_15_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X526B_SWA_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-R400N_NA_XAR",
+      "count": 1
+    },
+    {
+      "label": "SM-S937BE_SWA_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-M022G_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X200_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-G973F_SWA_12_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-A305F_SWA_RR_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-R870_NA_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-A042F_SWA_14_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-L505F_EUR_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-R820X_EUR_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-R865F_EUR_D0_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-A145F_SWA_15_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-N770F_SWA_13_IND",
+      "count": 1
+    },
+    {
+      "label": "SM-E045F_SWA_14_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-E225F_SWA_13_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-T975_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X706B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-R760_EUR_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-A515F_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-L325F_EUR_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X800_EUR_15_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-A225F_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-A910F_SWA_OO_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-F741BE_SWA_16_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-E366B_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X520_EUR_16_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-A505F_SWA_RR_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-S731BE_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X710_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-R870_NA_E0_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-X700_EUR_16_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X916B_SWA_16_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-A266BE_SWA_16_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-F936BE_SWA_16_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-F956BE_SWA_16_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-Q501_ALL_W/W",
+      "count": 1
+    },
+    {
+      "label": "SM-X610_EUR_16_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-X510_EUR_16_XX",
+      "count": 1
+    }
+  ],
+  "categories": [
+    {
+      "label": "Settings",
+      "count": 912
+    },
+    {
+      "label": "Network",
+      "count": 445
+    },
+    {
+      "label": "Camera",
+      "count": 439
+    },
+    {
+      "label": "Display",
+      "count": 364
+    },
+    {
+      "label": "Battery",
+      "count": 325
+    },
+    {
+      "label": "Lock Screen",
+      "count": 290
+    },
+    {
+      "label": "Call",
+      "count": 90
+    },
+    {
+      "label": "System performance",
+      "count": 82
+    },
+    {
+      "label": "Gallery",
+      "count": 68
+    },
+    {
+      "label": "Audio Sound",
+      "count": 51
+    },
+    {
+      "label": "System Performance",
+      "count": 45
+    },
+    {
+      "label": "System",
+      "count": 41
+    },
+    {
+      "label": "Notification",
+      "count": 37
+    },
+    {
+      "label": "Contacts",
+      "count": 34
+    },
+    {
+      "label": "Audio",
+      "count": 33
+    },
+    {
+      "label": "Charging",
+      "count": 30
+    },
+    {
+      "label": "Notes",
+      "count": 28
+    },
+    {
+      "label": "Biometrics",
+      "count": 24
+    },
+    {
+      "label": "Game",
+      "count": 21
+    },
+    {
+      "label": "Security",
+      "count": 19
+    },
+    {
+      "label": "Video Playback",
+      "count": 19
+    },
+    {
+      "label": "Media",
+      "count": 17
+    },
+    {
+      "label": "Launcher",
+      "count": 17
+    },
+    {
+      "label": "Navigation",
+      "count": 17
+    },
+    {
+      "label": "Health",
+      "count": 16
+    },
+    {
+      "label": "Platform",
+      "count": 16
+    },
+    {
+      "label": "Software Update",
+      "count": 14
+    },
+    {
+      "label": "Weather",
+      "count": 13
+    },
+    {
+      "label": "Messages",
+      "count": 12
+    },
+    {
+      "label": "Photo Editor",
+      "count": 12
+    },
+    {
+      "label": "Calculator",
+      "count": 12
+    },
+    {
+      "label": "Keyboard",
+      "count": 12
+    },
+    {
+      "label": "Calendar",
+      "count": 11
+    },
+    {
+      "label": "Touch",
+      "count": 11
+    },
+    {
+      "label": "Clock",
+      "count": 11
+    },
+    {
+      "label": "Communication",
+      "count": 11
+    },
+    {
+      "label": "Video",
+      "count": 11
+    },
+    {
+      "label": "My Files",
+      "count": 11
+    },
+    {
+      "label": "Sound",
+      "count": 10
+    },
+    {
+      "label": "Telephony",
+      "count": 10
+    },
+    {
+      "label": "Now Bar",
+      "count": 7
+    },
+    {
+      "label": "Storage",
+      "count": 7
+    },
+    {
+      "label": "Payment",
+      "count": 7
+    },
+    {
+      "label": "Game Performance",
+      "count": 7
+    },
+    {
+      "label": "Wallpaper",
+      "count": 7
+    },
+    {
+      "label": "Video Editor",
+      "count": 7
+    },
+    {
+      "label": "Recent",
+      "count": 7
+    },
+    {
+      "label": "Bluetooth",
+      "count": 6
+    },
+    {
+      "label": "Secure Folder",
+      "count": 6
+    },
+    {
+      "label": "Quick Panel",
+      "count": 5
+    },
+    {
+      "label": "Wallet",
+      "count": 5
+    },
+    {
+      "label": "Platform Reset",
+      "count": 5
+    },
+    {
+      "label": "Video Player",
+      "count": 5
+    },
+    {
+      "label": "Messaging",
+      "count": 5
+    },
+    {
+      "label": "Navigation bar",
+      "count": 4
+    },
+    {
+      "label": "Browser",
+      "count": 4
+    },
+    {
+      "label": "Location",
+      "count": 4
+    },
+    {
+      "label": "USB",
+      "count": 4
+    },
+    {
+      "label": "Edge",
+      "count": 4
+    },
+    {
+      "label": "Notifications",
+      "count": 4
+    },
+    {
+      "label": "Sensor",
+      "count": 4
+    },
+    {
+      "label": "Home Screen",
+      "count": 4
+    },
+    {
+      "label": "Connectivity",
+      "count": 4
+    },
+    {
+      "label": "Status Bar",
+      "count": 4
+    },
+    {
+      "label": "Digital Wellbeing",
+      "count": 3
+    },
+    {
+      "label": "Watch",
+      "count": 3
+    },
+    {
+      "label": "Files",
+      "count": 3
+    },
+    {
+      "label": "Media Playback",
+      "count": 3
+    },
+    {
+      "label": "Search",
+      "count": 3
+    },
+    {
+      "label": "Playback",
+      "count": 3
+    },
+    {
+      "label": "Performance",
+      "count": 2
+    },
+    {
+      "label": "Application",
+      "count": 2
+    },
+    {
+      "label": "Game Booster",
+      "count": 2
+    },
+    {
+      "label": "Payment Platform",
+      "count": 2
+    },
+    {
+      "label": "System UI",
+      "count": 2
+    },
+    {
+      "label": "Dialer",
+      "count": 2
+    },
+    {
+      "label": "Media Player",
+      "count": 2
+    },
+    {
+      "label": "Accessibility",
+      "count": 2
+    },
+    {
+      "label": "Maps",
+      "count": 2
+    },
+    {
+      "label": "Map",
+      "count": 2
+    },
+    {
+      "label": "Device Care",
+      "count": 2
+    },
+    {
+      "label": "Store",
+      "count": 2
+    },
+    {
+      "label": "Photo",
+      "count": 2
+    },
+    {
+      "label": "Power",
+      "count": 2
+    },
+    {
+      "label": "Fitness",
+      "count": 2
+    },
+    {
+      "label": "Wearable",
+      "count": 2
+    },
+    {
+      "label": "App Store",
+      "count": 2
+    },
+    {
+      "label": "Gaming Hub",
+      "count": 1
+    },
+    {
+      "label": "Sensors",
+      "count": 1
+    },
+    {
+      "label": "Multi-Window",
+      "count": 1
+    },
+    {
+      "label": "Watch_Connection",
+      "count": 1
+    },
+    {
+      "label": "Boot",
+      "count": 1
+    },
+    {
+      "label": "Others",
+      "count": 1
+    },
+    {
+      "label": "Capture",
+      "count": 1
+    },
+    {
+      "label": "Security Setting",
+      "count": 1
+    },
+    {
+      "label": "Body Composition",
+      "count": 1
+    },
+    {
+      "label": "Music",
+      "count": 1
+    },
+    {
+      "label": "Gaming",
+      "count": 1
+    },
+    {
+      "label": "Smart Switch",
+      "count": 1
+    },
+    {
+      "label": "Mail",
+      "count": 1
+    },
+    {
+      "label": "Galaxy Store",
+      "count": 1
+    },
+    {
+      "label": "Contact",
+      "count": 1
+    },
+    {
+      "label": "Watch System",
+      "count": 1
+    },
+    {
+      "label": "Sound Quality",
+      "count": 1
+    },
+    {
+      "label": "Sharing",
+      "count": 1
+    },
+    {
+      "label": "Pen",
+      "count": 1
+    },
+    {
+      "label": "Calculation",
+      "count": 1
+    },
+    {
+      "label": "BT",
+      "count": 1
+    },
+    {
+      "label": "Input",
+      "count": 1
+    },
+    {
+      "label": "Google Play Store",
+      "count": 1
+    },
+    {
+      "label": "Downloads",
+      "count": 1
+    },
+    {
+      "label": "Chat",
+      "count": 1
+    },
+    {
+      "label": "Backup",
+      "count": 1
+    },
+    {
+      "label": "OTG",
+      "count": 1
+    },
+    {
+      "label": "Watch Face",
+      "count": 1
+    },
+    {
+      "label": "Health Monitor",
+      "count": 1
+    },
+    {
+      "label": "Game Launcher",
+      "count": 1
+    },
+    {
+      "label": "App Installation",
+      "count": 1
+    },
+    {
+      "label": "Install",
+      "count": 1
+    },
+    {
+      "label": "Generative AI",
+      "count": 1
+    },
+    {
+      "label": "Editing",
+      "count": 1
+    },
+    {
+      "label": "UI",
+      "count": 1
+    },
+    {
+      "label": "System Update",
+      "count": 1
+    },
+    {
+      "label": "App",
+      "count": 1
+    },
+    {
+      "label": "Telephony_Call",
+      "count": 1
+    },
+    {
+      "label": "S Health",
+      "count": 1
+    }
+  ]
+}

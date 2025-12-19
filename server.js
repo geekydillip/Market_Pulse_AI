@@ -1023,6 +1023,35 @@ function sendProgress(sessionId, data) {
   }
 }
 
+// Precompute analytics after Excel processing
+async function precomputeAnalytics(module, processedPath) {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/pandas_aggregator.py', module, '--save-json']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log(`✅ Analytics precomputed for ${module}`);
+        resolve();
+      } else {
+        console.warn(`⚠️ Analytics precomputation failed for ${module}:`, stderr);
+        resolve(); // Don't fail the whole process
+      }
+    });
+  });
+}
+
 // POST /api/cancel/:sessionId -> marks a session as cancelled and aborts active requests
 app.post('/api/cancel/:sessionId', (req, res) => {
   const sessionId = req.params.sessionId;
@@ -1355,6 +1384,11 @@ async function processExcel(req, res) {
 
     try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
 
+    // Precompute analytics after successful processing
+    precomputeAnalytics(processingType, processedPath).catch(err =>
+      console.warn('Analytics precomputation failed:', err.message)
+    );
+
     res.json({
       success: true,
       total_processing_time_ms: Date.now() - tStart,
@@ -1495,7 +1529,11 @@ app.get('/api/models', (req, res) => {
     const models = new Set();
     files.forEach(f => {
       const m = (f.modelFromFile || '').toString().trim();
-      if (m) models.add(m);
+      if (m) {
+        // Split comma-separated model strings and add each individual model
+        const modelList = m.split(',').map(model => model.trim()).filter(model => model);
+        modelList.forEach(model => models.add(model));
+      }
     });
     const arr = Array.from(models).sort();
     res.json({ success: true, models: arr });
@@ -1551,100 +1589,41 @@ function getFilteredRows(modelQuery, severityQuery, category) {
   return filteredRows;
 }
 
-// GET /api/dashboard?model=<modelName>&severity=<severity>&category=<category>  (all parameters optional)
-// Reads from downloads/<category>/ if category provided, otherwise whole downloads/
-// returns: { success:true, model:..., totals:{ totalCases, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
-app.get('/api/dashboard', (req, res) => {
+// GET /api/dashboard?category=<module> -> Pandas-first dashboard API
+app.get('/api/dashboard', async (req, res) => {
   try {
-    const modelQueryRaw = (req.query.model || '').toString().trim();
-    const modelQuery = (modelQueryRaw === '' || /^(all|__all__|aggregate)$/i.test(modelQueryRaw)) ? null : modelQueryRaw;
-    const severityQueryRaw = (req.query.severity || '').toString().trim();
-    const severityQuery = severityQueryRaw === '' ? null : severityQueryRaw;
-    const categoryQueryRaw = (req.query.category || '').toString().trim();
-    const category = categoryQueryRaw === '' ? null : categoryQueryRaw;
+    const module = req.query.category || 'default';
 
-    const filteredRows = getFilteredRows(modelQuery, severityQuery, category);
+    const analyticsRes = await fetch(
+      `http://localhost:${PORT}/api/analytics/${module}`
+    );
 
-    // Aggregations
-    const totals = { totalCases: filteredRows.length, high: 0, medium: 0, low: 0 };
-    const severityCounts = {};
-    const moduleCounts = {};
-
-    filteredRows.forEach(r => {
-      // Severity detection: look for common severity words in any of the severity columns
-      const sev = (r.Severity || r['Severity'] || r['Severity Level'] || '').toString().trim() || 'Unknown';
-      const sevKey = sev || 'Unknown';
-      severityCounts[sevKey] = (severityCounts[sevKey] || 0) + 1;
-
-      if (/high/i.test(sevKey)) totals.high++;
-      if (/med/i.test(sevKey)) totals.medium++;
-      if (/low/i.test(sevKey)) totals.low++;
-
-      // Module detection: check common column names and fallback to empty
-      const mod = (r.Module || r['Module'] || r['Module Name'] || r['Modules'] || '').toString().trim() || 'Unknown';
-      moduleCounts[mod] = (moduleCounts[mod] || 0) + 1;
-    });
-
-    const severityDistribution = Object.keys(severityCounts).map(k => ({ severity: k, count: severityCounts[k] })).sort((a, b) => b.count - a.count);
-    const moduleDistribution = Object.keys(moduleCounts).map(k => ({ module: k, count: moduleCounts[k] })).sort((a, b) => b.count - a.count);
-
-    // Calculate complete model counts from all rows (for sidebar)
-    let modelCounts = {};
-    if (category && !modelQuery) {
-      filteredRows.forEach(r => {
-        const modelValue = r._modelFromFile || '';
-        if (modelValue) {
-          // Handle comma-separated models
-          if (modelValue.includes(',')) {
-            const models = modelValue.split(',').map(m => normalizeModelString(m.trim())).filter(m => m && m !== 'Unknown');
-            models.forEach(model => {
-              modelCounts[model] = (modelCounts[model] || 0) + 1;
-            });
-          } else {
-            const normalizedModel = normalizeModelString(modelValue);
-            if (normalizedModel && normalizedModel !== 'Unknown') {
-              modelCounts[normalizedModel] = (modelCounts[normalizedModel] || 0) + 1;
-            }
-          }
-        }
-      });
+    if (!analyticsRes.ok) {
+      throw new Error('Analytics service failed');
     }
 
-    // Prepare table rows to return (limit to avoid huge payload)
-    const tableRows = filteredRows.slice(0, 500).map(r => {
-      const mappedRow = {
-        caseId: r['Case Code'] || r['CaseId'] || r['ID'] || '',
-        title: r['Title'] || r['Summary'] || r['Problem Title'] || '',
-        problem: r['Problem'] || r['Issue'] || '',
-        modelFromFile: r._modelFromFile || '',
-        module: r['Module'] || r['Module Name'] || '',
-        severity: r['Severity'] || '',
-        sWVer: r['S/W Ver.'] || r['S/W Version'] || r['Software Version'] || '',
-        subModule: r['Sub-Module'] || r['Sub Module'] || r['SubModule'] || '',
-        summarizedProblem: r['Summarized Problem'] || r['Summarized_Problem'] || r['Summary'] || '',
-        severityReason: r['Severity Reason'] || r['Severity_Reason'] || ''
-      };
+    const analytics = await analyticsRes.json();
 
-      return mappedRow;
-    });
-
-    const response = {
+    res.json({
       success: true,
-      model: modelQuery || 'All',
-      totals,
-      severityDistribution,
-      moduleDistribution,
-      rows: tableRows
-    };
+      model: req.query.model || 'All',
+      totals: {
+        totalCases: analytics.kpis.total_rows,
+        high: analytics.kpis.severity_distribution?.High || 0,
+        medium: analytics.kpis.severity_distribution?.Medium || 0,
+        low: analytics.kpis.severity_distribution?.Low || 0,
+        critical: analytics.kpis.severity_distribution?.Critical || 0
+      },
+      severityDistribution: analytics.kpis.severity_distribution || {},
+      moduleDistribution: analytics.categories || [],
+      rows: analytics.rows || []
+    });
 
-    // Include model counts if calculated
-    if (Object.keys(modelCounts).length > 0) {
-      response.modelCounts = modelCounts;
-    }
-
-    res.json(response);
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
 
@@ -1812,6 +1791,92 @@ app.get('/api/samsung-members-plm', (req, res) => {
 });
 
 
+
+// GET /api/analytics/:module -> returns pre-aggregated analytics for dashboards
+app.get('/api/analytics/:module', async (req, res) => {
+  const module = req.params.module;
+  const analyticsPath = path.join(__dirname, 'downloads', module, 'analytics.json');
+
+  // Check if analytics.json exists and is newer than latest Excel
+  if (fs.existsSync(analyticsPath)) {
+    try {
+      const analyticsStat = fs.statSync(analyticsPath);
+      const latestExcel = getLatestExcelFile(module);
+
+      if (latestExcel && analyticsStat.mtime >= fs.statSync(latestExcel).mtime) {
+        // Cache is fresh, return it directly
+        console.log(`📋 Serving cached analytics for ${module}`);
+        const cachedData = JSON.parse(fs.readFileSync(analyticsPath, 'utf8'));
+        return res.json(cachedData);
+      }
+    } catch (err) {
+      console.warn('Cache read failed, falling back to computation:', err.message);
+    }
+  }
+
+  // Fallback to on-demand computation
+  console.log(`🔄 Computing analytics for ${module}`);
+  const { spawn } = require('child_process');
+
+  const pythonProcess = spawn('python', ['server/analytics/pandas_aggregator.py', module]);
+
+  let stdout = '';
+  let stderr = '';
+
+  pythonProcess.stdout.on('data', (data) => {
+    stdout += data.toString();
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    stderr += data.toString();
+  });
+
+  pythonProcess.on('close', (code) => {
+    if (code !== 0) {
+      console.error('Python analytics error:', stderr);
+      return res.status(500).json({ error: 'Analytics computation failed' });
+    }
+
+    try {
+      const result = JSON.parse(stdout);
+      if (result.error) {
+        if (result.error.includes('No Excel files')) {
+          return res.status(404).json({ error: 'No processed Excel files found' });
+        } else {
+          return res.status(500).json({ error: result.error });
+        }
+      }
+      res.json(result);
+    } catch (e) {
+      console.error('JSON parse error from analytics:', e);
+      res.status(500).json({ error: 'Invalid response from analytics' });
+    }
+  });
+});
+
+// Helper function to get latest Excel file for cache validation
+function getLatestExcelFile(module) {
+  const moduleDir = path.join(__dirname, 'downloads', module);
+  if (!fs.existsSync(moduleDir)) return null;
+
+  try {
+    const files = fs.readdirSync(moduleDir)
+      .filter(f => f.endsWith('.xlsx') || f.endsWith('.xls'))
+      .map(f => path.join(moduleDir, f))
+      .filter(f => fs.existsSync(f));
+
+    if (files.length === 0) return null;
+
+    // Return the most recently modified file
+    return files.reduce((latest, current) => {
+      const latestStat = fs.statSync(latest);
+      const currentStat = fs.statSync(current);
+      return currentStat.mtime > latestStat.mtime ? current : latest;
+    });
+  } catch (err) {
+    return null;
+  }
+}
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {

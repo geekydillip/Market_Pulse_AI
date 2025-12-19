@@ -1,0 +1,211 @@
+{
+  "kpis": {
+    "total_rows": 10,
+    "unique_models": 2,
+    "high_issues": 4,
+    "severity_distribution": {
+      "Medium": 6,
+      "High": 4
+    }
+  },
+  "top_models": [
+    {
+      "label": "SM-F761B_EUR_XX",
+      "count": 8
+    },
+    {
+      "label": "SM-F966U_NA_VZW",
+      "count": 2
+    }
+  ],
+  "categories": [
+    {
+      "label": "System",
+      "count": 3
+    },
+    {
+      "label": "Connectivity",
+      "count": 3
+    },
+    {
+      "label": "Network",
+      "count": 2
+    },
+    {
+      "label": "Call",
+      "count": 2
+    }
+  ],
+  "rows": [
+    {
+      "Case Code": "P250404-05795",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "(Moved) F966USQU0AYD3/OYN0AYD3/SQU0AYD3",
+      "Title": "CP Crash observed during CP stress test",
+      "Problem": "Turn ON the Phone > Run CP stress script > Observe. Actual Result: Kernel Panic Observed. Expected result: CP Crash should not be observed.",
+      "Priority": "A",
+      "Occurr. Freq.": "Once",
+      "Module": "System",
+      "Sub-Module": "CP",
+      "Issue Type": "Crash",
+      "Sub-Issue Type": "CP Crash",
+      "Summarized Problem": "CP crash occurs during stress test, leading to kernel panic.",
+      "Severity": "High",
+      "Severity Reason": "CP crash causes system kernel panic, preventing normal operation."
+    },
+    {
+      "Case Code": "P250404-06379",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "(Moved) F966USQU0AYD3/OYN0AYD3/SQU0AYD3",
+      "Title": "CP Crash observed during CP stress test",
+      "Problem": "Pre condition : SIM1: Airtel\\r\\n                   DUT: SM-F761BE_SWA [352845440000562]\\r\\n                   S/W version: AYD3/AYD3/AYD3\\r\\n\\r\\nCP Stress Script name: CP Stress script 2025_03\\r\\n\\r\\nOccurrence process:\\r\\nTurn ON the Phone > Run CP stress script > Observe\\r\\n\\r\\nActual Result:\\r\\nCP Crash Observed.\\r\\n[ 1943.124899] [6: cbd: 1098] Kernel panic - not syncing: CP Crash : CP Crash by CP - UMTS: N/A\\r\\n[ 1943.124899] [6: cbd: 1098] D-Abort(L3OT):DomainFault\\r\\n\\r\\nExpected result: \\r\\nCP Crash should not be observed.\\r\\n\\r\\nNote:\\r\\nRDX, Dumpstate, Act logs attached.",
+      "Priority": "A",
+      "Occurr. Freq.": "Once",
+      "Module": "System",
+      "Sub-Module": "CP",
+      "Issue Type": "Crash",
+      "Sub-Issue Type": "CP Crash",
+      "Summarized Problem": "CP crash occurs during stress test, violating expected stability.",
+      "Severity": "High",
+      "Severity Reason": "Crash during core process leads to system instability and failure to function."
+    },
+    {
+      "Case Code": "P250405-01752",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "F761BXXU0AYD3/OXM0AYD3/XXU0AYD3",
+      "Title": "VoNR toggle button is not showing in Network menu for Jio/Airtel.",
+      "Problem": "Go to settings > Connections > Mobile Network > Observe. VoNR toggle button is not available for Jio or Airtel. Expected result: VoNR toggle button should be available under Network menu.",
+      "Priority": "A",
+      "Occurr. Freq.": "Always",
+      "Module": "Network",
+      "Sub-Module": "CP Crash",
+      "Issue Type": "Functional",
+      "Sub-Issue Type": "Feature Missing",
+      "Summarized Problem": "VoNR toggle button is missing in Network menu for Jio and Airtel.",
+      "Severity": "High",
+      "Severity Reason": "Feature missing in core network settings prevents user from enabling VoNR on supported networks."
+    },
+    {
+      "Case Code": "P250405-01807",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "F761BXXU0AYD3/OXM0AYD3/XXU0AYD3",
+      "Title": "Data icon shows 4G while Device upper layer Indicator set 1",
+      "Problem": "SIM1: Airtel. Device in idle state until 4G data icon displays. Dial *#0011# to check. Data icon shows 4G while upper layer indicator is set to 1. Expected: when indicator is 1, data icon should show 4G. Upper layer indicator 1 should show 4G data in use.",
+      "Priority": "A",
+      "Occurr. Freq.": "Always",
+      "Module": "Network",
+      "Sub-Module": "Signal",
+      "Issue Type": "Connectivity",
+      "Sub-Issue Type": "Compatibility Issue",
+      "Summarized Problem": "Data icon shows 4G when upper layer indicator is set to 1, violating expected behavior for 5G data indication.",
+      "Severity": "High",
+      "Severity Reason": "Issue blocks correct 5G data indication under test conditions, causing misrepresentation of network status."
+    },
+    {
+      "Case Code": "P250405-01895",
+      "Model No.": "SM-F966U_NA_VZW",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "(Moved) F761BXXU0AYD3/OXM0AYD3/XXU0AYD3",
+      "Title": "Unable to retrive the Call screen from Notification panel.",
+      "Problem": "Make MO/MT Call > tap in Home button > tap on the Call screen icon from top right corner > Observe. Unable to retrive the Call screen from Notification panel. Expected result: Call screen should get retrieved when tap on the Call icon.",
+      "Priority": "B",
+      "Occurr. Freq.": "Always",
+      "Module": "Call",
+      "Sub-Module": null,
+      "Issue Type": "Functional",
+      "Sub-Issue Type": "Feature Missing",
+      "Summarized Problem": "Call screen fails to retrieve from notification panel when tapping the call icon.",
+      "Severity": "Medium",
+      "Severity Reason": "Issue occurs always and blocks call screen access, but does not cause system crash or data loss."
+    },
+    {
+      "Case Code": "P250405-01901",
+      "Model No.": "SM-F966U_NA_VZW",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "F966USQU0AYD3/OYN0AYD3/SQU0AYD3",
+      "Title": "System UI ANR occur",
+      "Problem": "Idle > drag Quick Plane > expand > edit icon > observe. Actual Result: SystemUI ANR occur. Expected result: Quick planel should work properly without any error",
+      "Priority": "B",
+      "Occurr. Freq.": "Once",
+      "Module": "System",
+      "Sub-Module": null,
+      "Issue Type": "Performance",
+      "Sub-Issue Type": "ANR",
+      "Summarized Problem": "System UI ANR occurs when interacting with Quick Plane feature",
+      "Severity": "Medium",
+      "Severity Reason": "ANR occurs during normal usage, affecting feature functionality"
+    },
+    {
+      "Case Code": "P250405-01918",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "(Moved) F966USQU0AYD3/OYN0AYD3/SQU0AYD3",
+      "Title": "Unable to turn on JIO Esim",
+      "Problem": "Pre condition : DUT: SM-F761BE_SWA [352845440001230] S/W version: AYD3/AYD3/AYD3. Occurrence process: Idle > Add JIO esim > esim configured > settings > SIM manager > Esim ON > Turn on eSIM > select \"Turn ON\" > Observe. Actual Result: \"Couldn't connect with SIM. Try again later\" pop up occur when we turn on Esim. Expected result: Esim should be configured and work properly without any error.",
+      "Priority": "B",
+      "Occurr. Freq.": "Always",
+      "Module": "Connectivity",
+      "Sub-Module": "SIM Manager",
+      "Issue Type": "Connectivity",
+      "Sub-Issue Type": "Compatibility Issue",
+      "Summarized Problem": "Esim fails to turn on and shows connection error despite being configured.",
+      "Severity": "Medium",
+      "Severity Reason": "Always occurs during Esim setup, blocks proper eSIM usage but does not crash system."
+    },
+    {
+      "Case Code": "P250405-01943",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "F761BXXU0AYD3/OXM0AYD3/XXU0AYD3",
+      "Title": "Wifi auto delatch & re-latch observed",
+      "Problem": "Connect DUT1 with DUT2 hotspot, enable Wifi Calling, keep device idle. Sometimes, Wifi auto delatches and re-latches. Expected: no auto delatch.",
+      "Priority": "B",
+      "Occurr. Freq.": "Sometimes",
+      "Module": "Connectivity",
+      "Sub-Module": "Wifi",
+      "Issue Type": "Connectivity",
+      "Sub-Issue Type": "Compatibility Issue",
+      "Summarized Problem": "Wifi automatically delatches and re-latches during idle state, violating expected behavior.",
+      "Severity": "Medium",
+      "Severity Reason": "Intermittent issue affects Wifi calling stability during idle state."
+    },
+    {
+      "Case Code": "P250408-03476",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "F761BXXU0AYD3/OXM0AYD3/XXU0AYD3",
+      "Title": "DUT remains in Emergency Calls only state post Panic Call",
+      "Problem": "Precondition: SIM1: Airtel. Process: 1. Make a Panic Call by pressing power button 3 times > wait > observe. 2. Do Flight MODE ON/OFF > observe. Status: DUT unable to connect to Emergency Number; falls back to 2G and Emergency Call only state during call establishment; stays in Emergency Call screen for long time; unable to re-latch to NW after call termination; latches to NW after Flight mode ON/OFF. Expected: DUT should connect to Emergency number; should not stay in Emergency Call screen for long; should latch to NW post Emergency call ends.",
+      "Priority": "B",
+      "Occurr. Freq.": "Once",
+      "Module": "Call",
+      "Sub-Module": "Emergency Call",
+      "Issue Type": "Functional",
+      "Sub-Issue Type": "Feature Missing",
+      "Summarized Problem": "DUT fails to connect to emergency number and remains in emergency call state after panic call, unable to re-latch to network post-call.",
+      "Severity": "Medium",
+      "Severity Reason": "Issue prevents normal emergency call functionality and network reconnection after call ends, but does not cause system crash or data loss."
+    },
+    {
+      "Case Code": "P250408-03602",
+      "Model No.": "SM-F761B_EUR_XX",
+      "Progr.Stat.": "Close",
+      "S/W Ver.": "F761BXXU0AYD3/OXM0AYD3/XXU0AYD3",
+      "Title": "DUT fall back to 2G NW when receive the MT Call",
+      "Problem": "Both DUTs connect to a Hotspot. VoWifi enabled with Wi-Fi preferred. Make MT Call (VoLTE/ViLTE) to DUT1 from DUT2. DUT1 takes longer to get call, then falls back to 2G NW. Everything works fine when Wi-Fi is off. Expected: DUT should get MT Call on Wi-Fi and VoWifi/ViWifi call should establish without CSFB.",
+      "Priority": "B",
+      "Occurr. Freq.": "Once",
+      "Module": "Connectivity",
+      "Sub-Module": "Network",
+      "Issue Type": "Connectivity",
+      "Sub-Issue Type": "Compatibility Issue",
+      "Summarized Problem": "DUT falls back to 2G network during MT VoLTE call when VoWifi is enabled, despite expected Wi-Fi call establishment.",
+      "Severity": "Medium",
+      "Severity Reason": "Issue occurs during key functionality under normal conditions, causing call fallback but does not crash or block full system usage."
+    }
+  ]
+}
