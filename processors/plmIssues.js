@@ -140,7 +140,7 @@ module.exports = {
     // Send only content fields to AI for analysis
     const aiInputRows = rows.map(row => ({
       Title: row.Title || '',
-      Problem: row.Problem || '',
+      Problem: (row.Problem || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
       'Dev. Mdl. Name/Item Name': row['Model No.'] || '',
       Priority: row.Priority || '',
       'Occurr. Freq.': row['Occurr. Freq.'] || ''
@@ -187,6 +187,26 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
+    // Sanitize NaN values in AI response
+    function sanitizeNaN(obj) {
+      if (obj === null || typeof obj !== 'object') {
+        if (typeof obj === 'number' && isNaN(obj)) {
+          return '';
+        }
+        return obj;
+      }
+      if (Array.isArray(obj)) {
+        return obj.map(sanitizeNaN);
+      }
+      const sanitized = {};
+      for (const key in obj) {
+        sanitized[key] = sanitizeNaN(obj[key]);
+      }
+      return sanitized;
+    }
+
+    aiRows = sanitizeNaN(aiRows);
+
     // Merge AI results with original core identifiers
     const mergedRows = aiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
@@ -196,7 +216,7 @@ module.exports = {
         'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
-        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Problem': (aiRow['Problem'] || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),  // From AI (cleaned)
         'Priority': original['Priority'] || '',
         'Occurr. Freq.': original['Occurr. Freq.'] || '',
         'Module': aiRow['Module'] || '',
