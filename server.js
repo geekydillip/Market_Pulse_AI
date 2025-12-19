@@ -83,6 +83,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Create keep-alive agent for HTTP connections
 const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
 
+// Serve the centralized dashboard at root (must come before static middleware)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'centralized_dashboard.html'));
+});
+
 // serve frontend static files (adjust folder if your frontend is in 'public')
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/downloads', express.static('downloads'));
@@ -1792,6 +1797,207 @@ app.get('/api/samsung-members-plm', (req, res) => {
 
 
 
+// ---------- Centralized Dashboard API Endpoints ----------
+// GET /api/central/kpis -> Returns totals by processor type
+app.get('/api/central/kpis', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Central aggregator error:', stderr);
+        return res.status(500).json({ error: 'Central aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result.kpis);
+      } catch (e) {
+        console.error('JSON parse error from central aggregator:', e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error('Central KPIs error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/top-modules -> Returns top 10 modules with labels and values
+app.get('/api/central/top-modules', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Central aggregator error:', stderr);
+        return res.status(500).json({ error: 'Central aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result.top_modules);
+      } catch (e) {
+        console.error('JSON parse error from central aggregator:', e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error('Central top modules error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/series-distribution -> Returns series distribution (Beta/PLM/VOC)
+app.get('/api/central/series-distribution', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Central aggregator error:', stderr);
+        return res.status(500).json({ error: 'Central aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result.series_distribution);
+      } catch (e) {
+        console.error('JSON parse error from central aggregator:', e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error('Central series distribution error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/top-models -> Returns top 10 models with labels and values
+app.get('/api/central/top-models', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Central aggregator error:', stderr);
+        return res.status(500).json({ error: 'Central aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result.top_models);
+      } catch (e) {
+        console.error('JSON parse error from central aggregator:', e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error('Central top models error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/high-issues -> Returns top 10 high issues
+app.get('/api/central/high-issues', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Central aggregator error:', stderr);
+        return res.status(500).json({ error: 'Central aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result.high_issues);
+      } catch (e) {
+        console.error('JSON parse error from central aggregator:', e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error('Central high issues error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/analytics/:module -> returns pre-aggregated analytics for dashboards
 app.get('/api/analytics/:module', async (req, res) => {
   const module = req.params.module;
@@ -2323,7 +2529,7 @@ app.get('/api/module-details', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log('\n🚀 Ollama Web Processor is running!');
+  console.log('\n🚀 Centralized Dashboard is running!');
   console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
   console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
 });

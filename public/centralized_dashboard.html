@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centralized Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            opacity: 0.6;
+        }
+
+        .header .timestamp {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #95a5a6;
+            font-size: 0.8em;
+            font-style: italic;
+        }
+
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .kpi-card.beta {
+            border-left: 5px solid #3498db;
+        }
+
+        .kpi-card.plm {
+            border-left: 5px solid #9b59b6;
+        }
+
+        .kpi-card.voc {
+            border-left: 5px solid #27ae60;
+        }
+
+        .kpi-card h3 {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+
+        .kpi-card .value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .kpi-card .subtitle {
+            font-size: 11px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .bottom-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-card h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .models-list {
+            max-height: 1000px;
+            overflow-y: auto;
+        }
+
+        .model-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+            align-items: center;
+        }
+
+        .model-item:last-child {
+            border-bottom: none;
+        }
+
+        .model-name {
+            font-weight: 500;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 10px;
+            cursor: help;
+        }
+
+        .model-name:hover::after {
+            content: attr(title);
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .model-count {
+            color: #3498db;
+            font-weight: bold;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .issues-table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .issues-table-container h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        th {
+            background-color: #e9ecef;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
+
+        tr:hover {
+            background-color: #f1f3f4;
+        }
+
+        .processor-pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .processor-pill.beta {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .processor-pill.plm {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .processor-pill.voc {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .case-code {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .issue-title {
+            line-height: 1.4;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #fee;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-container {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Centralized Analytics Dashboard</h1>
+            <p>Aggregated insights from processed data</p>
+            <div class="timestamp" id="timestamp">Loading...</div>
+        </div>
+
+        <div id="loading" class="loading">
+            <p>Loading dashboard data...</p>
+        </div>
+
+        <div id="dashboard-content" style="display: none;">
+            <!-- KPI Cards -->
+            <div class="kpi-container">
+                <div class="kpi-card beta" id="kpi-beta">
+                    <h3>Beta User Issues</h3>
+                    <div class="value" id="kpi-beta-value">-</div>
+                    <div class="subtitle">Total issues across all processed Excel files</div>
+                </div>
+                <div class="kpi-card plm" id="kpi-plm">
+                    <h3>Samsung Members PLM</h3>
+                    <div class="value" id="kpi-plm-value">-</div>
+                    <div class="subtitle">Total issues across all processed Excel files</div>
+                </div>
+                <div class="kpi-card voc" id="kpi-voc">
+                    <h3>Samsung Members VOC</h3>
+                    <div class="value" id="kpi-voc-value">-</div>
+                    <div class="subtitle">Total issues across all processed Excel files</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Top 10 Modules by Issue Count</h3>
+                    <canvas id="modulesChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Processor Distribution</h3>
+                    <canvas id="seriesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Bottom Section -->
+            <div class="bottom-container">
+                <div class="sidebar-card">
+                    <h3>Top 10 Models by Issue Count</h3>
+                    <div class="models-list" id="models-list">
+                        <!-- Models will be populated here -->
+                    </div>
+                </div>
+                <div class="issues-table-container">
+                    <h3>Top 10 Recurring Issues</h3>
+                    <table id="issues-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Processor</th>
+                                <th>Case Code</th>
+                                <th>Module Name</th>
+                                <th>Title</th>
+                            </tr>
+                        </thead>
+                        <tbody id="issues-tbody">
+                            <!-- Issues will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-message" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let modulesChart = null;
+        let seriesChart = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimestamp();
+            loadDashboardData();
+        });
+
+        function updateTimestamp() {
+            const now = new Date();
+            const formatted = now.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            document.getElementById('timestamp').textContent = `Last updated: ${formatted}`;
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Load all data in parallel
+                const [kpis, topModules, seriesDistribution, topModels, highIssues] = await Promise.all([
+                    fetch('/api/central/kpis').then(r => r.json()),
+                    fetch('/api/central/top-modules').then(r => r.json()),
+                    fetch('/api/central/series-distribution').then(r => r.json()),
+                    fetch('/api/central/top-models').then(r => r.json()),
+                    fetch('/api/central/high-issues').then(r => r.json())
+                ]);
+
+                // Update KPIs
+                updateKPIs(kpis);
+
+                // Update Charts
+                updateModulesChart(topModules);
+                updateSeriesChart(seriesDistribution);
+
+                // Update Models List
+                updateModelsList(topModels);
+
+                // Update Issues Table
+                updateIssuesTable(highIssues);
+
+                // Show dashboard
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                document.getElementById('loading').style.display = 'none';
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Failed to load dashboard data. Please check the server logs.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function updateKPIs(kpis) {
+            document.getElementById('kpi-beta-value').textContent = kpis['Beta User Issues'] || 0;
+            document.getElementById('kpi-plm-value').textContent = kpis['Samsung Members PLM'] || 0;
+            document.getElementById('kpi-voc-value').textContent = kpis['Samsung Members VOC'] || 0;
+        }
+
+        function updateModulesChart(modules) {
+            const ctx = document.getElementById('modulesChart').getContext('2d');
+
+            if (modulesChart) {
+                modulesChart.destroy();
+            }
+
+            // Use full module names directly - let Chart.js handle truncation if needed
+            const fullLabels = modules.map(m => m.label);
+
+            // Color scheme: Top 3 darker, rest lighter
+            const backgroundColors = modules.map((m, index) => {
+                if (index < 3) {
+                    return 'rgba(52, 152, 219, 0.8)'; // Darker blue for top 3
+                }
+                return 'rgba(52, 152, 219, 0.6)'; // Lighter blue for rest
+            });
+
+            const borderColors = modules.map((m, index) => {
+                if (index < 3) {
+                    return 'rgba(52, 152, 219, 1)'; // Darker border for top 3
+                }
+                return 'rgba(52, 152, 219, 1)'; // Standard border for rest
+            });
+
+            modulesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: fullLabels,
+                    datasets: [{
+                        label: 'Issue Count',
+                        data: modules.map(m => m.value),
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 2,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    layout: {
+                        padding: {
+                            left: 20,
+                            right: 20,
+                            top: 10,
+                            bottom: 10 // Extra bottom padding for X-axis labels
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Issue Count',
+                                color: 'rgba(0, 0, 0, 0.7)', // Increased contrast
+                                font: {
+                                    size: 12,
+                                    weight: 'normal'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 300, // Better step size for readability
+                                callback: function(value) {
+                                    return value.toLocaleString(); // Thousand separators
+                                },
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.08)', // Further reduced opacity
+                                drawBorder: false,
+                                drawTicks: false
+                            }
+                        },
+                        x: {
+                            display: true,
+                            ticks: {
+                                display: true,
+                                autoSkip: false,      // IMPORTANT: Force all ticks to render
+                                maxRotation: 30,
+                                minRotation: 30,
+                                padding: 8,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                display: false // Remove X-axis gridlines
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    return modules[index].label; // Full module name in tooltip
+                                },
+                                label: function(context) {
+                                    return 'Issues: ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'datalabels',
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        chart.data.datasets.forEach(function(dataset, i) {
+                            const meta = chart.getDatasetMeta(i);
+                            meta.data.forEach(function(bar, index) {
+                                const data = dataset.data[index];
+                                ctx.fillStyle = '#2c3e50';
+                                ctx.font = '11px Arial'; // Smaller font than axis labels
+                                ctx.textAlign = 'center';
+                                // Position labels above bars with better spacing
+                                const barHeight = bar.height;
+                                const yPos = bar.y - 8; // Higher above bars
+                                ctx.fillText(data.toLocaleString(), bar.x, yPos); // Thousand separators
+                            });
+                        });
+                    }
+                }]
+            });
+        }
+
+        function updateSeriesChart(series) {
+            const ctx = document.getElementById('seriesChart').getContext('2d');
+
+            if (seriesChart) {
+                seriesChart.destroy();
+            }
+
+            const total = series.reduce((sum, s) => sum + s.value, 0);
+
+            seriesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: series.map(s => s.label),
+                    datasets: [{
+                        data: series.map(s => s.value),
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(155, 89, 182, 0.8)',
+                            'rgba(46, 204, 113, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '70%', // Increased inner cutout for thinner ring
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    weight: '600' // Increased font weight
+                                },
+                                padding: 15 // Closer spacing to chart
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${context.label}: ${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'centerText',
+                    beforeDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                        const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+                        ctx.save();
+
+                        // Line 1: "Total Issues" (lighter)
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = 'rgba(44, 62, 80, 0.6)'; // Lighter opacity
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('Total Issues', centerX, centerY - 8);
+
+                        // Line 2: Formatted number (bold)
+                        ctx.font = 'bold 18px Arial';
+                        ctx.fillStyle = '#2c3e50';
+                        ctx.fillText(total.toLocaleString(), centerX, centerY + 8);
+
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+
+        function updateModelsList(models) {
+            const container = document.getElementById('models-list');
+            container.innerHTML = '';
+
+            models.forEach((model, index) => {
+                const div = document.createElement('div');
+                div.className = 'model-item';
+                div.innerHTML = `
+                    <span class="model-name" title="${model.label}">${index + 1}. ${model.label}</span>
+                    <span class="model-count">${model.value}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateIssuesTable(issues) {
+            const tbody = document.getElementById('issues-tbody');
+            tbody.innerHTML = '';
+
+            issues.forEach((issue, index) => {
+                const processorClass = (issue['Processor'] || '').toLowerCase();
+                const processorPill = issue['Processor']
+                    ? `<span class="processor-pill ${processorClass}">${issue['Processor']}</span>`
+                    : '-';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${processorPill}</td>
+                    <td class="case-code">${issue['Case Code'] || '-'}</td>
+                    <td>${issue['Module Name'] || '-'}</td>
+                    <td class="issue-title">${issue['Title'] || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
