@@ -62,7 +62,7 @@
         .kpi-card {
             background: white;
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px; /* Reduced from 25px (~20% reduction) */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
             min-height: 140px;
@@ -117,7 +117,7 @@
 
         .charts-container {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1fr 1fr; /* Equal width for both sections */
             gap: 30px;
             margin-bottom: 40px;
         }
@@ -125,14 +125,22 @@
         .chart-card {
             background: white;
             border-radius: 15px;
-            padding: 25px;
+            padding: 16px 18px; /* Reduced padding for tighter layout */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.2); /* Subtle darker border for prominence */
+            max-height: 600px; /* Prevent excessive vertical growth */
         }
 
         .chart-card h3 {
-            margin-bottom: 15px;
+            margin-bottom: 8px; /* Further reduced for tighter spacing */
             color: #2c3e50;
             text-align: center;
+            font-weight: 600; /* Slightly bolder for hierarchy */
+        }
+
+        .chart-card canvas {
+            width: 100% !important;
+            height: 100% !important; /* Fill container height */
         }
 
         .bottom-container {
@@ -144,27 +152,33 @@
         .sidebar-card {
             background: white;
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px; /* Reduced from 25px */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 600px; /* Prevent excessive vertical growth */
         }
 
         .sidebar-card h3 {
-            margin-bottom: 20px;
+            margin-bottom: 15px; /* Reduced from 20px */
             color: #2c3e50;
             text-align: center;
         }
 
-        .models-list {
-            max-height: 1000px;
-            overflow-y: auto;
-        }
 
         .model-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 12px 0; /* Increased from 8px for better spacing */
             border-bottom: 1px solid #ecf0f1;
             align-items: center;
+            transition: background-color 0.2s ease; /* Smooth hover transition */
+        }
+
+        .model-item:hover {
+            background-color: rgba(52, 152, 219, 0.05); /* Subtle background highlight */
+        }
+
+        .model-item.active {
+            background-color: rgba(52, 152, 219, 0.1); /* Clearer active state */
         }
 
         .model-item:last-child {
@@ -182,7 +196,7 @@
         }
 
         .model-name:hover::after {
-            content: attr(title);
+            content: attr(data-tooltip);
             position: absolute;
             background: rgba(0, 0, 0, 0.8);
             color: white;
@@ -200,44 +214,6 @@
             font-weight: bold;
             text-align: right;
             flex-shrink: 0;
-        }
-
-        .issues-table-container {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .issues-table-container h3 {
-            margin-bottom: 20px;
-            color: #2c3e50;
-            text-align: center;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        th {
-            background-color: #e9ecef;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        tr:nth-child(even) {
-            background-color: #fafbfc;
-        }
-
-        tr:hover {
-            background-color: #f1f3f4;
         }
 
         .processor-pill {
@@ -289,15 +265,6 @@
             color: white;
         }
 
-        .case-code {
-            font-family: 'Courier New', monospace;
-            font-weight: 500;
-        }
-
-        .issue-title {
-            line-height: 1.4;
-        }
-
         .loading {
             text-align: center;
             padding: 50px;
@@ -313,6 +280,211 @@
             border-left: 4px solid #e74c3c;
         }
 
+        /* Matrix Section Styles */
+        .matrix-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .matrix-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .matrix-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: white;
+        }
+
+        .matrix-table th {
+            background: #f8f9fa;
+            padding: 8px 6px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .matrix-table td {
+            padding: 6px 4px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            min-width: 40px;
+            max-width: 60px;
+        }
+
+        .matrix-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .matrix-table tbody tr:hover {
+            background: #e3f2fd;
+        }
+
+        /* Matrix cell colors based on issue count intensity */
+        .matrix-cell-0 { background: #ffffff; color: #666; }
+        .matrix-cell-1-5 { background: #e3f2fd; color: #1976d2; }
+        .matrix-cell-6-15 { background: #bbdefb; color: #1565c0; }
+        .matrix-cell-16-30 { background: #90caf9; color: #0d47a1; }
+        .matrix-cell-31-50 { background: #64b5f6; color: #ffffff; }
+        .matrix-cell-51-100 { background: #42a5f5; color: #ffffff; }
+        .matrix-cell-100-plus { background: #1e88e5; color: #ffffff; font-weight: 600; }
+
+        /* Model name column */
+        .matrix-table .model-name-cell {
+            text-align: left;
+            font-weight: 600;
+            background: #f8f9fa !important;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            min-width: 120px;
+            max-width: 150px;
+            word-wrap: break-word;
+        }
+
+        /* Summary Table Section Styles */
+        .summary-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .summary-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .summary-container {
+            overflow-x: auto;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: white;
+        }
+
+        .summary-table th {
+            background: #f8f9fa;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .summary-table td {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        .summary-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .summary-table tbody tr:hover {
+            background: #e3f2fd;
+        }
+
+        /* Source column styling */
+        .summary-table .source-cell {
+            font-weight: 600;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .summary-table .source-cell.beta {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .summary-table .source-cell.plm {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .summary-table .source-cell.voc {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+
+        /* Model column */
+        .summary-table .model-cell {
+            font-weight: 600;
+            min-width: 120px;
+            max-width: 150px;
+            word-wrap: break-word;
+        }
+
+        /* Modules column */
+        .summary-table .modules-cell {
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .modules-cell .module-tag {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            margin: 1px 2px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Count column */
+        .summary-table .count-cell {
+            text-align: center;
+            font-weight: 600;
+            color: #dc3545;
+            min-width: 80px;
+        }
+
+        /* Titles column */
+        .summary-table .titles-cell {
+            min-width: 250px;
+            max-width: 400px;
+        }
+
+        .titles-cell .title-tag {
+            display: block;
+            background: #fff3cd;
+            color: #856404;
+            padding: 3px 6px;
+            margin: 2px 0;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.3;
+            border-left: 3px solid #ffc107;
+        }
+
         @media (max-width: 768px) {
             .charts-container {
                 grid-template-columns: 1fr;
@@ -324,6 +496,32 @@
 
             .container {
                 padding: 10px;
+            }
+
+            .matrix-container {
+                max-height: 400px;
+            }
+
+            .matrix-table {
+                font-size: 11px;
+            }
+
+            .matrix-table th,
+            .matrix-table td {
+                padding: 4px 2px;
+            }
+
+            .summary-container {
+                max-height: 600px;
+            }
+
+            .summary-table {
+                font-size: 11px;
+            }
+
+            .summary-table th,
+            .summary-table td {
+                padding: 6px 4px;
             }
         }
     </style>
@@ -365,20 +563,12 @@
             <!-- Charts -->
             <div class="charts-container">
                 <div class="chart-card">
-                    <h3>Top 10 Modules by Issue Count</h3>
+                    <h3>Top 10 Affected Modules</h3>
                     <canvas id="modulesChart"></canvas>
                 </div>
-                <div class="chart-card">
-                    <h3>Series wise Distribution</h3>
-                    <canvas id="seriesChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Bottom Section -->
-            <div class="bottom-container">
                 <div class="sidebar-card">
                     <h3>
-                        Top 10 Model
+                        Top 10 Affected Models
                         <div style="margin-top: 10px; margin-bottom: 15px;">
                             <button id="filter-all" class="filter-btn" onclick="filterModels('all')" style="background: #6c757d; color: white; margin-right: 5px;">ALL</button>
                             <button id="filter-plm" class="filter-btn" onclick="filterModels('plm')" style="background: #9b59b6; color: white; margin-right: 5px;">PLM</button>
@@ -390,24 +580,47 @@
                         <!-- Models will be populated here -->
                     </div>
                 </div>
-                <div class="issues-table-container">
-                    <h3>Top 10 Recurring Issues</h3>
-                    <table id="issues-table">
+            </div>
+
+            <!-- Matrix Section -->
+            <div class="matrix-section">
+                <h2>Model-Module Issue Matrix</h2>
+                <div class="matrix-container">
+                    <table class="matrix-table" id="matrix-table">
                         <thead>
                             <tr>
-                                <th>Rank</th>
-                                <th>Processor</th>
-                                <th>Case Code</th>
-                                <th>Module Name</th>
-                                <th>Title</th>
+                                <th>Model ↓ / Module →</th>
+                                <!-- Module headers will be populated dynamically -->
                             </tr>
                         </thead>
-                        <tbody id="issues-tbody">
-                            <!-- Issues will be populated here -->
+                        <tbody>
+                            <!-- Matrix rows will be populated dynamically -->
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- Summary Table Section -->
+            <div class="summary-section">
+                <h2>Source-Model Summary</h2>
+                <div class="summary-container">
+                    <table class="summary-table" id="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Model No.</th>
+                                <th>Top 5 Modules</th>
+                                <th>Issue Count</th>
+                                <th>Top 5 Issue Titles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Summary rows will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
         <div id="error-message" class="error" style="display: none;"></div>
@@ -416,7 +629,6 @@
     <script>
         // Global variables
         let modulesChart = null;
-        let seriesChart = null;
         let allModels = [];
         let currentFilter = 'all';
 
@@ -442,12 +654,12 @@
         async function loadDashboardData() {
             try {
                 // Load all data in parallel
-                const [kpis, topModules, seriesDistribution, topModels, highIssues] = await Promise.all([
+                const [kpis, topModules, topModels, matrixData, summaryData] = await Promise.all([
                     fetch('/api/central/kpis').then(r => r.json()),
                     fetch('/api/central/top-modules').then(r => r.json()),
-                    fetch('/api/central/series-distribution').then(r => r.json()),
                     fetch('/api/central/top-models').then(r => r.json()),
-                    fetch('/api/central/high-issues').then(r => r.json())
+                    fetch('/api/central/model-module-matrix').then(r => r.json()),
+                    fetch('/api/central/source-model-summary').then(r => r.json())
                 ]);
 
                 // Update KPIs
@@ -455,14 +667,16 @@
 
                 // Update Charts
                 updateModulesChart(topModules);
-                updateSeriesChart(seriesDistribution);
 
                 // Update Models List
                 allModels = topModels;
                 updateModelsList(topModels);
 
-                // Update Issues Table
-                updateIssuesTable(highIssues);
+                // Update Matrix
+                updateModelModuleMatrix(matrixData);
+
+                // Update Summary Table
+                updateSourceModelSummary(summaryData);
 
                 // Show dashboard
                 document.getElementById('loading').style.display = 'none';
@@ -490,22 +704,23 @@
                 modulesChart.destroy();
             }
 
+            // Calculate total for percentage calculations
+            const total = modules.reduce((sum, m) => sum + m.value, 0);
+
             // Use full module names directly - let Chart.js handle truncation if needed
             const fullLabels = modules.map(m => m.label);
 
-            // Color scheme: Top 3 darker, rest lighter
+            // Visual hierarchy using color intensity based on ranking
             const backgroundColors = modules.map((m, index) => {
-                if (index < 3) {
-                    return 'rgba(52, 152, 219, 0.8)'; // Darker blue for top 3
-                }
-                return 'rgba(52, 152, 219, 0.6)'; // Lighter blue for rest
+                if (index === 0) return '#2563eb';      // Top issue – bold blue
+                if (index < 5) return '#60a5fa';        // Top 5 – medium blue
+                return '#93c5fd';                       // Lower tier – light blue
             });
 
             const borderColors = modules.map((m, index) => {
-                if (index < 3) {
-                    return 'rgba(52, 152, 219, 1)'; // Darker border for top 3
-                }
-                return 'rgba(52, 152, 219, 1)'; // Standard border for rest
+                if (index === 0) return '#1d4ed8';      // Darker border for top
+                if (index < 5) return '#3b82f6';        // Medium border for top 5
+                return '#60a5fa';                       // Light border for rest
             });
 
             modulesChart = new Chart(ctx, {
@@ -519,42 +734,50 @@
                         borderColor: borderColors,
                         borderWidth: 1,
                         borderRadius: 2,
-                        borderSkipped: false
+                        borderSkipped: false,
+                        hoverBackgroundColor: modules.map((m, index) => {
+                            if (index === 0) return '#1d4ed8';      // Darker hover for top issue
+                            if (index < 5) return '#3b82f6';        // Darker hover for top 5
+                            return '#60a5fa';                       // Darker hover for rest
+                        })
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     layout: {
                         padding: {
-                            left: 20,
-                            right: 20,
-                            top: 10,
-                            bottom: 10 // Extra bottom padding for X-axis labels
+                            left: 10,
+                            right: 10,
+                            top: 5,
+                            bottom: 10
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
+                            type: 'logarithmic',
+                            beginAtZero: false,
                             title: {
                                 display: true,
                                 text: 'Issue Count',
-                                color: 'rgba(0, 0, 0, 0.7)', // Increased contrast
+                                color: 'rgba(0, 0, 0, 0.7)',
                                 font: {
                                     size: 12,
                                     weight: 'normal'
                                 }
                             },
                             ticks: {
-                                stepSize: 300, // Better step size for readability
                                 callback: function(value) {
                                     return value.toLocaleString(); // Thousand separators
                                 },
                                 font: {
                                     size: 11
-                                }
+                                },
+                                padding: 8,
+                                maxTicksLimit: 6 // Reduce tick density to avoid clutter
                             },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.08)', // Further reduced opacity
+                                color: 'rgba(0, 0, 0, 0.08)', // Darker gridlines for better contrast
                                 drawBorder: false,
                                 drawTicks: false
                             }
@@ -563,16 +786,17 @@
                             display: true,
                             ticks: {
                                 display: true,
-                                autoSkip: false,      // IMPORTANT: Force all ticks to render
+                                autoSkip: false,
                                 maxRotation: 30,
                                 minRotation: 30,
                                 padding: 8,
                                 font: {
-                                    size: 11
+                                    size: 11,
+                                    weight: 600 // Bolder font weight for better readability
                                 }
                             },
                             grid: {
-                                display: false // Remove X-axis gridlines
+                                display: false
                             }
                         }
                     },
@@ -581,126 +805,49 @@
                             display: false
                         },
                         tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: 'rgba(52, 152, 219, 0.5)',
+                            borderWidth: 1,
+                            cornerRadius: 6,
+                            displayColors: false,
                             callbacks: {
                                 title: function(tooltipItems) {
                                     const index = tooltipItems[0].dataIndex;
-                                    return modules[index].label; // Full module name in tooltip
+                                    return modules[index].label;
                                 },
                                 label: function(context) {
-                                    return 'Issues: ' + context.parsed.y.toLocaleString();
+                                    const value = context.parsed.y;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return [
+                                        `Issues: ${value.toLocaleString()}`,
+                                        `Share: ${percentage}%`
+                                    ];
                                 }
                             }
                         }
+                    },
+                    onHover: (event, elements) => {
+                        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
                     }
                 },
                 plugins: [{
                     id: 'datalabels',
-                    afterDatasetsDraw: function(chart) {
-                        const ctx = chart.ctx;
-                        chart.data.datasets.forEach(function(dataset, i) {
-                            const meta = chart.getDatasetMeta(i);
-                            meta.data.forEach(function(bar, index) {
-                                const data = dataset.data[index];
-                                ctx.fillStyle = '#2c3e50';
-                                ctx.font = '11px Arial'; // Smaller font than axis labels
-                                ctx.textAlign = 'center';
-                                // Position labels above bars with better spacing
-                                const barHeight = bar.height;
-                                const yPos = bar.y - 8; // Higher above bars
-                                ctx.fillText(data.toLocaleString(), bar.x, yPos); // Thousand separators
-                            });
-                        });
-                    }
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 4,
+                    color: '#1f2937',
+                    font: {
+                        size: 11,
+                        weight: 600
+                    },
+                    formatter: v => v.toLocaleString()
                 }]
             });
         }
 
-        function updateSeriesChart(series) {
-            const ctx = document.getElementById('seriesChart').getContext('2d');
 
-            if (seriesChart) {
-                seriesChart.destroy();
-            }
-
-            const total = series.reduce((sum, s) => sum + s.value, 0);
-
-            // Generate distinct colors for each series
-            const colorPalette = [
-                'rgba(52, 152, 219, 0.8)',   // Blue
-                'rgba(155, 89, 182, 0.8)',   // Purple
-                'rgba(46, 204, 113, 0.8)',   // Green
-                'rgba(230, 126, 34, 0.8)',   // Orange
-                'rgba(231, 76, 60, 0.8)',    // Red
-                'rgba(149, 165, 166, 0.8)',  // Gray
-                'rgba(44, 62, 80, 0.8)',     // Dark Blue
-                'rgba(26, 188, 156, 0.8)',   // Teal
-                'rgba(155, 89, 182, 0.8)',   // Purple (duplicate for more series)
-                'rgba(52, 73, 94, 0.8)'      // Dark Gray
-            ];
-
-            const backgroundColors = series.map((s, index) => colorPalette[index % colorPalette.length]);
-
-            seriesChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: series.map(s => s.label),
-                    datasets: [{
-                        data: series.map(s => s.value),
-                        backgroundColor: backgroundColors,
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    cutout: '70%', // Increased inner cutout for thinner ring
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    weight: '600' // Increased font weight
-                                },
-                                padding: 15 // Closer spacing to chart
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.parsed;
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${context.label}: ${value.toLocaleString()} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [{
-                    id: 'centerText',
-                    beforeDraw: function(chart) {
-                        const ctx = chart.ctx;
-                        const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
-                        const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
-
-                        ctx.save();
-
-                        // Line 1: "Total Issues" (lighter)
-                        ctx.font = '12px Arial';
-                        ctx.fillStyle = 'rgba(44, 62, 80, 0.6)'; // Lighter opacity
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText('Total Issues', centerX, centerY - 8);
-
-                        // Line 2: Formatted number (bold)
-                        ctx.font = 'bold 18px Arial';
-                        ctx.fillStyle = '#2c3e50';
-                        ctx.fillText(total.toLocaleString(), centerX, centerY + 8);
-
-                        ctx.restore();
-                    }
-                }]
-            });
-        }
 
         function updateModelsList(models) {
             const container = document.getElementById('models-list');
@@ -710,10 +857,15 @@
                 const div = document.createElement('div');
                 div.className = 'model-item';
                 div.innerHTML = `
-                    <span class="model-name" title="${model.label}">${index + 1}. ${model.label}</span>
+                    <span class="model-name" data-tooltip="${model.label}">${index + 1}. ${model.label}</span>
                     <span class="model-count" style="background: rgba(52, 152, 219, 0.2); color: #3498db; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">${model.value}</span>
                 `;
                 container.appendChild(div);
+            });
+
+            // Safety check: Remove any title attributes from model-name elements
+            document.querySelectorAll('.model-name[title]').forEach(el => {
+                el.removeAttribute('title');
             });
         }
 
@@ -757,27 +909,128 @@
             }));
         }
 
-        function updateIssuesTable(issues) {
-            const tbody = document.getElementById('issues-tbody');
-            tbody.innerHTML = '';
+        function updateModelModuleMatrix(matrixData) {
+            const table = document.getElementById('matrix-table');
 
-            issues.forEach((issue, index) => {
-                const processorClass = (issue['Processor'] || '').toLowerCase();
-                const processorPill = issue['Processor']
-                    ? `<span class="processor-pill ${processorClass}">${issue['Processor']}</span>`
-                    : '-';
+            // Clear existing content
+            table.querySelector('thead tr').innerHTML = '<th>Model ↓ / Module →</th>';
+            table.querySelector('tbody').innerHTML = '';
 
+            if (!matrixData || !matrixData.models || !matrixData.modules || !matrixData.matrix) {
+                console.error('Invalid matrix data:', matrixData);
+                return;
+            }
+
+            const { models, modules, matrix } = matrixData;
+
+            // Add module headers
+            modules.forEach(module => {
+                const th = document.createElement('th');
+                th.textContent = module;
+                table.querySelector('thead tr').appendChild(th);
+            });
+
+            // Add matrix rows
+            models.forEach((model, modelIndex) => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${processorPill}</td>
-                    <td class="case-code">${issue['Case Code'] || '-'}</td>
-                    <td>${issue['Module Name'] || '-'}</td>
-                    <td class="issue-title">${issue['Title'] || '-'}</td>
-                `;
-                tbody.appendChild(tr);
+
+                // Model name cell (sticky)
+                const modelCell = document.createElement('td');
+                modelCell.className = 'model-name-cell';
+                modelCell.textContent = model;
+                tr.appendChild(modelCell);
+
+                // Matrix cells
+                modules.forEach((module, moduleIndex) => {
+                    const count = matrix[modelIndex][moduleIndex];
+                    const td = document.createElement('td');
+
+                    // Apply color class based on count
+                    if (count === 0) {
+                        td.className = 'matrix-cell-0';
+                    } else if (count >= 1 && count <= 5) {
+                        td.className = 'matrix-cell-1-5';
+                    } else if (count >= 6 && count <= 15) {
+                        td.className = 'matrix-cell-6-15';
+                    } else if (count >= 16 && count <= 30) {
+                        td.className = 'matrix-cell-16-30';
+                    } else if (count >= 31 && count <= 50) {
+                        td.className = 'matrix-cell-31-50';
+                    } else if (count >= 51 && count <= 100) {
+                        td.className = 'matrix-cell-51-100';
+                    } else if (count > 100) {
+                        td.className = 'matrix-cell-100-plus';
+                    }
+
+                    td.textContent = count > 0 ? count : '';
+                    td.title = `${model} + ${module}: ${count} issues`;
+                    tr.appendChild(td);
+                });
+
+                table.querySelector('tbody').appendChild(tr);
             });
         }
+
+        function updateSourceModelSummary(summaryData) {
+            const table = document.getElementById('summary-table');
+
+            // Clear existing content
+            table.querySelector('tbody').innerHTML = '';
+
+            if (!Array.isArray(summaryData)) {
+                console.error('Invalid summary data:', summaryData);
+                return;
+            }
+
+            // Add summary rows
+            summaryData.forEach(item => {
+                const tr = document.createElement('tr');
+
+                // Source cell
+                const sourceCell = document.createElement('td');
+                sourceCell.className = `source-cell ${item.source.toLowerCase()}`;
+                sourceCell.textContent = item.source;
+                tr.appendChild(sourceCell);
+
+                // Model cell
+                const modelCell = document.createElement('td');
+                modelCell.className = 'model-cell';
+                modelCell.textContent = item.model;
+                tr.appendChild(modelCell);
+
+                // Top 5 Modules cell
+                const modulesCell = document.createElement('td');
+                modulesCell.className = 'modules-cell';
+                item.top_modules.forEach(module => {
+                    const moduleTag = document.createElement('span');
+                    moduleTag.className = 'module-tag';
+                    moduleTag.textContent = module;
+                    modulesCell.appendChild(moduleTag);
+                });
+                tr.appendChild(modulesCell);
+
+                // Issue Count cell
+                const countCell = document.createElement('td');
+                countCell.className = 'count-cell';
+                countCell.textContent = item.issue_count.toLocaleString();
+                tr.appendChild(countCell);
+
+                // Top 5 Issue Titles cell
+                const titlesCell = document.createElement('td');
+                titlesCell.className = 'titles-cell';
+                item.top_titles.forEach(title => {
+                    const titleTag = document.createElement('div');
+                    titleTag.className = 'title-tag';
+                    titleTag.textContent = title;
+                    titlesCell.appendChild(titleTag);
+                });
+                tr.appendChild(titlesCell);
+
+                table.querySelector('tbody').appendChild(tr);
+            });
+        }
+
+
     </script>
 </body>
 </html>

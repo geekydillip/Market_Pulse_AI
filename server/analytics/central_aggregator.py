@@ -283,6 +283,124 @@ def compute_high_issues(data: dict) -> list:
 
     return module_high_issues[:10]
 
+def compute_model_module_matrix(data: dict) -> dict:
+    """
+    Create a matrix of Top 10 Models × Top 10 Modules with issue counts.
+    Returns a dict with models, modules, and matrix data.
+    """
+    # Get top 10 models and modules
+    top_models = compute_top_models(data)
+    top_modules = compute_top_modules(data)
+
+    model_names = [item['label'] for item in top_models]
+    module_names = [item['label'] for item in top_modules]
+
+    # Create matrix: rows = models, columns = modules
+    matrix = []
+    for model in model_names:
+        row = []
+        for module in module_names:
+            # Count issues for this model-module combination
+            count = 0
+            for folder, dfs in data.items():
+                combined = combine_dataframes(dfs)
+                if 'Model No.' in combined.columns and 'Module' in combined.columns:
+                    # Filter for this specific model and module
+                    filtered = combined[
+                        (combined['Model No.'].astype(str).str.strip() == model.strip()) &
+                        (combined['Module'].astype(str).str.strip() == module.strip())
+                    ]
+                    count += len(filtered)
+            row.append(count)
+        matrix.append(row)
+
+    return {
+        'models': model_names,
+        'modules': module_names,
+        'matrix': matrix
+    }
+
+def clean_excel_text(text: str) -> str:
+    """
+    Clean text from Excel that may contain unwanted HTML entities and characters.
+    """
+    if not isinstance(text, str):
+        return str(text) if text is not None else ""
+
+    # Remove common Excel HTML entities
+    cleaned = text.replace("_x000D_", " ")  # Carriage return to space
+    cleaned = cleaned.replace("_x000A_", " ")  # Line feed to space
+    cleaned = cleaned.replace("_x0009_", " ")  # Tab to space
+
+    # Remove multiple spaces and trim
+    cleaned = " ".join(cleaned.split())
+    return cleaned.strip()
+
+def compute_source_model_summary(data: dict) -> list:
+    """
+    Create a summary table with Source, Model, Top 5 Modules, Issue Count, Top 5 Issue Titles.
+    Returns a list of summary objects.
+    """
+    source_map = {
+        'beta_user_issues': 'Beta',
+        'samsung_members_plm': 'PLM',
+        'samsung_members_voc': 'VOC'
+    }
+
+    summary = []
+
+    for folder, dfs in data.items():
+        if folder not in source_map:
+            continue
+
+        source_name = source_map[folder]
+        combined = combine_dataframes(dfs)
+
+        if 'Model No.' not in combined.columns:
+            continue
+
+        # Get top 5 models for this source only
+        models_in_source = combined['Model No.'].value_counts().head(5)
+
+        for model, total_count in models_in_source.items():
+            if pd.notna(model) and str(model).strip():
+                model_str = str(model).strip()
+
+                # Filter data for this specific model
+                model_data = combined[combined['Model No.'].astype(str).str.strip() == model_str]
+
+                # Top 5 modules for this model
+                top_modules = []
+                if 'Module' in model_data.columns:
+                    modules = model_data['Module'].value_counts().head(5)
+                    top_modules = [str(mod).strip() for mod in modules.index if pd.notna(mod)]
+
+                # Top 5 issue titles/contents for this model
+                top_titles = []
+                if source_name == 'VOC':
+                    # For VOC, use 'content' column instead of 'Title'
+                    if 'content' in model_data.columns:
+                        contents = model_data['content'].value_counts().head(5)
+                        top_titles = [clean_excel_text(str(content)) for content in contents.index if pd.notna(content)]
+                else:
+                    # For Beta and PLM, use 'Title' column
+                    if 'Title' in model_data.columns:
+                        titles = model_data['Title'].value_counts().head(5)
+                        top_titles = [str(title).strip() for title in titles.index if pd.notna(title)]
+
+                summary.append({
+                    'source': source_name,
+                    'model': model_str,
+                    'top_modules': top_modules,
+                    'issue_count': int(total_count),
+                    'top_titles': top_titles
+                })
+
+    # Sort by source, then by issue count descending
+    summary.sort(key=lambda x: (x['source'], -x['issue_count']))
+
+    return summary
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1:
@@ -300,6 +418,14 @@ if __name__ == "__main__":
             data = load_all_excels("./downloads")
             models = compute_top_models_by_source(data, 'samsung_members_voc')
             print(json.dumps(models))
+        elif command == "matrix":
+            data = load_all_excels("./downloads")
+            matrix = compute_model_module_matrix(data)
+            print(json.dumps(matrix))
+        elif command == "summary":
+            data = load_all_excels("./downloads")
+            summary = compute_source_model_summary(data)
+            print(json.dumps(summary))
         else:
             print(json.dumps({"error": f"Unknown command: {command}"}))
         sys.exit(0)

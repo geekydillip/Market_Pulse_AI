@@ -2050,6 +2050,86 @@ app.get('/api/central/top-models/:source', async (req, res) => {
   }
 });
 
+// GET /api/central/model-module-matrix -> Returns matrix of Top 10 Models × Top 10 Modules
+app.get('/api/central/model-module-matrix', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py', 'matrix']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Central aggregator matrix error:', stderr);
+        return res.status(500).json({ error: 'Central matrix aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result);
+      } catch (e) {
+        console.error('JSON parse error from central aggregator matrix:', e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error('Central model-module matrix error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/source-model-summary -> Returns detailed summary by source and model
+app.get('/api/central/source-model-summary', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py', 'summary']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Central aggregator summary error:', stderr);
+        return res.status(500).json({ error: 'Central summary aggregation failed' });
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        if (result.error) {
+          return res.status(500).json({ error: result.error });
+        }
+        res.json(result);
+      } catch (e) {
+        console.error('JSON parse error from central aggregator summary:', e);
+        res.status(500).json({ error: 'Invalid response from central aggregator' });
+      }
+    });
+  } catch (error) {
+    console.error('Central source-model summary error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/analytics/:module -> returns pre-aggregated analytics for dashboards
 app.get('/api/analytics/:module', async (req, res) => {
   const module = req.params.module;
