@@ -129,7 +129,7 @@ def compute_series_distribution(data: dict) -> list:
             return 'Watch'
         # Everything else
         else:
-            return 'Unknown'
+            return 'Others'
 
     def categorize_series_new(model):
         """Categorize model into series based on new logic (no SM- prefix)"""
@@ -170,7 +170,7 @@ def compute_series_distribution(data: dict) -> list:
             return 'Ring'
         # Everything else
         else:
-            return 'Unknown'
+            return 'Others'
 
     # Folders to use new logic with 'S/W Ver.' column
     new_logic_folders = {'beta_user_issues', 'samsung_members_plm'}
