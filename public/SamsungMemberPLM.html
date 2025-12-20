@@ -29,6 +29,14 @@
   </div>
 
   <script>
+    // Global pagination state
+    let modelPagination = { currentPage: 1, itemsPerPage: 10, totalItems: 0 };
+    let modulePagination = { currentPage: 1, itemsPerPage: 10, totalItems: 0 };
+
+    // Global data storage
+    let allModelData = [];
+    let allModuleData = [];
+
     // Fetch data from API and render dashboard cards
     async function fetchDataAndRender() {
       try {
@@ -61,8 +69,16 @@
       // Parse data from the Excel structure
       const plmStatusData = parsePLMStatusData(rows);
       const seriesData = parseSeriesData(rows);
-      const modelData = parseModelData(rows);
-      const moduleData = parseModuleData(rows);
+      allModelData = parseModelData(rows);
+      allModuleData = parseModuleData(rows);
+
+      // Update pagination totals
+      modelPagination.totalItems = allModelData.length;
+      modulePagination.totalItems = allModuleData.length;
+
+      // Reset to first page
+      modelPagination.currentPage = 1;
+      modulePagination.currentPage = 1;
 
       // Create dashboard sections
       const container = document.getElementById('dashboardSections');
@@ -72,7 +88,7 @@
       container.appendChild(createOverviewSection(plmStatusData, seriesData));
 
       // Combined Models and Module Analysis Section
-      container.appendChild(createModelsAndModulesSection(modelData, moduleData));
+      container.appendChild(createModelsAndModulesSection());
     }
 
     // Parse PLM Status data from rows
@@ -119,7 +135,7 @@
           });
         }
       }
-      // Sort by count descending (show all models)
+      // Sort by count descending - return all models
       return modelData.sort((a, b) => b.count - a.count);
     }
 
@@ -136,7 +152,7 @@
           });
         }
       }
-      // Sort by total count descending
+      // Sort by total count descending - return all modules
       return moduleData.sort((a, b) => b.total - a.total);
     }
 
@@ -316,58 +332,160 @@
       return section;
     }
 
+    // Get paginated data for models
+    function getPaginatedModels() {
+      const startIndex = (modelPagination.currentPage - 1) * modelPagination.itemsPerPage;
+      const endIndex = startIndex + modelPagination.itemsPerPage;
+      return allModelData.slice(startIndex, endIndex);
+    }
+
+    // Get paginated data for modules
+    function getPaginatedModules() {
+      const startIndex = (modulePagination.currentPage - 1) * modulePagination.itemsPerPage;
+      const endIndex = startIndex + modulePagination.itemsPerPage;
+      return allModuleData.slice(startIndex, endIndex);
+    }
+
+    // Create pagination controls
+    function createPaginationControls(pagination, type) {
+      const totalPages = Math.ceil(pagination.totalItems / pagination.itemsPerPage);
+      const currentPage = pagination.currentPage;
+
+      // Always show pagination controls for professional UX, even on single page
+      return `
+        <div class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+          <div class="pagination-info" style="font-size: 14px; color: #6b7280; font-weight: 500;">
+            Showing ${Math.min((currentPage - 1) * pagination.itemsPerPage + 1, pagination.totalItems)} to ${Math.min(currentPage * pagination.itemsPerPage, pagination.totalItems)} of ${pagination.totalItems} entries
+          </div>
+          <div class="pagination-buttons" style="display: flex; gap: 8px; align-items: center;">
+            <button
+              class="pagination-btn prev-btn"
+              data-type="${type}"
+              ${currentPage <= 1 ? 'disabled' : ''}
+              style="min-width: 80px; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: white; color: #374151; cursor: ${currentPage <= 1 ? 'not-allowed' : 'pointer'}; transition: all 0.2s; opacity: ${currentPage <= 1 ? '0.5' : '1'}; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px;"
+              aria-label="Previous page"
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 19l-7-7 7-7"/>
+              </svg>
+              Prev
+            </button>
+            <span class="pagination-current" style="padding: 8px 14px; background: #3b82f6; color: white; border-radius: 6px; font-weight: 600; font-size: 13px; user-select: none;">
+              ${currentPage} / ${Math.max(totalPages, 1)}
+            </span>
+            <button
+              class="pagination-btn next-btn"
+              data-type="${type}"
+              ${currentPage >= totalPages ? 'disabled' : ''}
+              style="min-width: 80px; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: white; color: #374151; cursor: ${currentPage >= totalPages ? 'not-allowed' : 'pointer'}; transition: all 0.2s; opacity: ${currentPage >= totalPages ? '0.5' : '1'}; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px;"
+              aria-label="Next page"
+            >
+              Next
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
     // Create combined Top Models and Module Analysis section
-    function createModelsAndModulesSection(modelData, moduleData) {
+    function createModelsAndModulesSection() {
+      const paginatedModels = getPaginatedModels();
+      const paginatedModules = getPaginatedModules();
+
       const section = document.createElement('div');
       section.className = 'section-card';
+      section.id = 'models-modules-section';
 
       section.innerHTML = `
         <h2 class="section-title">Models & Module Analysis</h2>
         <div class="tables-side-by-side">
-          <div>
+          <div class="table-container">
             <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Top Affected Models</h3>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Model</th>
-                  <th>Count</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${modelData.map(item => `
+            <div class="table-wrapper" style="overflow-x: auto;">
+              <table class="data-table">
+                <thead>
                   <tr>
-                    <td>${item.model}</td>
-                    <td class="numeric-value">${item.count}</td>
+                    <th>Model</th>
+                    <th>Count</th>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${paginatedModels.map(item => `
+                    <tr>
+                      <td>${item.model}</td>
+                      <td class="numeric-value">${item.count}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${createPaginationControls(modelPagination, 'model')}
           </div>
-          <div>
+          <div class="table-container">
             <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Module Analysis</h3>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Module</th>
-                  <th>Total</th>
-                  <th>Active</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${moduleData.map(item => `
+            <div class="table-wrapper" style="overflow-x: auto;">
+              <table class="data-table">
+                <thead>
                   <tr>
-                    <td>${item.module}</td>
-                    <td class="numeric-value">${item.total}</td>
-                    <td class="numeric-value">${item.active}</td>
+                    <th>Module</th>
+                    <th>Total</th>
+                    <th>Active</th>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${paginatedModules.map(item => `
+                    <tr>
+                      <td>${item.module}</td>
+                      <td class="numeric-value">${item.total}</td>
+                      <td class="numeric-value">${item.active}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${createPaginationControls(modulePagination, 'module')}
           </div>
         </div>
       `;
 
+      // Add event listeners for pagination buttons
+      section.addEventListener('click', handlePaginationClick);
+
       return section;
+    }
+
+    // Handle pagination button clicks
+    function handlePaginationClick(event) {
+      const button = event.target.closest('.pagination-btn');
+      if (!button) return;
+
+      const type = button.getAttribute('data-type');
+      const isPrev = button.classList.contains('prev-btn');
+      const isNext = button.classList.contains('next-btn');
+
+      if (type === 'model') {
+        if (isPrev && modelPagination.currentPage > 1) {
+          modelPagination.currentPage--;
+        } else if (isNext && modelPagination.currentPage < Math.ceil(modelPagination.totalItems / modelPagination.itemsPerPage)) {
+          modelPagination.currentPage++;
+        }
+      } else if (type === 'module') {
+        if (isPrev && modulePagination.currentPage > 1) {
+          modulePagination.currentPage--;
+        } else if (isNext && modulePagination.currentPage < Math.ceil(modulePagination.totalItems / modulePagination.itemsPerPage)) {
+          modulePagination.currentPage++;
+        }
+      }
+
+      // Re-render the models and modules section
+      const section = document.getElementById('models-modules-section');
+      if (section) {
+        const newSection = createModelsAndModulesSection();
+        section.parentNode.replaceChild(newSection, section);
+      }
     }
 
     // Create Module Analysis section
