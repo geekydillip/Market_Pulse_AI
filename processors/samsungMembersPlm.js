@@ -357,7 +357,7 @@ module.exports = {
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
-        'Progr.Stat.': aiRow['Progr.Stat.'] || '',
+        'Progr.Stat.': original['Progr.Stat.'] || '',  // From original data
         'Resolve Type': original['Resolve Option(Small)'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',

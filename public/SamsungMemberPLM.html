@@ -99,7 +99,7 @@
         // Identify series rows by empty columns 0,1,2 and non-empty 3,4
         if (row && row[0] === "" && row[1] === "" && row[2] === "" && row[3] && row[4]) {
           seriesData.push({
-            series: row[3],
+            series: row[3] === 'Unknown' ? 'Others' : row[3],
             count: parseInt(row[4]) || 0
           });
         }
