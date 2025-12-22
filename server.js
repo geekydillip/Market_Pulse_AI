@@ -1048,9 +1048,44 @@ async function precomputeAnalytics(module, processedPath) {
     pythonProcess.on('close', (code) => {
       if (code === 0) {
         console.log(`✅ Analytics precomputed for ${module}`);
+
+        // Trigger central cache update after analytics are ready
+        generateCentralCache().catch(err =>
+          console.warn('⚠️ Central cache generation failed:', err.message)
+        );
+
         resolve();
       } else {
         console.warn(`⚠️ Analytics precomputation failed for ${module}:`, stderr);
+        resolve(); // Don't fail the whole process
+      }
+    });
+  });
+}
+
+// Generate centralized dashboard cache
+async function generateCentralCache() {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/generate_central_cache.py']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log('✅ Central dashboard cache updated');
+        resolve();
+      } else {
+        console.warn('⚠️ Central cache generation failed:', stderr);
         resolve(); // Don't fail the whole process
       }
     });
@@ -1801,37 +1836,27 @@ app.get('/api/samsung-members-plm', (req, res) => {
 // GET /api/central/kpis -> Returns totals by processor type
 app.get('/api/central/kpis', async (req, res) => {
   try {
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    let stdout = '';
-    let stderr = '';
+    // Check if cache exists and is fresh
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.kpis);
+    } else {
+      // Fallback: generate cache on-demand
+      console.log('⚠️ Cache not found, generating on-demand...');
+      const { spawn } = require('child_process');
+      const pythonProcess = spawn('python', ['server/analytics/generate_central_cache.py']);
 
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Central aggregator error:', stderr);
-        return res.status(500).json({ error: 'Central aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
+      pythonProcess.on('close', (code) => {
+        if (code === 0 && fs.existsSync(cachePath)) {
+          const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+          res.json(cacheData.kpis);
+        } else {
+          res.status(500).json({ error: 'Failed to generate dashboard cache' });
         }
-        res.json(result.kpis);
-      } catch (e) {
-        console.error('JSON parse error from central aggregator:', e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+      });
+    }
   } catch (error) {
     console.error('Central KPIs error:', error);
     res.status(500).json({ error: error.message });
@@ -1841,37 +1866,14 @@ app.get('/api/central/kpis', async (req, res) => {
 // GET /api/central/top-modules -> Returns top 10 modules with labels and values
 app.get('/api/central/top-modules', async (req, res) => {
   try {
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Central aggregator error:', stderr);
-        return res.status(500).json({ error: 'Central aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
-        }
-        res.json(result.top_modules);
-      } catch (e) {
-        console.error('JSON parse error from central aggregator:', e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.top_modules);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
   } catch (error) {
     console.error('Central top modules error:', error);
     res.status(500).json({ error: error.message });
@@ -1881,37 +1883,14 @@ app.get('/api/central/top-modules', async (req, res) => {
 // GET /api/central/series-distribution -> Returns series distribution (Beta/PLM/VOC)
 app.get('/api/central/series-distribution', async (req, res) => {
   try {
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Central aggregator error:', stderr);
-        return res.status(500).json({ error: 'Central aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
-        }
-        res.json(result.series_distribution);
-      } catch (e) {
-        console.error('JSON parse error from central aggregator:', e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.series_distribution);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
   } catch (error) {
     console.error('Central series distribution error:', error);
     res.status(500).json({ error: error.message });
@@ -1921,37 +1900,14 @@ app.get('/api/central/series-distribution', async (req, res) => {
 // GET /api/central/top-models -> Returns top 10 models with labels and values
 app.get('/api/central/top-models', async (req, res) => {
   try {
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Central aggregator error:', stderr);
-        return res.status(500).json({ error: 'Central aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
-        }
-        res.json(result.top_models);
-      } catch (e) {
-        console.error('JSON parse error from central aggregator:', e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.top_models);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
   } catch (error) {
     console.error('Central top models error:', error);
     res.status(500).json({ error: error.message });
@@ -1961,37 +1917,14 @@ app.get('/api/central/top-models', async (req, res) => {
 // GET /api/central/high-issues -> Returns top 10 high issues
 app.get('/api/central/high-issues', async (req, res) => {
   try {
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py']);
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Central aggregator error:', stderr);
-        return res.status(500).json({ error: 'Central aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
-        }
-        res.json(result.high_issues);
-      } catch (e) {
-        console.error('JSON parse error from central aggregator:', e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.high_issues);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
   } catch (error) {
     console.error('Central high issues error:', error);
     res.status(500).json({ error: error.message });
@@ -2007,43 +1940,14 @@ app.get('/api/central/top-models/:source', async (req, res) => {
       return res.status(400).json({ error: 'Invalid source. Must be beta, plm, or voc' });
     }
 
-    const commandMap = {
-      'beta': 'top-models-beta',
-      'plm': 'top-models-plm',
-      'voc': 'top-models-voc'
-    };
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py', commandMap[source]]);
-
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error(`Central aggregator error for ${source}:`, stderr);
-        return res.status(500).json({ error: 'Central aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
-        }
-        res.json(result);
-      } catch (e) {
-        console.error(`JSON parse error from central aggregator for ${source}:`, e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.filtered_top_models[source]);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
   } catch (error) {
     console.error(`Central top models ${req.params.source} error:`, error);
     res.status(500).json({ error: error.message });
@@ -2053,37 +1957,14 @@ app.get('/api/central/top-models/:source', async (req, res) => {
 // GET /api/central/model-module-matrix -> Returns matrix of Top 10 Models × Top 10 Modules
 app.get('/api/central/model-module-matrix', async (req, res) => {
   try {
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py', 'matrix']);
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Central aggregator matrix error:', stderr);
-        return res.status(500).json({ error: 'Central matrix aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
-        }
-        res.json(result);
-      } catch (e) {
-        console.error('JSON parse error from central aggregator matrix:', e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.model_module_matrix);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
   } catch (error) {
     console.error('Central model-module matrix error:', error);
     res.status(500).json({ error: error.message });
@@ -2093,37 +1974,14 @@ app.get('/api/central/model-module-matrix', async (req, res) => {
 // GET /api/central/source-model-summary -> Returns detailed summary by source and model
 app.get('/api/central/source-model-summary', async (req, res) => {
   try {
-    const { spawn } = require('child_process');
-    const pythonProcess = spawn('python', ['server/analytics/central_aggregator.py', 'summary']);
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
 
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Central aggregator summary error:', stderr);
-        return res.status(500).json({ error: 'Central summary aggregation failed' });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          return res.status(500).json({ error: result.error });
-        }
-        res.json(result);
-      } catch (e) {
-        console.error('JSON parse error from central aggregator summary:', e);
-        res.status(500).json({ error: 'Invalid response from central aggregator' });
-      }
-    });
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.source_model_summary);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
   } catch (error) {
     console.error('Central source-model summary error:', error);
     res.status(500).json({ error: error.message });
