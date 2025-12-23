@@ -110,6 +110,17 @@ function readAndNormalizeExcel(uploadedPath) {
   return normalizeHeaders(rows);
 }
 
+/**
+ * Derive model name from S/W Ver. for OS Beta entries
+ * Example: "S911BXXU8ZYHB" -> "SM-S911B"
+ */
+function deriveModelNameFromSwVer(swVer) {
+  if (!swVer || typeof swVer !== 'string' || swVer.length < 5) {
+    return '';
+  }
+  return 'SM-' + swVer.substring(0, 5);
+}
+
 // normalizeRows - now just calls the shared function
 function normalizeRows(rows) {
   return normalizeHeaders(rows);
@@ -186,7 +197,9 @@ module.exports = {
       const original = originalRows[index] || {};
       return {
         'Case Code': original['Case Code'] || '',
-        'Model No.': original['Model No.'] || '',
+        'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
+          ? deriveModelNameFromSwVer(original['S/W Ver.'])
+          : (original['Model No.'] || ''),
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)

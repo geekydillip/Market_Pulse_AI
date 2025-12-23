@@ -17,9 +17,29 @@ def sanitize_nan(obj):
     else:
         return obj
 
+def derive_model_name_from_sw_ver(sw_ver):
+    """
+    Derive model name from S/W Ver. for OS Beta entries
+    Example: "S911BXXU8ZYHB" -> "SM-S911B"
+    """
+    if not sw_ver or not isinstance(sw_ver, str) or len(sw_ver) < 5:
+        return sw_ver  # Return original if invalid
+    return 'SM-' + sw_ver[:5]
+
+def transform_model_names(df):
+    """
+    Transform Model No. column for OS Beta entries using S/W Ver.
+    """
+    if 'Model No.' in df.columns and 'S/W Ver.' in df.columns:
+        # Apply transformation where Model No. starts with "[OS Beta]"
+        mask = df['Model No.'].astype(str).str.startswith('[OS Beta]')
+        df.loc[mask, 'Model No.'] = df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+    return df
+
 def load_all_excels(base_path: str) -> dict:
     """
     Load all Excel files from subfolders under base_path, grouped by folder.
+    Apply model name transformation for OS Beta entries.
     Returns dict: {folder_name: [df1, df2, ...]}
     """
     base = Path(base_path)
@@ -35,6 +55,8 @@ def load_all_excels(base_path: str) -> dict:
                 for excel in excels:
                     try:
                         df = pd.read_excel(excel)
+                        # Apply model name transformation for OS Beta entries
+                        df = transform_model_names(df)
                         dfs.append(df)
                     except Exception as e:
                         print(f"Warning: Failed to load {excel}: {e}")

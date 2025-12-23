@@ -1,0 +1,736 @@
+{
+  "last_updated": "2025-12-23T11:03:03.909719",
+  "version": "1.0",
+  "kpis": {
+    "Beta User Issues": 2147,
+    "Samsung Members PLM": 3858,
+    "Samsung Members VOC": 4999
+  },
+  "top_modules": [
+    {
+      "label": "Settings",
+      "value": 1371
+    },
+    {
+      "label": "Network",
+      "value": 621
+    },
+    {
+      "label": "Camera",
+      "value": 613
+    },
+    {
+      "label": "Display",
+      "value": 597
+    },
+    {
+      "label": "Battery",
+      "value": 570
+    },
+    {
+      "label": "Lock Screen",
+      "value": 553
+    },
+    {
+      "label": "Call",
+      "value": 133
+    },
+    {
+      "label": "Gallery",
+      "value": 102
+    },
+    {
+      "label": "System performance",
+      "value": 82
+    },
+    {
+      "label": "Audio",
+      "value": 75
+    }
+  ],
+  "series_distribution": [
+    {
+      "label": "S Series",
+      "value": 5273
+    },
+    {
+      "label": "A Series",
+      "value": 3052
+    },
+    {
+      "label": "M Series",
+      "value": 1356
+    },
+    {
+      "label": "F Series",
+      "value": 864
+    },
+    {
+      "label": "Fold & Flip Series",
+      "value": 257
+    },
+    {
+      "label": "Tablet",
+      "value": 176
+    },
+    {
+      "label": "Others",
+      "value": 165
+    },
+    {
+      "label": "Watch",
+      "value": 17
+    },
+    {
+      "label": "Ring",
+      "value": 1
+    }
+  ],
+  "top_models": [
+    {
+      "label": "SM-S938B",
+      "value": 488
+    },
+    {
+      "label": "SM-A356E",
+      "value": 361
+    },
+    {
+      "label": "SM-G610F",
+      "value": 318
+    },
+    {
+      "label": "SM-S928B",
+      "value": 314
+    },
+    {
+      "label": "SM-S928BE_SWA_15_DD",
+      "value": 294
+    },
+    {
+      "label": "SM-S911B",
+      "value": 215
+    },
+    {
+      "label": "SM-S938BE_SWA_DD",
+      "value": 210
+    },
+    {
+      "label": "SM-S911BE_SWA_15_DD",
+      "value": 206
+    },
+    {
+      "label": "SM-A156E",
+      "value": 201
+    },
+    {
+      "label": "SM-A556E",
+      "value": 196
+    }
+  ],
+  "high_issues": [
+    {
+      "Model Number": "SM-S931N",
+      "Case Code": "P251209-03479",
+      "Module Name": "Settings",
+      "Title": "Font corruption in sleep statistics at the bottom of the sleep alarm setting",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S931N",
+      "Case Code": "P251210-06676",
+      "Module Name": "Settings",
+      "Title": "Severe lag after setting up the Quick Settings panel",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S931N",
+      "Case Code": "P251210-06691",
+      "Module Name": "Settings",
+      "Title": "Pop-up appears for \"Routine triggered when leaving home\" even when inside the house",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S938N",
+      "Case Code": "P251210-06731",
+      "Module Name": "Settings",
+      "Title": "The app crashes when selecting a carrier PASS for identity verification in the Military Service Agency app",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S936N",
+      "Case Code": "P251210-07158",
+      "Module Name": "Settings",
+      "Title": "The \"Enable Multi-Window Support for All Apps\" option in Labs turns off automatically",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S938N",
+      "Case Code": "P251211-03789",
+      "Module Name": "Settings",
+      "Title": "Error pop-up appears when opening the clipboard while writing in the Safety Report app",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S936N",
+      "Case Code": "P251211-05122",
+      "Module Name": "Settings",
+      "Title": "The System UI stops while deleting an alarm",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S936N",
+      "Case Code": "P251211-06535",
+      "Module Name": "Settings",
+      "Title": "Exception occurs when copying text in apps using WebView",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S936N",
+      "Case Code": "P251211-06911",
+      "Module Name": "Settings",
+      "Title": "Inconsistent alignment of the Quick Panel in both portrait and landscape modes",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S931N",
+      "Case Code": "P251211-06973",
+      "Module Name": "Settings",
+      "Title": "The KB Chachacha app crashes when selecting a carrier",
+      "Processor": "Beta"
+    }
+  ],
+  "model_module_matrix": {
+    "models": [
+      "SM-S938B",
+      "SM-A356E",
+      "SM-G610F",
+      "SM-S928B",
+      "SM-S928BE_SWA_15_DD",
+      "SM-S911B",
+      "SM-S938BE_SWA_DD",
+      "SM-S911BE_SWA_15_DD",
+      "SM-A156E",
+      "SM-A556E"
+    ],
+    "modules": [
+      "Settings",
+      "Network",
+      "Camera",
+      "Display",
+      "Battery",
+      "Lock Screen",
+      "Call",
+      "Gallery",
+      "System performance",
+      "Audio"
+    ],
+    "matrix": [
+      [
+        98,
+        53,
+        33,
+        43,
+        55,
+        59,
+        9,
+        4,
+        0,
+        12
+      ],
+      [
+        24,
+        10,
+        7,
+        18,
+        28,
+        14,
+        2,
+        1,
+        0,
+        3
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        69,
+        14,
+        45,
+        27,
+        36,
+        41,
+        9,
+        4,
+        0,
+        5
+      ],
+      [
+        78,
+        13,
+        31,
+        26,
+        37,
+        33,
+        10,
+        12,
+        6,
+        2
+      ],
+      [
+        43,
+        26,
+        24,
+        21,
+        25,
+        26,
+        2,
+        2,
+        0,
+        2
+      ],
+      [
+        59,
+        12,
+        34,
+        19,
+        15,
+        23,
+        6,
+        5,
+        1,
+        0
+      ],
+      [
+        42,
+        16,
+        26,
+        27,
+        24,
+        15,
+        10,
+        2,
+        6,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "source_model_summary": [
+    {
+      "source": "Beta",
+      "model": "SM-S938B",
+      "top_modules": [
+        "Settings",
+        "Lock Screen",
+        "Battery",
+        "Network",
+        "Display"
+      ],
+      "issue_count": 488,
+      "top_titles": [
+        "Battery drain observed in the device",
+        "Battery drains at an abnormal rate",
+        "Unable to install WIFI certificate from company portal",
+        "System font selected is Bold font but not applied in Samsung keyboard",
+        "While WhatsApp call, video cannot play on Samsung internet"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-S928B",
+      "top_modules": [
+        "Settings",
+        "Camera",
+        "Lock Screen",
+        "Battery",
+        "Display"
+      ],
+      "issue_count": 314,
+      "top_titles": [
+        "Battery drain at an abnormal rate",
+        "What App not working properly",
+        "Camera cutout showing in landscape mode",
+        "Battery drains at an abnormal rate",
+        "Overheating Issue When Opening Camera"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-S911B",
+      "top_modules": [
+        "Settings",
+        "Lock Screen",
+        "Network",
+        "Battery",
+        "Camera"
+      ],
+      "issue_count": 215,
+      "top_titles": [
+        "Network issues faced",
+        "Camera Noise observed at 3x in low light",
+        "Lag observed in the device",
+        "Home up app not working",
+        "WhatsApp call notification text misaligned and WP icon bigger than background"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-S938N",
+      "top_modules": [
+        "Settings",
+        "Display",
+        "Lock Screen",
+        "Network",
+        "Gallery"
+      ],
+      "issue_count": 160,
+      "top_titles": [
+        "Exception occurs when entering battery background app usage restriction in Device Care",
+        "Quick Panel settings are reset every time the device boots",
+        "Reboot occurs while playing music with Alsong (theme changes to default afterward)",
+        "Reboot occurs when the device is idle",
+        "The Always On Display (AOD) background appears unnatural, and the clock stutters when the screen is turned on/off"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-S931B",
+      "top_modules": [
+        "Settings",
+        "Lock Screen",
+        "Battery",
+        "Display",
+        "Camera"
+      ],
+      "issue_count": 156,
+      "top_titles": [
+        "App disappear from recent tab when switch to other app",
+        "Application icons occasionally fail to render, displaying as blank spaces",
+        "Brightness slider issue in Quick panel",
+        "issue with: Quick setting icons",
+        "Goodlock modules not working"
+      ]
+    },
+    {
+      "source": "PLM",
+      "model": "SM-S928BE_SWA_15_DD",
+      "top_modules": [
+        "Settings",
+        "Battery",
+        "Lock Screen",
+        "Camera",
+        "Display"
+      ],
+      "issue_count": 294,
+      "top_titles": [
+        "Battery drain",
+        "Vibrate when answered feature not working",
+        "Camera issue",
+        "Battery drain issue",
+        "Camera quality is not good"
+      ]
+    },
+    {
+      "source": "PLM",
+      "model": "SM-S938BE_SWA_DD",
+      "top_modules": [
+        "Settings",
+        "Camera",
+        "Lock Screen",
+        "Display",
+        "Battery"
+      ],
+      "issue_count": 210,
+      "top_titles": [
+        "Quick Panel",
+        "Face unlock not working",
+        "Now bar not working on Lock Screen",
+        "Camera quality is not good",
+        "Rear Camera keeps closing"
+      ]
+    },
+    {
+      "source": "PLM",
+      "model": "SM-S911BE_SWA_15_DD",
+      "top_modules": [
+        "Settings",
+        "Display",
+        "Camera",
+        "Battery",
+        "Network"
+      ],
+      "issue_count": 206,
+      "top_titles": [
+        "Battery drain",
+        "Call background issue",
+        "Notification Panel color not getting changed properly",
+        "Not able to open phone app and call history",
+        "Font color not display proper in Home Up module of Good Lock"
+      ]
+    },
+    {
+      "source": "PLM",
+      "model": "SM-S918BE_SWA_15_DD",
+      "top_modules": [
+        "Settings",
+        "Camera",
+        "Display",
+        "Network",
+        "Battery"
+      ],
+      "issue_count": 152,
+      "top_titles": [
+        "Battery drain",
+        "Multiple issues observed",
+        "noise distortion muffling in sound",
+        "AOD clock and battery icon glitching",
+        "screen flicker Green screen issue"
+      ]
+    },
+    {
+      "source": "PLM",
+      "model": "SM-S938BE_SWA_16_DD",
+      "top_modules": [
+        "Camera",
+        "Settings",
+        "Lock Screen",
+        "Display",
+        "Battery"
+      ],
+      "issue_count": 107,
+      "top_titles": [
+        "Poor camera quality",
+        "Camera stutters at 0.6x",
+        "Camera quality is not good",
+        "Update for Samsung Language Core failed to install",
+        "Videos not playing in any media application"
+      ]
+    },
+    {
+      "source": "VOC",
+      "model": "SM-G610F",
+      "top_modules": [],
+      "issue_count": 318,
+      "top_titles": [
+        "Please solve my network problem",
+        "To provide feedback on speech-to-text functionality within an app, consider the following suggestions: Feedback Categories 1. *Accuracy*: Evaluate how well the app transcribes spoken words. 2. *Speed*: Assess the app's response time in transcribing speech. 3. *User Interface*: Provide feedback on the app's user interface, including layout, buttons, and overall usability. 4. *Error Handling*: Evaluate how the app handles errors, such as misrecognized words or phrases. 5. *Additional Features*: Suggest additional features that would enhance the app's speech-to-text functionality. Specific Feedback Examples 1. \"I noticed that the app struggles to recognize certain words or phrases, particularly those with accents or regional dialects.\" 2. \"The app's response time is slow, often taking several seconds to transcribe a short sentence.\" 3. \"I find the user interface to be cluttered and confusing, making it difficult to navigate and use the app effectively.\" 4. \"When the app misrecognizes a",
+        "Close app aa raha hai",
+        "Very good and so nice",
+        "You can also try erasing all the texts on your Samsung device to tackle the issue of IMS service has stopped Galaxy J7 error. You can do this in the following way. Launch the Messaging app from the home screen. Select “Menu” and then tap on “Delete Threads” option."
+      ]
+    },
+    {
+      "source": "VOC",
+      "model": "SM-A356E",
+      "top_modules": [],
+      "issue_count": 214,
+      "top_titles": [
+        "Hey Samsung A35 5G users! I'm experiencing a weird issue while playing online games like Free Fire and BGMI. Despite having a perfect ping (around 20-30 ms), the game consistently shows \"Poor Network\" warnings I've checked my internet connection and it's stable, with a download speed of insert speed]. I've also tried: •Restarting my phone .Switching between Wi-Fi and mobile data. .Closing other resource-intensive apps . Updating my phone's software But the issue persists. Anyone else facing this problem? Any suggestions or solutions would be greatly appreciated!",
+        "Not working secure folder",
+        "This phone battery and network connection is very 👎 bed",
+        "Paring problem",
+        "Automatic SD card eject and all photo are cracked"
+      ]
+    },
+    {
+      "source": "VOC",
+      "model": "SM-A156E",
+      "top_modules": [],
+      "issue_count": 201,
+      "top_titles": [
+        "Phone isn't responding",
+        "Finger print not working",
+        "Taking too much time while opening an apps.Including Samsung members.",
+        "আমার ফোনের রিংটোন চেঞ্জ করা যাচ্ছে না।Can't change my phone ringtone.",
+        "Don't open lmc 8.4 and auto back problems"
+      ]
+    },
+    {
+      "source": "VOC",
+      "model": "SM-A556E",
+      "top_modules": [],
+      "issue_count": 196,
+      "top_titles": [
+        "Dear Samsung Support Team, I am facing a charging issue with my Samsung Galaxy A55 5G. The device automatically switches between Super Fast Charging and Fast Charging while plugged in. I visited the Samsung Care center, and they attempted to resolve the issue, but it persists. Finally, they suggested it might be a software glitch, as this problem has been reported by multiple users of the A55 5G. I am attaching a video as proof of the issue. Kindly review it and provide a solution, whether through a software update or another fix. Looking forward to your prompt response. Best regards, Vikas Kumar",
+        "I can't download medication features on my Samsung health app",
+        "Facing network fluctuations. The call drops suddenly while on a call and the internet gets very slower and not working and to solve this I switch on and off the flight mode for sometimes it works good and than I am Facing the same issue...my friend also using same my model samsung A55 5g he is also Facing the same issue with network...",
+        "You should tell, how can you do this even if you are such a big company, the camera quality of this phone is very poor pixel quality, which is not expected from you, how much more proud we feel how expensive it is talking to everyone that it is a brand. ,but lost all hope, after buying this phone no one is getting quality respect for this camera, I hope you inform your organization about this, I don,t Know need about some solution. I have everything updated on the phone, everything is fine but camera picture is very bed . Another problem is that you don't give importance to any of our feedback, I don't know why. But if this is given to you bot, you should read it without replaying it, I hope you will tell me that this will be fixed in the next update, I don't want to know any settings. And why don't you support raw, in taking pictures,",
+        "Both Sim cards Network automatically in Few Of minutes Switching off. then for after 10 seconds it On please solve the issue"
+      ]
+    },
+    {
+      "source": "VOC",
+      "model": "SM-M356B",
+      "top_modules": [],
+      "issue_count": 195,
+      "top_titles": [
+        "Here is log file",
+        "Wifi turning off automatically",
+        "When I use Hotspot with bsnl 4g with 2100mhz then it work fine but when band switch to 700mhz then no internet showing in connected device but in my Samsung it works properly why?",
+        "In my samsung m35 while i open my samsung wallets its doesnot reqired the pin or fingerprint to login its directly open . i have restart my device try to add new fingerprint and pin but wallets open without asking any verification method and please provde the update so that my device doesnot heat while using basic tasks.I have also screen recorded the issue plz fix both issues More Faster.",
+        "I just used Samsung Switch to transfer A month photos and videos which I have not transfered from my previous phone but the existing photos and videos are not showing which I have transfered a month ago I am getting goosebumps if I lost my nostalgic media that had been stored"
+      ]
+    }
+  ],
+  "filtered_top_models": {
+    "beta": [
+      {
+        "label": "SM-S938B",
+        "value": 488
+      },
+      {
+        "label": "SM-S928B",
+        "value": 314
+      },
+      {
+        "label": "SM-S911B",
+        "value": 215
+      },
+      {
+        "label": "SM-S938N",
+        "value": 160
+      },
+      {
+        "label": "SM-S931B",
+        "value": 156
+      },
+      {
+        "label": "SM-S918B",
+        "value": 155
+      },
+      {
+        "label": "SM-A356E",
+        "value": 147
+      },
+      {
+        "label": "SM-S938U",
+        "value": 118
+      },
+      {
+        "label": "SM-S921B",
+        "value": 94
+      },
+      {
+        "label": "SM-S926B",
+        "value": 82
+      }
+    ],
+    "plm": [
+      {
+        "label": "SM-S928BE_SWA_15_DD",
+        "value": 294
+      },
+      {
+        "label": "SM-S938BE_SWA_DD",
+        "value": 210
+      },
+      {
+        "label": "SM-S911BE_SWA_15_DD",
+        "value": 206
+      },
+      {
+        "label": "SM-S918BE_SWA_15_DD",
+        "value": 152
+      },
+      {
+        "label": "SM-S938BE_SWA_16_DD",
+        "value": 107
+      },
+      {
+        "label": "SM-S921BE_SWA_15_DD",
+        "value": 100
+      },
+      {
+        "label": "SM-S928BE_SWA_16_DD",
+        "value": 98
+      },
+      {
+        "label": "SM-M356B_SWA_15_INS",
+        "value": 83
+      },
+      {
+        "label": "SM-S908E_SWA_15_DD",
+        "value": 78
+      },
+      {
+        "label": "SM-S711BE_SWA_15_INS",
+        "value": 77
+      }
+    ],
+    "voc": [
+      {
+        "label": "SM-G610F",
+        "value": 318
+      },
+      {
+        "label": "SM-A356E",
+        "value": 214
+      },
+      {
+        "label": "SM-A156E",
+        "value": 201
+      },
+      {
+        "label": "SM-A556E",
+        "value": 196
+      },
+      {
+        "label": "SM-M356B",
+        "value": 195
+      },
+      {
+        "label": "SM-A346E",
+        "value": 175
+      },
+      {
+        "label": "SM-A146B",
+        "value": 157
+      },
+      {
+        "label": "SM-G990E",
+        "value": 156
+      },
+      {
+        "label": "SM-E156B",
+        "value": 135
+      },
+      {
+        "label": "SM-G781B",
+        "value": 126
+      }
+    ]
+  }
+}

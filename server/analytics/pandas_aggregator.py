@@ -17,6 +17,25 @@ def sanitize_nan(obj):
     else:
         return obj
 
+def derive_model_name_from_sw_ver(sw_ver):
+    """
+    Derive model name from S/W Ver. for OS Beta entries
+    Example: "S911BXXU8ZYHB" -> "SM-S911B"
+    """
+    if not sw_ver or not isinstance(sw_ver, str) or len(sw_ver) < 5:
+        return sw_ver  # Return original if invalid
+    return 'SM-' + sw_ver[:5]
+
+def transform_model_names(df):
+    """
+    Transform Model No. column for OS Beta entries using S/W Ver.
+    """
+    if 'Model No.' in df.columns and 'S/W Ver.' in df.columns:
+        # Apply transformation where Model No. starts with "[OS Beta]"
+        mask = df['Model No.'].astype(str).str.startswith('[OS Beta]')
+        df.loc[mask, 'Model No.'] = df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+    return df
+
 def load_latest_excel(folder_path: str) -> pd.DataFrame:
     """
     Load the most recent Excel file from a folder.
@@ -99,6 +118,9 @@ if __name__ == "__main__":
 
     try:
         df = load_latest_excel(folder_path)
+        # Apply model name transformation for OS Beta entries
+        df = transform_model_names(df)
+
         kpis = compute_kpis(df)
         top_models = group_by_column(df, 'Model No.')
         categories = group_by_column(df, 'Module')
