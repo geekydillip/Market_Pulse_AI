@@ -18,6 +18,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
+    darkMode: 'class',
     theme: {
       extend: {
         colors: {
@@ -39,26 +40,38 @@
       },
     },
   }
+
+  // System theme detection
+  function updateTheme() {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', isDark);
+  }
+
+  // Listen for theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
+  // Set initial theme
+  updateTheme();
 </script>
 </head>
 
-<body class="bg-slate-50 text-slate-900 font-sans min-h-screen">
-<div class="max-w-7xl mx-auto px-6 py-8">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
+<div class="max-w-7xl mx-auto px-6 py-6">
 
 <!-- HEADER -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-  <h1 class="text-2xl font-bold text-slate-800">MARKET PULSE AI DASHBOARD</h1>
+  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI DASHBOARD</h1>
   <div class="flex gap-2">
-    <select id="filterModel" aria-label="Filter by model" class="px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+    <select id="filterModel" aria-label="Filter by model" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
       <option>All Models</option>
     </select>
-    <select id="filterModule" aria-label="Filter by module" class="px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+    <select id="filterModule" aria-label="Filter by module" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
       <option>All Modules</option>
     </select>
-    <select id="filterSource" aria-label="Filter by source" class="px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+    <select id="filterSource" aria-label="Filter by source" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
       <option>All Sources</option>
     </select>
-    <select id="filterSeverity" aria-label="Filter by severity" class="px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+    <select id="filterSeverity" aria-label="Filter by severity" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
       <option>All Severities</option>
     </select>
   </div>
@@ -66,50 +79,51 @@
 
 <!-- KPI -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-  <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-sm text-slate-600 font-medium">Total Issues</p>
-        <p class="text-3xl font-bold text-slate-900 mt-1" id="total-issues">0</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total Issues</p>
+        <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
       </div>
-      <div class="p-3 bg-slate-100 rounded-lg">
-        <i class="fa-solid fa-chart-column text-slate-600 text-xl"></i>
+      <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
+        <i class="fa-solid fa-chart-line text-slate-600 dark:text-slate-400 text-xl"></i>
       </div>
     </div>
   </div>
 
-  <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-    <div class="flex items-center justify-between">
+  <div class="bg-red-50 dark:bg-red-950/30 rounded-xl shadow-lg p-6 border-2 border-red-200 dark:border-red-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
       <div>
-        <p class="text-sm text-slate-600 font-medium">High Issues</p>
-        <p class="text-3xl font-bold text-red-600 mt-1" id="high-issues">0</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">High Issues</p>
+        <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="high-issues">0</p>
       </div>
-      <div class="p-3 bg-red-50 rounded-lg">
-        <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+      <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
+        <i class="fa-solid fa-triangle-exclamation text-red-600 dark:text-red-400 text-xl"></i>
       </div>
     </div>
   </div>
 
-  <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-sm text-slate-600 font-medium">Total Models</p>
-        <p class="text-3xl font-bold text-slate-900 mt-1" id="total-models">0</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total Models</p>
+        <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-models">0</p>
       </div>
-      <div class="p-3 bg-slate-100 rounded-lg">
-        <i class="fa-solid fa-mobile-screen-button text-slate-600 text-xl"></i>
+      <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
+        <i class="fa-solid fa-mobile-screen text-slate-600 dark:text-slate-400 text-xl"></i>
       </div>
     </div>
   </div>
 
-  <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-sm text-slate-600 font-medium">Total Modules</p>
-        <p class="text-3xl font-bold text-slate-900 mt-1" id="total-modules">0</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total Modules</p>
+        <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-modules">0</p>
       </div>
-      <div class="p-3 bg-slate-100 rounded-lg">
-        <i class="fa-solid fa-cubes text-slate-600 text-xl"></i>
+      <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
+        <i class="fa-solid fa-cubes text-slate-600 dark:text-slate-400 text-xl"></i>
       </div>
     </div>
   </div>
@@ -120,24 +134,24 @@
 
 <!-- SOURCE DISTRIBUTION - 100% Stacked Horizontal Bar -->
 <div class="col-span-3">
-  <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 h-[260px]">
-    <h3 class="text-sm font-semibold text-slate-800 mb-2">Source Distribution</h3>
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
+    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Source Distribution</h3>
     <div id="source-distribution-chart" class="h-[200px] w-full"></div>
   </div>
 </div>
 
 <!-- SEVERITY SPLIT - Donut Chart -->
 <div class="col-span-3">
-  <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 h-[260px]">
-    <h3 class="text-sm font-semibold text-slate-800 mb-2">Issues Severity Split</h3>
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
+    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Issues Severity Split</h3>
     <div id="severity-split-chart" class="h-[200px] w-full"></div>
   </div>
 </div>
 
 <!-- TOP MODELS - Lollipop Bar Chart -->
 <div class="col-span-6">
-  <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 h-[260px]">
-    <h3 class="text-sm font-semibold text-slate-800 mb-2">Top Models</h3>
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
+    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Top Models</h3>
     <div id="top-models-chart" class="h-[200px] w-full"></div>
   </div>
 </div>
@@ -151,40 +165,40 @@
 <!-- DETAILS MODAL -->
 <div id="details-modal" class="fixed inset-0 z-50 hidden">
   <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeDetailsModal()"></div>
-  <div class="relative mx-auto my-8 max-w-4xl max-h-[90vh] bg-white rounded-xl shadow-xl flex flex-col overflow-hidden">
-    <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 bg-slate-50">
-      <h2 class="text-xl font-semibold text-slate-800">Detailed Model Analysis</h2>
-      <button class="text-slate-400 hover:text-slate-600 text-2xl leading-none" onclick="closeDetailsModal()">×</button>
+  <div class="relative mx-auto my-8 max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl flex flex-col overflow-hidden">
+    <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700">
+      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Detailed Model Analysis</h2>
+      <button class="text-slate-400 hover:text-slate-600 dark:text-slate-300 text-2xl leading-none" onclick="closeDetailsModal()">×</button>
     </div>
     <div class="flex-1 overflow-y-auto p-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-slate-50 rounded-lg">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
         <div class="text-center">
-          <div class="text-2xl font-bold text-slate-900" id="modal-total-models">0</div>
-          <div class="text-sm text-slate-600">Total Models</div>
+          <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-models">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">Total Models</div>
         </div>
         <div class="text-center">
-          <div class="text-2xl font-bold text-slate-900" id="modal-total-issues">0</div>
-          <div class="text-sm text-slate-600">Total Issues</div>
+          <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-issues">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">Total Issues</div>
         </div>
         <div class="text-center">
-          <div class="text-2xl font-bold text-red-600" id="modal-high-risk">0</div>
-          <div class="text-sm text-slate-600">High Risk Models</div>
+          <div class="text-2xl font-bold text-red-600 dark:text-red-400" id="modal-high-risk">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">High Risk Models</div>
         </div>
       </div>
-      <div class="overflow-x-auto border border-slate-200 rounded-lg">
+      <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
         <table class="w-full">
-          <thead class="bg-slate-50">
+          <thead class="bg-slate-50 dark:bg-slate-700">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Rank</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Model</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Module</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Source</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Issues</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Severity</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Risk Level</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rank</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Module</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Source</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issues</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Severity</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Risk Level</th>
             </tr>
           </thead>
-          <tbody id="modal-table-body" class="bg-white divide-y divide-slate-200">
+          <tbody id="modal-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
             <!-- Dynamic content will be inserted here -->
           </tbody>
         </table>
@@ -314,8 +328,10 @@ async function loadDashboardData() {
     const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
     const jsonData = await response.json();
 
-    // Extract data from the JSON structure
+    // Extract data from the JSON structure - use pre-computed values
     dashboardData.kpis = jsonData.kpis;
+    dashboardData.totalIssues = jsonData.total_issues;
+    dashboardData.highIssuesCount = jsonData.high_issues_count;
     dashboardData.topModules = jsonData.top_modules;
     dashboardData.topModels = jsonData.top_models;
     dashboardData.sourceModelSummary = jsonData.source_model_summary;
@@ -338,68 +354,70 @@ async function loadDashboardData() {
 
 // Update KPI values
 function updateKPIs() {
-  const totalIssues = Object.values(dashboardData.kpis).reduce((sum, val) => sum + val, 0);
-
-  // Update KPI elements using correct IDs
+  // Update KPI elements using correct IDs - use pre-computed values
   const totalIssuesEl = document.getElementById('total-issues');
   const highIssuesEl = document.getElementById('high-issues');
   const totalModelsEl = document.getElementById('total-models');
   const totalModulesEl = document.getElementById('total-modules');
 
-  if (totalIssuesEl) totalIssuesEl.textContent = totalIssues.toLocaleString(); // Total Issues: 11,004
-
-  // Calculate High severity issues from real data (approximation based on available data)
-  // TODO: Backend should provide aggregated severity counts
-  const estimatedHighIssues = Math.floor(totalIssues * 0.35); // More realistic estimate based on typical distributions
-  if (highIssuesEl) highIssuesEl.textContent = estimatedHighIssues.toLocaleString(); // High Issues
+  // Use pre-computed values from backend
+  if (totalIssuesEl) totalIssuesEl.textContent = (dashboardData.totalIssues || 0).toLocaleString();
+  if (highIssuesEl) highIssuesEl.textContent = (dashboardData.highIssuesCount || 0).toLocaleString();
 
   // Use real aggregated counts from central cache
-  if (totalModelsEl) totalModelsEl.textContent = dashboardData.totalUniqueModels || dashboardData.topModels.length; // Total Models: 516
-  if (totalModulesEl) totalModulesEl.textContent = dashboardData.totalUniqueModules || dashboardData.topModules.length; // Total Modules: 142
+  if (totalModelsEl) totalModelsEl.textContent = dashboardData.totalUniqueModels || dashboardData.topModels.length;
+  if (totalModulesEl) totalModulesEl.textContent = dashboardData.totalUniqueModules || dashboardData.topModules.length;
 }
 
 // Update source distribution chart - 100% Stacked Horizontal Bar
 function updateSourceDistribution() {
   const chartDom = document.getElementById('source-distribution-chart');
-  if (!chartDom || !dashboardData.sourceModelSummary || dashboardData.sourceModelSummary.length === 0) {
+  if (!chartDom) {
     return;
   }
 
+  console.log("HTML Dashboard - Updating source distribution");
+  console.log("KPIs data:", dashboardData.kpis);
+
   const chart = echarts.init(chartDom);
+  const colors = getChartColors();
 
-  // Group data by source and calculate severity distribution
-  const sourceData = {};
+  // Use actual severity data from KPIs instead of classifying by count
+  const severityData = dashboardData.kpis || {};
+  console.log("Severity data from KPIs:", severityData);
 
-  dashboardData.sourceModelSummary.forEach(model => {
-    const source = model.source;
-    const issueCount = model.issue_count || 0;
+  // Map display names to KPI keys
+  const displayToKPI = {
+    'Beta Users': 'Beta User Issues',
+    'Samsung Members PLM': 'Samsung Members PLM',
+    'Samsung Members VOC': 'Samsung Members VOC'
+  };
 
-    if (!sourceData[source]) {
-      sourceData[source] = { high: 0, medium: 0, low: 0, total: 0 };
-    }
+  const sources = ['Beta Users Issues', 'Samsung Members PLM', 'Samsung Members VOC'];
 
-    // Classify by issue count
-    if (issueCount > 300) sourceData[source].high += issueCount;
-    else if (issueCount > 100) sourceData[source].medium += issueCount;
-    else sourceData[source].low += issueCount;
-
-    sourceData[source].total += issueCount;
-  });
-
-  // Prepare data for 100% stacked bars
-  const sources = Object.keys(sourceData);
+  // Extract severity counts directly from KPIs
   const highData = sources.map(source => {
-    const total = sourceData[source].total;
-    return total > 0 ? Math.round((sourceData[source].high / total) * 100) : 0;
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.High || 0;
+    console.log(`High for ${source} (${kpiKey}):`, value);
+    return value;
   });
+
   const mediumData = sources.map(source => {
-    const total = sourceData[source].total;
-    return total > 0 ? Math.round((sourceData[source].medium / total) * 100) : 0;
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.Medium || 0;
+    console.log(`Medium for ${source} (${kpiKey}):`, value);
+    return value;
   });
+
   const lowData = sources.map(source => {
-    const total = sourceData[source].total;
-    return total > 0 ? Math.round((sourceData[source].low / total) * 100) : 0;
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.Low || 0;
+    console.log(`Low for ${source} (${kpiKey}):`, value);
+    return value;
   });
+
+  console.log("Final data arrays - High:", highData, "Medium:", mediumData, "Low:", lowData);
 
   // Create mapping from display names to data keys
   const displayNameToKey = {
@@ -409,6 +427,9 @@ function updateSourceDistribution() {
   };
 
   const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
     tooltip: {
       trigger: 'axis',
       formatter: function(params) {
@@ -416,10 +437,8 @@ function updateSourceDistribution() {
         params.forEach(param => {
           const source = param.name;
           const severity = param.seriesName;
-          const percentage = param.value;
-          const dataKey = displayNameToKey[source] || source;
-          const absValue = sourceData[dataKey] ? sourceData[dataKey][severity.toLowerCase()] : 0;
-          result += `${source}<br/>${severity}: ${absValue} (${percentage}%)<br/>`;
+          const value = param.value;
+          result += `${source}<br/>${severity}: ${value}<br/>`;
         });
         return result;
       }
@@ -428,28 +447,32 @@ function updateSourceDistribution() {
       data: ['High', 'Medium', 'Low'],
       top: 0,
       right: 10,
-      orient: 'horizontal'
+      orient: 'horizontal',
+      textStyle: {
+        color: colors.textPrimary
+      }
     },
     grid: {
       left: '20%',
       right: '15%',
       top: '25%',
-      bottom: '10%'
+      bottom: '10%',
+      borderColor: colors.gridLines
     },
     xAxis: {
       type: 'value',
-      max: 100,
       axisLabel: {
-        formatter: '{value}%',
-        fontSize: 12
+        fontSize: 12,
+        color: colors.textPrimary
       }
     },
     yAxis: {
       type: 'category',
-      data: ['Samsung Members VOC', 'Samsung Members PLM', 'Beta Users'], // Full names, no truncation
+      data: ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'], // Match the order of sources array
       axisLabel: {
         fontSize: 12,
-        interval: 0
+        interval: 0,
+        color: colors.textPrimary
       }
     },
     series: [
@@ -540,6 +563,7 @@ function updateSeveritySplit() {
   if (!chartDom) return;
 
   const chart = echarts.init(chartDom);
+  const colors = getChartColors();
 
   // Calculate severity distribution
   let highCount = 0;
@@ -559,6 +583,9 @@ function updateSeveritySplit() {
   if (totalIssues === 0) return;
 
   const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
     tooltip: {
       trigger: 'item',
       formatter: '{b}: {c} ({d}%)'
@@ -566,7 +593,10 @@ function updateSeveritySplit() {
     legend: {
       data: ['High', 'Medium', 'Low'],
       bottom: '5%',
-      orient: 'horizontal'
+      orient: 'horizontal',
+      textStyle: {
+        color: colors.textPrimary
+      }
     },
     series: [
       {
@@ -622,6 +652,7 @@ function updateTopModelsChart() {
   }
 
   const chart = echarts.init(chartDom);
+  const colors = getChartColors();
 
   // Use top 8 models (reduced bar thickness allows more)
   const top8Models = dashboardData.topModels.slice(0, 8).reverse(); // Reverse for descending order (largest at top)
@@ -636,6 +667,9 @@ function updateTopModelsChart() {
   const avgIssuesPerModel = Math.round(totalIssues / dashboardData.totalUniqueModels);
 
   const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
     tooltip: {
       trigger: 'axis',
       formatter: function(params) {
@@ -650,7 +684,8 @@ function updateTopModelsChart() {
       left: '18%',
       right: '15%',
       top: '8%',
-      bottom: '8%'
+      bottom: '8%',
+      borderColor: colors.gridLines
     },
     xAxis: {
       type: 'value',
@@ -664,7 +699,7 @@ function updateTopModelsChart() {
         interval: 0,
         rotate: 0,
         fontSize: 11,
-        color: '#374151',
+        color: colors.textPrimary,
         formatter: function(value) {
           // Truncate long names for display, full names in tooltips
           return value.length > 12 ? value.substring(0, 12) + '...' : value;
@@ -693,7 +728,7 @@ function updateTopModelsChart() {
           formatter: '{c}', // Show count only, no percentage
           fontSize: 11,
           fontWeight: 'bold',
-          color: '#1f2937'
+          color: colors.textPrimary
         },
         emphasis: {
           itemStyle: {
@@ -843,6 +878,17 @@ function handleModalKeydown(event) {
   if (event.key === 'Escape') {
     closeDetailsModal();
   }
+}
+
+// Theme-aware color helper for charts
+function getChartColors() {
+  const isDark = document.documentElement.classList.contains('dark');
+
+  return {
+    textPrimary: isDark ? '#FFFFFF' : '#000000',
+    textSecondary: isDark ? '#FFFFFF' : '#000000',
+    gridLines: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+  };
 }
 
 // Error handling

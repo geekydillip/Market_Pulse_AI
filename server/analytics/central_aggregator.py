@@ -93,7 +93,7 @@ def filter_allowed_severity(df: pd.DataFrame) -> pd.DataFrame:
 
 def compute_central_kpis(data: dict) -> dict:
     """
-    Compute KPIs for each processor type.
+    Compute KPIs for each processor type with severity breakdowns.
     Filter out Critical severity issues as per requirements.
     """
     kpis = {}
@@ -108,7 +108,20 @@ def compute_central_kpis(data: dict) -> dict:
             # Apply severity filter to exclude Critical
             combined = filter_allowed_severity(combined)
             total = len(combined)
-            kpis[processor_map[folder]] = total
+
+            # Compute severity counts
+            severity_counts = {'High': 0, 'Medium': 0, 'Low': 0}
+            if 'Severity' in combined.columns:
+                severity_series = combined['Severity'].value_counts()
+                for severity in severity_counts.keys():
+                    severity_counts[severity] = int(severity_series.get(severity, 0))
+
+            kpis[processor_map[folder]] = {
+                'total': total,
+                'High': severity_counts['High'],
+                'Medium': severity_counts['Medium'],
+                'Low': severity_counts['Low']
+            }
     return kpis
 
 def compute_top_modules(data: dict) -> list:
@@ -516,8 +529,14 @@ if __name__ == "__main__":
         for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
             filtered_top_models[folder_name] = compute_top_models_by_source(data, folder_name)
 
+        # Compute total issues and high issues counts
+        total_issues = sum(kpis[source]['total'] for source in kpis)
+        high_issues_count = sum(kpis[source]['High'] for source in kpis)
+
         response = {
             "kpis": kpis,
+            "total_issues": total_issues,
+            "high_issues_count": high_issues_count,
             "top_modules": top_modules,
             "series_distribution": series_distribution,
             "top_models": top_models,

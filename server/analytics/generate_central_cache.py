@@ -117,6 +117,8 @@ def generate_central_cache():
 
     # Extract data from the single response
     kpis = base_data.get("kpis", {})
+    total_issues = base_data.get("total_issues", 0)
+    high_issues_count = base_data.get("high_issues_count", 0)
     top_modules = base_data.get("top_modules", [])
     series_distribution = base_data.get("series_distribution", [])
     top_models = base_data.get("top_models", [])
@@ -131,6 +133,8 @@ def generate_central_cache():
     # Create core data for hash computation (exclude metadata)
     core_data = {
         "kpis": kpis,
+        "total_issues": total_issues,
+        "high_issues_count": high_issues_count,
         "top_modules": top_modules,
         "series_distribution": series_distribution,
         "top_models": top_models,
@@ -191,6 +195,8 @@ def validate_cache_freshness():
         # Extract current core data for hash computation
         current_core_data = {
             "kpis": current_data.get("kpis", {}),
+            "total_issues": current_data.get("total_issues", 0),
+            "high_issues_count": current_data.get("high_issues_count", 0),
             "top_modules": current_data.get("top_modules", []),
             "series_distribution": current_data.get("series_distribution", []),
             "top_models": current_data.get("top_models", []),

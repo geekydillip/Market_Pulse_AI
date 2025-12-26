@@ -7,22 +7,24 @@ export function useDashboardData() {
     fetch("/downloads/__dashboard_cache__/central_dashboard.json")
       .then(res => res.json())
       .then(json => {
-        // Normalize KPIs once here
-        const totalIssues = Object.values(json.kpis || {}).reduce(
-          (sum, v) => sum + v,
-          0
-        );
+        console.log("Raw JSON from cache:", json);
+        // Use pre-computed values from backend
+        const kpisData = json.kpis || {};
+        console.log("KPIs data:", kpisData);
 
-        setData({
+        const finalData = {
           ...json,
           kpis: {
-            ...json.kpis,
-            total_issues: totalIssues,
-            high: json.kpis?.High || json.kpis?.high || 0,
-            medium: json.kpis?.Medium || json.kpis?.medium || 0,
-            low: json.kpis?.Low || json.kpis?.low || 0
+            ...kpisData, // Keep the nested structure for charts
+            total_issues: json.total_issues,
+            high: json.high_issues_count
           }
-        });
+        };
+
+        console.log("Final data structure:", finalData);
+        console.log("KPIs structure:", finalData.kpis);
+
+        setData(finalData);
       })
       .catch(err => {
         console.error("Failed to load dashboard cache", err);

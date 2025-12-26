@@ -29,6 +29,18 @@
   </div>
 
   <script>
+    // System theme detection
+    function updateTheme() {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.body.classList.toggle('theme-light', !isDark);
+    }
+
+    // Listen for theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
+    // Set initial theme
+    updateTheme();
+
     // Global pagination state
     let modelPagination = { currentPage: 1, itemsPerPage: 10, totalItems: 0 };
     let modulePagination = { currentPage: 1, itemsPerPage: 10, totalItems: 0 };

@@ -27,7 +27,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SourceStackedBar data={data.source_model_summary} />
+        <SourceStackedBar data={data.kpis} />
         <SeveritySplit data={data.kpis} />
       </section>
 
