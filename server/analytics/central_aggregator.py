@@ -22,9 +22,18 @@ def derive_model_name_from_sw_ver(sw_ver):
     Derive model name from S/W Ver. for OS Beta entries
     Example: "S911BXXU8ZYHB" -> "SM-S911B"
     """
-    if not sw_ver or not isinstance(sw_ver, str) or len(sw_ver) < 5:
+    if not sw_ver or not isinstance(sw_ver, str):
         return sw_ver  # Return original if invalid
-    return 'SM-' + sw_ver[:5]
+
+    sw_ver = str(sw_ver).strip()
+    if len(sw_ver) < 6:
+        return sw_ver  # Return original if too short for safe parsing
+
+    # Ensure we have enough characters for a valid model code
+    if len(sw_ver) >= 6:
+        return f"SM-{sw_ver[:6]}"  # Take first 6 characters for more precision
+
+    return sw_ver  # Fallback
 
 def transform_model_names(df):
     """
@@ -72,9 +81,20 @@ def combine_dataframes(dfs: list) -> pd.DataFrame:
         return pd.DataFrame()
     return pd.concat(dfs, ignore_index=True, sort=False)
 
+def filter_allowed_severity(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filter DataFrame to only include allowed severity levels: High, Medium, Low.
+    Excludes Critical severity as per requirements.
+    """
+    allowed_severity = ['High', 'Medium', 'Low']
+    if 'Severity' in df.columns:
+        return df[df['Severity'].isin(allowed_severity)]
+    return df
+
 def compute_central_kpis(data: dict) -> dict:
     """
     Compute KPIs for each processor type.
+    Filter out Critical severity issues as per requirements.
     """
     kpis = {}
     processor_map = {
@@ -85,6 +105,8 @@ def compute_central_kpis(data: dict) -> dict:
     for folder, dfs in data.items():
         if folder in processor_map:
             combined = combine_dataframes(dfs)
+            # Apply severity filter to exclude Critical
+            combined = filter_allowed_severity(combined)
             total = len(combined)
             kpis[processor_map[folder]] = total
     return kpis
@@ -92,6 +114,7 @@ def compute_central_kpis(data: dict) -> dict:
 def compute_top_modules(data: dict) -> list:
     """
     Aggregate top 10 modules from Beta User Issues, Samsung Members PLM, and Samsung Members VOC only.
+    Filter out Critical severity issues as per requirements.
     """
     # Only include data from these three sources
     included_folders = {'beta_user_issues', 'samsung_members_plm', 'samsung_members_voc'}
@@ -100,6 +123,8 @@ def compute_top_modules(data: dict) -> list:
     for folder, dfs in data.items():
         if folder in included_folders:  # Only process specified folders
             combined = combine_dataframes(dfs)
+            # Apply severity filter to exclude Critical
+            combined = filter_allowed_severity(combined)
             if 'Module' in combined.columns:
                 modules = combined['Module'].value_counts()
                 for module, count in modules.items():
@@ -114,6 +139,7 @@ def compute_series_distribution(data: dict) -> list:
     Distribution by series type.
     For samsung_members_voc and plm_issues: uses 'Model No.' with SM- prefixed logic.
     For beta_user_issues and samsung_members_plm: uses 'S/W Ver.' with new logic.
+    Filter out Critical severity issues as per requirements.
     """
     def categorize_series(model):
         """Categorize model into series based on Samsung SM- prefixed logic"""
@@ -201,6 +227,8 @@ def compute_series_distribution(data: dict) -> list:
     series_counts = {}
     for folder, dfs in data.items():
         combined = combine_dataframes(dfs)
+        # Apply severity filter to exclude Critical
+        combined = filter_allowed_severity(combined)
 
         if folder in new_logic_folders:
             # Use 'S/W Ver.' column with new categorization
@@ -225,10 +253,13 @@ def compute_series_distribution(data: dict) -> list:
 def compute_top_models(data: dict) -> list:
     """
     Top 10 models by issue count across all data.
+    Filter out Critical severity issues as per requirements.
     """
     all_models = {}
     for folder, dfs in data.items():
         combined = combine_dataframes(dfs)
+        # Apply severity filter to exclude Critical
+        combined = filter_allowed_severity(combined)
         if 'Model No.' in combined.columns:
             models = combined['Model No.'].value_counts()
             for model, count in models.items():
@@ -241,10 +272,13 @@ def compute_top_models(data: dict) -> list:
 def compute_top_models_by_source(data: dict, source_folder: str) -> list:
     """
     Top 10 models by issue count for a specific data source.
+    Filter out Critical severity issues as per requirements.
     """
     all_models = {}
     if source_folder in data:
         combined = combine_dataframes(data[source_folder])
+        # Apply severity filter to exclude Critical
+        combined = filter_allowed_severity(combined)
         if 'Model No.' in combined.columns:
             models = combined['Model No.'].value_counts()
             for model, count in models.items():
@@ -258,6 +292,7 @@ def compute_high_issues(data: dict) -> list:
     """
     Top 10 high issues from the module with maximum issue count.
     Filter by Severity == 'High', include processor type, take first 10 from max-issue module.
+    Apply severity filtering to exclude Critical issues as per requirements.
     """
     processor_map = {
         'beta_user_issues': 'Beta',
@@ -265,21 +300,26 @@ def compute_high_issues(data: dict) -> list:
         'samsung_members_voc': 'VOC'
     }
 
-    # First, find the module with maximum issue count
+    # First, find the module with maximum High severity issue count
     all_modules = {}
     for folder, dfs in data.items():
         combined = combine_dataframes(dfs)
-        if 'Module' in combined.columns:
-            modules = combined['Module'].value_counts()
-            for module, count in modules.items():
-                if pd.notna(module) and str(module).strip():
-                    module_str = str(module).strip()
-                    all_modules[module_str] = all_modules.get(module_str, 0) + count
+        # Apply severity filter to exclude Critical, only count High issues for module ranking
+        combined = filter_allowed_severity(combined)
+        if 'Module' in combined.columns and 'Severity' in combined.columns:
+            # Only count High severity issues for module ranking
+            high_issues = combined[combined['Severity'].str.lower() == 'high']
+            if not high_issues.empty:
+                modules = high_issues['Module'].value_counts()
+                for module, count in modules.items():
+                    if pd.notna(module) and str(module).strip():
+                        module_str = str(module).strip()
+                        all_modules[module_str] = all_modules.get(module_str, 0) + count
 
     if not all_modules:
         return []
 
-    # Get the module with maximum issues
+    # Get the module with maximum High severity issues
     max_issue_module = max(all_modules.items(), key=lambda x: x[1])[0]
 
     # Now collect high issues only from this module
@@ -309,6 +349,7 @@ def compute_model_module_matrix(data: dict) -> dict:
     """
     Create a matrix of Top 10 Models × Top 10 Modules with issue counts.
     Returns a dict with models, modules, and matrix data.
+    Filter out Critical severity issues as per requirements.
     """
     # Get top 10 models and modules
     top_models = compute_top_models(data)
@@ -326,6 +367,8 @@ def compute_model_module_matrix(data: dict) -> dict:
             count = 0
             for folder, dfs in data.items():
                 combined = combine_dataframes(dfs)
+                # Apply severity filter to exclude Critical
+                combined = filter_allowed_severity(combined)
                 if 'Model No.' in combined.columns and 'Module' in combined.columns:
                     # Filter for this specific model and module
                     filtered = combined[
@@ -361,7 +404,7 @@ def clean_excel_text(text: str) -> str:
 def compute_source_model_summary(data: dict) -> list:
     """
     Create a summary table with Source, Model, Top 5 Modules, Issue Count, Top 5 Issue Titles.
-    Returns a list of summary objects.
+    Filter out Critical severity issues as per requirements.
     """
     source_map = {
         'beta_user_issues': 'Beta',
@@ -377,6 +420,8 @@ def compute_source_model_summary(data: dict) -> list:
 
         source_name = source_map[folder]
         combined = combine_dataframes(dfs)
+        # Apply severity filter to exclude Critical
+        combined = filter_allowed_severity(combined)
 
         if 'Model No.' not in combined.columns:
             continue
@@ -452,7 +497,7 @@ if __name__ == "__main__":
             print(json.dumps({"error": f"Unknown command: {command}"}))
         sys.exit(0)
 
-    # Default behavior - return all data
+    # Default behavior - return all data including matrix, summary, and filtered models
     base_path = "./downloads"
     try:
         data = load_all_excels(base_path)
@@ -462,12 +507,24 @@ if __name__ == "__main__":
         top_models = compute_top_models(data)
         high_issues = compute_high_issues(data)
 
+        # Include additional data for cache generation efficiency
+        model_module_matrix = compute_model_module_matrix(data)
+        source_model_summary = compute_source_model_summary(data)
+
+        # Get filtered top models for each source
+        filtered_top_models = {}
+        for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
+            filtered_top_models[folder_name] = compute_top_models_by_source(data, folder_name)
+
         response = {
             "kpis": kpis,
             "top_modules": top_modules,
             "series_distribution": series_distribution,
             "top_models": top_models,
-            "high_issues": high_issues
+            "high_issues": high_issues,
+            "model_module_matrix": model_module_matrix,
+            "source_model_summary": source_model_summary,
+            "filtered_top_models": filtered_top_models
         }
 
         # Sanitize NaN values

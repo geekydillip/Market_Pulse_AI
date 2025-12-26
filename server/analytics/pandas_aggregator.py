@@ -38,7 +38,7 @@ def transform_model_names(df):
 
 def load_latest_excel(folder_path: str) -> pd.DataFrame:
     """
-    Load the most recent Excel file from a folder.
+    Load the most recent Excel file from a folder with dtype optimizations.
     """
     folder = Path(folder_path)
     if not folder.exists():
@@ -49,7 +49,29 @@ def load_latest_excel(folder_path: str) -> pd.DataFrame:
         raise FileNotFoundError(f"No Excel files in {folder_path}")
 
     latest = max(excels, key=lambda p: p.stat().st_mtime)
-    return pd.read_excel(latest)
+
+    # Define dtypes for better performance and memory usage
+    dtype_spec = {
+        'Model No.': 'string',
+        'Module': 'string',
+        'Severity': 'category',  # Use category for repeated values
+        'Title': 'string',
+        'Case Code': 'string',
+        'S/W Ver.': 'string'
+    }
+
+    # Load with optimizations
+    df = pd.read_excel(latest, dtype=dtype_spec, engine='openpyxl')
+
+    # Optimize memory for large datasets
+    if len(df) > 10000:
+        # Downcast numeric types if they exist
+        for col in df.select_dtypes(include=['int64']):
+            df[col] = pd.to_numeric(df[col], downcast='integer')
+        for col in df.select_dtypes(include=['float64']):
+            df[col] = pd.to_numeric(df[col], downcast='float')
+
+    return df
 
 def compute_kpis(df: pd.DataFrame) -> dict:
     """
@@ -95,16 +117,20 @@ def group_by_column(df: pd.DataFrame, column: str) -> list:
 def time_series(df: pd.DataFrame, date_column: str) -> list:
     """
     Return daily counts sorted by date.
+    Safe date parsing without mutating original DataFrame.
     """
     if date_column not in df.columns:
         return []
 
+    # Create a copy to avoid mutating the original DataFrame
+    df_copy = df.copy()
+
     # Convert to datetime, drop invalid dates
-    df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
-    df = df.dropna(subset=[date_column])
+    df_copy[date_column] = pd.to_datetime(df_copy[date_column], errors='coerce')
+    df_copy = df_copy.dropna(subset=[date_column])
 
     # Group by date and count
-    return df.groupby(df[date_column].dt.date).size().sort_index().reset_index(name='count').rename(columns={date_column: 'date'}).to_dict('records')
+    return df_copy.groupby(df_copy[date_column].dt.date).size().sort_index().reset_index(name='count').rename(columns={date_column: 'date'}).to_dict('records')
 
 if __name__ == "__main__":
     import sys

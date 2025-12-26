@@ -1,58 +1,72 @@
-// Set light theme permanently
-document.body.className = 'theme-light';
+// Wrap uploader logic in IIFE to prevent global scope pollution
+(() => {
+    // Set light theme permanently
+    document.body.className = 'theme-light';
 
-// Debug configuration
-const DEBUG = false;
+    // Debug configuration
+    const DEBUG = false;
 
-// DOM Elements (will be defined inside DOMContentLoaded)
-let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, fileActions, processBtn, loadingOverlay;
-let statusElement, progressContainer, progressFill, progressText, modelSelect, stopBtn;
+    // DOM Elements (will be defined inside DOMContentLoaded)
+    let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, fileActions, processBtn, loadingOverlay;
+    let statusElement, progressContainer, progressFill, progressText, modelSelect, stopBtn;
 
-// State
-let currentFile = null;
-let currentResult = '';
-let fileQueue = []; // Array of file objects with id, file, status, etc.
-let queueCounter = 0; // For unique IDs
-let isProcessingQueue = false;
-let currentProcessingIndex = -1;
+    // State
+    let currentFile = null;
+    let currentResult = '';
+    let fileQueue = []; // Array of file objects with id, file, status, etc.
+    let queueCounter = 0; // For unique IDs
+    let isProcessingQueue = false;
+    let currentProcessingIndex = -1;
 
-// Initialize
+    // Global variables for cleanup
+    let currentSessionId = null;
+    let currentEventSource = null;
+
+    // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-    // Initialize DOM elements after DOM is loaded
-    dropzone = document.getElementById('dropzone');
-    fileInput = document.getElementById('fileInput');
-    filePreview = document.getElementById('filePreview');
-    fileName = document.getElementById('fileName');
-    fileSize = document.getElementById('fileSize');
-    fileContent = document.getElementById('fileContent');
-    fileActions = document.getElementById('fileActions');
-    removeFile = document.getElementById('removeFile');
-    processBtn = document.getElementById('processBtn');
-    loadingOverlay = document.getElementById('loadingOverlay');
-    statusElement = document.getElementById('status');
-    progressContainer = document.getElementById('progressContainer');
-    progressFill = document.getElementById('progressFill');
-    progressText = document.getElementById('progressText');
-    modelSelect = document.getElementById('modelSelect');
-    stopBtn = document.getElementById('stopBtn');
+        // Initialize DOM elements after DOM is loaded
+        dropzone = document.getElementById('dropzone');
+        fileInput = document.getElementById('fileInput');
+        filePreview = document.getElementById('filePreview');
+        fileName = document.getElementById('fileName');
+        fileSize = document.getElementById('fileSize');
+        fileContent = document.getElementById('fileContent');
+        fileActions = document.getElementById('fileActions');
+        removeFile = document.getElementById('removeFile');
+        processBtn = document.getElementById('processBtn');
+        loadingOverlay = document.getElementById('loadingOverlay');
+        statusElement = document.getElementById('status');
+        progressContainer = document.getElementById('progressContainer');
+        progressFill = document.getElementById('progressFill');
+        progressText = document.getElementById('progressText');
+        modelSelect = document.getElementById('modelSelect');
+        stopBtn = document.getElementById('stopBtn');
 
-    setupEventListeners();
-    loadModels();
-    checkOllamaConnection();
+        setupEventListeners();
+        loadModels();
+        checkOllamaConnection();
 
-    // Initialize processing options visibility - show by default (not hidden until file uploaded)
-    const processingSection = document.querySelector('.processing-section');
-    if (processingSection) {
-        processingSection.style.display = 'block';
-    }
+        // Initialize processing options visibility - show by default (not hidden until file uploaded)
+        const processingSection = document.querySelector('.processing-section');
+        if (processingSection) {
+            processingSection.style.display = 'block';
+        }
 
-    // Initialize Desire Selector visual state
-    updateSelectionState();
-    initializeProgressState();
+        // Initialize Desire Selector visual state
+        updateSelectionState();
+        initializeProgressState();
 
-    // Setup drag and drop for Processing Queue
-    setupQueueDragDrop();
-});
+        // Setup drag and drop for Processing Queue
+        setupQueueDragDrop();
+    });
+
+    // Add beforeunload event listener to close EventSource and prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+        if (currentEventSource) {
+            currentEventSource.close();
+            currentEventSource = null;
+        }
+    });
 
 function initializeProgressState() {
     progressFill.style.width = '0%';
@@ -1351,10 +1365,6 @@ async function handleProcessQueue() {
     alert(`Batch processing completed!\nCompleted: ${completedCount}\nFailed: ${failedCount}\nDuration: ${Math.round((batchEndTime - batchStartTime) / 1000)}s`);
 }
 
-// Global variables for cleanup
-let currentSessionId = null;
-let currentEventSource = null;
-
 // Processing Queue JS
 document.addEventListener('DOMContentLoaded', function() {
   // Update progress bars based on data attributes
@@ -1549,3 +1559,6 @@ document.addEventListener('keydown', (e) => {
         clearFile();
     }
 });
+
+// Close the IIFE
+})();
