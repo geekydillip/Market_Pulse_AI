@@ -62,6 +62,13 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
   <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI DASHBOARD</h1>
 
+  <div class="flex gap-2">
+    <a href="ai-processing.html"
+       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+      <i class="fa-solid fa-brain mr-2"></i>
+      AI Processing
+    </a>
+  </div>
 </div>
 
 <!-- KPI -->
@@ -121,25 +128,61 @@
 
 <!-- SOURCE DISTRIBUTION - 100% Stacked Horizontal Bar -->
 <div class="col-span-4">
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
-    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Source Distribution</h3>
-    <div id="source-distribution-chart" class="h-[200px] w-full"></div>
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Source Distribution</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-simple text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="source-distribution-chart" class="h-[180px] w-full"></div>
+    </div>
   </div>
 </div>
 
 <!-- SEVERITY SPLIT - Donut Chart -->
 <div class="col-span-3">
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
-    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Issues Severity Split</h3>
-    <div id="severity-split-chart" class="h-[200px] w-full"></div>
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Issues Severity Split</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="severity-split-chart" class="h-[180px] w-full"></div>
+    </div>
   </div>
 </div>
 
-<!-- TOP MODELS - Lollipop Bar Chart -->
+<!-- TOP MODELS - Professional Design -->
 <div class="col-span-5">
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
-    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Top Models</h3>
-    <div id="top-models-chart" class="h-[200px] w-full"></div>
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top Models</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="top-models-chart" class="h-[180px] w-full"></div>
+    </div>
   </div>
 </div>
 
@@ -359,7 +402,7 @@ function updateSourceDistribution() {
       type: 'value',
       axisLabel: {
         show: false,
-        fontSize: 12,
+        fontSize: 10,
         color: colors.textPrimary
       }
     },
@@ -609,7 +652,7 @@ function updateTopModelsChart() {
       }
     },
     grid: {
-      left: '22%',
+      left: '21%',
       right: '0%',
       top: '8%',
       bottom: '8%',
