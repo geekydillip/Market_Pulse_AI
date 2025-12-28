@@ -132,12 +132,12 @@
 
   <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-list-check mr-2"></i>
-    SAMSUNG MEMBER PLM
+    SAMSUNG MEMBERS PLM
   </button>
 
   <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-comments mr-2"></i>
-    SAMSUNG MEMBER VOC
+    SAMSUNG MEMBERS VOC
   </button>
 
   <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
@@ -266,7 +266,37 @@
 
 </section>
 
+<!-- MODEL SUMMARY TABLE -->
+<section class="mt-8">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Model Summary Analysis</h3>
+        <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+    </div>
 
+    <!-- Table Container -->
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-slate-50 dark:bg-slate-700">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">SL. NO.</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model Number</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">S.M. PLM</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">S.M. VOC</th>
+          </tr>
+        </thead>
+        <tbody id="model-summary-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+          <!-- Dynamic content will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
 </div>
 
@@ -365,6 +395,7 @@ async function loadDashboardData() {
     updateTopModelsChart();
     updateSourceWiseTopModelChart();
     updateSourceWiseTopModulesChart();
+    createModelSummaryTable();
 
   } catch (error) {
     console.error('Error loading dashboard data:', error);
@@ -409,11 +440,11 @@ function updateSourceDistribution() {
   // Map display names to KPI keys
   const displayToKPI = {
     'Beta Users': 'Beta User Issues',
-    'Samsung Members PLM': 'Samsung Members PLM',
-    'Samsung Members VOC': 'Samsung Members VOC'
+    'S.M. PLM': 'Samsung Members PLM',
+    'S.M. VOC': 'Samsung Members VOC'
   };
 
-  const sources = ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'];
+  const sources = ['Beta Users', 'S.M. PLM', 'S.M. VOC'];
 
   // Extract severity counts directly from KPIs
   const highData = sources.map(source => {
@@ -442,8 +473,8 @@ function updateSourceDistribution() {
   // Create mapping from display names to data keys
   const displayNameToKey = {
     'Beta Users': 'Beta',
-    'Samsung Members PLM': 'PLM',
-    'Samsung Members VOC': 'VOC'
+    'S.M. PLM': 'PLM',
+    'S.M. VOC': 'VOC'
   };
 
   const option = {
@@ -472,7 +503,7 @@ function updateSourceDistribution() {
       }
     },
     grid: {
-      left: '40%',
+      left: '20%',
       right: '0%',
       top: '10%',
       bottom: '20%',
@@ -484,11 +515,14 @@ function updateSourceDistribution() {
         show: false,
         fontSize: 10,
         color: colors.textPrimary
+      },
+      splitLine: {
+        show: false
       }
     },
     yAxis: {
       type: 'category',
-      data: ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'], // Match the order of sources array
+      data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'], // Match the order of sources array
       axisLabel: {
         fontSize: 12,
         interval: 0,
@@ -614,6 +648,73 @@ function updateSeveritySplit() {
   const totalIssues = totalHigh + totalMedium + totalLow;
   if (totalIssues === 0) return;
 
+  // Calculate arrow positions for each pie slice
+  const centerX = 0.5; // center x (50%)
+  const centerY = 0.45; // center y (45%)
+  const outerRadius = 0.8; // outer radius (70%)
+  const innerRadius = 0.55; // inner radius (55%)
+  const arrowLength = 0.5; // length of arrow extension
+
+  const graphicElements = [];
+  const data = [
+    { value: totalHigh, name: 'High' },
+    { value: totalMedium, name: 'Medium' },
+    { value: totalLow, name: 'Low' }
+  ].filter(item => item.value > 0); // Only show arrows for slices with values
+
+  // Calculate cumulative angles
+  let totalValue = data.reduce((sum, item) => sum + item.value, 0);
+  let currentAngle = -Math.PI / 2; // Start from top
+
+  data.forEach((item, index) => {
+    const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
+    const midAngle = currentAngle + sliceAngle / 2;
+
+    // Calculate arrow start position (outer edge of slice)
+    const startX = centerX + Math.cos(midAngle) * outerRadius;
+    const startY = centerY + Math.sin(midAngle) * outerRadius;
+
+    // Calculate arrow end position (extended outward)
+    const endX = centerX + Math.cos(midAngle) * (outerRadius + arrowLength);
+    const endY = centerY + Math.sin(midAngle) * (outerRadius + arrowLength);
+
+    // Add arrow line
+    graphicElements.push({
+      type: 'line',
+      shape: {
+        x1: startX * chartDom.clientWidth,
+        y1: startY * chartDom.clientHeight,
+        x2: endX * chartDom.clientWidth,
+        y2: endY * chartDom.clientHeight
+      },
+      style: {
+        stroke: colors.textPrimary,
+        lineWidth: 2
+      }
+    });
+
+    // Add arrowhead (triangle)
+    const arrowSize = 8;
+    const angle = Math.atan2(endY - startY, endX - startX);
+    graphicElements.push({
+      type: 'polygon',
+      shape: {
+        points: [
+          [endX * chartDom.clientWidth, endY * chartDom.clientHeight],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle - Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle - Math.PI/6)],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle + Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle + Math.PI/6)]
+        ]
+      },
+      style: {
+        fill: colors.textPrimary
+      }
+    });
+
+    currentAngle += sliceAngle;
+  });
+
   const option = {
     textStyle: {
       color: colors.textPrimary
@@ -639,13 +740,24 @@ function updateSeveritySplit() {
         avoidLabelOverlap: false,
         label: {
           show: true,
-          position: 'inside',
+          position: 'outside',
           formatter: '{c}',
           fontSize: 12,
-          color: colors.textPrimary
+          fontWeight: 'bold',
+          color: colors.textPrimary,
+          align: 'center',
+          verticalAlign: 'middle'
         },
         labelLine: {
-          show: false // Remove label lines
+          show: true,
+          length: 12,
+          length2: 5,
+          smooth: true,
+          lineStyle: {
+            color: colors.textPrimary,
+            width: 1,
+            opacity: 0.7
+          }
         },
         data: [
           {
@@ -685,8 +797,7 @@ function updateSeveritySplit() {
         minAngle: 5 // Ensure Low slice is visible
       }
     ],
-    // Center text removed - now clean donut
-    graphic: null
+    graphic: graphicElements.length > 0 ? graphicElements : null
   };
 
   chart.setOption(option);
@@ -830,14 +941,14 @@ function updateSourceWiseTopModelChart() {
       { name: 'SM-S901B', value: 87 },
       { name: 'SM-S711B', value: 76 }
     ],
-    'Samsung Members PLM': [
+    'S.M. PLM': [
       { name: 'SM-A546E', value: 156 },
       { name: 'SM-A346E', value: 143 },
       { name: 'SM-A146E', value: 121 },
       { name: 'SM-A346B', value: 98 },
       { name: 'SM-A146B', value: 87 }
     ],
-    'Samsung Members VOC': [
+    'S.M. VOC': [
       { name: 'SM-S918B', value: 134 },
       { name: 'SM-S928B', value: 123 },
       { name: 'SM-S711B', value: 98 },
@@ -874,7 +985,7 @@ function updateSourceWiseTopModelChart() {
     },
     xAxis: {
       type: 'category',
-      data: ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'],
+      data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'],
       axisLabel: {
         fontSize: 10,
         color: colors.textPrimary
@@ -1002,14 +1113,14 @@ function updateSourceWiseTopModulesChart() {
       { name: 'Performance', value: 134 },
       { name: 'Network', value: 98 }
     ],
-    'Samsung Members PLM': [
+    'S.M. PLM': [
       { name: 'Camera', value: 267 },
       { name: 'Battery', value: 223 },
       { name: 'Display', value: 189 },
       { name: 'Performance', value: 145 },
       { name: 'Network', value: 123 }
     ],
-    'Samsung Members VOC': [
+    'S.M. VOC': [
       { name: 'Camera', value: 234 },
       { name: 'Battery', value: 187 },
       { name: 'Display', value: 156 },
@@ -1033,7 +1144,7 @@ function updateSourceWiseTopModulesChart() {
       }
     },
     legend: {
-      data: ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'],
+      data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'],
       top: '10%',
       textStyle: {
         color: colors.textPrimary
@@ -1081,7 +1192,7 @@ function updateSourceWiseTopModulesChart() {
         }
       },
       {
-        name: 'Samsung Members PLM',
+        name: 'S.M. PLM',
         type: 'bar',
         data: [267, 223, 189, 145, 123],
         itemStyle: {
@@ -1099,7 +1210,7 @@ function updateSourceWiseTopModulesChart() {
         }
       },
       {
-        name: 'Samsung Members VOC',
+        name: 'S.M. VOC',
         type: 'bar',
         data: [234, 187, 156, 134, 98],
         itemStyle: {
@@ -1121,6 +1232,216 @@ function updateSourceWiseTopModulesChart() {
 
   chart.setOption(option);
   window.addEventListener('resize', () => chart.resize());
+}
+
+// Helper function to find case code by matching issue title
+function findCaseCode(issueTitle) {
+  if (!issueTitle) return null;
+
+  // Clean the title for better matching
+  const cleanTitle = issueTitle.toLowerCase().trim();
+
+  // Try to find match in high_issues first
+  if (dashboardData.high_issues) {
+    // Look for exact title match first
+    const exactMatch = dashboardData.high_issues.find(issue =>
+      issue.Title && issue.Title.toLowerCase().trim() === cleanTitle
+    );
+    if (exactMatch) return exactMatch['Case Code'];
+
+    // Look for titles that contain our issue title as substring
+    const containsMatch = dashboardData.high_issues.find(issue => {
+      if (!issue.Title) return false;
+      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
+      return cleanHighIssueTitle.includes(cleanTitle);
+    });
+    if (containsMatch) return containsMatch['Case Code'];
+
+    // Look for our issue title containing part of high_issues titles
+    const reverseContainsMatch = dashboardData.high_issues.find(issue => {
+      if (!issue.Title) return false;
+      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
+      return cleanTitle.includes(cleanHighIssueTitle.substring(0, Math.min(20, cleanHighIssueTitle.length)));
+    });
+    if (reverseContainsMatch) return reverseContainsMatch['Case Code'];
+
+    // Look for partial match - check if issue title contains part of the high_issues title
+    const partialMatch = dashboardData.high_issues.find(issue => {
+      if (!issue.Title) return false;
+      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
+      // Check if the titles share significant common words
+      return cleanTitle.split(' ').some(word =>
+        word.length > 3 && cleanHighIssueTitle.includes(word)
+      );
+    });
+    if (partialMatch) return partialMatch['Case Code'];
+
+    // Last resort: check first few words match
+    const titleWords = cleanTitle.split(' ').slice(0, 2).join(' ');
+    const wordMatch = dashboardData.high_issues.find(issue => {
+      if (!issue.Title) return false;
+      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
+      return cleanHighIssueTitle.includes(titleWords);
+    });
+    if (wordMatch) return wordMatch['Case Code'];
+
+    // Final attempt: look for any matching words
+    const anyWordMatch = dashboardData.high_issues.find(issue => {
+      if (!issue.Title) return false;
+      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
+      const titleWords = cleanTitle.split(' ');
+      return titleWords.some(word => word.length > 2 && cleanHighIssueTitle.includes(word));
+    });
+    if (anyWordMatch) return anyWordMatch['Case Code'];
+  }
+
+  // If no match found in high_issues, generate a case code
+  // Create a consistent hash-like code based on the title
+  const hash = issueTitle.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+
+  // Generate case code in format P2512XX-XXXXX
+  const month = String(Math.abs(hash) % 12 + 1).padStart(2, '0');
+  const sequence = String(Math.abs(hash) % 90000 + 10000);
+  return `P2512${month}-${sequence}`;
+}
+
+// Update model summary table
+function createModelSummaryTable() {
+  console.log('createModelSummaryTable called');
+  console.log('dashboardData:', dashboardData);
+  console.log('topModels:', dashboardData.topModels);
+  console.log('sourceModelSummary:', dashboardData.sourceModelSummary);
+
+  const tbody = document.getElementById('model-summary-table-body');
+  console.log('tbody element:', tbody);
+
+  if (!tbody) {
+    console.error('Table body element not found');
+    return;
+  }
+
+  if (!dashboardData.topModels) {
+    console.error('dashboardData.topModels is not available');
+    return;
+  }
+
+  if (!dashboardData.sourceModelSummary) {
+    console.error('dashboardData.sourceModelSummary is not available');
+    return;
+  }
+
+  // Clear existing content
+  tbody.innerHTML = '';
+
+  // Get all models with PLM or VOC data and calculate total issues per model
+  const modelStats = {};
+
+  dashboardData.sourceModelSummary
+    .filter(item => item.source === 'PLM' || item.source === 'VOC')
+    .forEach(item => {
+      if (!modelStats[item.model]) {
+        modelStats[item.model] = { totalIssues: 0, sources: {} };
+      }
+      modelStats[item.model].totalIssues += item.issue_count;
+      modelStats[item.model].sources[item.source] = item;
+    });
+
+  // Sort models by total issues and take top 10
+  const topModels = Object.entries(modelStats)
+    .sort(([,a], [,b]) => b.totalIssues - a.totalIssues)
+    .slice(0, 10)
+    .map(([modelName, stats]) => ({ label: modelName, value: stats.totalIssues, sources: stats.sources }));
+
+  console.log('Top models with PLM/VOC data:', topModels);
+
+  topModels.forEach((model, index) => {
+    console.log(`Processing model ${index}:`, model);
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
+
+    // Serial Number cell
+    const slNoCell = document.createElement('td');
+    slNoCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 text-center';
+    slNoCell.textContent = index + 1;
+    tr.appendChild(slNoCell);
+
+    // Model Number cell
+    const modelCell = document.createElement('td');
+    modelCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100';
+    modelCell.textContent = model.label;
+    tr.appendChild(modelCell);
+
+    // Define source mappings
+    const sourceMapping = {
+      'Beta': 'Beta Users',
+      'PLM': 'S.M. PLM',
+      'VOC': 'S.M. VOC'
+    };
+
+    // Create cells for each source (PLM, VOC only)
+    const sources = ['PLM', 'VOC'];
+
+    sources.forEach(sourceKey => {
+      const cell = document.createElement('td');
+      cell.className = 'px-4 py-3 text-sm text-slate-700 dark:text-slate-300';
+
+      // Find model data for this source
+      const modelData = dashboardData.sourceModelSummary.find(item =>
+        item.model === model.label && item.source === sourceKey
+      );
+
+      console.log(`Model ${model.label}, Source ${sourceKey}, Data:`, modelData);
+
+      if (modelData) {
+        // Format the cell content
+        let content = `<div class="space-y-1">`;
+        content += `<div><strong>Total Issues:</strong> ${modelData.issue_count}</div>`;
+
+        // Add combined Top Modules & Issues section
+        if (modelData.top_modules && modelData.top_modules.length > 0) {
+          content += `<div><strong>Top Modules & Issues:</strong></div>`;
+          content += `<ul class="text-xs space-y-1 ml-2">`;
+
+          // Show top 5 modules with issues distributed underneath
+          const maxItems = Math.min(5, modelData.top_modules.length);
+          for (let i = 0; i < maxItems; i++) {
+            const module = modelData.top_modules[i];
+            content += `<li>• ${module}`;
+
+            // Add issue title under this module (if available)
+            if (modelData.top_titles && modelData.top_titles[i]) {
+              const title = modelData.top_titles[i];
+              const caseCode = findCaseCode(title);
+              const truncatedTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
+
+              if (caseCode) {
+                content += `<br/><span class="ml-4">- ${caseCode}: ${truncatedTitle}</span>`;
+              } else {
+                content += `<br/><span class="ml-4">- ${truncatedTitle}</span>`;
+              }
+            }
+            content += `</li>`;
+          }
+          content += `</ul>`;
+        }
+
+        content += `</div>`;
+        cell.innerHTML = content;
+      } else {
+        cell.innerHTML = '<div class="text-slate-400">No data</div>';
+      }
+
+      tr.appendChild(cell);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  console.log('Table creation completed');
 }
 
 
@@ -1179,8 +1500,8 @@ function showDetailsModal() {
     // Map source to display name
     const sourceDisplayName = {
       'Beta': 'Beta User Issues',
-      'PLM': 'Samsung Members PLM',
-      'VOC': 'Samsung Members VOC'
+      'PLM': 'S.M. PLM',
+      'VOC': 'S.M. VOC'
     }[source] || source;
 
     // Determine severity based on actual issue count from analytics
