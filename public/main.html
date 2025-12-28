@@ -61,20 +61,7 @@
 <!-- HEADER -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
   <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI DASHBOARD</h1>
-  <div class="flex gap-2">
-    <select id="filterModel" aria-label="Filter by model" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-      <option>All Models</option>
-    </select>
-    <select id="filterModule" aria-label="Filter by module" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-      <option>All Modules</option>
-    </select>
-    <select id="filterSource" aria-label="Filter by source" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-      <option>All Sources</option>
-    </select>
-    <select id="filterSeverity" aria-label="Filter by severity" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-      <option>All Severities</option>
-    </select>
-  </div>
+
 </div>
 
 <!-- KPI -->
@@ -86,7 +73,7 @@
         <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
       </div>
       <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-        <i class="fa-solid fa-chart-line text-slate-600 dark:text-slate-400 text-xl"></i>
+        <i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400 text-xl"></i>
       </div>
     </div>
   </div>
@@ -111,7 +98,7 @@
         <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-models">0</p>
       </div>
       <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-        <i class="fa-solid fa-mobile-screen text-slate-600 dark:text-slate-400 text-xl"></i>
+        <i class="fa-solid fa-mobile-screen text-green-600 dark:text-green-400 text-xl"></i>
       </div>
     </div>
   </div>
@@ -123,7 +110,7 @@
         <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-modules">0</p>
       </div>
       <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-        <i class="fa-solid fa-cubes text-slate-600 dark:text-slate-400 text-xl"></i>
+        <i class="fa-solid fa-cubes text-purple-600 dark:text-purple-400 text-xl"></i>
       </div>
     </div>
   </div>
@@ -215,102 +202,12 @@ let dashboardData = {
   topModules: []
 };
 
-// Filter state
-let currentFilters = {
-  model: null,
-  module: null,
-  source: null,
-  severity: null
-};
-
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', function() {
-  setupFilters();
   loadDashboardData();
 });
 
-// Setup filter dropdowns
-async function setupFilters() {
-  try {
-    // Get data from central_dashboard.json for filters
-    const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
-    const jsonData = await response.json();
 
-    // Get available models for filter
-    const modelNames = jsonData.top_models.map(m => m.label);
-    populateFilter('model', modelNames);
-
-    // Get available modules
-    const moduleNames = jsonData.top_modules.map(m => m.label);
-    populateFilter('module', moduleNames);
-
-    // Get available sources
-    const sourceNames = Object.keys(jsonData.kpis);
-    populateFilter('source', sourceNames);
-
-    // Add severity options
-    populateFilter('severity', ['High', 'Medium', 'Low']);
-
-    // Add event listeners to filters
-    const filters = document.querySelectorAll('#filterModel, #filterModule, #filterSource, #filterSeverity');
-    filters.forEach((select) => {
-      select.addEventListener('change', handleFilterChange);
-    });
-
-  } catch (error) {
-    console.error('Error setting up filters:', error);
-    // Fallback: use basic options
-    populateFilter('model', ['SM-S938B', 'SM-A356E', 'SM-G610F']);
-    populateFilter('module', ['Settings', 'Network', 'Camera']);
-    populateFilter('source', ['Beta User Issues', 'Samsung Members PLM', 'Samsung Members VOC']);
-    populateFilter('severity', ['High', 'Medium', 'Low']);
-  }
-}
-
-function populateFilter(filterType, options) {
-  let targetSelect;
-
-  // Map filter types to select element IDs
-  if (filterType === 'model') targetSelect = document.getElementById('filterModel');
-  else if (filterType === 'module') targetSelect = document.getElementById('filterModule');
-  else if (filterType === 'source') targetSelect = document.getElementById('filterSource');
-  else if (filterType === 'severity') targetSelect = document.getElementById('filterSeverity');
-
-  if (!targetSelect) return;
-
-  // Clear existing options except the first one
-  while (targetSelect.options.length > 1) {
-    targetSelect.remove(1);
-  }
-
-  // Add new options
-  options.forEach(option => {
-    const optionElement = document.createElement('option');
-    optionElement.value = option;
-    optionElement.textContent = option;
-    targetSelect.appendChild(optionElement);
-  });
-}
-
-function handleFilterChange(event) {
-  const select = event.target;
-  const filterType = getFilterType(select);
-  const value = select.value === 'All' ? null : select.value;
-
-  // Update current filters
-  currentFilters[filterType] = value;
-
-  // Reload dashboard data with filters
-  loadDashboardData();
-}
-
-function getFilterType(select) {
-  const selectElements = document.querySelectorAll('.filters select');
-  const index = Array.from(selectElements).indexOf(select);
-
-  const filterTypes = ['model', 'module', 'source', 'severity'];
-  return filterTypes[index] || 'model';
-}
 
 // Add accessibility attributes to table headers
 document.addEventListener('DOMContentLoaded', function() {
@@ -631,17 +528,35 @@ function updateSeveritySplit() {
           {
             value: totalHigh,
             name: 'High',
-            itemStyle: { color: '#ef4444' } // Strong red
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#ef4444' },
+                { offset: 0.5, color: '#dc2626' },
+                { offset: 1, color: '#b91c1c' }
+              ])
+            }
           },
           {
             value: totalMedium,
             name: 'Medium',
-            itemStyle: { color: '#f59e0b' } // Yellow for medium
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#fbbf24' },
+                { offset: 0.5, color: '#f59e0b' },
+                { offset: 1, color: '#d97706' }
+              ])
+            }
           },
           {
             value: totalLow,
             name: 'Low',
-            itemStyle: { color: '#94a3b8' } // Consistent gray
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#9ca3af' },
+                { offset: 0.5, color: '#6b7280' },
+                { offset: 1, color: '#4b5563' }
+              ])
+            }
           }
         ],
         minAngle: 5 // Ensure Low slice is visible
