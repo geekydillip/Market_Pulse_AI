@@ -133,7 +133,7 @@
 <section class="grid grid-cols-12 gap-4">
 
 <!-- SOURCE DISTRIBUTION - 100% Stacked Horizontal Bar -->
-<div class="col-span-3">
+<div class="col-span-4">
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
     <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Source Distribution</h3>
     <div id="source-distribution-chart" class="h-[200px] w-full"></div>
@@ -149,7 +149,7 @@
 </div>
 
 <!-- TOP MODELS - Lollipop Bar Chart -->
-<div class="col-span-6">
+<div class="col-span-5">
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-200 dark:border-slate-700 h-[260px]">
     <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Top Models</h3>
     <div id="top-models-chart" class="h-[200px] w-full"></div>
@@ -393,7 +393,7 @@ function updateSourceDistribution() {
     'Samsung Members VOC': 'Samsung Members VOC'
   };
 
-  const sources = ['Beta Users Issues', 'Samsung Members PLM', 'Samsung Members VOC'];
+  const sources = ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'];
 
   // Extract severity counts directly from KPIs
   const highData = sources.map(source => {
@@ -445,23 +445,23 @@ function updateSourceDistribution() {
     },
     legend: {
       data: ['High', 'Medium', 'Low'],
-      top: 0,
-      right: 10,
+      bottom: 10,
       orient: 'horizontal',
       textStyle: {
         color: colors.textPrimary
       }
     },
     grid: {
-      left: '20%',
-      right: '15%',
-      top: '25%',
-      bottom: '10%',
+      left: '40%',
+      right: '0%',
+      top: '10%',
+      bottom: '20%',
       borderColor: colors.gridLines
     },
     xAxis: {
       type: 'value',
       axisLabel: {
+        show: false,
         fontSize: 12,
         color: colors.textPrimary
       }
@@ -480,7 +480,7 @@ function updateSourceDistribution() {
         name: 'High',
         type: 'bar',
         stack: 'total',
-        barWidth: '70%', // Thicker bars for cylindrical effect
+        barWidth: '50%', // Thicker bars for cylindrical effect
         data: highData,
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
@@ -488,7 +488,7 @@ function updateSourceDistribution() {
             { offset: 0.5, color: '#dc2626' },
             { offset: 1, color: '#b91c1c' }
           ]),
-          borderRadius: [4, 4, 0, 0],
+          borderRadius: [12, 0, 0, 12],
           shadowBlur: 8,
           shadowColor: 'rgba(239, 68, 68, 0.3)'
         },
@@ -498,6 +498,13 @@ function updateSourceDistribution() {
             shadowBlur: 12,
             shadowColor: 'rgba(239, 68, 68, 0.5)'
           }
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
         }
       },
       {
@@ -512,7 +519,7 @@ function updateSourceDistribution() {
             { offset: 0.5, color: '#f59e0b' },
             { offset: 1, color: '#d97706' }
           ]),
-          borderRadius: [4, 4, 0, 0],
+          borderRadius: [0, 0, 0, 0],
           shadowBlur: 8,
           shadowColor: 'rgba(245, 158, 11, 0.3)',
           opacity: 0.75
@@ -524,6 +531,13 @@ function updateSourceDistribution() {
             shadowBlur: 12,
             shadowColor: 'rgba(245, 158, 11, 0.5)'
           }
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
         }
       },
       {
@@ -548,6 +562,13 @@ function updateSourceDistribution() {
             shadowBlur: 12,
             shadowColor: 'rgba(107, 114, 128, 0.5)'
           }
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
         }
       }
     ]
@@ -565,21 +586,12 @@ function updateSeveritySplit() {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Calculate severity distribution
-  let highCount = 0;
-  let mediumCount = 0;
-  let lowCount = 0;
+  // Calculate totals across all sources - same logic as Source Distribution
+  const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High || 0), 0);
+  const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium || 0), 0);
+  const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low || 0), 0);
 
-  if (dashboardData.sourceModelSummary && dashboardData.sourceModelSummary.length > 0) {
-    dashboardData.sourceModelSummary.forEach(model => {
-      const issueCount = model.issue_count || 0;
-      if (issueCount > 300) highCount += issueCount;
-      else if (issueCount > 100) mediumCount += issueCount;
-      else lowCount += issueCount;
-    });
-  }
-
-  const totalIssues = highCount + mediumCount + lowCount;
+  const totalIssues = totalHigh + totalMedium + totalLow;
   if (totalIssues === 0) return;
 
   const option = {
@@ -606,29 +618,28 @@ function updateSeveritySplit() {
         center: ['50%', '45%'],
         avoidLabelOverlap: false,
         label: {
-          show: false // Remove external percentage callouts
-        },
-        emphasis: {
-          label: {
-            show: false
-          }
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
         },
         labelLine: {
           show: false // Remove label lines
         },
         data: [
           {
-            value: highCount,
+            value: totalHigh,
             name: 'High',
             itemStyle: { color: '#ef4444' } // Strong red
           },
           {
-            value: mediumCount,
+            value: totalMedium,
             name: 'Medium',
             itemStyle: { color: '#f59e0b' } // Yellow for medium
           },
           {
-            value: lowCount,
+            value: totalLow,
             name: 'Low',
             itemStyle: { color: '#94a3b8' } // Consistent gray
           }
@@ -681,8 +692,8 @@ function updateTopModelsChart() {
       }
     },
     grid: {
-      left: '18%',
-      right: '15%',
+      left: '22%',
+      right: '0%',
       top: '8%',
       bottom: '8%',
       borderColor: colors.gridLines
@@ -718,7 +729,7 @@ function updateTopModelsChart() {
             { offset: 0.5, color: '#0284c7' },
             { offset: 1, color: '#0369a1' }
           ]),
-          borderRadius: [0, 4, 4, 0],
+          borderRadius: [4, 4, 4, 4],
           shadowBlur: 8,
           shadowColor: 'rgba(6, 182, 212, 0.3)'
         },
