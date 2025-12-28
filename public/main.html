@@ -665,16 +665,18 @@ function updateTopModelsChart() {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Use top 8 models (reduced bar thickness allows more)
-  const top8Models = dashboardData.topModels.slice(0, 8).reverse(); // Reverse for descending order (largest at top)
+  // Use top 10 models (reduced bar thickness allows more)
+  const top8Models = dashboardData.topModels.slice(0, 10).reverse(); // Reverse for descending order (largest at top)
   const modelNames = top8Models.map(model => {
     // Truncate for display but keep full name for tooltips
     return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
   });
   const issueCounts = top8Models.map(model => model.value);
 
-  // Calculate average for reference line
-  const totalIssues = Object.values(dashboardData.kpis).reduce((sum, val) => sum + val, 0);
+  // Calculate total issues across all sources
+  const totalIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => {
+    return sum + (kpi?.High || 0) + (kpi?.Medium || 0) + (kpi?.Low || 0);
+  }, 0);
   const avgIssuesPerModel = Math.round(totalIssues / dashboardData.totalUniqueModels);
 
   const option = {
