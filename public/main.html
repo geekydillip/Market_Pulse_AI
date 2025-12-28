@@ -123,6 +123,39 @@
   </div>
 </div>
 
+<!-- NAVIGATION BUTTONS -->
+<div class="flex flex-wrap gap-4 mb-6 justify-center">
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-mobile-screen mr-2"></i>
+    BETA USER ISSUES
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-list-check mr-2"></i>
+    SAMSUNG MEMBER PLM
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-comments mr-2"></i>
+    SAMSUNG MEMBER VOC
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-question-circle mr-2"></i>
+    QINGS
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-trophy mr-2"></i>
+    QUALITY INDEX
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-blog mr-2"></i>
+    BLOGGER ISSUES
+  </button>
+</div>
+
 <!-- CHARTS ROW -->
 <section class="grid grid-cols-12 gap-4">
 
@@ -146,26 +179,6 @@
   </div>
 </div>
 
-<!-- SEVERITY SPLIT - Donut Chart -->
-<div class="col-span-3">
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
-    <!-- Header with subtle accent -->
-    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Issues Severity Split</h3>
-        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
-        </div>
-      </div>
-    </div>
-
-    <!-- Chart Container -->
-    <div class="p-4">
-      <div id="severity-split-chart" class="h-[180px] w-full"></div>
-    </div>
-  </div>
-</div>
-
 <!-- TOP MODELS - Professional Design -->
 <div class="col-span-5">
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
@@ -182,6 +195,26 @@
     <!-- Chart Container -->
     <div class="p-4">
       <div id="top-models-chart" class="h-[180px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEVERITY SPLIT - Donut Chart -->
+<div class="col-span-3">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Issues Severity</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="severity-split-chart" class="h-[180px] w-full"></div>
     </div>
   </div>
 </div>

@@ -83,9 +83,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Create keep-alive agent for HTTP connections
 const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
 
-// Serve the centralized dashboard at root (must come before static middleware)
+// Serve the main dashboard at root (must come before static middleware)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'centralized_dashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'main.html'));
 });
 
 // serve frontend static files (adjust folder if your frontend is in 'public')
