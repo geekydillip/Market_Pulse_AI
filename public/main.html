@@ -221,6 +221,51 @@
 
 </section>
 
+<!-- SECOND ROW - Source-wise Charts -->
+<section class="grid grid-cols-12 gap-4 mt-4">
+
+<!-- SOURCE WISE TOP MODEL -->
+<div class="col-span-6">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[300px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Source wise Top Model</h3>
+        <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-mobile-screen text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="source-wise-top-model-chart" class="h-[220px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SOURCE WISE TOP MODULES -->
+<div class="col-span-6">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[300px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Source wise Top Modules</h3>
+        <div class="w-8 h-8 bg-orange-50 dark:bg-orange-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-cubes text-orange-600 dark:text-orange-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="source-wise-top-modules-chart" class="h-[220px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+</section>
+
 
 
 </div>
@@ -318,6 +363,8 @@ async function loadDashboardData() {
     updateSourceDistribution();
     updateSeveritySplit();
     updateTopModelsChart();
+    updateSourceWiseTopModelChart();
+    updateSourceWiseTopModulesChart();
 
   } catch (error) {
     console.error('Error loading dashboard data:', error);
@@ -759,6 +806,316 @@ function updateTopModelsChart() {
         }
       }
       // Reference line removed - unexplained and added cognitive load
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update source wise top model chart - Dummy Data
+function updateSourceWiseTopModelChart() {
+  const chartDom = document.getElementById('source-wise-top-model-chart');
+  if (!chartDom) return;
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Dummy data for source-wise top models
+  const dummyData = {
+    'Beta Users': [
+      { name: 'SM-S928B', value: 145 },
+      { name: 'SM-S918B', value: 132 },
+      { name: 'SM-S911B', value: 98 },
+      { name: 'SM-S901B', value: 87 },
+      { name: 'SM-S711B', value: 76 }
+    ],
+    'Samsung Members PLM': [
+      { name: 'SM-A546E', value: 156 },
+      { name: 'SM-A346E', value: 143 },
+      { name: 'SM-A146E', value: 121 },
+      { name: 'SM-A346B', value: 98 },
+      { name: 'SM-A146B', value: 87 }
+    ],
+    'Samsung Members VOC': [
+      { name: 'SM-S918B', value: 134 },
+      { name: 'SM-S928B', value: 123 },
+      { name: 'SM-S711B', value: 98 },
+      { name: 'SM-S901B', value: 87 },
+      { name: 'SM-S911B', value: 76 }
+    ]
+  };
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const source = params[0].name;
+        const value = params[0].value;
+        return `${source}<br/>Issues: ${value}`;
+      }
+    },
+    legend: {
+      data: ['Top Model 1', 'Top Model 2', 'Top Model 3', 'Top Model 4', 'Top Model 5'],
+      top: '10%',
+      textStyle: {
+        color: colors.textPrimary
+      }
+    },
+    grid: {
+      left: '30%',
+      right: '10%',
+      top: '25%',
+      bottom: '10%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'category',
+      data: ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'],
+      axisLabel: {
+        fontSize: 10,
+        color: colors.textPrimary
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: false,
+      splitLine: {
+        show: false
+      }
+    },
+    series: [
+      {
+        name: 'Top Model 1',
+        type: 'bar',
+        data: [145, 156, 134],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#3b82f6' },
+            { offset: 1, color: '#1e40af' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Top Model 2',
+        type: 'bar',
+        data: [132, 143, 123],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#10b981' },
+            { offset: 1, color: '#047857' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Top Model 3',
+        type: 'bar',
+        data: [98, 121, 98],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#f59e0b' },
+            { offset: 1, color: '#d97706' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Top Model 4',
+        type: 'bar',
+        data: [87, 98, 87],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#8b5cf6' },
+            { offset: 1, color: '#7c3aed' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Top Model 5',
+        type: 'bar',
+        data: [76, 87, 76],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#ec4899' },
+            { offset: 1, color: '#db2777' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update source wise top modules chart - Dummy Data
+function updateSourceWiseTopModulesChart() {
+  const chartDom = document.getElementById('source-wise-top-modules-chart');
+  if (!chartDom) return;
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Dummy data for source-wise top modules
+  const dummyData = {
+    'Beta Users': [
+      { name: 'Camera', value: 245 },
+      { name: 'Battery', value: 198 },
+      { name: 'Display', value: 156 },
+      { name: 'Performance', value: 134 },
+      { name: 'Network', value: 98 }
+    ],
+    'Samsung Members PLM': [
+      { name: 'Camera', value: 267 },
+      { name: 'Battery', value: 223 },
+      { name: 'Display', value: 189 },
+      { name: 'Performance', value: 145 },
+      { name: 'Network', value: 123 }
+    ],
+    'Samsung Members VOC': [
+      { name: 'Camera', value: 234 },
+      { name: 'Battery', value: 187 },
+      { name: 'Display', value: 156 },
+      { name: 'Performance', value: 134 },
+      { name: 'Network', value: 98 }
+    ]
+  };
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        let result = '';
+        params.forEach(param => {
+          result += `${param.seriesName}: ${param.value}<br/>`;
+        });
+        return result;
+      }
+    },
+    legend: {
+      data: ['Beta Users', 'Samsung Members PLM', 'Samsung Members VOC'],
+      top: '10%',
+      textStyle: {
+        color: colors.textPrimary
+      }
+    },
+    grid: {
+      left: '15%',
+      right: '10%',
+      top: '25%',
+      bottom: '10%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'category',
+      data: ['Camera', 'Battery', 'Display', 'Performance', 'Network'],
+      axisLabel: {
+        fontSize: 10,
+        color: colors.textPrimary
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: false,
+      splitLine: {
+        show: false
+      }
+    },
+    series: [
+      {
+        name: 'Beta Users',
+        type: 'bar',
+        data: [245, 198, 156, 134, 98],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#3b82f6' },
+            { offset: 1, color: '#1e40af' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Samsung Members PLM',
+        type: 'bar',
+        data: [267, 223, 189, 145, 123],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#10b981' },
+            { offset: 1, color: '#047857' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Samsung Members VOC',
+        type: 'bar',
+        data: [234, 187, 156, 134, 98],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#f59e0b' },
+            { offset: 1, color: '#d97706' }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '{c}',
+          fontSize: 10,
+          color: colors.textPrimary
+        }
+      }
     ]
   };
 
