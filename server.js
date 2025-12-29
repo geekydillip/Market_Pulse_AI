@@ -88,6 +88,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'main.html'));
 });
 
+// Serve main.html explicitly
+app.get('/main.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'main.html'));
+});
+
 // serve frontend static files (adjust folder if your frontend is in 'public')
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/downloads', express.static('downloads'));
