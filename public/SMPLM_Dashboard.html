@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Samsung Member PLM - Overview</title>
+<title>Samsung Members PLM - Overview</title>
 
 <!-- Font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
 
 <!-- HEADER -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Samsung Member PLM - Overview</h1>
+  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Samsung Members PLM - Overview</h1>
 
   <div class="flex gap-2">
     <a href="main.html"
@@ -248,10 +248,11 @@ function updateSeriesDistribution() {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Take top series for display and sort by value descending (max to min)
+  // Take top series for display and sort by value descending (max to min), then reverse for chart display
   const topSeries = dashboardData.seriesDistribution
     .slice(0, 8)
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.value - a.value)
+    .reverse(); // Reverse to show highest at top, lowest at bottom
 
   const option = {
     textStyle: {
@@ -302,9 +303,9 @@ function updateSeriesDistribution() {
         data: topSeries.map(s => s.value),
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#0ea5e9' },
-            { offset: 0.5, color: '#0284c7' },
-            { offset: 1, color: '#0369a1' }
+            { offset: 0, color: '#8b5cf6' },
+            { offset: 0.5, color: '#7c3aed' },
+            { offset: 1, color: '#6d28d9' }
           ]),
           borderRadius: [4, 4, 4, 4]
         },
