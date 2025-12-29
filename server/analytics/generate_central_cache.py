@@ -64,6 +64,69 @@ def aggregate_analytics_data():
     print(f"Aggregated totals: {len(unique_models)} unique models, {len(unique_modules)} unique modules")
     return len(unique_models), len(unique_modules)
 
+def get_per_source_data():
+    """
+    Read all analytics.json files and extract per-source data for top_models, top_modules, and top_titles_CaseCode.
+    top_titles_CaseCode contains one "CaseCode : Title" entry per top_module.
+    Returns dict with per-source data.
+    """
+    analytics_files = [
+        ('./downloads/beta_user_issues/analytics.json', 'beta_user_issues'),
+        ('./downloads/plm_issues/analytics.json', 'plm_issues'),
+        ('./downloads/samsung_members_plm/analytics.json', 'samsung_members_plm'),
+        ('./downloads/samsung_members_voc/analytics.json', 'samsung_members_voc')
+    ]
+
+    per_source_data = {}
+
+    for file_path, source_name in analytics_files:
+        try:
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                # Extract top_models
+                top_models = data.get('top_models', [])
+
+                # Extract categories as top_modules
+                top_modules = data.get('categories', [])
+
+                # Group issues by module
+                module_issues = {}
+                rows = data.get('rows', [])
+                for row in rows:
+                    module = row.get('Module', '')
+                    title = row.get('Title', '')
+                    case_code = row.get('Case Code', '')
+
+                    if module and title and case_code:
+                        if module not in module_issues:
+                            module_issues[module] = []
+                        module_issues[module].append((case_code, title))
+
+                # Create top_titles_CaseCode - one entry per top_module
+                top_titles_CaseCode = []
+                for module_item in top_modules:
+                    module_name = module_item.get('label', '')
+                    if module_name in module_issues and module_issues[module_name]:
+                        # Take the first issue for this module
+                        case_code, title = module_issues[module_name][0]
+                        formatted_entry = f"{case_code} : {title}"
+                        top_titles_CaseCode.append(formatted_entry)
+
+                per_source_data[f"{source_name}_top_models"] = top_models
+                per_source_data[f"{source_name}_top_modules"] = top_modules
+                per_source_data[f"{source_name}_top_titles_CaseCode"] = top_titles_CaseCode
+
+                print(f"[OK] Extracted data for {source_name}: {len(top_models)} models, {len(top_modules)} modules, {len(top_titles_CaseCode)} top titles with case codes")
+            else:
+                print(f"[WARNING] Analytics file not found: {file_path}")
+
+        except Exception as e:
+            print(f"[ERROR] Error reading {file_path}: {e}")
+
+    return per_source_data
+
 def run_aggregator_command(command_args=None):
     """
     Run central_aggregator.py with specified arguments and return parsed JSON result.
@@ -130,6 +193,9 @@ def generate_central_cache():
     # Aggregate unique models and modules from all analytics.json files
     total_unique_models, total_unique_modules = aggregate_analytics_data()
 
+    # Get per-source data
+    per_source_data = get_per_source_data()
+
     # Create core data for hash computation (exclude metadata)
     core_data = {
         "kpis": kpis,
@@ -143,7 +209,8 @@ def generate_central_cache():
         "source_model_summary": source_model_summary,
         "filtered_top_models": filtered_top_models,
         "total_unique_models": total_unique_models,
-        "total_unique_modules": total_unique_modules
+        "total_unique_modules": total_unique_modules,
+        **per_source_data  # Include per-source data
     }
 
     # Compute hash of the core data
@@ -210,6 +277,10 @@ def validate_cache_freshness():
         current_totals = aggregate_analytics_data()
         current_core_data["total_unique_models"] = current_totals[0]
         current_core_data["total_unique_modules"] = current_totals[1]
+
+        # Get current per-source data
+        current_per_source_data = get_per_source_data()
+        current_core_data.update(current_per_source_data)
 
         # Compute current data hash
         current_hash = compute_data_hash(current_core_data)

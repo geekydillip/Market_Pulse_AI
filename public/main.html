@@ -1234,79 +1234,7 @@ function updateSourceWiseTopModulesChart() {
   window.addEventListener('resize', () => chart.resize());
 }
 
-// Helper function to find case code by matching issue title
-function findCaseCode(issueTitle) {
-  if (!issueTitle) return null;
 
-  // Clean the title for better matching
-  const cleanTitle = issueTitle.toLowerCase().trim();
-
-  // Try to find match in high_issues first
-  if (dashboardData.high_issues) {
-    // Look for exact title match first
-    const exactMatch = dashboardData.high_issues.find(issue =>
-      issue.Title && issue.Title.toLowerCase().trim() === cleanTitle
-    );
-    if (exactMatch) return exactMatch['Case Code'];
-
-    // Look for titles that contain our issue title as substring
-    const containsMatch = dashboardData.high_issues.find(issue => {
-      if (!issue.Title) return false;
-      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
-      return cleanHighIssueTitle.includes(cleanTitle);
-    });
-    if (containsMatch) return containsMatch['Case Code'];
-
-    // Look for our issue title containing part of high_issues titles
-    const reverseContainsMatch = dashboardData.high_issues.find(issue => {
-      if (!issue.Title) return false;
-      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
-      return cleanTitle.includes(cleanHighIssueTitle.substring(0, Math.min(20, cleanHighIssueTitle.length)));
-    });
-    if (reverseContainsMatch) return reverseContainsMatch['Case Code'];
-
-    // Look for partial match - check if issue title contains part of the high_issues title
-    const partialMatch = dashboardData.high_issues.find(issue => {
-      if (!issue.Title) return false;
-      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
-      // Check if the titles share significant common words
-      return cleanTitle.split(' ').some(word =>
-        word.length > 3 && cleanHighIssueTitle.includes(word)
-      );
-    });
-    if (partialMatch) return partialMatch['Case Code'];
-
-    // Last resort: check first few words match
-    const titleWords = cleanTitle.split(' ').slice(0, 2).join(' ');
-    const wordMatch = dashboardData.high_issues.find(issue => {
-      if (!issue.Title) return false;
-      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
-      return cleanHighIssueTitle.includes(titleWords);
-    });
-    if (wordMatch) return wordMatch['Case Code'];
-
-    // Final attempt: look for any matching words
-    const anyWordMatch = dashboardData.high_issues.find(issue => {
-      if (!issue.Title) return false;
-      const cleanHighIssueTitle = issue.Title.toLowerCase().trim();
-      const titleWords = cleanTitle.split(' ');
-      return titleWords.some(word => word.length > 2 && cleanHighIssueTitle.includes(word));
-    });
-    if (anyWordMatch) return anyWordMatch['Case Code'];
-  }
-
-  // If no match found in high_issues, generate a case code
-  // Create a consistent hash-like code based on the title
-  const hash = issueTitle.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-
-  // Generate case code in format P2512XX-XXXXX
-  const month = String(Math.abs(hash) % 12 + 1).padStart(2, '0');
-  const sequence = String(Math.abs(hash) % 90000 + 10000);
-  return `P2512${month}-${sequence}`;
-}
 
 // Update model summary table
 function createModelSummaryTable() {
@@ -1415,16 +1343,25 @@ function createModelSummaryTable() {
             // Add issue title under this module (if available)
             if (modelData.top_titles && modelData.top_titles[i]) {
               const title = modelData.top_titles[i];
-              const caseCode = findCaseCode(title);
               const truncatedTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
 
-              if (caseCode) {
-                content += `<br/><span class="ml-4">- ${caseCode}: ${truncatedTitle}</span>`;
-              } else {
-                content += `<br/><span class="ml-4">- ${truncatedTitle}</span>`;
-              }
+              content += `<br/><span class="ml-4">- ${truncatedTitle}</span>`;
             }
             content += `</li>`;
+          }
+          content += `</ul>`;
+        } else if (modelData.top_titles && modelData.top_titles.length > 0) {
+          // Show Top Issues section when there are no modules but there are titles (VOC data)
+          content += `<div><strong>Top Issues:</strong></div>`;
+          content += `<ul class="text-xs space-y-1 ml-2">`;
+
+          // Show top 5 issue titles
+          const maxItems = Math.min(5, modelData.top_titles.length);
+          for (let i = 0; i < maxItems; i++) {
+            const title = modelData.top_titles[i];
+            const truncatedTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
+
+            content += `<li>• ${truncatedTitle}</li>`;
           }
           content += `</ul>`;
         }

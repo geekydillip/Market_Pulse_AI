@@ -455,26 +455,67 @@ def compute_source_model_summary(data: dict) -> list:
                     modules = model_data['Module'].value_counts().head(5)
                     top_modules = [str(mod).strip() for mod in modules.index if pd.notna(mod)]
 
-                # Top 5 issue titles/contents for this model
+                # Get titles based on available modules
                 top_titles = []
-                if source_name == 'VOC':
-                    # For VOC, use 'content' column instead of 'Title'
-                    if 'content' in model_data.columns:
-                        contents = model_data['content'].value_counts().head(5)
-                        top_titles = [clean_excel_text(str(content)) for content in contents.index if pd.notna(content)]
-                else:
-                    # For Beta and PLM, use 'Title' column
-                    if 'Title' in model_data.columns:
-                        titles = model_data['Title'].value_counts().head(5)
-                        top_titles = [str(title).strip() for title in titles.index if pd.notna(title)]
+                if top_modules:
+                    # If modules exist, get one "Case Code : Title" entry for each top module
+                    for module in top_modules:
+                        # Filter issues for this specific module
+                        module_issues = model_data[model_data['Module'].astype(str).str.strip() == module]
 
-                summary.append({
-                    'source': source_name,
-                    'model': model_str,
-                    'top_modules': top_modules,
-                    'issue_count': int(total_count),
-                    'top_titles': top_titles
-                })
+                        if not module_issues.empty:
+                            # Take the first issue for this module
+                            first_issue = module_issues.iloc[0]
+
+                            case_code = str(first_issue.get('Case Code', '')).strip()
+                            title = str(first_issue.get('Title', '')).strip()
+
+                            # For VOC, use 'content' column instead of 'Title'
+                            if source_name == 'VOC' and 'content' in first_issue:
+                                title = clean_excel_text(str(first_issue.get('content', '')))
+
+                            if case_code and title:
+                                top_titles.append(f"{case_code} : {title}")
+                            else:
+                                # Fallback if case code or title is missing
+                                top_titles.append(f"Unknown : {title or 'Unknown Title'}")
+                        else:
+                            # No issues found for this module
+                            top_titles.append(f"Unknown : No issues found for {module}")
+                else:
+                    # If no modules (like for VOC), fall back to top 5 titles/contents from all issues
+                    if source_name == 'VOC':
+                        # For VOC, use 'content' column instead of 'Title'
+                        if 'content' in model_data.columns:
+                            contents = model_data['content'].value_counts().head(5)
+                            for content in contents.index:
+                                if pd.notna(content):
+                                    cleaned_content = clean_excel_text(str(content))
+                                    top_titles.append(cleaned_content)
+                    else:
+                        # For Beta and PLM, use 'Title' column
+                        if 'Title' in model_data.columns:
+                            titles = model_data['Title'].value_counts().head(5)
+                            for title in titles.index:
+                                if pd.notna(title):
+                                    top_titles.append(str(title).strip())
+
+                # For VOC sources, only include issue_count and top_titles (no top_modules since they're irrelevant)
+                if source_name == 'VOC':
+                    summary.append({
+                        'source': source_name,
+                        'model': model_str,
+                        'issue_count': int(total_count),
+                        'top_titles': top_titles
+                    })
+                else:
+                    summary.append({
+                        'source': source_name,
+                        'model': model_str,
+                        'top_modules': top_modules,
+                        'issue_count': int(total_count),
+                        'top_titles': top_titles
+                    })
 
     # Sort by source, then by issue count descending
     summary.sort(key=lambda x: (x['source'], -x['issue_count']))
