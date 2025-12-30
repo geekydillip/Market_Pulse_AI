@@ -107,10 +107,13 @@
 
   <div class="flex gap-4 items-center">
     <!-- Ollama Health Status -->
-    <div class="flex items-center gap-2">
-      <div class="flex items-center gap-2">
-        <div id="ollama-status" class="w-3 h-3 rounded-full bg-gray-400"></div>
-        <span class="text-sm font-medium" id="ollama-status-text">Checking Ollama...</span>
+    <div class="flex items-center">
+      <div class="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-lg shadow-sm border border-slate-300 dark:border-slate-500">
+        <i class="fa-solid fa-server text-slate-600 dark:text-slate-300 text-sm"></i>
+        <div class="flex items-center gap-2">
+          <div id="ollama-status" class="w-4 h-4 rounded-full bg-gray-400 animate-pulse transition-all duration-300"></div>
+          <span class="text-sm font-semibold text-slate-700 dark:text-slate-200" id="ollama-status-text">Checking Ollama...</span>
+        </div>
       </div>
     </div>
 
@@ -154,11 +157,28 @@
 
   <!-- Processing Queue -->
   <div id="processingQueue" class="mt-6 hidden">
+    <!-- Queue Status Card -->
+    <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem] mb-4">
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        <i class="fa-solid fa-list-check text-blue-600 dark:text-blue-400 flex-shrink-0"></i>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-slate-900 dark:text-slate-100" id="queueStatus">Queue Status: Idle</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400" id="queueDetails">No files in queue</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <div class="text-sm font-medium text-slate-700 dark:text-slate-300" id="processingTypeDisplay">No type selected</div>
+        <button class="px-3 py-1 text-sm bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 rounded transition-colors" id="clearQueueBtn">
+          <i class="fa-solid fa-trash mr-1"></i>
+          Clear All
+        </button>
+      </div>
+    </div>
+
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Processing Queue</h3>
       <div class="flex gap-2">
         <span class="text-sm text-slate-600 dark:text-slate-400" id="fileCount">0 files</span>
-        <button class="px-3 py-1 text-sm bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors" id="clearQueueBtn">Clear All</button>
       </div>
     </div>
 
@@ -168,44 +188,6 @@
   </div>
 </section>
 
-<!-- PROCESSING TYPE BUTTONS -->
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="beta_user_issues">
-    <i class="fa-solid fa-mobile-screen mr-2"></i>
-    BETA USER ISSUES
-  </button>
-
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="samsung_members_plm">
-    <i class="fa-solid fa-list-check mr-2"></i>
-    SAMSUNG MEMBERS PLM
-  </button>
-
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="samsung_members_voc">
-    <i class="fa-solid fa-comments mr-2"></i>
-    SAMSUNG MEMBERS VOC
-  </button>
-
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="qings">
-    <i class="fa-solid fa-question-circle mr-2"></i>
-    QINGS
-  </button>
-
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="qi">
-    <i class="fa-solid fa-trophy mr-2"></i>
-    QUALITY INDEX
-  </button>
-
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="blogger_issues">
-    <i class="fa-solid fa-blog mr-2"></i>
-    BLOGGER ISSUES
-  </button>
-
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="plm_issues">
-    <i class="fa-solid fa-tools mr-2"></i>
-    PLM ISSUES
-  </button>
-</div>
-
 <!-- SELECTION STATUS -->
 <div class="mb-6 text-center">
   <div id="selectionStatus" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
@@ -213,26 +195,71 @@
   </div>
 </div>
 
+<!-- PROCESSING TYPE BUTTONS -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 hover:from-blue-400 hover:via-blue-500 hover:to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-blue-500/25 border border-blue-400/30 hover:border-blue-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="beta_user_issues">
+    <i class="fa-solid fa-mobile-screen mr-2"></i>
+    BETA USER ISSUES
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700 hover:from-green-400 hover:via-emerald-500 hover:to-teal-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-green-500/25 border border-green-400/30 hover:border-green-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="samsung_members_plm">
+    <i class="fa-solid fa-list-check mr-2"></i>
+    SAMSUNG MEMBERS PLM
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-br from-purple-500 via-violet-600 to-pink-700 hover:from-purple-400 hover:via-violet-500 hover:to-pink-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-purple-500/25 border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="samsung_members_voc">
+    <i class="fa-solid fa-comments mr-2"></i>
+    SAMSUNG MEMBERS VOC
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-br from-orange-500 via-red-600 to-rose-700 hover:from-orange-400 hover:via-red-500 hover:to-rose-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-orange-500/25 border border-orange-400/30 hover:border-orange-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="qings">
+    <i class="fa-solid fa-question-circle mr-2"></i>
+    QINGS
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-br from-teal-500 via-cyan-600 to-sky-700 hover:from-teal-400 hover:via-cyan-500 hover:to-sky-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-teal-500/25 border border-teal-400/30 hover:border-teal-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="qi">
+    <i class="fa-solid fa-trophy mr-2"></i>
+    QUALITY INDEX
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-600 hover:from-yellow-300 hover:via-amber-400 hover:to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-yellow-500/25 border border-yellow-400/30 hover:border-yellow-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="blogger_issues">
+    <i class="fa-solid fa-blog mr-2"></i>
+    BLOGGER ISSUES
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-br from-red-500 via-rose-600 to-pink-700 hover:from-red-400 hover:via-rose-500 hover:to-pink-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-red-500/25 border border-red-400/30 hover:border-red-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="plm_issues">
+    <i class="fa-solid fa-tools mr-2"></i>
+    PLM ISSUES
+  </button>
+</div>
+
 <!-- PROGRESS SECTION -->
 <div id="progressSection" class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6 hidden">
   <div class="mb-4">
     <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Processing Progress</h2>
-    <div class="flex justify-between items-center">
-      <span class="text-slate-600 dark:text-slate-400" id="currentFile">Processing...</span>
-      <span class="text-sm text-slate-500 dark:text-slate-400" id="estimatedTime"></span>
+  </div>
+
+  <!-- Progress Card -->
+  <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem] mb-4">
+    <div class="flex items-center gap-3 flex-1 min-w-0">
+      <i class="fa-solid fa-cog text-blue-600 dark:text-blue-400 flex-shrink-0"></i>
+      <div class="flex-1 min-w-0">
+        <div class="font-medium text-slate-900 dark:text-slate-100 truncate" id="currentFile">Processing...</div>
+        <div class="text-sm text-slate-600 dark:text-slate-400" id="estimatedTime">Calculating...</div>
+      </div>
     </div>
-  </div>
-
-  <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 mb-4">
-    <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
-  </div>
-
-  <div class="flex justify-between items-center">
-    <span class="text-sm text-slate-600 dark:text-slate-400" id="progressText">0%</span>
-    <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors" id="stopBtn">
-      <i class="fa-solid fa-stop mr-2"></i>
-      Stop Processing
-    </button>
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="w-32 bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+          <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+        </div>
+        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 min-w-[2.5rem]" id="progressText">0%</span>
+      </div>
+      <button class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-colors text-sm" id="stopBtn">
+        <i class="fa-solid fa-stop mr-1"></i>
+        Stop
+      </button>
+    </div>
   </div>
 </div>
 
@@ -254,6 +281,7 @@ let queueCounter = 0;
 let currentSessionId = null;
 let currentEventSource = null;
 let processingStartTime = null;
+let isProcessingActive = false; // Flag to prevent multiple simultaneous processing sessions
 
 // Processing metrics for ETC calculation
 const EST_ALPHA = 0.30;
@@ -395,11 +423,63 @@ function updateQueueDisplay() {
   // Update count
   fileCount.textContent = `${fileQueue.length} file${fileQueue.length !== 1 ? 's' : ''}`;
 
+  // Update queue status card
+  updateQueueStatus();
+
   // Add file cards
   fileQueue.forEach(item => {
     const card = createFileCard(item);
     queueGrid.appendChild(card);
   });
+}
+
+// Update queue status card
+function updateQueueStatus() {
+  const queueStatusEl = document.getElementById('queueStatus');
+  const queueDetailsEl = document.getElementById('queueDetails');
+  const processingTypeDisplayEl = document.getElementById('processingTypeDisplay');
+
+  const queuedCount = fileQueue.filter(item => item.status === 'queued').length;
+  const processingCount = fileQueue.filter(item => item.status === 'processing').length;
+  const completedCount = fileQueue.filter(item => item.status === 'completed').length;
+  const failedCount = fileQueue.filter(item => item.status === 'failed').length;
+
+  // Determine status
+  let status = 'Idle';
+  if (processingCount > 0) {
+    status = 'Processing';
+  } else if (queuedCount > 0) {
+    status = 'Ready';
+  } else if (completedCount > 0 || failedCount > 0) {
+    status = 'Finished';
+  }
+
+  queueStatusEl.textContent = `Queue Status: ${status}`;
+
+  // Details
+  let details = [];
+  if (queuedCount > 0) details.push(`${queuedCount} queued`);
+  if (processingCount > 0) details.push(`${processingCount} processing`);
+  if (completedCount > 0) details.push(`${completedCount} completed`);
+  if (failedCount > 0) details.push(`${failedCount} failed`);
+
+  queueDetailsEl.textContent = details.length > 0 ? details.join(', ') : 'No files in queue';
+
+  // Processing type
+  if (selectedProcessingType) {
+    const typeLabels = {
+      'beta_user_issues': 'Beta User Issues',
+      'samsung_members_plm': 'Samsung Members PLM',
+      'samsung_members_voc': 'Samsung Members VOC',
+      'qings': 'QINGS',
+      'qi': 'Quality Index',
+      'blogger_issues': 'Blogger Issues',
+      'plm_issues': 'PLM Issues'
+    };
+    processingTypeDisplayEl.textContent = typeLabels[selectedProcessingType] || selectedProcessingType;
+  } else {
+    processingTypeDisplayEl.textContent = 'No type selected';
+  }
 }
 
 function createFileCard(item) {
@@ -540,6 +620,12 @@ async function loadModels() {
 
 // Start processing queue
 async function startProcessing() {
+  // Prevent multiple simultaneous processing sessions
+  if (isProcessingActive) {
+    console.log('Processing already active, skipping start');
+    return;
+  }
+
   if (fileQueue.length === 0 || !selectedProcessingType) return;
 
   const modelSelect = document.getElementById('aiModel');
@@ -554,7 +640,11 @@ async function startProcessing() {
   const processingItem = fileQueue.find(item => item.status === 'queued');
   if (!processingItem) return;
 
+  // Set processing flag
+  isProcessingActive = true;
+
   processingItem.status = 'processing';
+  processingItem.processingStartedAt = Date.now(); // Track when processing started
   updateQueueDisplay();
 
   // Show progress section
@@ -566,6 +656,9 @@ async function startProcessing() {
     console.error('Processing error:', error);
     processingItem.status = 'failed';
     updateQueueDisplay();
+  } finally {
+    // Reset processing flag when done
+    isProcessingActive = false;
   }
 
   // Hide progress section
@@ -701,7 +794,7 @@ function addToCompletedFiles(queueItem) {
   completedSection.classList.remove('hidden');
 
   const card = document.createElement('div');
-  card.className = 'flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800';
+  card.className = 'flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem]';
 
   const fileInfo = document.createElement('div');
   fileInfo.className = 'flex items-center gap-3';
@@ -715,9 +808,14 @@ function addToCompletedFiles(queueItem) {
   name.className = 'font-medium text-slate-900 dark:text-slate-100';
   name.textContent = queueItem.file.name;
 
+  // Calculate processing duration
+  const processingDuration = queueItem.processingStartedAt ?
+    Date.now() - queueItem.processingStartedAt : 0;
+  const durationText = formatProcessingDuration(processingDuration);
+
   const time = document.createElement('div');
   time.className = 'text-sm text-slate-600 dark:text-slate-400';
-  time.textContent = `Processed at ${new Date().toLocaleTimeString()}`;
+  time.textContent = `Processed in ${durationText}`;
 
   details.appendChild(name);
   details.appendChild(time);
@@ -789,8 +887,27 @@ function formatFileSize(bytes) {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
+function formatProcessingDuration(milliseconds) {
+  if (milliseconds < 1000) return '< 1s';
+
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  } else {
+    return `${seconds}s`;
+  }
+}
+
 // Auto-start processing when files are added and type is selected
 function checkAutoStart() {
+  // Don't start if processing is already active
+  if (isProcessingActive) {
+    return;
+  }
+
   const hasQueuedFiles = fileQueue.some(item => item.status === 'queued');
   const hasSelectedType = selectedProcessingType !== null;
   const modelSelected = document.getElementById('aiModel').value !== '';
