@@ -185,6 +185,44 @@
     <div id="queueGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       <!-- File cards will be added here -->
     </div>
+
+    <!-- PROGRESS SECTION -->
+    <div id="progressSection" class="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hidden">
+      <div class="mb-4">
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Processing Progress</h2>
+      </div>
+
+      <!-- Progress Card -->
+      <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem] mb-4">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <i class="fa-solid fa-cog text-blue-600 dark:text-blue-400 flex-shrink-0"></i>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-slate-900 dark:text-slate-100 truncate" id="currentFile">Processing...</div>
+            <div class="text-sm text-slate-600 dark:text-slate-400" id="estimatedTime">Calculating...</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-32 bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+              <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+            </div>
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-300 min-w-[2.5rem]" id="progressText">0%</span>
+          </div>
+          <button class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-colors text-sm" id="stopBtn">
+            <i class="fa-solid fa-stop mr-1"></i>
+            Stop
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETED FILES SECTION -->
+    <div id="completedSection" class="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hidden">
+      <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Completed Files</h2>
+      <div id="completedFiles" class="space-y-3">
+        <!-- Completed file cards will be added here -->
+      </div>
+    </div>
   </div>
 </section>
 
@@ -233,43 +271,7 @@
   </button>
 </div>
 
-<!-- PROGRESS SECTION -->
-<div id="progressSection" class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6 hidden">
-  <div class="mb-4">
-    <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Processing Progress</h2>
-  </div>
 
-  <!-- Progress Card -->
-  <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem] mb-4">
-    <div class="flex items-center gap-3 flex-1 min-w-0">
-      <i class="fa-solid fa-cog text-blue-600 dark:text-blue-400 flex-shrink-0"></i>
-      <div class="flex-1 min-w-0">
-        <div class="font-medium text-slate-900 dark:text-slate-100 truncate" id="currentFile">Processing...</div>
-        <div class="text-sm text-slate-600 dark:text-slate-400" id="estimatedTime">Calculating...</div>
-      </div>
-    </div>
-    <div class="flex items-center gap-3 flex-shrink-0">
-      <div class="flex items-center gap-2">
-        <div class="w-32 bg-slate-200 dark:bg-slate-600 rounded-full h-2">
-          <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
-        </div>
-        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 min-w-[2.5rem]" id="progressText">0%</span>
-      </div>
-      <button class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-colors text-sm" id="stopBtn">
-        <i class="fa-solid fa-stop mr-1"></i>
-        Stop
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- COMPLETED FILES SECTION -->
-<div id="completedSection" class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hidden">
-  <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Completed Files</h2>
-  <div id="completedFiles" class="space-y-3">
-    <!-- Completed file cards will be added here -->
-  </div>
-</div>
 
 </div>
 
@@ -484,7 +486,12 @@ function updateQueueStatus() {
 
 function createFileCard(item) {
   const card = document.createElement('div');
-  card.className = 'flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem]';
+  card.className = 'p-3 bg-slate-50 dark:bg-slate-700 rounded-lg';
+  card.dataset.fileId = item.id;
+
+  // Header row: Icon + File name + Size + Status + Actions
+  const headerRow = document.createElement('div');
+  headerRow.className = 'flex items-center justify-between mb-2';
 
   // Left section: Icon + File name
   const fileInfo = document.createElement('div');
@@ -499,14 +506,14 @@ function createFileCard(item) {
   name.textContent = item.file.name;
   fileInfo.appendChild(name);
 
-  // Middle section: File size + Status
-  const sizeAndStatus = document.createElement('div');
-  sizeAndStatus.className = 'flex items-center gap-2 flex-shrink-0';
+  // Right section: Size + Status + Actions
+  const rightSection = document.createElement('div');
+  rightSection.className = 'flex items-center gap-3 flex-shrink-0';
 
   const size = document.createElement('div');
   size.className = 'text-sm text-slate-600 dark:text-slate-400';
   size.textContent = formatFileSize(item.file.size);
-  sizeAndStatus.appendChild(size);
+  rightSection.appendChild(size);
 
   const status = document.createElement('div');
   status.className = 'text-sm font-medium';
@@ -529,11 +536,11 @@ function createFileCard(item) {
       status.textContent = 'Failed';
       break;
   }
-  sizeAndStatus.appendChild(status);
+  rightSection.appendChild(status);
 
-  // Right section: Actions
+  // Actions
   const actions = document.createElement('div');
-  actions.className = 'flex gap-2 flex-shrink-0 ml-2';
+  actions.className = 'flex gap-2';
 
   if (item.status === 'queued') {
     const removeBtn = document.createElement('button');
@@ -541,11 +548,95 @@ function createFileCard(item) {
     removeBtn.textContent = 'Remove';
     removeBtn.onclick = () => removeFromQueue(item.id);
     actions.appendChild(removeBtn);
+  } else if (item.status === 'processing') {
+    const stopBtn = document.createElement('button');
+    stopBtn.className = 'px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors';
+    stopBtn.textContent = 'Stop';
+    stopBtn.onclick = () => stopProcessingForFile(item.id);
+    actions.appendChild(stopBtn);
+  } else if (item.status === 'completed' && item.downloads) {
+    item.downloads.forEach(download => {
+      if (!download.filename.toLowerCase().endsWith('.json')) {
+        const downloadBtn = document.createElement('a');
+        downloadBtn.className = 'px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors';
+        downloadBtn.href = download.url;
+        downloadBtn.download = download.filename;
+        downloadBtn.textContent = 'Download';
+        actions.appendChild(downloadBtn);
+      }
+    });
   }
 
-  card.appendChild(fileInfo);
-  card.appendChild(sizeAndStatus);
-  card.appendChild(actions);
+  rightSection.appendChild(actions);
+
+  headerRow.appendChild(fileInfo);
+  headerRow.appendChild(rightSection);
+
+  // Progress section (for processing files)
+  let progressSection = null;
+  if (item.status === 'processing') {
+    progressSection = document.createElement('div');
+    progressSection.className = 'mt-2';
+
+    const progressContainer = document.createElement('div');
+    progressContainer.className = 'w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2';
+
+    const progressBar = document.createElement('div');
+    progressBar.className = 'bg-blue-600 h-2 rounded-full transition-all duration-300';
+    progressBar.style.width = (item.progress || 0) + '%';
+    progressBar.id = `progress-${item.id}`;
+
+    progressContainer.appendChild(progressBar);
+
+    const progressInfo = document.createElement('div');
+    progressInfo.className = 'flex justify-between items-center text-sm';
+
+    const progressText = document.createElement('span');
+    progressText.className = 'font-medium text-slate-700 dark:text-slate-300';
+    progressText.textContent = (item.progress || 0) + '%';
+    progressText.id = `progress-text-${item.id}`;
+
+    const estimatedTime = document.createElement('span');
+    estimatedTime.className = 'text-slate-600 dark:text-slate-400';
+    estimatedTime.textContent = 'Calculating...';
+    estimatedTime.id = `estimated-time-${item.id}`;
+
+    progressInfo.appendChild(progressText);
+    progressInfo.appendChild(estimatedTime);
+
+    progressSection.appendChild(progressContainer);
+    progressSection.appendChild(progressInfo);
+  }
+
+  // Completion details (for completed/failed files)
+  let completionSection = null;
+  if (item.status === 'completed') {
+    completionSection = document.createElement('div');
+    completionSection.className = 'mt-2 pt-2 border-t border-slate-200 dark:border-slate-600';
+
+    const processingTime = document.createElement('div');
+    processingTime.className = 'text-sm text-slate-600 dark:text-slate-400';
+    const duration = item.processingStartedAt ? formatProcessingDuration(Date.now() - item.processingStartedAt) : 'Unknown';
+    processingTime.textContent = `Processed in ${duration}`;
+    processingTime.id = `completion-time-${item.id}`;
+
+    completionSection.appendChild(processingTime);
+  } else if (item.status === 'failed') {
+    completionSection = document.createElement('div');
+    completionSection.className = 'mt-2 pt-2 border-t border-red-200 dark:border-red-800';
+
+    const errorMsg = document.createElement('div');
+    errorMsg.className = 'text-sm text-red-600 dark:text-red-400';
+    errorMsg.textContent = 'Processing failed. Please try again.';
+    errorMsg.id = `error-msg-${item.id}`;
+
+    completionSection.appendChild(errorMsg);
+  }
+
+  // Assemble card
+  card.appendChild(headerRow);
+  if (progressSection) card.appendChild(progressSection);
+  if (completionSection) card.appendChild(completionSection);
 
   return card;
 }
@@ -752,39 +843,75 @@ async function processFile(queueItem, processingType, model) {
 }
 
 function updateProgress(percent, message, queueItem) {
-  document.getElementById('progressBar').style.width = percent + '%';
-  document.getElementById('progressText').textContent = Math.round(percent) + '%';
+  const progressPercent = Math.round(percent);
+
+  // Update global progress section
+  document.getElementById('progressBar').style.width = progressPercent + '%';
+  document.getElementById('progressText').textContent = progressPercent + '%';
+
+  // Update individual card progress
+  const cardProgressBar = document.getElementById(`progress-${queueItem.id}`);
+  const cardProgressText = document.getElementById(`progress-text-${queueItem.id}`);
+  const cardEstimatedTime = document.getElementById(`estimated-time-${queueItem.id}`);
+
+  if (cardProgressBar) {
+    cardProgressBar.style.width = progressPercent + '%';
+  }
+  if (cardProgressText) {
+    cardProgressText.textContent = progressPercent + '%';
+  }
 
   // Update queue item progress
-  queueItem.progress = Math.round(percent);
+  queueItem.progress = progressPercent;
 
   // Update estimated time
-  updateEstimatedTime(message, percent);
+  updateEstimatedTime(message, percent, queueItem);
 }
 
-function updateEstimatedTime(message, percent) {
+function updateEstimatedTime(message, percent, queueItem) {
   const estimatedTimeEl = document.getElementById('estimatedTime');
+  const cardEstimatedTime = document.getElementById(`estimated-time-${queueItem.id}`);
 
   // Always show some estimate if we're processing
   const elapsed = Date.now() - processingStartTime;
 
+  let timeText = 'Calculating...';
   if (percent > 0 && percent < 100 && elapsed > 5000) { // Only show after 5 seconds of processing
     const estimatedTotal = (elapsed / percent) * 100;
     const estimatedRemaining = estimatedTotal - elapsed;
     if (estimatedRemaining > 0) {
       const minutes = Math.floor(estimatedRemaining / 60000);
       const seconds = Math.floor((estimatedRemaining % 60000) / 1000);
-      estimatedTimeEl.textContent = `~${minutes}m ${seconds}s remaining`;
+      timeText = `~${minutes}m ${seconds}s remaining`;
     } else {
-      estimatedTimeEl.textContent = 'Almost done...';
+      timeText = 'Almost done...';
     }
   } else if (elapsed > 10000) { // Show processing time after 10 seconds
     const minutes = Math.floor(elapsed / 60000);
     const seconds = Math.floor((elapsed % 60000) / 1000);
-    estimatedTimeEl.textContent = `${minutes}m ${seconds}s elapsed`;
-  } else {
-    estimatedTimeEl.textContent = 'Calculating...';
+    timeText = `${minutes}m ${seconds}s elapsed`;
   }
+
+  // Update global progress section
+  if (estimatedTimeEl) {
+    estimatedTimeEl.textContent = timeText;
+  }
+
+  // Update individual card
+  if (cardEstimatedTime) {
+    cardEstimatedTime.textContent = timeText;
+  }
+}
+
+async function stopProcessingForFile(fileId) {
+  const queueItem = fileQueue.find(item => item.id === fileId);
+  if (!queueItem || queueItem.status !== 'processing') {
+    return;
+  }
+
+  // For now, use the global stop processing function
+  // In a more advanced implementation, we could stop individual files
+  await stopProcessing();
 }
 
 function addToCompletedFiles(queueItem) {
