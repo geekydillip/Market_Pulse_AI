@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Market Pulse AI - File Processing</title>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          primary: {
+            50: '#f0f9ff',
+            100: '#e0f2fe',
+            500: '#0ea5e9',
+            600: '#0284c7',
+            700: '#0369a1',
+          },
+          secondary: {
+            50: '#f8fafc',
+            100: '#f1f5f9',
+            500: '#64748b',
+            600: '#475569',
+            700: '#334155',
+          },
+        },
+      },
+    },
+  }
+
+
+
+  // System theme detection
+  function updateTheme() {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', isDark);
+  }
+
+  // Listen for theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
+  // Set initial theme
+  updateTheme();
+</script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
+<div class="max-w-7xl mx-auto px-6 py-6">
+
+<!-- HEADER -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI FILE PROCESSING</h1>
+    <!-- AI Model Selector -->
+    <div class="flex items-center gap-2">
+      <label for="aiModel" class="text-sm font-medium">AI Model:</label>
+      <select id="aiModel" class="px-3 py-1 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm">
+        <option value="">Loading models...</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="flex gap-4 items-center">
+    <!-- Ollama Health Status -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2">
+        <div id="ollama-status" class="w-3 h-3 rounded-full bg-gray-400"></div>
+        <span class="text-sm font-medium" id="ollama-status-text">Checking Ollama...</span>
+      </div>
+    </div>
+
+    <a href="main.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+      <i class="fa-solid fa-arrow-left mr-2"></i>
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<!-- FILE UPLOAD SECTION -->
+<section class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
+  <div class="mb-4">
+    <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">File Upload</h2>
+    <p class="text-slate-600 dark:text-slate-400">Upload multiple Excel (.xlsx, .xls), JSON (.json), or CSV (.csv) files for processing</p>
+  </div>
+
+  <!-- Drop Zone -->
+  <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors" id="dropZone">
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.json,.csv" multiple hidden>
+    <div class="mb-4">
+      <i class="fa-solid fa-cloud-upload-alt text-4xl text-slate-400 dark:text-slate-500 mb-4"></i>
+      <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">Drop files here or click to browse</h3>
+      <p class="text-slate-600 dark:text-slate-400">Supported formats: .xlsx, .xls, .json, .csv (Max 10MB each)</p>
+    </div>
+  </div>
+
+  <!-- Processing Queue -->
+  <div id="processingQueue" class="mt-6 hidden">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Processing Queue</h3>
+      <div class="flex gap-2">
+        <span class="text-sm text-slate-600 dark:text-slate-400" id="fileCount">0 files</span>
+        <button class="px-3 py-1 text-sm bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors" id="clearQueueBtn">Clear All</button>
+      </div>
+    </div>
+
+    <div id="queueGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <!-- File cards will be added here -->
+    </div>
+  </div>
+</section>
+
+<!-- PROCESSING TYPE BUTTONS -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="beta_user_issues">
+    <i class="fa-solid fa-mobile-screen mr-2"></i>
+    BETA USER ISSUES
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="samsung_members_plm">
+    <i class="fa-solid fa-list-check mr-2"></i>
+    SAMSUNG MEMBERS PLM
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="samsung_members_voc">
+    <i class="fa-solid fa-comments mr-2"></i>
+    SAMSUNG MEMBERS VOC
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="qings">
+    <i class="fa-solid fa-question-circle mr-2"></i>
+    QINGS
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="qi">
+    <i class="fa-solid fa-trophy mr-2"></i>
+    QUALITY INDEX
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="blogger_issues">
+    <i class="fa-solid fa-blog mr-2"></i>
+    BLOGGER ISSUES
+  </button>
+
+  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" data-type="plm_issues">
+    <i class="fa-solid fa-tools mr-2"></i>
+    PLM ISSUES
+  </button>
+</div>
+
+<!-- SELECTION STATUS -->
+<div class="mb-6 text-center">
+  <div id="selectionStatus" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+    <span id="selectionText">✗ No Processing Type Selected</span>
+  </div>
+</div>
+
+<!-- PROGRESS SECTION -->
+<div id="progressSection" class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6 hidden">
+  <div class="mb-4">
+    <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Processing Progress</h2>
+    <div class="flex justify-between items-center">
+      <span class="text-slate-600 dark:text-slate-400" id="currentFile">Processing...</span>
+      <span class="text-sm text-slate-500 dark:text-slate-400" id="estimatedTime"></span>
+    </div>
+  </div>
+
+  <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 mb-4">
+    <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+  </div>
+
+  <div class="flex justify-between items-center">
+    <span class="text-sm text-slate-600 dark:text-slate-400" id="progressText">0%</span>
+    <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors" id="stopBtn">
+      <i class="fa-solid fa-stop mr-2"></i>
+      Stop Processing
+    </button>
+  </div>
+</div>
+
+<!-- COMPLETED FILES SECTION -->
+<div id="completedSection" class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hidden">
+  <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Completed Files</h2>
+  <div id="completedFiles" class="space-y-3">
+    <!-- Completed file cards will be added here -->
+  </div>
+</div>
+
+</div>
+
+<script>
+// Global state
+let selectedProcessingType = null;
+let fileQueue = [];
+let queueCounter = 0;
+let currentSessionId = null;
+let currentEventSource = null;
+let processingStartTime = null;
+
+// Processing metrics for ETC calculation
+const EST_ALPHA = 0.30;
+let processingMetrics = {
+  chunkCompletionTimes: [],
+  chunksCompleted: 0,
+  totalChunks: 0,
+  ewmaIntervalMs: null
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  setupEventListeners();
+  checkOllamaStatus();
+  loadModels();
+
+  // Check Ollama status every 30 seconds
+  setInterval(checkOllamaStatus, 30000);
+});
+
+// Setup event listeners
+function setupEventListeners() {
+  // Processing type buttons
+  document.querySelectorAll('.processing-btn').forEach(btn => {
+    btn.addEventListener('click', () => selectProcessingType(btn));
+  });
+
+  // File upload
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', handleDragOver);
+  dropZone.addEventListener('dragleave', handleDragLeave);
+  dropZone.addEventListener('drop', handleDrop);
+  fileInput.addEventListener('change', handleFileSelect);
+
+  // Clear queue button
+  document.getElementById('clearQueueBtn').addEventListener('click', clearQueue);
+
+  // Stop processing button
+  document.getElementById('stopBtn').addEventListener('click', stopProcessing);
+}
+
+// Processing type selection
+function selectProcessingType(button) {
+  // Reset all buttons
+  document.querySelectorAll('.processing-btn').forEach(btn => {
+    btn.classList.remove('ring-2', 'ring-blue-500');
+  });
+
+  // Select this button
+  button.classList.add('ring-2', 'ring-blue-500');
+  selectedProcessingType = button.dataset.type;
+
+  // Update status
+  const selectionStatus = document.getElementById('selectionStatus');
+  const selectionText = document.getElementById('selectionText');
+
+  selectionStatus.className = 'inline-flex items-center px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+  selectionText.textContent = `✓ ${button.textContent.trim()} Selected`;
+
+  // Enable file upload
+  document.getElementById('dropZone').classList.remove('opacity-50', 'pointer-events-none');
+}
+
+// File handling
+function handleDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('border-blue-400', 'dark:border-blue-500');
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('border-blue-400', 'dark:border-blue-500');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('border-blue-400', 'dark:border-blue-500');
+
+  const files = Array.from(e.dataTransfer.files);
+  addFilesToQueue(files);
+}
+
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  addFilesToQueue(files);
+  e.target.value = ''; // Reset input
+}
+
+function addFilesToQueue(files) {
+  const validExtensions = ['.xlsx', '.xls', '.json', '.csv'];
+  const validFiles = files.filter(file => {
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    return validExtensions.includes(ext) && file.size <= 10 * 1024 * 1024; // 10MB limit
+  });
+
+  if (validFiles.length === 0) {
+    alert('No valid files selected. Please upload .xlsx, .xls, .json, or .csv files under 10MB each.');
+    return;
+  }
+
+  // Check for duplicates
+  const existingNames = fileQueue.map(item => item.file.name);
+  const newFiles = validFiles.filter(file => !existingNames.includes(file.name));
+
+  if (newFiles.length === 0) {
+    alert('All selected files are already in the queue.');
+    return;
+  }
+
+  // Add to queue
+  newFiles.forEach(file => {
+    const queueItem = {
+      id: ++queueCounter,
+      file: file,
+      status: 'queued',
+      progress: 0,
+      addedAt: new Date()
+    };
+    fileQueue.push(queueItem);
+  });
+
+  updateQueueDisplay();
+
+  // Show processing queue
+  document.getElementById('processingQueue').classList.remove('hidden');
+}
+
+// Queue management
+function updateQueueDisplay() {
+  const queueGrid = document.getElementById('queueGrid');
+  const fileCount = document.getElementById('fileCount');
+
+  // Clear existing
+  queueGrid.innerHTML = '';
+
+  // Update count
+  fileCount.textContent = `${fileQueue.length} file${fileQueue.length !== 1 ? 's' : ''}`;
+
+  // Add file cards
+  fileQueue.forEach(item => {
+    const card = createFileCard(item);
+    queueGrid.appendChild(card);
+  });
+}
+
+function createFileCard(item) {
+  const card = document.createElement('div');
+  card.className = 'flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem]';
+
+  // Left section: Icon + File name
+  const fileInfo = document.createElement('div');
+  fileInfo.className = 'flex items-center gap-3 flex-1 min-w-0';
+
+  const icon = document.createElement('i');
+  icon.className = 'fa-solid fa-file text-slate-500 dark:text-slate-400 flex-shrink-0';
+  fileInfo.appendChild(icon);
+
+  const name = document.createElement('div');
+  name.className = 'font-medium text-slate-900 dark:text-slate-100 truncate';
+  name.textContent = item.file.name;
+  fileInfo.appendChild(name);
+
+  // Middle section: File size + Status
+  const sizeAndStatus = document.createElement('div');
+  sizeAndStatus.className = 'flex items-center gap-2 flex-shrink-0';
+
+  const size = document.createElement('div');
+  size.className = 'text-sm text-slate-600 dark:text-slate-400';
+  size.textContent = formatFileSize(item.file.size);
+  sizeAndStatus.appendChild(size);
+
+  const status = document.createElement('div');
+  status.className = 'text-sm font-medium';
+
+  switch(item.status) {
+    case 'queued':
+      status.className += ' text-slate-600 dark:text-slate-400';
+      status.textContent = 'Queued';
+      break;
+    case 'processing':
+      status.className += ' text-blue-600 dark:text-blue-400';
+      status.textContent = 'Processing...';
+      break;
+    case 'completed':
+      status.className += ' text-green-600 dark:text-green-400';
+      status.textContent = 'Completed';
+      break;
+    case 'failed':
+      status.className += ' text-red-600 dark:text-red-400';
+      status.textContent = 'Failed';
+      break;
+  }
+  sizeAndStatus.appendChild(status);
+
+  // Right section: Actions
+  const actions = document.createElement('div');
+  actions.className = 'flex gap-2 flex-shrink-0 ml-2';
+
+  if (item.status === 'queued') {
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors';
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = () => removeFromQueue(item.id);
+    actions.appendChild(removeBtn);
+  }
+
+  card.appendChild(fileInfo);
+  card.appendChild(sizeAndStatus);
+  card.appendChild(actions);
+
+  return card;
+}
+
+function removeFromQueue(id) {
+  fileQueue = fileQueue.filter(item => item.id !== id);
+  updateQueueDisplay();
+
+  if (fileQueue.length === 0) {
+    document.getElementById('processingQueue').classList.add('hidden');
+  }
+}
+
+function clearQueue() {
+  fileQueue = [];
+  updateQueueDisplay();
+  document.getElementById('processingQueue').classList.add('hidden');
+}
+
+// Ollama integration
+async function checkOllamaStatus() {
+  try {
+    const response = await fetch('/api/health');
+    const data = await response.json();
+
+    const statusIndicator = document.getElementById('ollama-status');
+    const statusText = document.getElementById('ollama-status-text');
+
+    if (data.ollama === 'connected') {
+      statusIndicator.className = 'w-3 h-3 rounded-full bg-green-500';
+      statusText.textContent = 'Ollama Connected';
+    } else {
+      statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
+      statusText.textContent = 'Ollama Disconnected';
+    }
+  } catch (error) {
+    const statusIndicator = document.getElementById('ollama-status');
+    const statusText = document.getElementById('ollama-status-text');
+
+    statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
+    statusText.textContent = 'Connection Error';
+  }
+}
+
+async function loadModels() {
+  try {
+    const response = await fetch('/api/ollama-models');
+    const data = await response.json();
+
+    const modelSelect = document.getElementById('aiModel');
+    modelSelect.innerHTML = '<option value="">Select AI Model...</option>';
+
+    if (data.success && data.models.length > 0) {
+      data.models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = model;
+        modelSelect.appendChild(option);
+      });
+
+      // Default to qwen3:4b-instruct or gemma3:4b if available
+      const defaultModel = data.models.includes('qwen3:4b-instruct') ? 'qwen3:4b-instruct' :
+                          data.models.includes('gemma3:4b') ? 'gemma3:4b' : data.models[0];
+      modelSelect.value = defaultModel;
+    }
+  } catch (error) {
+    console.error('Error loading models:', error);
+    const modelSelect = document.getElementById('aiModel');
+    modelSelect.innerHTML = '<option value="">Failed to load models</option>';
+  }
+}
+
+// Start processing queue
+async function startProcessing() {
+  if (fileQueue.length === 0 || !selectedProcessingType) return;
+
+  const modelSelect = document.getElementById('aiModel');
+  const selectedModel = modelSelect.value;
+
+  if (!selectedModel) {
+    alert('Please select an AI model first.');
+    return;
+  }
+
+  // Mark first queued file as processing
+  const processingItem = fileQueue.find(item => item.status === 'queued');
+  if (!processingItem) return;
+
+  processingItem.status = 'processing';
+  updateQueueDisplay();
+
+  // Show progress section
+  document.getElementById('progressSection').classList.remove('hidden');
+
+  try {
+    await processFile(processingItem, selectedProcessingType, selectedModel);
+  } catch (error) {
+    console.error('Processing error:', error);
+    processingItem.status = 'failed';
+    updateQueueDisplay();
+  }
+
+  // Hide progress section
+  document.getElementById('progressSection').classList.add('hidden');
+}
+
+async function processFile(queueItem, processingType, model) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Generate session ID
+      currentSessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+      processingStartTime = Date.now();
+
+      // Initialize processing metrics
+      processingMetrics = {
+        chunkCompletionTimes: [processingStartTime],
+        chunksCompleted: 0,
+        totalChunks: 0,
+        ewmaIntervalMs: null
+      };
+
+      // Update UI
+      document.getElementById('currentFile').textContent = `Processing ${queueItem.file.name}...`;
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressText').textContent = '0%';
+
+      // Connect to SSE for progress updates
+      const eventSource = new EventSource(`/api/progress/${currentSessionId}`);
+      currentEventSource = eventSource;
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'progress') {
+            updateProgress(data.percent, data.message, queueItem);
+          }
+        } catch (e) {
+          console.error('Error parsing SSE data:', e);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE error:', error);
+      };
+
+      // Send processing request
+      const formData = new FormData();
+      formData.append('file', queueItem.file);
+      formData.append('processingType', processingType);
+      formData.append('model', model);
+      formData.append('sessionId', currentSessionId);
+
+      const response = await fetch('/api/process', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Processing failed');
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.downloads && result.downloads.length > 0) {
+        // Mark as completed and add to completed files
+        queueItem.status = 'completed';
+        queueItem.downloads = result.downloads;
+        addToCompletedFiles(queueItem);
+
+        // Process next file in queue
+        const nextItem = fileQueue.find(item => item.status === 'queued');
+        if (nextItem) {
+          setTimeout(() => startProcessing(), 1000); // Small delay
+        }
+      } else {
+        throw new Error(result.error || 'Processing failed');
+      }
+
+      resolve();
+    } catch (error) {
+      reject(error);
+    } finally {
+      // Cleanup
+      if (currentEventSource) {
+        currentEventSource.close();
+        currentEventSource = null;
+      }
+      currentSessionId = null;
+    }
+  });
+}
+
+function updateProgress(percent, message, queueItem) {
+  document.getElementById('progressBar').style.width = percent + '%';
+  document.getElementById('progressText').textContent = Math.round(percent) + '%';
+
+  // Update queue item progress
+  queueItem.progress = Math.round(percent);
+
+  // Update estimated time
+  updateEstimatedTime(message, percent);
+}
+
+function updateEstimatedTime(message, percent) {
+  const estimatedTimeEl = document.getElementById('estimatedTime');
+
+  // Always show some estimate if we're processing
+  const elapsed = Date.now() - processingStartTime;
+
+  if (percent > 0 && percent < 100 && elapsed > 5000) { // Only show after 5 seconds of processing
+    const estimatedTotal = (elapsed / percent) * 100;
+    const estimatedRemaining = estimatedTotal - elapsed;
+    if (estimatedRemaining > 0) {
+      const minutes = Math.floor(estimatedRemaining / 60000);
+      const seconds = Math.floor((estimatedRemaining % 60000) / 1000);
+      estimatedTimeEl.textContent = `~${minutes}m ${seconds}s remaining`;
+    } else {
+      estimatedTimeEl.textContent = 'Almost done...';
+    }
+  } else if (elapsed > 10000) { // Show processing time after 10 seconds
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    estimatedTimeEl.textContent = `${minutes}m ${seconds}s elapsed`;
+  } else {
+    estimatedTimeEl.textContent = 'Calculating...';
+  }
+}
+
+function addToCompletedFiles(queueItem) {
+  const completedSection = document.getElementById('completedSection');
+  const completedFiles = document.getElementById('completedFiles');
+
+  completedSection.classList.remove('hidden');
+
+  const card = document.createElement('div');
+  card.className = 'flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800';
+
+  const fileInfo = document.createElement('div');
+  fileInfo.className = 'flex items-center gap-3';
+
+  const icon = document.createElement('i');
+  icon.className = 'fa-solid fa-check-circle text-green-600 dark:text-green-400';
+  fileInfo.appendChild(icon);
+
+  const details = document.createElement('div');
+  const name = document.createElement('div');
+  name.className = 'font-medium text-slate-900 dark:text-slate-100';
+  name.textContent = queueItem.file.name;
+
+  const time = document.createElement('div');
+  time.className = 'text-sm text-slate-600 dark:text-slate-400';
+  time.textContent = `Processed at ${new Date().toLocaleTimeString()}`;
+
+  details.appendChild(name);
+  details.appendChild(time);
+  fileInfo.appendChild(details);
+
+  const actions = document.createElement('div');
+  actions.className = 'flex gap-2';
+
+  queueItem.downloads.forEach(download => {
+    // Skip .json files (log files)
+    if (download.filename.toLowerCase().endsWith('.json')) {
+      return;
+    }
+    const downloadBtn = document.createElement('a');
+    downloadBtn.className = 'px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors';
+    downloadBtn.href = download.url;
+    downloadBtn.download = download.filename;
+    downloadBtn.textContent = 'Download';
+    actions.appendChild(downloadBtn);
+  });
+
+  card.appendChild(fileInfo);
+  card.appendChild(actions);
+  completedFiles.appendChild(card);
+
+  updateQueueDisplay();
+}
+
+async function stopProcessing() {
+  if (!currentSessionId) {
+    alert('No active processing session to stop.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/cancel/${currentSessionId}`, {
+      method: 'POST'
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Reset UI
+      document.getElementById('progressSection').classList.add('hidden');
+      document.getElementById('progressBar').style.width = '0%';
+
+      // Mark current processing item as failed
+      const processingItem = fileQueue.find(item => item.status === 'processing');
+      if (processingItem) {
+        processingItem.status = 'failed';
+        updateQueueDisplay();
+      }
+
+      alert('Processing cancelled successfully.');
+    } else {
+      alert('Failed to cancel processing: ' + result.error);
+    }
+  } catch (error) {
+    alert('Error cancelling processing: ' + error.message);
+  }
+}
+
+// Utility functions
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Auto-start processing when files are added and type is selected
+function checkAutoStart() {
+  const hasQueuedFiles = fileQueue.some(item => item.status === 'queued');
+  const hasSelectedType = selectedProcessingType !== null;
+  const modelSelected = document.getElementById('aiModel').value !== '';
+
+  if (hasQueuedFiles && hasSelectedType && modelSelected) {
+    startProcessing();
+  }
+}
+
+// Override addFilesToQueue to trigger auto-start
+const originalAddFilesToQueue = addFilesToQueue;
+addFilesToQueue = function(files) {
+  originalAddFilesToQueue(files);
+  setTimeout(checkAutoStart, 100); // Small delay to ensure UI updates
+};
+
+// Override selectProcessingType to trigger auto-start
+const originalSelectProcessingType = selectProcessingType;
+selectProcessingType = function(button) {
+  originalSelectProcessingType(button);
+  setTimeout(checkAutoStart, 100);
+};
+</script>
+</body>
+</html>
