@@ -55,6 +55,45 @@
   // Set initial theme
   updateTheme();
 </script>
+
+<style>
+  /* Custom styles for select dropdown in dark mode */
+  .dark select#aiModel {
+    background-color: rgb(31 41 55); /* slate-800 */
+    color: rgb(241 245 249); /* slate-100 */
+    border-color: rgb(71 85 105); /* slate-600 */
+  }
+
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  .dark select#aiModel option {
+    background-color: rgb(31 41 55); /* slate-800 */
+    color: rgb(241 245 249); /* slate-100 */
+  }
+
+  /* Firefox */
+  .dark select#aiModel option {
+    background-color: rgb(31 41 55); /* slate-800 */
+    color: rgb(241 245 249); /* slate-100 */
+  }
+
+  /* Ensure proper styling for the dropdown arrow and scrollbar */
+  .dark select#aiModel::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .dark select#aiModel::-webkit-scrollbar-track {
+    background: rgb(31 41 55); /* slate-800 */
+  }
+
+  .dark select#aiModel::-webkit-scrollbar-thumb {
+    background: rgb(71 85 105); /* slate-600 */
+    border-radius: 4px;
+  }
+
+  .dark select#aiModel::-webkit-scrollbar-thumb:hover {
+    background: rgb(100 116 139); /* slate-500 */
+  }
+</style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
@@ -63,14 +102,7 @@
 <!-- HEADER -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
   <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-    <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI FILE PROCESSING</h1>
-    <!-- AI Model Selector -->
-    <div class="flex items-center gap-2">
-      <label for="aiModel" class="text-sm font-medium">AI Model:</label>
-      <select id="aiModel" class="px-3 py-1 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm">
-        <option value="">Loading models...</option>
-      </select>
-    </div>
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"><i class="fa-solid fa-brain mr-2 text-purple-600"></i>AI PROCESSOR</h1>
   </div>
 
   <div class="flex gap-4 items-center">
@@ -82,9 +114,23 @@
       </div>
     </div>
 
+    <!-- AI Model Selector -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-lg shadow-sm border border-slate-300 dark:border-slate-500">
+        <i class="fa-solid fa-brain text-purple-600 dark:text-purple-400 text-sm"></i>
+        <label for="aiModel" class="text-sm font-semibold text-slate-700 dark:text-slate-200">AI Model:</label>
+      </div>
+      <div class="relative">
+        <select id="aiModel" class="appearance-none px-4 py-2 pr-8 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer min-w-[180px]">
+          <option value="">Loading models...</option>
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none text-xs"></i>
+      </div>
+    </div>
+
     <a href="main.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
       <i class="fa-solid fa-arrow-left mr-2"></i>
-      Back to Dashboard
+      Dashboard
     </a>
   </div>
 </div>

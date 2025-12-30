@@ -41,6 +41,20 @@
     },
   }
 
+  // Add custom styles for active filter buttons
+  const style = document.createElement('style');
+  style.textContent = `
+    .active-filter {
+      background-color: #0ea5e9 !important;
+      color: white !important;
+    }
+    .dark .active-filter {
+      background-color: #0284c7 !important;
+      color: white !important;
+    }
+  `;
+  document.head.appendChild(style);
+
   // System theme detection
   function updateTheme() {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -66,7 +80,7 @@
     <a href="aiprocessor.html"
        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
       <i class="fa-solid fa-brain mr-2"></i>
-      AI Processing
+      AI PROCESSOR
     </a>
   </div>
 </div>
@@ -161,7 +175,7 @@
 
 <!-- SOURCE DISTRIBUTION - 100% Stacked Horizontal Bar -->
 <div class="col-span-4">
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
@@ -170,10 +184,10 @@
           <i class="fa-solid fa-chart-simple text-blue-600 dark:text-blue-400"></i>
         </div>
       </div>
-    </div>
+  </div>
 
-    <!-- Chart Container -->
-    <div class="p-4">
+  <!-- Chart Container -->
+    <div class="p-4 flex items-center justify-bottom">
       <div id="source-distribution-chart" class="h-[180px] w-full"></div>
     </div>
   </div>
@@ -181,7 +195,7 @@
 
 <!-- TOP MODELS - Professional Design -->
 <div class="col-span-5">
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
@@ -189,6 +203,18 @@
         <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
           <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
         </div>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors active-filter" data-filter="ALL">ALL</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="PLM">PLM</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="VOC">VOC</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QINGS">QINGS</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QI">QI</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="Bloggers">Bloggers</button>
       </div>
     </div>
 
@@ -201,7 +227,7 @@
 
 <!-- SEVERITY SPLIT - Donut Chart -->
 <div class="col-span-3">
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
@@ -213,7 +239,7 @@
     </div>
 
     <!-- Chart Container -->
-    <div class="p-4">
+    <div class="p-4 flex items-center justify-bottom">
       <div id="severity-split-chart" class="h-[180px] w-full"></div>
     </div>
   </div>
@@ -310,12 +336,50 @@ let dashboardData = {
   topModules: []
 };
 
+// Current active filter for top models chart
+let currentTopModelsFilter = 'ALL';
+
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', function() {
   loadDashboardData();
+
+  // Add filter button event listeners
+  setupFilterButtons();
 });
 
+// Setup filter button event listeners
+function setupFilterButtons() {
+  const filterButtons = document.querySelectorAll('[data-filter]');
 
+  filterButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const filter = this.getAttribute('data-filter');
+
+      // Update active button state
+      updateActiveFilterButton(filter);
+
+      // Update chart with new filter
+      updateTopModelsChart(filter);
+
+      // Store current filter
+      currentTopModelsFilter = filter;
+    });
+  });
+}
+
+// Update active filter button styling
+function updateActiveFilterButton(activeFilter) {
+  const filterButtons = document.querySelectorAll('[data-filter]');
+
+  filterButtons.forEach(button => {
+    const filter = button.getAttribute('data-filter');
+    if (filter === activeFilter) {
+      button.classList.add('active-filter');
+    } else {
+      button.classList.remove('active-filter');
+    }
+  });
+}
 
 // Add accessibility attributes to table headers
 document.addEventListener('DOMContentLoaded', function() {
@@ -760,17 +824,90 @@ function updateSeveritySplit() {
 }
 
 // Update top models chart - Lollipop Bar Chart
-function updateTopModelsChart() {
+function updateTopModelsChart(filter = 'ALL') {
   const chartDom = document.getElementById('top-models-chart');
-  if (!chartDom || !dashboardData.topModels || dashboardData.topModels.length === 0) {
+  if (!chartDom) {
     return;
   }
 
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
+  // Filter models based on selected filter
+  let filteredModels = [];
+
+  if (filter === 'ALL') {
+    // Show all models from topModels
+    filteredModels = dashboardData.topModels || [];
+  } else {
+    // Filter based on source from sourceModelSummary
+    const sourceMap = {
+      'PLM': 'PLM',
+      'VOC': 'VOC',
+      'QINGS': 'QINGS',
+      'QI': 'QI',
+      'Bloggers': 'Bloggers'
+    };
+
+    const targetSource = sourceMap[filter];
+    if (targetSource && dashboardData.sourceModelSummary) {
+      // Group models by name and sum their issue counts for the specific source
+      const modelMap = {};
+
+      dashboardData.sourceModelSummary
+        .filter(item => item.source === targetSource)
+        .forEach(item => {
+          if (!modelMap[item.model]) {
+            modelMap[item.model] = { label: item.model, value: 0 };
+          }
+          modelMap[item.model].value += item.issue_count;
+        });
+
+      filteredModels = Object.values(modelMap).sort((a, b) => b.value - a.value);
+    } else {
+      // Fallback to all models if filter not found
+      filteredModels = dashboardData.topModels || [];
+    }
+  }
+
+  if (filteredModels.length === 0) {
+    // Show empty chart if no data - clear all chart elements
+    const option = {
+      title: {
+        text: 'No data available for selected filter',
+        left: 'center',
+        top: 'middle',
+        textStyle: {
+          color: colors.textPrimary,
+          fontSize: 16,
+          fontWeight: 'bold'
+        }
+      },
+      grid: {
+        show: false
+      },
+      xAxis: {
+        show: false,
+        type: 'value'
+      },
+      yAxis: {
+        show: false,
+        type: 'category'
+      },
+      series: [],
+      tooltip: {
+        show: false
+      },
+      legend: {
+        show: false
+      }
+    };
+    chart.setOption(option, true); // Use notMerge to clear previous chart
+    return;
+  }
+
   // Use top 10 models (reduced bar thickness allows more)
-  const top8Models = dashboardData.topModels.slice(0, 10).reverse(); // Reverse for descending order (largest at top)
+  const top8Models = filteredModels.slice(0, 10).reverse(); // Reverse for descending order (largest at top)
   const modelNames = top8Models.map(model => {
     // Truncate for display but keep full name for tooltips
     return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
