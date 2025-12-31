@@ -190,6 +190,76 @@
 
 </section>
 
+<!-- MODEL WISE PLM SUMMARY TABLE -->
+<section class="mt-8">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Model Wise PLM Summary</h3>
+        <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-x-auto">
+      <table class="w-full" id="model-summary-table">
+        <thead class="bg-slate-50 dark:bg-slate-700">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model No.</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolve - App Update</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolve - Not Released</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Maintain Current Status</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Insufficient Defect Info.</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Close</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
+          </tr>
+        </thead>
+        <tbody id="model-summary-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+          <!-- Dynamic content will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE WISE PLM SUMMARY TABLE -->
+<section class="mt-8">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Module Wise PLM Summary</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-cubes text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-x-auto">
+      <table class="w-full" id="module-summary-table">
+        <thead class="bg-slate-50 dark:bg-slate-700">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Module</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolve - App Update</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolve - Not Released</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Maintain Current Status</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Insufficient Defect Info.</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Close</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
+          </tr>
+        </thead>
+        <tbody id="module-summary-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+          <!-- Dynamic content will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 </div>
 
 <script>
@@ -201,24 +271,31 @@ document.addEventListener('DOMContentLoaded', function() {
   loadDashboardData();
 });
 
-// Load all dashboard data from central_dashboard.json
+// Load all dashboard data from central_dashboard.json and analytics.json
 async function loadDashboardData() {
   try {
     // Fetch data from central_dashboard.json
     const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
     const jsonData = await response.json();
 
+    // Fetch analytics data
+    const analyticsResponse = await fetch('/downloads/samsung_members_plm/analytics.json');
+    const analyticsData = await analyticsResponse.json();
+
     // Extract Samsung Members PLM specific data
     dashboardData.kpis = jsonData.kpis['Samsung Members PLM'];
     dashboardData.seriesDistribution = jsonData.series_distribution;
     dashboardData.topModels = jsonData.samsung_members_plm_top_models;
     dashboardData.topModules = jsonData.samsung_members_plm_top_modules;
+    dashboardData.analytics = analyticsData;
 
     // Update all UI elements
     updateKPIs();
     updateSeriesDistribution();
     updateTopModelsChart();
     updateTopModulesChart();
+    updateModelSummaryTable();
+    updateModuleSummaryTable();
 
   } catch (error) {
     console.error('Error loading dashboard data:', error);
@@ -478,6 +555,148 @@ function updateTopModulesChart() {
 
   chart.setOption(option);
   window.addEventListener('resize', () => chart.resize());
+}
+
+// Update model summary table with resolve type aggregation
+function updateModelSummaryTable() {
+  const tbody = document.getElementById('model-summary-table-body');
+  if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
+
+  // Clear existing content
+  tbody.innerHTML = '';
+
+  // Process analytics data to aggregate by model and resolve type categories
+  const modelSummary = {};
+
+  dashboardData.analytics.rows.forEach(row => {
+    const model = row['Model No.'] || 'Unknown';
+    const resolveType = row['Resolve Type'] || '';
+    const progrStat = row['Progr.Stat.'] || '';
+
+    if (!modelSummary[model]) {
+      modelSummary[model] = {
+        'Resolve - App Update': 0,
+        'Resolve - Not Released': 0,
+        'Maintain Current Status': 0,
+        'Insufficient Defect Info.': 0,
+        'Close': 0,
+        'Total': 0
+      };
+    }
+
+    // Categorize resolve types
+    let category = '';
+    if (resolveType === 'App Update via App Store') {
+      category = 'Resolve - App Update';
+    } else if (resolveType.includes('Issue Fixed')) {
+      category = 'Resolve - Not Released';
+    } else if (['CS guiding', 'Platform/System Limitation', 'Intentional operation/Phenomenon/Unsupported', 'Not problem'].includes(resolveType)) {
+      category = 'Maintain Current Status';
+    } else if (['Insufficient log time coverage', 'No required Logs/Broken files', 'Unclear Issue/Reproduction Route/Issue time', 'Delayed log extraction by user'].includes(resolveType)) {
+      category = 'Insufficient Defect Info.';
+    } else if (progrStat === 'Close') {
+      category = 'Close';
+    }
+
+    if (category) {
+      modelSummary[model][category]++;
+      modelSummary[model]['Total']++;
+    }
+  });
+
+  // Convert to array and sort by Total descending
+  const sortedModels = Object.entries(modelSummary)
+    .sort(([,a], [,b]) => b.Total - a.Total)
+    .slice(0, 10); // Show top 10 models
+
+  // Render table rows
+  sortedModels.forEach(([model, counts]) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
+
+    tr.innerHTML = `
+      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${model}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Maintain Current Status'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Insufficient Defect Info.'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+// Update module summary table with resolve type aggregation
+function updateModuleSummaryTable() {
+  const tbody = document.getElementById('module-summary-table-body');
+  if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
+
+  // Clear existing content
+  tbody.innerHTML = '';
+
+  // Process analytics data to aggregate by module and resolve type categories
+  const moduleSummary = {};
+
+  dashboardData.analytics.rows.forEach(row => {
+    const module = row['Module'] || 'Unknown';
+    const resolveType = row['Resolve Type'] || '';
+    const progrStat = row['Progr.Stat.'] || '';
+
+    if (!moduleSummary[module]) {
+      moduleSummary[module] = {
+        'Resolve - App Update': 0,
+        'Resolve - Not Released': 0,
+        'Maintain Current Status': 0,
+        'Insufficient Defect Info.': 0,
+        'Close': 0,
+        'Total': 0
+      };
+    }
+
+    // Categorize resolve types
+    let category = '';
+    if (resolveType === 'App Update via App Store') {
+      category = 'Resolve - App Update';
+    } else if (resolveType.includes('Issue Fixed')) {
+      category = 'Resolve - Not Released';
+    } else if (['CS guiding', 'Platform/System Limitation', 'Intentional operation/Phenomenon/Unsupported', 'Not problem'].includes(resolveType)) {
+      category = 'Maintain Current Status';
+    } else if (['Insufficient log time coverage', 'No required Logs/Broken files', 'Unclear Issue/Reproduction Route/Issue time', 'Delayed log extraction by user'].includes(resolveType)) {
+      category = 'Insufficient Defect Info.';
+    } else if (progrStat === 'Close') {
+      category = 'Close';
+    }
+
+    if (category) {
+      moduleSummary[module][category]++;
+      moduleSummary[module]['Total']++;
+    }
+  });
+
+  // Convert to array and sort by Total descending
+  const sortedModules = Object.entries(moduleSummary)
+    .sort(([,a], [,b]) => b.Total - a.Total)
+    .slice(0, 10); // Show top 10 modules
+
+  // Render table rows
+  sortedModules.forEach(([module, counts]) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
+
+    tr.innerHTML = `
+      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${module}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Maintain Current Status'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Insufficient Defect Info.'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
+      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
 
 // Theme-aware color helper
