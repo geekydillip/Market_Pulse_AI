@@ -191,9 +191,12 @@ async function refreshDashboardOverview() {
 
     // Update totals
     const totals = resp.totals || { totalCases: 0, critical: 0, high: 0, medium: 0, low: 0 };
-    document.getElementById('dashTotal').textContent = totals.totalCases || 0;
-    document.getElementById('dashHigh').textContent = totals.high || 0;
-    document.getElementById('dashDistinct').textContent = (resp.moduleDistribution && resp.moduleDistribution.length) || 0;
+    const dashTotalEl = document.getElementById('dashTotal');
+    if (dashTotalEl) dashTotalEl.textContent = totals.totalCases || 0;
+    const dashHighEl = document.getElementById('dashHigh');
+    if (dashHighEl) dashHighEl.textContent = totals.high || 0;
+    const dashDistinctEl = document.getElementById('dashDistinct');
+    if (dashDistinctEl) dashDistinctEl.textContent = (resp.moduleDistribution && resp.moduleDistribution.length) || 0;
 
     // Cache raw data for exports
     currentDashboardData.rows = resp.rows || [];
@@ -206,8 +209,9 @@ async function refreshDashboardOverview() {
     // Update charts
     renderCharts(resp.severityDistribution || [], resp.moduleDistribution || []);
 
-    // Only render table if a specific model is selected (not on initial "All Models" load)
-    if (currentFilters.model && currentFilters.model !== null) {
+    // Render table for details page immediately, or when a specific model is selected
+    const isDetailsPage = document.title.includes('Details Data');
+    if (isDetailsPage || (currentFilters.model && currentFilters.model !== null)) {
       renderTable();
     }
   } catch (err) {
@@ -548,25 +552,22 @@ function renderModelList(sortedModels, containerEl) {
 
   top.forEach(({model, count}) => {
     const btn = document.createElement('button');
-    btn.className = 'model-chip';
+    btn.className = 'model-chip w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
 
     // Check if this is the currently selected model to add active class
     if (currentFilters.model === model) {
       btn.classList.add('active');
+      btn.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'border-blue-200', 'dark:border-blue-800', 'text-blue-700', 'dark:text-blue-300');
     }
 
     // Create span for model name
     const modelNameSpan = document.createElement('span');
     modelNameSpan.textContent = model;
-    modelNameSpan.style.whiteSpace = 'nowrap';
-    modelNameSpan.style.overflow = 'hidden';
-    modelNameSpan.style.textOverflow = 'ellipsis';
-    modelNameSpan.style.marginRight = '8px';
+    modelNameSpan.className = 'whitespace-nowrap overflow-hidden text-ellipsis mr-2';
 
     // Create CAPSULE badge for count
     const countBadge = document.createElement('span');
-    countBadge.className = 'model-badge';
-    // Removed parentheses for a cleaner capsule look
+    countBadge.className = 'model-badge inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium';
     countBadge.textContent = count;
 
     // Append elements to button
@@ -1154,71 +1155,129 @@ function renderLoadingTable() {
   document.getElementById('tableCount').textContent = 'Loading...';
 }
 
-// Render aggregated table with pagination
+// Render aggregated table with pagination or detailed table
 function renderTable() {
   const table = document.getElementById('dataTable');
   const thead = table.querySelector('thead');
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
 
-  // Update table headers based on filter state
-  const isFilteredToSingleModel = currentFilters.model && currentFilters.model !== null;
+  // Check if this is the details page by title
+  const isDetailsPage = document.title.includes('Details Data');
 
-  // Create header row
-  const headerRow = document.createElement('tr');
-  headerRow.innerHTML = `
-    <th>S/N</th>
-    <th>Model No.</th>
-    <th>Module</th>
-    <th>Top Issue Title</th>
-    <th>Count</th>
-  `;
-  thead.innerHTML = '';
-  thead.appendChild(headerRow);
-
-  // Calculate paginated slice
-  const startIndex = (paginationState.page - 1) * paginationState.pageSize;
-  const endIndex = Math.min(startIndex + paginationState.pageSize, currentDashboardData.aggregatedData.length);
-  const pageData = currentDashboardData.aggregatedData.slice(startIndex, endIndex);
-
-  pageData.forEach((moduleData, index) => {
-    const globalIndex = startIndex + index + 1;
-    const tr = document.createElement('tr');
-
-
-
-    tr.innerHTML = `
-      <td>${globalIndex}</td>
-      <td><div class="truncate-cell" title="${escapeHtml(moduleData.modelNo)}">${escapeHtml(moduleData.modelNo)}</div></td>
-      <td><button class="module-name-link" data-module="${escapeHtml(moduleData.module)}" data-count="${moduleData.count}">${escapeHtml(moduleData.module)}</button></td>
-      <td><div class="truncate-cell" title="${escapeHtml(moduleData.topIssueTitle)}">${escapeHtml(moduleData.topIssueTitle)}</div></td>
-      <td>${moduleData.count}</td>
+  if (isDetailsPage) {
+    // Render detailed table
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = `
+      <th>S/N</th>
+      <th>Case Code</th>
+      <th>Model No.</th>
+      <th>S/W Ver.</th>
+      <th>Issue Title</th>
+      <th>Sub-Module</th>
+      <th>Summarized Problem</th>
+      <th>Severity</th>
     `;
+    thead.innerHTML = '';
+    thead.appendChild(headerRow);
 
-    // Add row click handler
-    tr.addEventListener('click', () => {
-      const module = moduleData.module;
-      showModuleDetails(module, moduleData);
+    // Filter data based on current filters
+    let filteredRows = currentDashboardData.rows || [];
+
+    if (currentFilters.model && currentFilters.model !== null) {
+      filteredRows = filteredRows.filter(row => extractModelFromRow(row) === currentFilters.model);
+    }
+
+    if (currentFilters.severity) {
+      filteredRows = filteredRows.filter(row => (row.severity || '').toLowerCase() === currentFilters.severity.toLowerCase());
+    }
+
+    // Calculate paginated slice
+    const startIndex = (paginationState.page - 1) * paginationState.pageSize;
+    const endIndex = Math.min(startIndex + paginationState.pageSize, filteredRows.length);
+    const pageData = filteredRows.slice(startIndex, endIndex);
+
+    pageData.forEach((row, index) => {
+      const globalIndex = startIndex + index + 1;
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${globalIndex}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Case Code'] || row.caseCode || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(extractModelFromRow(row))}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['S/W Ver.'] || row.sWVer || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.title || row.Title || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Sub-Module'] || row.subModule || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Summarized Problem'] || row.summarizedProblem || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.Severity || row.severity || 'N/A')}</td>
+      `;
+
+      tbody.appendChild(tr);
     });
 
-    tbody.appendChild(tr);
-  });
+    paginationState.totalRows = filteredRows.length;
+    paginationState.totalPages = Math.ceil(paginationState.totalRows / paginationState.pageSize);
 
-  document.getElementById('tableCount').textContent = `${currentDashboardData.aggregatedData.length} modules`;
+    document.getElementById('tableCount').textContent = `${filteredRows.length} cases`;
+  } else {
+    // Render aggregated table (original logic)
+    // Update table headers based on filter state
+    const isFilteredToSingleModel = currentFilters.model && currentFilters.model !== null;
+
+    // Create header row
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = `
+      <th>S/N</th>
+      <th>Model No.</th>
+      <th>Module</th>
+      <th>Top Issue Title</th>
+      <th>Count</th>
+    `;
+    thead.innerHTML = '';
+    thead.appendChild(headerRow);
+
+    // Calculate paginated slice
+    const startIndex = (paginationState.page - 1) * paginationState.pageSize;
+    const endIndex = Math.min(startIndex + paginationState.pageSize, currentDashboardData.aggregatedData.length);
+    const pageData = currentDashboardData.aggregatedData.slice(startIndex, endIndex);
+
+    pageData.forEach((moduleData, index) => {
+      const globalIndex = startIndex + index + 1;
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>${globalIndex}</td>
+        <td><div class="truncate-cell" title="${escapeHtml(moduleData.modelNo)}">${escapeHtml(moduleData.modelNo)}</div></td>
+        <td><button class="module-name-link" data-module="${escapeHtml(moduleData.module)}" data-count="${moduleData.count}">${escapeHtml(moduleData.module)}</button></td>
+        <td><div class="truncate-cell" title="${escapeHtml(moduleData.topIssueTitle)}">${escapeHtml(moduleData.topIssueTitle)}</div></td>
+        <td>${moduleData.count}</td>
+      `;
+
+      // Add row click handler
+      tr.addEventListener('click', () => {
+        const module = moduleData.module;
+        showModuleDetails(module, moduleData);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('tableCount').textContent = `${currentDashboardData.aggregatedData.length} modules`;
+
+    // Attach click handlers to module name buttons
+    document.querySelectorAll('.module-name-link').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent row click when clicking module button
+        const module = button.dataset.module;
+        const count = parseInt(button.dataset.count);
+        showModuleDetails(module, currentDashboardData.aggregatedData.find(m => m.module === module));
+      });
+    });
+  }
 
   // Update pagination controls
   updatePaginationControls();
-
-  // Attach click handlers to module name buttons
-  document.querySelectorAll('.module-name-link').forEach(button => {
-    button.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation(); // Prevent row click when clicking module button
-      const module = button.dataset.module;
-      const count = parseInt(button.dataset.count);
-      showModuleDetails(module, currentDashboardData.aggregatedData.find(m => m.module === module));
-    });
-  });
 }
 
 /* Updated setupModelSearch: Adds a click-outside listener to close the dropdown properly */
@@ -1888,6 +1947,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize theme
   initTheme();
+
+  // Handle URL parameters for filtering on details page
+  const urlParams = new URLSearchParams(window.location.search);
+  const modelParam = urlParams.get('model');
+  const moduleParam = urlParams.get('module');
+
+  if (modelParam) {
+    updateFilters({ model: decodeURIComponent(modelParam) });
+  } else if (moduleParam) {
+    // For module filtering, we need to set up a custom filter
+    // Since the current filter system only supports model filtering directly,
+    // we'll need to modify the data loading to filter by module
+    console.log('Module filter requested:', decodeURIComponent(moduleParam));
+    // For now, we'll show a message that module filtering is coming soon
+    alert(`Module filtering for "${decodeURIComponent(moduleParam)}" will be implemented. Currently showing all data.`);
+  }
 
   // Initialize modal close handlers
   document.getElementById('modalClose').addEventListener('click', closeModal);

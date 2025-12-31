@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samsung Member PLM - Detail View</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ECharts and XLSX for exports -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <script>
+        // Tailwind config for theme support
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+
+        // System theme detection
+        function updateTheme() {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.toggle('dark', isDark);
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+        updateTheme();
+    </script>
+</head>
+
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div class="min-h-full flex">
+        <!-- Models Sidebar -->
+        <div class="hidden lg:flex lg:w-80 lg:flex-col">
+            <div class="flex flex-col flex-grow bg-white dark:bg-gray-800 pt-5 pb-4 overflow-y-auto border-r border-gray-200 dark:border-gray-700">
+                <div class="flex items-center flex-shrink-0 px-4">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Top 10 Models</h2>
+                </div>
+                <!-- Search Input -->
+                <div class="px-4 mt-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" id="model-search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Search models..." autocomplete="off">
+                        <!-- Search Suggestions Dropdown -->
+                        <div id="search-suggestions" class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg hidden">
+                            <!-- Suggestions will be populated here -->
+                        </div>
+                    </div>
+                    <!-- All Models Button -->
+                    <div class="mt-3">
+                        <button id="all-models-btn" class="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                            </svg>
+                            All Models
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Models List -->
+                <div class="mt-5 flex-grow flex flex-col">
+                    <nav class="flex-1 px-2 space-y-1" id="models-list">
+                        <!-- Models will be populated here -->
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex flex-col w-0 flex-1 overflow-hidden">
+            <main class="flex-1 relative overflow-y-auto focus:outline-none">
+                <!-- Header -->
+                <div class="bg-white dark:bg-gray-800 px-4 py-4 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Samsung Member PLM - Detail View</h1>
+                        <button id="back-button" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                            Back
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="px-4 py-6 sm:px-6">
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        <!-- Total Cases Card -->
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Cases</dt>
+                                            <dd class="text-lg font-medium text-gray-900 dark:text-gray-100" id="total-cases">0</dd>
+                                        </dl>
+                                    </div>
+                                    <div class="ml-4 flex-shrink-0">
+                                        <button id="download-total" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- High Severity Card -->
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">High Severity</dt>
+                                            <dd class="text-lg font-medium text-gray-900 dark:text-gray-100" id="high-cases">0</dd>
+                                        </dl>
+                                    </div>
+                                    <div class="ml-4 flex-shrink-0">
+                                        <button id="download-high" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Distinct Modules Card -->
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Distinct Modules</dt>
+                                            <dd class="text-lg font-medium text-gray-900 dark:text-gray-100" id="distinct-modules">0</dd>
+                                        </dl>
+                                    </div>
+                                    <div class="ml-4 flex-shrink-0">
+                                        <button id="download-modules" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="px-4 py-6 sm:px-6">
+                    <div class="grid grid-cols-12 gap-4">
+                        <!-- Severity Distribution Chart -->
+                        <div class="col-span-6">
+                            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[360px]">
+                                <!-- Header with subtle accent -->
+                                <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Distribution</h3>
+                                        <div class="w-8 h-8 bg-red-50 dark:bg-red-950/30 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-chart-pie text-red-600 dark:text-red-400"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chart Container -->
+                                <div class="p-4">
+                                    <div id="severity-chart" class="h-[280px] w-full"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Modules Chart -->
+                        <div class="col-span-6">
+                            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[360px]">
+                                <!-- Header with subtle accent -->
+                                <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Modules</h3>
+                                        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chart Container -->
+                                <div class="p-4">
+                                    <div id="modules-chart" class="h-[280px] w-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Models Toggle -->
+                <div class="lg:hidden px-4 sm:px-6">
+                    <button id="mobile-models-toggle" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                        Top Models
+                    </button>
+                </div>
+
+                <!-- Mobile Models Sidebar -->
+                <div id="mobile-models-sidebar" class="lg:hidden hidden fixed inset-0 z-40">
+                    <div class="fixed inset-0 bg-gray-600 bg-opacity-75" id="mobile-sidebar-overlay"></div>
+                    <div class="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-gray-800">
+                        <div class="absolute top-0 right-0 -mr-12 pt-2">
+                            <button id="mobile-sidebar-close" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                                <span class="sr-only">Close sidebar</span>
+                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+                            <div class="flex-shrink-0 flex items-center px-4">
+                                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Top 10 Models</h2>
+                            </div>
+                            <nav class="mt-5 flex-1 px-2 space-y-1" id="mobile-models-list">
+                                <!-- Mobile models will be populated here -->
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Table -->
+                <div class="px-4 sm:px-6 pb-6">
+                    <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md border border-gray-200 dark:border-gray-700">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Issue Summary</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="issues-table">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/N</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model No.</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Module</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top Issue Title</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="issues-table-body">
+                                    <!-- Table rows will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div class="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6" id="pagination-container">
+                            <div class="flex-1 flex justify-between sm:hidden">
+                                <button id="prev-page-mobile" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">Previous</button>
+                                <button id="next-page-mobile" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">Next</button>
+                            </div>
+                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                                        Showing <span id="page-start">1</span> to <span id="page-end">10</span> of <span id="total-items">0</span> results
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination" id="pagination-buttons">
+                                        <!-- Pagination buttons will be populated here -->
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Module Details Modal -->
+    <div id="module-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative h-full bg-white dark:bg-gray-800">
+            <div class="flex flex-col h-full">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100" id="modal-title">Module Details</h3>
+                    <div class="flex items-center space-x-2">
+                        <button id="export-modal" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export
+                        </button>
+                        <button id="close-modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 overflow-auto">
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="modal-table">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/N</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Case Code</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model No.</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/W Ver.</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Module</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Summarized Problem</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" id="severity-header">Severity</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="modal-table-body">
+                                    <!-- Modal table rows will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentData = {
+            rows: [],
+            aggregatedData: [],
+            totals: {}
+        };
+        let currentPage = 1;
+        let pageSize = 10;
+        let selectedModule = null;
+        let selectedModel = null; // For filtering by model
+        let modalSortOrder = 'desc'; // 'asc' or 'desc'
+
+        // Chart instances
+        let severityChart = null;
+        let modulesChart = null;
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+        });
+
+        async function initializePage() {
+            setupEventListeners();
+            await loadData();
+            renderModelsList();
+            renderTable();
+            updateKPIs();
+            renderCharts();
+        }
+
+        function setupEventListeners() {
+            // Back button
+            document.getElementById('back-button').addEventListener('click', () => {
+                window.history.back();
+            });
+
+            // Model search
+            const searchInput = document.getElementById('model-search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', handleModelSearch);
+                searchInput.addEventListener('keydown', handleSearchKeydown);
+                searchInput.addEventListener('blur', hideSearchSuggestions);
+            }
+
+            // All Models button
+            const allModelsBtn = document.getElementById('all-models-btn');
+            if (allModelsBtn) {
+                allModelsBtn.addEventListener('click', resetModelFilter);
+            }
+
+            // Mobile models toggle
+            document.getElementById('mobile-models-toggle').addEventListener('click', () => {
+                document.getElementById('mobile-models-sidebar').classList.remove('hidden');
+            });
+
+            // Mobile sidebar close
+            document.getElementById('mobile-sidebar-close').addEventListener('click', () => {
+                document.getElementById('mobile-models-sidebar').classList.add('hidden');
+            });
+
+            document.getElementById('mobile-sidebar-overlay').addEventListener('click', () => {
+                document.getElementById('mobile-models-sidebar').classList.add('hidden');
+            });
+
+            // Download buttons
+            document.getElementById('download-total').addEventListener('click', () => downloadData('total'));
+            document.getElementById('download-high').addEventListener('click', () => downloadData('high'));
+            document.getElementById('download-modules').addEventListener('click', () => downloadData('modules'));
+
+            // Modal
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('export-modal').addEventListener('click', exportModalData);
+            document.getElementById('severity-header').addEventListener('click', sortModalBySeverity);
+
+            // Pagination
+            document.getElementById('prev-page-mobile').addEventListener('click', () => changePage(currentPage - 1));
+            document.getElementById('next-page-mobile').addEventListener('click', () => changePage(currentPage + 1));
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('/api/dashboard?category=samsung_members_plm');
+                const data = await response.json();
+
+                if (data.success === false) {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+
+                currentData.rows = data.rows || [];
+                currentData.aggregatedData = aggregateByModelAndModule(currentData.rows);
+                currentData.totals = data.totals || {};
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Failed to load data: ' + error.message);
+            }
+        }
+
+        function aggregateByModule(rows) {
+            const moduleMap = new Map();
+
+            rows.forEach(row => {
+                // Fix: Check for 'Module' (capital M) field as per processor
+                const module = row['Module'] || row.Module || row.module || 'Unknown';
+                const modelNo = extractModelFromRow(row);
+
+                if (!moduleMap.has(module)) {
+                    moduleMap.set(module, {
+                        module: module,
+                        models: new Set(),
+                        count: 0,
+                        rows: [],
+                        titleCount: new Map()
+                    });
+                }
+
+                const moduleData = moduleMap.get(module);
+                moduleData.count++;
+                moduleData.rows.push(row);
+                moduleData.models.add(modelNo);
+
+                const title = (row.title || '').toLowerCase().trim();
+                if (title) {
+                    moduleData.titleCount.set(title, (moduleData.titleCount.get(title) || 0) + 1);
+                }
+            });
+
+            return Array.from(moduleMap.values()).map(moduleData => {
+                const titleEntries = Array.from(moduleData.titleCount.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 2);
+
+                const topTitlesText = titleEntries.length > 0 ?
+                    titleEntries.map(([title]) => title.charAt(0).toUpperCase() + title.slice(1)).join(' | ') :
+                    'N/A';
+
+                const modelsArray = Array.from(moduleData.models).sort();
+                let modelDisplay;
+                if (modelsArray.length === 1) {
+                    modelDisplay = modelsArray[0];
+                } else if (modelsArray.length === 2) {
+                    modelDisplay = modelsArray.join(', ');
+                } else if (modelsArray.length > 2) {
+                    modelDisplay = `${modelsArray[0]}, ${modelsArray[1]}, +${modelsArray.length - 2} more`;
+                } else {
+                    modelDisplay = 'Unknown';
+                }
+
+                return {
+                    ...moduleData,
+                    modelNo: modelDisplay,
+                    models: modelsArray,
+                    topIssueTitle: topTitlesText
+                };
+            }).sort((a, b) => b.count - a.count);
+        }
+
+        function aggregateByModelAndModule(rows) {
+            const modelModuleMap = new Map();
+
+            rows.forEach(row => {
+                const module = row['Module'] || row.Module || row.module || 'Unknown';
+                const modelNo = extractModelFromRow(row);
+                const key = `${modelNo}-${module}`;
+
+                if (!modelModuleMap.has(key)) {
+                    modelModuleMap.set(key, {
+                        model: modelNo,
+                        module: module,
+                        count: 0,
+                        rows: [],
+                        titleCount: new Map()
+                    });
+                }
+
+                const modelModuleData = modelModuleMap.get(key);
+                modelModuleData.count++;
+                modelModuleData.rows.push(row);
+
+                const title = (row.Title || row.title || row['Title'] || '').toLowerCase().trim();
+                if (title) {
+                    modelModuleData.titleCount.set(title, (modelModuleData.titleCount.get(title) || 0) + 1);
+                }
+            });
+
+            return Array.from(modelModuleMap.values()).map(modelModuleData => {
+                const titleEntries = Array.from(modelModuleData.titleCount.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 2);
+
+                const topTitlesText = titleEntries.length > 0 ?
+                    titleEntries.map(([title, count]) => `${title.charAt(0).toUpperCase() + title.slice(1)} ${count}`).join(' | ') :
+                    'N/A';
+
+                return {
+                    ...modelModuleData,
+                    modelNo: modelModuleData.model,
+                    topIssueTitle: topTitlesText
+                };
+            }).sort((a, b) => {
+                // Sort by model name first, then by count descending
+                if (a.model < b.model) return -1;
+                if (a.model > b.model) return 1;
+                return b.count - a.count;
+            });
+        }
+
+        function aggregateByModuleForChart(rows, selectedModel = null) {
+            const moduleMap = new Map();
+
+            // Filter rows by selected model if provided
+            const filteredRows = selectedModel ?
+                rows.filter(row => extractModelFromRow(row) === selectedModel) :
+                rows;
+
+            filteredRows.forEach(row => {
+                const module = row['Module'] || row.Module || row.module || 'Unknown';
+
+                if (!moduleMap.has(module)) {
+                    moduleMap.set(module, {
+                        module: module,
+                        count: 0,
+                        rows: []
+                    });
+                }
+
+                const moduleData = moduleMap.get(module);
+                moduleData.count++;
+                moduleData.rows.push(row);
+            });
+
+            return Array.from(moduleMap.values())
+                .sort((a, b) => b.count - a.count) // Sort descending (highest count first)
+                .slice(0, 10); // Return top 10 modules
+        }
+
+        function aggregateByModelModule(rows, selectedModel) {
+            const modelModuleMap = new Map();
+
+            // Filter rows for the selected model first
+            const modelRows = rows.filter(row => extractModelFromRow(row) === selectedModel);
+
+            modelRows.forEach(row => {
+                const module = row['Module'] || row.Module || row.module || 'Unknown';
+                const key = `${selectedModel}-${module}`;
+
+                if (!modelModuleMap.has(key)) {
+                    modelModuleMap.set(key, {
+                        model: selectedModel,
+                        module: module,
+                        count: 0,
+                        rows: [],
+                        titleCount: new Map()
+                    });
+                }
+
+                const modelModuleData = modelModuleMap.get(key);
+                modelModuleData.count++;
+                modelModuleData.rows.push(row);
+
+                const title = (row.title || '').toLowerCase().trim();
+                if (title) {
+                    modelModuleData.titleCount.set(title, (modelModuleData.titleCount.get(title) || 0) + 1);
+                }
+            });
+
+            return Array.from(modelModuleMap.values()).map(modelModuleData => {
+                const titleEntries = Array.from(modelModuleData.titleCount.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 2);
+
+                const topTitlesText = titleEntries.length > 0 ?
+                    titleEntries.map(([title]) => title.charAt(0).toUpperCase() + title.slice(1)).join(' | ') :
+                    'N/A';
+
+                return {
+                    ...modelModuleData,
+                    topIssueTitle: topTitlesText
+                };
+            }).sort((a, b) => b.count - a.count);
+        }
+
+        function extractModelFromRow(row) {
+            const candidates = ['Model No.', 'Model', 'modelFromFile', 'ModelNo', 'Model_No', 'model', 'model_no'];
+            for (const c of candidates) {
+                if (row[c] && String(row[c]).trim()) {
+                    return String(row[c]).trim();
+                }
+            }
+            return 'Unknown';
+        }
+
+        function renderModelsList(filteredModels = null) {
+            const modelsToShow = filteredModels || getTopModels();
+            const modelsList = document.getElementById('models-list');
+            const mobileModelsList = document.getElementById('mobile-models-list');
+
+            [modelsList, mobileModelsList].forEach(container => {
+                if (!container) return;
+                container.innerHTML = '';
+
+                if (modelsToShow.length === 0) {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'px-2 py-4 text-sm text-gray-500 dark:text-gray-400 text-center';
+                    noResults.textContent = 'No models found';
+                    container.appendChild(noResults);
+                    return;
+                }
+
+                modelsToShow.forEach(({model, count}) => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100';
+                    item.innerHTML = `
+                        <span class="flex-1">${model}</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                            ${count}
+                        </span>
+                    `;
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        filterByModel(model);
+                    });
+                    container.appendChild(item);
+                });
+            });
+        }
+
+        function getTopModels() {
+            const modelCounts = {};
+            currentData.rows.forEach(row => {
+                const model = extractModelFromRow(row);
+                modelCounts[model] = (modelCounts[model] || 0) + 1;
+            });
+
+            return Object.entries(modelCounts)
+                .map(([model, count]) => ({model, count}))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+        }
+
+        function handleModelSearch(event) {
+            const searchTerm = event.target.value.toLowerCase().trim();
+            const allModels = getTopModels();
+
+            if (searchTerm === '') {
+                hideSearchSuggestions();
+                renderModelsList();
+            } else if (searchTerm.length >= 1) {
+                // Show suggestions
+                showSearchSuggestions(searchTerm, allModels);
+            }
+        }
+
+        function handleSearchKeydown(event) {
+            const suggestionsContainer = document.getElementById('search-suggestions');
+            if (!suggestionsContainer || suggestionsContainer.classList.contains('hidden')) return;
+
+            const suggestions = suggestionsContainer.querySelectorAll('.search-suggestion');
+            let selectedIndex = -1;
+
+            // Find currently selected suggestion
+            suggestions.forEach((suggestion, index) => {
+                if (suggestion.classList.contains('bg-blue-100')) {
+                    selectedIndex = index;
+                }
+            });
+
+            switch (event.key) {
+                case 'ArrowDown':
+                    event.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1);
+                    updateSuggestionSelection(suggestions, selectedIndex);
+                    break;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, 0);
+                    updateSuggestionSelection(suggestions, selectedIndex);
+                    break;
+                case 'Enter':
+                    event.preventDefault();
+                    if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+                        const selectedModel = suggestions[selectedIndex].textContent.trim();
+                        selectModelFromSuggestion(selectedModel);
+                    }
+                    break;
+                case 'Escape':
+                    event.preventDefault();
+                    hideSearchSuggestions();
+                    event.target.blur();
+                    break;
+            }
+        }
+
+        function hideSearchSuggestions() {
+            const suggestionsContainer = document.getElementById('search-suggestions');
+            if (suggestionsContainer) {
+                suggestionsContainer.classList.add('hidden');
+            }
+        }
+
+        function showSearchSuggestions(searchTerm, allModels) {
+            const suggestionsContainer = document.getElementById('search-suggestions');
+            if (!suggestionsContainer) return;
+
+            const filteredModels = allModels.filter(({model}) =>
+                model.toLowerCase().includes(searchTerm)
+            ).slice(0, 5); // Limit to 5 suggestions
+
+            suggestionsContainer.innerHTML = '';
+
+            if (filteredModels.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'px-4 py-3 text-sm text-gray-500 dark:text-gray-400';
+                noResults.textContent = 'No models found';
+                suggestionsContainer.appendChild(noResults);
+            } else {
+                filteredModels.forEach(({model, count}) => {
+                    const suggestion = document.createElement('div');
+                    suggestion.className = 'search-suggestion px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer flex items-center justify-between';
+                    suggestion.innerHTML = `
+                        <span>${model}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">(${count})</span>
+                    `;
+                    suggestion.addEventListener('click', () => selectModelFromSuggestion(model));
+                    suggestionsContainer.appendChild(suggestion);
+                });
+            }
+
+            suggestionsContainer.classList.remove('hidden');
+        }
+
+        function updateSuggestionSelection(suggestions, selectedIndex) {
+            suggestions.forEach((suggestion, index) => {
+                if (index === selectedIndex) {
+                    suggestion.classList.add('bg-blue-100', 'dark:bg-blue-900');
+                } else {
+                    suggestion.classList.remove('bg-blue-100', 'dark:bg-blue-900');
+                }
+            });
+        }
+
+        function selectModelFromSuggestion(model) {
+            // Clear search input and hide suggestions
+            const searchInput = document.getElementById('model-search-input');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            hideSearchSuggestions();
+
+            // Apply model filter
+            filterByModel(model);
+        }
+
+        async function resetModelFilter() {
+            const allModelsBtn = document.getElementById('all-models-btn');
+            const originalText = allModelsBtn.innerHTML;
+
+            // Show loading state
+            allModelsBtn.innerHTML = `
+                <svg class="animate-spin mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+            `;
+            allModelsBtn.disabled = true;
+
+            try {
+                // Clear model selection
+                selectedModel = null;
+
+                // Clear search input
+                const searchInput = document.getElementById('model-search-input');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+
+                // Reload fresh data from API
+                await loadData();
+
+                // Update page title
+                updatePageTitle();
+
+                // Re-render everything with fresh data
+                renderModelsList();
+                renderTable();
+                updateKPIs();
+                renderCharts();
+
+            } catch (error) {
+                console.error('Error reloading data:', error);
+                alert('Failed to reload data: ' + error.message);
+            } finally {
+                // Restore original button state
+                allModelsBtn.innerHTML = originalText;
+                allModelsBtn.disabled = false;
+            }
+        }
+
+        function filterByModel(model) {
+            selectedModel = model;
+
+            // Reset to first page when filtering
+            currentPage = 1;
+
+            // Update page title
+            updatePageTitle();
+
+            // Re-render everything with filtered data
+            renderTable();
+            updateKPIs();
+            renderCharts();
+        }
+
+        function updatePageTitle() {
+            const titleElement = document.querySelector('h1');
+            if (titleElement) {
+                if (selectedModel) {
+                    titleElement.textContent = `SMPLM Details Data - ${selectedModel}`;
+                } else {
+                    titleElement.textContent = 'SMPLM Details Data';
+                }
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('issues-table-body');
+            tbody.innerHTML = '';
+
+            // Use the individual model-module data (always available now)
+            let tableData = currentData.aggregatedData;
+
+            // Filter by selected model if one is selected
+            if (selectedModel) {
+                tableData = tableData.filter(item => item.model === selectedModel);
+            }
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, tableData.length);
+            const pageData = tableData.slice(startIndex, endIndex);
+
+            pageData.forEach((item, index) => {
+                const globalIndex = startIndex + index + 1;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+
+                // Always show: S/N, Model No., Module, Top Issue Title (top titles), Count (count)
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${globalIndex}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${item.model}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <button class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium module-link" data-module="${item.module}">
+                            ${item.module}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${item.topIssueTitle}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${item.count}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            // Add event listeners to module links
+            document.querySelectorAll('.module-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const module = e.target.dataset.module;
+                    openModuleModal(module);
+                });
+            });
+
+            updatePagination(tableData.length);
+        }
+
+        function updateTableHeaders(isModelSelected) {
+            const thead = document.querySelector('#issues-table thead tr');
+            if (!thead) return;
+
+            if (isModelSelected) {
+                // Model-specific headers: S/N, Module, Count, Top 2 Issue Titles
+                thead.innerHTML = `
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/N</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Module</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Count</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top 2 Issue Titles</th>
+                `;
+            } else {
+                // General headers: S/N, Model No., Module, Top Issue Title, Count
+                thead.innerHTML = `
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/N</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model No.</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Module</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top Issue Title</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Count</th>
+                `;
+            }
+        }
+
+        function updatePagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / pageSize);
+            const startItem = (currentPage - 1) * pageSize + 1;
+            const endItem = Math.min(currentPage * pageSize, totalItems);
+
+            document.getElementById('page-start').textContent = startItem;
+            document.getElementById('page-end').textContent = endItem;
+            document.getElementById('total-items').textContent = totalItems;
+
+            // Update mobile buttons
+            document.getElementById('prev-page-mobile').disabled = currentPage <= 1;
+            document.getElementById('next-page-mobile').disabled = currentPage >= totalPages;
+
+            // Render pagination buttons
+            renderPaginationButtons(totalPages);
+        }
+
+        function renderPaginationButtons(totalPages) {
+            const container = document.getElementById('pagination-buttons');
+            container.innerHTML = '';
+
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+            if (endPage - startPage + 1 < maxVisible) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            // Previous button
+            if (currentPage > 1) {
+                const prevBtn = createPaginationButton('Previous', currentPage - 1, false);
+                prevBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 01 1.414 0z" clip-rule="evenodd"></path></svg>';
+                container.appendChild(prevBtn);
+            }
+
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = createPaginationButton(i, i, i === currentPage);
+                container.appendChild(pageBtn);
+            }
+
+            // Next button
+            if (currentPage < totalPages) {
+                const nextBtn = createPaginationButton('Next', currentPage + 1, false);
+                nextBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>';
+                container.appendChild(nextBtn);
+            }
+        }
+
+        function createPaginationButton(text, page, isActive) {
+            const btn = document.createElement('a');
+            btn.href = '#';
+            btn.textContent = text;
+            btn.className = `relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                isActive
+                    ? 'z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                changePage(page);
+            });
+            return btn;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(currentData.aggregatedData.length / pageSize);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTable();
+            }
+        }
+
+        function updateKPIs() {
+            // Filter data by selected model if one is selected
+            let filteredRows = currentData.rows;
+            let filteredAggregatedData = currentData.aggregatedData;
+
+            if (selectedModel) {
+                filteredRows = currentData.rows.filter(row =>
+                    extractModelFromRow(row) === selectedModel
+                );
+                filteredAggregatedData = currentData.aggregatedData.filter(item =>
+                    item.model === selectedModel
+                );
+            }
+
+            // Calculate totals from filtered data
+            const totals = calculateTotals(filteredRows);
+
+            document.getElementById('total-cases').textContent = totals.totalCases;
+            document.getElementById('high-cases').textContent = totals.high;
+            document.getElementById('distinct-modules').textContent = filteredAggregatedData.length;
+        }
+
+        function calculateTotals(rows) {
+            const totals = {
+                totalCases: rows.length,
+                high: 0,
+                medium: 0,
+                low: 0
+            };
+
+            rows.forEach(row => {
+                const severity = (row.severity || row.Severity || '').toLowerCase();
+                if (severity === 'high') totals.high++;
+                else if (severity === 'medium') totals.medium++;
+                else if (severity === 'low') totals.low++;
+            });
+
+            return totals;
+        }
+
+        function openModuleModal(module) {
+            selectedModule = module;
+            const moduleData = currentData.aggregatedData.find(m => m.module === module);
+            if (!moduleData) return;
+
+            document.getElementById('modal-title').textContent = `${module} Details (${moduleData.count} issues)`;
+
+            renderModalTable(moduleData.rows);
+            document.getElementById('module-modal').classList.remove('hidden');
+        }
+
+        function renderModalTable(rows) {
+            // Sort by severity (High > Medium > Low)
+            const sortedRows = sortRowsBySeverity(rows, modalSortOrder);
+            const tbody = document.getElementById('modal-table-body');
+            tbody.innerHTML = '';
+
+            sortedRows.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+
+                const severity = (row.severity || '').toLowerCase();
+                const severityClass = severity === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                                   severity === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                   'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['Case Code'] || row.caseCode || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${extractModelFromRow(row)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['S/W Ver.'] || row.sWVer || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${row.title || row.Title || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['Sub-Module'] || row.subModule || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${row['Summarized Problem'] || row.summarizedProblem || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${severityClass}">
+                            ${row.Severity || row.severity || 'Low'}
+                        </span>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function sortRowsBySeverity(rows, order) {
+            return rows.sort((a, b) => {
+                const severityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                const aSeverity = severityOrder[(a.severity || '').toLowerCase()] || 1;
+                const bSeverity = severityOrder[(b.severity || '').toLowerCase()] || 1;
+
+                if (order === 'desc') {
+                    return bSeverity - aSeverity;
+                } else {
+                    return aSeverity - bSeverity;
+                }
+            });
+        }
+
+        function sortModalBySeverity() {
+            modalSortOrder = modalSortOrder === 'desc' ? 'asc' : 'desc';
+            const moduleData = currentData.aggregatedData.find(m => m.module === selectedModule);
+            if (moduleData) {
+                renderModalTable(moduleData.rows);
+            }
+
+            // Update sort indicator
+            const header = document.getElementById('severity-header');
+            header.innerHTML = `Severity ${modalSortOrder === 'desc' ? '↓' : '↑'}`;
+        }
+
+        function closeModal() {
+            document.getElementById('module-modal').classList.add('hidden');
+            selectedModule = null;
+        }
+
+        function downloadData(type) {
+            let data = [];
+            let filename = '';
+
+            switch (type) {
+                case 'total':
+                    data = currentData.rows;
+                    filename = `smplm_total_cases_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    break;
+                case 'high':
+                    data = currentData.rows.filter(row => (row.severity || '').toLowerCase() === 'high');
+                    filename = `smplm_high_severity_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    break;
+                case 'modules':
+                    data = currentData.aggregatedData;
+                    filename = `smplm_modules_summary_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    break;
+            }
+
+            if (data.length === 0) {
+                alert('No data available to download');
+                return;
+            }
+
+            exportToExcel(data, filename);
+        }
+
+        function exportModalData() {
+            if (!selectedModule) return;
+
+            const moduleData = currentData.aggregatedData.find(m => m.module === selectedModule);
+            if (!moduleData) return;
+
+            const data = sortRowsBySeverity(moduleData.rows, modalSortOrder);
+            const filename = `smplm_${selectedModule.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+            exportToExcel(data, filename);
+        }
+
+        function renderCharts() {
+            renderSeverityChart();
+            renderModulesChart();
+        }
+
+        function renderSeverityChart() {
+            const chartDom = document.getElementById('severity-chart');
+            if (!chartDom) return;
+
+            // Destroy existing chart if it exists
+            if (severityChart) {
+                severityChart.dispose();
+            }
+
+            // Filter rows by selected model if one is selected
+            let filteredRows = currentData.rows;
+            if (selectedModel) {
+                filteredRows = currentData.rows.filter(row =>
+                    extractModelFromRow(row) === selectedModel
+                );
+            }
+
+            // Count severity distribution
+            const severityCounts = { 'High': 0, 'Medium': 0, 'Low': 0 };
+            filteredRows.forEach(row => {
+                const severity = (row.severity || row.Severity || '').toLowerCase();
+                if (severity === 'high') severityCounts['High']++;
+                else if (severity === 'medium') severityCounts['Medium']++;
+                else severityCounts['Low']++;
+            });
+
+            severityChart = echarts.init(chartDom);
+            const colors = getChartColors();
+
+            // Calculate arrow positions for each pie slice (same logic as main.html)
+            const centerX = 0.5; // center x (50%)
+            const centerY = 0.45; // center y (45%)
+            const outerRadius = 0.8; // outer radius (70%)
+            const innerRadius = 0.55; // inner radius (55%)
+            const arrowLength = 0.5; // length of arrow extension
+
+            const graphicElements = [];
+            const data = [
+                { value: severityCounts['High'], name: 'High' },
+                { value: severityCounts['Medium'], name: 'Medium' },
+                { value: severityCounts['Low'], name: 'Low' }
+            ].filter(item => item.value > 0); // Only show arrows for slices with values
+
+            // Calculate cumulative angles
+            let totalValue = data.reduce((sum, item) => sum + item.value, 0);
+            let currentAngle = -Math.PI / 2; // Start from top
+
+            data.forEach((item, index) => {
+                const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
+                const midAngle = currentAngle + sliceAngle / 2;
+
+                // Calculate arrow start position (outer edge of slice)
+                const startX = centerX + Math.cos(midAngle) * outerRadius;
+                const startY = centerY + Math.sin(midAngle) * outerRadius;
+
+                // Calculate arrow end position (extended outward)
+                const endX = centerX + Math.cos(midAngle) * (outerRadius + arrowLength);
+                const endY = centerY + Math.sin(midAngle) * (outerRadius + arrowLength);
+
+                // Add arrow line
+                graphicElements.push({
+                    type: 'line',
+                    shape: {
+                        x1: startX * chartDom.clientWidth,
+                        y1: startY * chartDom.clientHeight,
+                        x2: endX * chartDom.clientWidth,
+                        y2: endY * chartDom.clientHeight
+                    },
+                    style: {
+                        stroke: colors.textPrimary,
+                        lineWidth: 2
+                    }
+                });
+
+                // Add arrowhead (triangle)
+                const arrowSize = 8;
+                const angle = Math.atan2(endY - startY, endX - startX);
+                graphicElements.push({
+                    type: 'polygon',
+                    shape: {
+                        points: [
+                            [endX * chartDom.clientWidth, endY * chartDom.clientHeight],
+                            [endX * chartDom.clientWidth - arrowSize * Math.cos(angle - Math.PI/6),
+                             endY * chartDom.clientHeight - arrowSize * Math.sin(angle - Math.PI/6)],
+                            [endX * chartDom.clientWidth - arrowSize * Math.cos(angle + Math.PI/6),
+                             endY * chartDom.clientHeight - arrowSize * Math.sin(angle + Math.PI/6)]
+                        ]
+                    },
+                    style: {
+                        fill: colors.textPrimary
+                    }
+                });
+
+                currentAngle += sliceAngle;
+            });
+
+            const option = {
+                textStyle: {
+                    color: colors.textPrimary
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}: {c} ({d}%)'
+                },
+                legend: {
+                    data: ['High', 'Medium', 'Low'],
+                    bottom: '5%',
+                    orient: 'horizontal',
+                    textStyle: {
+                        color: colors.textPrimary
+                    }
+                },
+                series: [
+                    {
+                        name: 'Severity',
+                        type: 'pie',
+                        radius: ['55%', '70%'], // Updated radius to match main.html
+                        center: ['50%', '45%'], // Updated center position to match main.html
+                        avoidLabelOverlap: false,
+                        label: {
+                            show: true,
+                            position: 'outside',
+                            formatter: '{c}',
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            color: colors.textPrimary,
+                            align: 'center',
+                            verticalAlign: 'middle'
+                        },
+                        labelLine: {
+                            show: true,
+                            length: 12,
+                            length2: 5,
+                            smooth: true,
+                            lineStyle: {
+                                color: colors.textPrimary,
+                                width: 1,
+                                opacity: 0.7
+                            }
+                        },
+                        data: [
+                            {
+                                value: severityCounts['High'],
+                                name: 'High',
+                                itemStyle: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                        { offset: 0, color: '#ef4444' },
+                                        { offset: 0.5, color: '#dc2626' },
+                                        { offset: 1, color: '#b91c1c' }
+                                    ])
+                                }
+                            },
+                            {
+                                value: severityCounts['Medium'],
+                                name: 'Medium',
+                                itemStyle: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                        { offset: 0, color: '#fbbf24' },
+                                        { offset: 0.5, color: '#f59e0b' },
+                                        { offset: 1, color: '#d97706' }
+                                    ])
+                                }
+                            },
+                            {
+                                value: severityCounts['Low'],
+                                name: 'Low',
+                                itemStyle: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                        { offset: 0, color: '#9ca3af' },
+                                        { offset: 0.5, color: '#6b7280' },
+                                        { offset: 1, color: '#4b5563' }
+                                    ])
+                                }
+                            }
+                        ],
+                        minAngle: 5 // Ensure Low slice is visible
+                    }
+                ],
+                graphic: graphicElements.length > 0 ? graphicElements : null
+            };
+
+            severityChart.setOption(option);
+            window.addEventListener('resize', () => severityChart.resize());
+        }
+
+        function renderModulesChart() {
+            const chartDom = document.getElementById('modules-chart');
+            if (!chartDom) return;
+
+            // Destroy existing chart if it exists
+            if (modulesChart) {
+                modulesChart.dispose();
+            }
+
+            // Use proper module aggregation for chart
+            const topModules = aggregateByModuleForChart(currentData.rows, selectedModel).reverse();
+            const moduleNames = topModules.map(m => m.module.length > 15 ? m.module.substring(0, 15) + '...' : m.module);
+            const issueCounts = topModules.map(m => m.count);
+
+            modulesChart = echarts.init(chartDom);
+            const colors = getChartColors();
+
+            const option = {
+                textStyle: {
+                    color: colors.textPrimary
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        const moduleIndex = params[0].dataIndex;
+                        const fullName = topModules[moduleIndex].module;
+                        const count = params[0].value;
+                        return `${fullName}<br/>Issues: ${count}`;
+                    }
+                },
+                grid: {
+                    left: '25%',
+                    right: '5%',
+                    top: '8%',
+                    bottom: '8%',
+                    borderColor: colors.gridLines
+                },
+                xAxis: {
+                    type: 'value',
+                    show: false
+                },
+                yAxis: {
+                    type: 'category',
+                    data: moduleNames,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 0,
+                        fontSize: 11,
+                        color: colors.textPrimary
+                    }
+                },
+                series: [
+                    {
+                        name: 'Issues',
+                        type: 'bar',
+                        barWidth: '60%',
+                        data: issueCounts,
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: '#0ea5e9' },
+                                { offset: 0.5, color: '#0284c7' },
+                                { offset: 1, color: '#0369a1' }
+                            ]),
+                            borderRadius: [4, 4, 4, 4]
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}',
+                            fontSize: 11,
+                            color: colors.textPrimary
+                        }
+                    }
+                ]
+            };
+
+            modulesChart.setOption(option);
+            window.addEventListener('resize', () => modulesChart.resize());
+        }
+
+        function exportToExcel(data, filename) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Data');
+            XLSX.writeFile(wb, filename);
+        }
+
+        // Theme-aware color helper
+        function getChartColors() {
+            const isDark = document.documentElement.classList.contains('dark');
+
+            return {
+                textPrimary: isDark ? '#FFFFFF' : '#000000',
+                textSecondary: isDark ? '#FFFFFF' : '#000000',
+                gridLines: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+            };
+        }
+    </script>
+</body>
+</html>

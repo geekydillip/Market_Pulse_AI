@@ -1,8 +1,14 @@
 {
-  "last_updated": "2026-01-01T00:32:48.043114",
+  "last_updated": "2026-01-01T02:57:42.126590",
   "version": "1.0",
-  "data_hash": "3c89debbee00cffbabf95d8c98eb65d093f018a61d72271eb1aba970ea05915c",
+  "data_hash": "e9d036ea3669e60bc1b8577a2113f5263f7f093cd098124867cdb883fb278da5",
   "kpis": {
+    "Beta User Issues": {
+      "total": 694,
+      "High": 315,
+      "Medium": 374,
+      "Low": 5
+    },
     "Samsung Members PLM": {
       "total": 100,
       "High": 49,
@@ -16,48 +22,48 @@
       "Low": 0
     }
   },
-  "total_issues": 5099,
-  "high_issues_count": 49,
+  "total_issues": 5793,
+  "high_issues_count": 364,
   "top_modules": [
     {
-      "label": "Camera",
-      "value": 17
+      "label": "Battery",
+      "value": 103
     },
     {
-      "label": "Network",
-      "value": 12
+      "label": "Lock Screen",
+      "value": 99
+    },
+    {
+      "label": "Camera",
+      "value": 94
     },
     {
       "label": "Settings",
-      "value": 11
-    },
-    {
-      "label": "Battery",
-      "value": 7
-    },
-    {
-      "label": "System",
-      "value": 7
+      "value": 91
     },
     {
       "label": "Display",
-      "value": 6
+      "value": 66
+    },
+    {
+      "label": "Network",
+      "value": 36
+    },
+    {
+      "label": "Performance",
+      "value": 28
+    },
+    {
+      "label": "App",
+      "value": 26
     },
     {
       "label": "Connectivity",
-      "value": 6
+      "value": 25
     },
     {
-      "label": "Notes",
-      "value": 3
-    },
-    {
-      "label": "Video Playback",
-      "value": 3
-    },
-    {
-      "label": "Video Editor",
-      "value": 2
+      "label": "System",
+      "value": 21
     }
   ],
   "series_distribution": [
@@ -96,12 +102,16 @@
   ],
   "top_models": [
     {
+      "label": "SM-A356E",
+      "value": 361
+    },
+    {
       "label": "SM-G610F",
       "value": 318
     },
     {
-      "label": "SM-A356E",
-      "value": 214
+      "label": "SM-S928B",
+      "value": 314
     },
     {
       "label": "SM-A156E",
@@ -130,100 +140,117 @@
     {
       "label": "SM-E156B",
       "value": 135
-    },
-    {
-      "label": "SM-G781B",
-      "value": 126
     }
   ],
   "high_issues": [
     {
-      "Model Number": "SM-G998B_SWA_14_DD",
-      "Case Code": "P250106-04212",
-      "Module Name": "System",
-      "Title": "System's UI not responding",
-      "Processor": "PLM"
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04686",
+      "Module Name": "Battery",
+      "Title": "Overheating During Normal Use and Hotspot Mode on Device",
+      "Processor": "Beta"
     },
     {
-      "Model Number": "SM-S926BE_SWA_DD",
-      "Case Code": "P250108-04609",
-      "Module Name": "System",
-      "Title": "Jitter and Lag while scrolling apps",
-      "Processor": "PLM"
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04698",
+      "Module Name": "Battery",
+      "Title": "Overheating Issue Post Beta Update Installation",
+      "Processor": "Beta"
     },
     {
-      "Model Number": "SM-S908E_SWA_14_DD",
-      "Case Code": "P250114-04409",
-      "Module Name": "System",
-      "Title": "Mobile phone is still lagging or froze",
-      "Processor": "PLM"
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04703",
+      "Module Name": "Battery",
+      "Title": "Heating even when normal use",
+      "Processor": "Beta"
     },
     {
-      "Model Number": "SM-S911BE_SWA_14_DD",
-      "Case Code": "P250120-04104",
-      "Module Name": "System",
-      "Title": "Phone getting lags during normal usage",
-      "Processor": "PLM"
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04711",
+      "Module Name": "Battery",
+      "Title": "Excessive Heating Issue",
+      "Processor": "Beta"
     },
     {
-      "Model Number": "SM-S908E_SWA_14_DD",
-      "Case Code": "P250123-03069",
-      "Module Name": "System",
-      "Title": "System UI keep Stop popup Occur",
-      "Processor": "PLM"
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04725",
+      "Module Name": "Battery",
+      "Title": "Battery Drain Issue Observed During Heating",
+      "Processor": "Beta"
     },
     {
-      "Model Number": "SM-S908E_SWA_14_DD",
-      "Case Code": "P250127-00832",
-      "Module Name": "System",
-      "Title": "Google play system update failed",
-      "Processor": "PLM"
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04731",
+      "Module Name": "Battery",
+      "Title": "Excessive Battery Drain After 1 Hour of Usage",
+      "Processor": "Beta"
     },
     {
-      "Model Number": "SM-S921BE_SWA_DD",
-      "Case Code": "P250203-04130",
-      "Module Name": "System",
-      "Title": "phone got automatically reset",
-      "Processor": "PLM"
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04738",
+      "Module Name": "Battery",
+      "Title": "Excessive Battery Drain in Idle Mode Overnight",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04747",
+      "Module Name": "Battery",
+      "Title": "Battery Drain During Idle Time",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04752",
+      "Module Name": "Battery",
+      "Title": "Battery is draining fast in one ui 8",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-A356E",
+      "Case Code": "P250905-04761",
+      "Module Name": "Battery",
+      "Title": "Battery drains fast after beta update",
+      "Processor": "Beta"
     }
   ],
   "model_module_matrix": {
     "models": [
-      "SM-G610F",
       "SM-A356E",
+      "SM-G610F",
+      "SM-S928B",
       "SM-A156E",
       "SM-A556E",
       "SM-M356B",
       "SM-A346E",
       "SM-A146B",
       "SM-G990E",
-      "SM-E156B",
-      "SM-G781B"
+      "SM-E156B"
     ],
     "modules": [
-      "Camera",
-      "Network",
-      "Settings",
       "Battery",
-      "System",
+      "Lock Screen",
+      "Camera",
+      "Settings",
       "Display",
+      "Network",
+      "Performance",
+      "App",
       "Connectivity",
-      "Notes",
-      "Video Playback",
-      "Video Editor"
+      "System"
     ],
     "matrix": [
       [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
+        25,
+        19,
+        8,
+        16,
+        15,
+        8,
+        14,
+        3,
+        3,
+        5
       ],
       [
         0,
@@ -238,15 +265,15 @@
         0
       ],
       [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
+        37,
+        45,
+        47,
+        42,
+        22,
+        5,
+        5,
+        15,
+        12,
         0
       ],
       [
@@ -336,6 +363,101 @@
     ]
   },
   "source_model_summary": [
+    {
+      "source": "Beta",
+      "model": "SM-S928B",
+      "top_modules": [
+        "Camera",
+        "Lock Screen",
+        "Settings",
+        "Battery",
+        "Display"
+      ],
+      "issue_count": 314,
+      "top_titles": [
+        "P250818-04395 : Expert Raw is not working/opening",
+        "P250818-04342 : Sports from Google option is not available on Lock Screen",
+        "P250818-04616 : Google messages appears twice after Beta update",
+        "P250818-04546 : Device starts heating a lot",
+        "P250822-04646 : Screen become black when receive any call"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-A356E",
+      "top_modules": [
+        "Battery",
+        "Lock Screen",
+        "Settings",
+        "Display",
+        "Performance"
+      ],
+      "issue_count": 147,
+      "top_titles": [
+        "P250905-04686 : Overheating During Normal Use and Hotspot Mode on Device",
+        "P250905-04623 : Lockscreen Clock Style Position automatically changed from top to bottom",
+        "P250905-04321 : Modes and Routines Crashing while Opening",
+        "P250905-04828 : Inconsistent Dynamic Wallpaper Display in App Drawer and Recent Apps",
+        "P250905-04338 : Device not smooth & lagging while scrolling"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-S921B",
+      "top_modules": [
+        "Lock Screen",
+        "Battery",
+        "Display",
+        "Settings",
+        "Camera"
+      ],
+      "issue_count": 94,
+      "top_titles": [
+        "P250818-04551 : Lock Screen Fingerprint & charging information collide",
+        "P250822-03969 : 50% battery drain overnight",
+        "P250819-04626 : Color of animation is zigging and fading during switching apps",
+        "P250822-04296 : Back swipe preview not working",
+        "P250818-04543 : Camera quality is not up to mark"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-S926B",
+      "top_modules": [
+        "Battery",
+        "Lock Screen",
+        "Camera",
+        "Display",
+        "Settings"
+      ],
+      "issue_count": 82,
+      "top_titles": [
+        "P250818-04536 : Device is taking more time to charge",
+        "P250820-00068 : Lock screen clock setting not working properly",
+        "P250818-04768 : Camera Lag observed while switching lens at 30 fps",
+        "P250819-04689 : Quick Panel Name and arrow is misaligned in wearable",
+        "P250818-04400 : Sleep mode feels sluggish"
+      ]
+    },
+    {
+      "source": "Beta",
+      "model": "SM-A366E",
+      "top_modules": [
+        "Lock Screen",
+        "Camera",
+        "Settings",
+        "Display",
+        "Performance"
+      ],
+      "issue_count": 57,
+      "top_titles": [
+        "P250905-03702 : Clock style have no motion alignment",
+        "P250905-03683 : Camera Says camera failed",
+        "P250905-03721 : HomeUp is not working",
+        "P250905-03768 : Lagging and Screen Freezing on Device",
+        "P250905-03671 : Lag observed in the device"
+      ]
+    },
     {
       "source": "PLM",
       "model": "SM-S918BE_SWA_14_DD",
@@ -489,7 +611,28 @@
     }
   ],
   "filtered_top_models": {
-    "beta_user_issues": [],
+    "beta_user_issues": [
+      {
+        "label": "SM-S928B",
+        "value": 314
+      },
+      {
+        "label": "SM-A356E",
+        "value": 147
+      },
+      {
+        "label": "SM-S921B",
+        "value": 94
+      },
+      {
+        "label": "SM-S926B",
+        "value": 82
+      },
+      {
+        "label": "SM-A366E",
+        "value": 57
+      }
+    ],
     "samsung_members_plm": [
       {
         "label": "SM-S918BE_SWA_14_DD",
@@ -575,185 +718,153 @@
       }
     ]
   },
-  "total_unique_models": 252,
-  "total_unique_modules": 78,
+  "total_unique_models": 245,
+  "total_unique_modules": 88,
   "beta_user_issues_top_models": [
     {
-      "label": "SM-S938N",
-      "count": 160
+      "label": "SM-S928B",
+      "count": 314
     },
     {
-      "label": "SM-S938U",
-      "count": 118
+      "label": "SM-A356E",
+      "count": 147
     },
     {
-      "label": "SM-S938B",
-      "count": 65
+      "label": "SM-S921B",
+      "count": 94
     },
     {
-      "label": "SM-S931N",
-      "count": 62
+      "label": "SM-S926B",
+      "count": 82
     },
     {
-      "label": "SM-S936N",
-      "count": 32
-    },
-    {
-      "label": "SM-S931U",
-      "count": 11
-    },
-    {
-      "label": "SM-S936B",
-      "count": 8
-    },
-    {
-      "label": "SM-S931B",
-      "count": 4
-    },
-    {
-      "label": "SM-(Move",
-      "count": 3
-    },
-    {
-      "label": "SM-L705U",
-      "count": 1
-    },
-    {
-      "label": "SM-S936U",
-      "count": 1
+      "label": "SM-A366E",
+      "count": 57
     }
   ],
   "beta_user_issues_top_modules": [
     {
-      "label": "Settings",
-      "count": 122
-    },
-    {
       "label": "Lock Screen",
-      "count": 66
-    },
-    {
-      "label": "Display",
-      "count": 55
-    },
-    {
-      "label": "Network",
-      "count": 30
+      "count": 99
     },
     {
       "label": "Battery",
-      "count": 27
+      "count": 96
+    },
+    {
+      "label": "Settings",
+      "count": 80
     },
     {
       "label": "Camera",
-      "count": 20
+      "count": 77
     },
     {
-      "label": "Gallery",
-      "count": 17
-    },
-    {
-      "label": "Audio",
-      "count": 8
-    },
-    {
-      "label": "Call",
-      "count": 8
-    },
-    {
-      "label": "Navigation",
-      "count": 8
-    },
-    {
-      "label": "Notification",
-      "count": 8
-    },
-    {
-      "label": "Bluetooth",
-      "count": 6
-    },
-    {
-      "label": "App",
-      "count": 5
-    },
-    {
-      "label": "Music",
-      "count": 5
-    },
-    {
-      "label": "Clock",
-      "count": 5
-    },
-    {
-      "label": "Quick Panel",
-      "count": 4
-    },
-    {
-      "label": "Keyboard",
-      "count": 4
-    },
-    {
-      "label": "Messages",
-      "count": 4
-    },
-    {
-      "label": "Launcher",
-      "count": 4
-    },
-    {
-      "label": "Weather",
-      "count": 3
-    },
-    {
-      "label": "Contacts",
-      "count": 3
+      "label": "Display",
+      "count": 60
     },
     {
       "label": "Performance",
-      "count": 3
+      "count": 26
     },
     {
-      "label": "Media",
-      "count": 3
+      "label": "App",
+      "count": 25
     },
     {
-      "label": "NFC",
-      "count": 3
+      "label": "Network",
+      "count": 24
+    },
+    {
+      "label": "Connectivity",
+      "count": 19
+    },
+    {
+      "label": "Call",
+      "count": 17
     },
     {
       "label": "System",
-      "count": 2
+      "count": 14
     },
     {
-      "label": "Game",
-      "count": 2
+      "label": "Gallery",
+      "count": 11
     },
     {
-      "label": "Payment",
-      "count": 2
+      "label": "Audio",
+      "count": 10
     },
     {
-      "label": "Status Bar",
-      "count": 2
+      "label": "Keyboard",
+      "count": 10
+    },
+    {
+      "label": "Launcher",
+      "count": 9
+    },
+    {
+      "label": "Sound",
+      "count": 8
+    },
+    {
+      "label": "Heat",
+      "count": 6
+    },
+    {
+      "label": "Security",
+      "count": 6
+    },
+    {
+      "label": "Widget",
+      "count": 5
+    },
+    {
+      "label": "Files",
+      "count": 4
+    },
+    {
+      "label": "Bluetooth",
+      "count": 4
+    },
+    {
+      "label": "Secure Folder",
+      "count": 4
+    },
+    {
+      "label": "Now bar",
+      "count": 4
+    },
+    {
+      "label": "UI/UX",
+      "count": 4
+    },
+    {
+      "label": "S Pen",
+      "count": 3
+    },
+    {
+      "label": "Communication",
+      "count": 3
+    },
+    {
+      "label": "App Drawer",
+      "count": 3
+    },
+    {
+      "label": "Bixby",
+      "count": 3
+    },
+    {
+      "label": "Power",
+      "count": 3
     },
     {
       "label": "Notifications",
       "count": 2
     },
     {
-      "label": "Device Care",
-      "count": 2
-    },
-    {
-      "label": "Connectivity",
-      "count": 2
-    },
-    {
-      "label": "Home Screen",
-      "count": 2
-    },
-    {
-      "label": "Health",
+      "label": "Weather",
       "count": 2
     },
     {
@@ -761,47 +872,87 @@
       "count": 2
     },
     {
-      "label": "Now bar",
-      "count": 1
+      "label": "Home Screen",
+      "count": 2
+    },
+    {
+      "label": "UI",
+      "count": 2
+    },
+    {
+      "label": "Video",
+      "count": 2
+    },
+    {
+      "label": "Health",
+      "count": 2
+    },
+    {
+      "label": "Quick Share",
+      "count": 2
+    },
+    {
+      "label": "Notification",
+      "count": 2
+    },
+    {
+      "label": "Video Playback",
+      "count": 2
+    },
+    {
+      "label": "Navigation",
+      "count": 2
+    },
+    {
+      "label": "Touch",
+      "count": 2
     },
     {
       "label": "Messaging",
+      "count": 2
+    },
+    {
+      "label": "Control Panel",
       "count": 1
     },
     {
-      "label": "Setup Wizard",
+      "label": "Air Command",
       "count": 1
     },
     {
-      "label": "File Management",
+      "label": "Sound and Vibration",
       "count": 1
     },
     {
-      "label": "App Functionality",
+      "label": "Photo Editor",
       "count": 1
     },
     {
-      "label": "Browser",
+      "label": "Sensor",
       "count": 1
     },
     {
-      "label": "Input",
+      "label": "Sound & Vibration",
       "count": 1
     },
     {
-      "label": "Alarm",
+      "label": "Lock",
       "count": 1
     },
     {
-      "label": "Login",
+      "label": "Phone",
       "count": 1
     },
     {
-      "label": "SmartThings",
+      "label": "Modes & Routines",
       "count": 1
     },
     {
-      "label": "Now Brief",
+      "label": "Vibration",
+      "count": 1
+    },
+    {
+      "label": "WhatsApp",
       "count": 1
     },
     {
@@ -809,113 +960,156 @@
       "count": 1
     },
     {
-      "label": "Multi-Window",
+      "label": "App Updates",
       "count": 1
     },
     {
-      "label": "Remote Control",
+      "label": "Galaxy Store",
       "count": 1
     },
     {
-      "label": "Application",
+      "label": "Health Assist",
       "count": 1
     },
     {
-      "label": "Email",
+      "label": "Clock",
       "count": 1
     },
     {
-      "label": "Quick panel",
+      "label": "Dialer",
       "count": 1
     },
     {
-      "label": "Wallpaper",
+      "label": "S Health",
       "count": 1
     },
     {
-      "label": "System UI",
+      "label": "Alarm",
       "count": 1
     },
     {
-      "label": "Calculator",
+      "label": "Media Player",
       "count": 1
     },
     {
-      "label": "System Performance",
+      "label": "Widgets",
       "count": 1
     },
     {
-      "label": "Communication",
+      "label": "Phone App",
       "count": 1
     },
     {
-      "label": "Android Auto",
+      "label": "My Files",
       "count": 1
     },
     {
-      "label": "Connected Car",
+      "label": "Wearables",
+      "count": 1
+    },
+    {
+      "label": "Now Brief",
+      "count": 1
+    },
+    {
+      "label": "Style",
+      "count": 1
+    },
+    {
+      "label": "Game",
+      "count": 1
+    },
+    {
+      "label": "Call Protection",
+      "count": 1
+    },
+    {
+      "label": "News",
+      "count": 1
+    },
+    {
+      "label": "Note",
+      "count": 1
+    },
+    {
+      "label": "Installation",
       "count": 1
     }
   ],
   "beta_user_issues_top_titles_CaseCode": [
-    "P251209-02278 : Quick Panel settings are reset every time the device boots",
-    "P251209-05468 : Misalignment of icons and text when displaying sleep routine on the lock screen's notification bar",
-    "P251209-03405 : The Always On Display (AOD) background appears unnatural, and the clock stutters when the screen is turned on/off",
-    "P251209-07701 : The top Wi-Fi signal icon moves left and right based on signal strength",
-    "P251209-02198 : Exception occurs when entering battery background app usage restriction in Device Care",
-    "P251209-03542 : Reduced sound quality of camera shooting effects",
-    "P251209-04866 : Folder photos are deselected when entering the gallery app after setting a wallpaper",
-    "P251210-02307 : Reboot occurs during ALSong playback",
-    "P251209-04857 : Animation refresh rate drops below 60Hz when additional buttons are pressed during a call",
-    "P251210-04886 : Screen does not switch using swipe gestures",
-    "P251210-08297 : Notification indicating Wireless DeX is running continues to appear even when not connected.",
-    "P251211-03061 : Shokz Bluetooth call connection does not work",
-    "P251210-06740 : The Shinhan Super SOL app freezes while copying text",
-    "P251211-03786 : Song title display error occurs in Spotify after the update",
-    "P251211-03787 : The clock app timer does not return to the original position after completion",
-    "P251211-06930 : The brightness and volume control icons in the Quick Panel are not centered.",
-    "P251211-07156 : The keyboard shifts to the right in landscape mode",
-    "P251209-01925 : App stops when sending a message",
-    "P251215-01325 : When opening a folder in Apps and swiping to the left, the animation is shown outside the folder",
-    "P251215-02291 : Snowfall amount value not displayed on the weather widget",
-    "P251215-00823 : All contact groupings are ungrouped",
-    "P251211-05166 : Issues with app termination and animation interruptions",
-    "P251210-06736 : Apple Music stops playing and the app closes unexpectedly",
-    "P251209-04698 : NFC icon remains continuously pressed",
-    "P251209-03382 : Reboot occurs while playing music with Alsong (theme changes to default afterward)",
-    "P251209-03423 : Exception occurs when launching the Langrisser game",
-    "P251212-02622 : Bus transit card tag not working",
-    "P251211-07009 : Irregular or narrow spacing between icons on the right side of the status bar",
-    "P251211-04819 : Not getting text notifications or vibrations",
-    "P251210-06456 : When checking internal storage in Device Care, duplicate files are deleted together.",
-    "P251210-03858 : A pop-up error occurs when retrying to connect earbuds",
-    "P251210-03417 : When the icon size is set to medium or larger, icons in home screen folders are fixed to the minimum size",
-    "P251210-05079 : Step counting in Samsung Health does not work",
-    "P251210-06983 : Blank space appears when scrolling to the bottom of the Now Bar settings page",
-    "P251210-06220 : After closing Now Brief, it reappears again",
-    "P251209-05097 : Note in the bottom menu of the message conversation window is untranslated",
-    "P251209-03439 : Screen turns black when clicking \"New Updates\" in Setup Wizard",
-    "P251211-05242 : When deleting one duplicate file, both files are deleted",
-    "P251211-06527 : Exception occurs when copying text in apps using WebView",
-    "P251211-07689 : Some English letters and special characters appear in serif font in the latest Chrome version and WebView",
-    "P251211-03784 : When typing \"루\" in Naver Blog, it changes to \"두\"",
-    "P251211-03795 : Text is not visible on the alarm app list screen",
-    "P251215-01399 : Infinite loading after Google login when using OnceHuman mobile",
-    "P251212-04403 : Temperature selection not working in SmartThings boiler floor heating mode",
-    "P251215-02361 : Special characters are displayed in the first line of Now Brief",
-    "P251215-01443 : Buds3 wearable animation is unnaturally choppy",
-    "P251215-04447 : When using Multi-Window, pressing below turns on the keyboard",
-    "P251215-06009 : Failed to connect Samsung TV remote",
-    "P251211-09733 : Outlook application constantly crashes",
-    "P251215-04372 : Account verification failed pop-up notification appears",
-    "P251211-09973 : Brightness slider issue in Quick panel",
-    "P251212-01505 : Wallpaper The three dots top right to access live wallpapers is missing",
-    "P251213-01048 : System UI keeps crashing",
-    "P251210-02478 : Calculator does not change to scientific if turned sideways",
-    "P251211-06341 : Pop up view in split screen in glitching",
-    "P251212-02118 : Call and text on other devices doesn't work with my galaxy watch ultra",
-    "P251215-00815 : Google assistant doesn’t work with Android Auto",
-    "P251215-01159 : 30 second delay for notification in connected car with Google Messages"
+    "P250905-04623 : Lockscreen Clock Style Position automatically changed from top to bottom",
+    "P250905-04686 : Overheating During Normal Use and Hotspot Mode on Device",
+    "P250905-04321 : Modes and Routines Crashing while Opening",
+    "P250905-06261 : HDR 2160p Not Functioning on YouTube",
+    "P250905-04828 : Inconsistent Dynamic Wallpaper Display in App Drawer and Recent Apps",
+    "P250905-04338 : Device not smooth & lagging while scrolling",
+    "P250911-04399 : Prime video app force closing while playing video in app",
+    "P250908-05817 : Sim 1 network shifts to 5g automatically",
+    "P250905-04248 : Quick Share Link Sharing History Not Saving Consistently",
+    "P250905-06353 : Voicemail Functionality Not Displaying in Call App Post Update",
+    "P250917-07002 : System freezes and restarts",
+    "P250916-08351 : Whatsapp images not shown in gallery",
+    "P250905-06254 : Crackling Sound and Imbalanced Audio in Samsung Music Player",
+    "P250917-06942 : When trying to activate voice typing in the Samsung Keyboard, the system freezes.",
+    "P250911-04451 : In app drawer screen unable to change folder grid",
+    "P250910-06741 : Sound During a call, when switch to speaker mode, audio still plays through earpiece",
+    "P250905-04683 : Overheating",
+    "P250905-06289 : Device Not Locking Properly, Unlocking Without Password",
+    "P250922-09315 : Widget message count not updating even after reading messages",
+    "P250822-03392 : MyFiles flickers every time go to previous screen",
+    "P250908-05813 : Audio gets mismatch with the video when connect Bluetooth device",
+    "P250910-06719 : Unable to use circle to search in secure folder",
+    "P250908-05860 : Now Bar Timer, Stopwatch, Voice Recorder and Google Maps doesn't show up on the Now bar",
+    "P250905-05307 : App opening animation is slow after beat update",
+    "P250820-00082 : Air commands not working",
+    "P250822-04816 : Wrong profile picture shows in WhatsApp message notification",
+    "P250823-03486 : Apps not showing as 6x7 in the search app suggestions section",
+    "P250910-07435 : Bixby voice is not working",
+    "P250911-04460 : phone automatically restarted and keypad laging",
+    "P250903-09707 : Notifications Max 2 notifications are showing in cards view others in icon only",
+    "P250905-05070 : Weather App Not Displaying Data Post Update",
+    "P250822-03257 : Google sports live notification option not available",
+    "P250905-06240 : Home Screen Clock Layout and Widget Misplacement Issue",
+    "P250822-03173 : Lag while scrolling through Flex Volume UI",
+    "P250826-03505 : YouTube live streams are not working in latest beta",
+    "P250827-04459 : Steps are being not calculated in challenges",
+    "P250826-03928 : Quick share shows multiple instances of receiving device",
+    "P250822-04783 : Discrepancy in notifications background",
+    "P250922-07681 : YouTube Video Resolution Drops from 4K to 480p",
+    "P250929-08581 : Navigation bar freezes and didn't work",
+    "P250818-04741 : Touch Sensitivity Lagging Issue",
+    "P250901-03672 : WhatsApp is getting crashed",
+    "P250905-05220 : Jitter in Control Panel Opening and Typing Lag Issue",
+    "P250818-04539 : Air command keeps stopping",
+    "P250912-05774 : Vibration is not working after update",
+    "P251010-06197 : Photo Editor When use colorise or resolution increase option image turns black & white",
+    "P250929-08685 : Proximity sensor not working when device heats",
+    "P250908-05830 : Haptic doesn't work during call",
+    "P250909-08680 : Fingerprint scanner is very slow",
+    "P251002-04112 : ANR in com.android.phone during startup",
+    "P250823-03480 : Modes and Routines take time to load",
+    "P250823-03497 : Device does not vibrate during App notifications",
+    "P250826-03531 : Unable to perform back action in WhatsApp",
+    "P250827-04747 : Buds 3 pro cannot connect for wearable app",
+    "P250827-07950 : The apps are not updating from playstore",
+    "P250822-03976 : Unable to open galaxy store after update",
+    "P250822-04538 : Unable to download samsung offline language model",
+    "P250827-09060 : Dynamic clock not working properly",
+    "P250827-08235 : App freezing while making calls and selecting the Sim to dial",
+    "P250827-09111 : Step Synchronization Issue in Together Section",
+    "P250827-09075 : Alarm notification showing before time",
+    "P250901-03711 : VLC Media Player Crashing After Subtitle Selection",
+    "P250902-07195 : Blank space showing in widgets list",
+    "P250902-07471 : While scrolling call logs it takes time to load",
+    "P250901-03681 : My Files Document List Refreshes Multiple Times Upon Opening",
+    "P250903-07743 : Galaxy buds2 pro diagnostic is not working",
+    "P250903-07835 : Error shows when open any news from Now Brief",
+    "P250903-09730 : Wallpaper and Style The color pallete doesn't change with wallpaper change",
+    "P250905-00029 : Asphalt legend game crash",
+    "P250905-04148 : Samsung caller id protection can't block spam or fraud calls",
+    "P250909-05441 : Samsung news app is not working and not showing any updated news",
+    "P250909-05469 : while writing date on Samsung note app it's creating link to the calender",
+    "P250915-08731 : Not able to Install bhim application"
   ],
   "plm_issues_top_models": [
     {

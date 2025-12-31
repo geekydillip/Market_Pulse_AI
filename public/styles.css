@@ -1827,18 +1827,18 @@ section {
 }
 
 #dataTable thead th {
-  padding: 16px 12px;
-  text-align: left;
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid rgba(0,0,0,0.1);
-  position: relative;
-  transition: all 0.2s ease;
-  cursor: default;
-  user-select: none;
+  padding: 16px 12px !important;
+  text-align: left !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  color: var(--text-primary) !important;
+  text-transform: none !important;
+  letter-spacing: 0.5px !important;
+  border-bottom: 2px solid rgba(0,0,0,0.1) !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+  cursor: default !important;
+  user-select: none !important;
 }
 
 #dataTable thead th:hover {
