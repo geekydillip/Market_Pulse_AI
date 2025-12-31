@@ -90,7 +90,7 @@
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total Issues</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total</p>
         <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
       </div>
       <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
@@ -103,35 +103,37 @@
     <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full -mr-8 -mt-8"></div>
     <div class="flex items-center justify-between relative z-10">
       <div>
-        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">High Issues</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Open</p>
         <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="high-issues">0</p>
       </div>
       <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
-        <i class="fa-solid fa-triangle-exclamation text-red-600 dark:text-red-400 text-xl"></i>
+        <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
       </div>
     </div>
   </div>
 
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-    <div class="flex items-center justify-between">
+  <div class="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl shadow-lg p-6 border-2 border-yellow-200 dark:border-yellow-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
       <div>
-        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total Models</p>
-        <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-models">0</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Resolved</p>
+        <p class="text-3xl font-bold text-yellow-800 dark:text-yellow-200 mt-1" id="total-models">0</p>
       </div>
-      <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-        <i class="fa-solid fa-mobile-screen text-green-600 dark:text-green-400 text-xl"></i>
+      <div class="p-3 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
+        <i class="fa-solid fa-check-circle text-yellow-600 dark:text-yellow-400 text-xl"></i>
       </div>
     </div>
   </div>
 
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-    <div class="flex items-center justify-between">
+  <div class="bg-green-50 dark:bg-green-950/30 rounded-xl shadow-lg p-6 border-2 border-green-200 dark:border-green-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
       <div>
-        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total Modules</p>
-        <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-modules">0</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Close</p>
+        <p class="text-3xl font-bold text-green-800 dark:text-green-200 mt-1" id="total-modules">0</p>
       </div>
-      <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-        <i class="fa-solid fa-cubes text-purple-600 dark:text-purple-400 text-xl"></i>
+      <div class="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
+        <i class="fa-solid fa-times-circle text-green-600 dark:text-green-400 text-xl"></i>
       </div>
     </div>
   </div>
