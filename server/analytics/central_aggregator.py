@@ -150,48 +150,10 @@ def compute_top_modules(data: dict) -> list:
 def compute_series_distribution(data: dict) -> list:
     """
     Distribution by series type.
-    For samsung_members_voc and plm_issues: uses 'Model No.' with SM- prefixed logic.
-    For beta_user_issues and samsung_members_plm: uses 'S/W Ver.' with new logic.
+    Calculate this data from analytics.json file Samsung Members PLM folders only.
+    Uses 'S/W Ver.' with new logic for samsung_members_plm.
     Filter out Critical severity issues as per requirements.
     """
-    def categorize_series(model):
-        """Categorize model into series based on Samsung SM- prefixed logic"""
-        if not model or not isinstance(model, str):
-            return 'Unknown'
-
-        model_upper = model.upper()
-
-        # A Series
-        if model_upper.startswith('SM-A'):
-            return 'A Series'
-        # M Series
-        elif model_upper.startswith('SM-M'):
-            return 'M Series'
-        # E Series (treated as F Series)
-        elif model_upper.startswith('SM-E'):
-            return 'F Series'
-        # Fold & Flip Series (SM-F9, SM-F7)
-        elif model_upper.startswith('SM-F9') or model_upper.startswith('SM-F7'):
-            return 'Fold & Flip Series'
-        # F Series (other SM-F models)
-        elif model_upper.startswith('SM-F'):
-            return 'F Series'
-        # S Series
-        elif model_upper.startswith('SM-S') or model_upper.startswith('SM-G'):
-            return 'S Series'
-        # Tablet
-        elif model_upper.startswith('SM-X') or model_upper.startswith('SM-T'):
-            return 'Tablet'
-        # Ring
-        elif model_upper.startswith('SM-Q'):
-            return 'Ring'
-        # Watch
-        elif model_upper.startswith('SM-L') or model_upper.startswith('SM-R'):
-            return 'Watch'
-        # Everything else
-        else:
-            return 'Others'
-
     def categorize_series_new(model):
         """Categorize model into series based on new logic (no SM- prefix)"""
         if not model or not isinstance(model, str):
@@ -233,31 +195,27 @@ def compute_series_distribution(data: dict) -> list:
         else:
             return 'Others'
 
-    # Folders to use new logic with 'S/W Ver.' column
-    new_logic_folders = {'beta_user_issues', 'samsung_members_plm'}
+    # Only process Samsung Members PLM data
+    folder = 'samsung_members_plm'
+    if folder not in data:
+        return []
 
-    # Count issues by series across all data
+    dfs = data[folder]
+    combined = combine_dataframes(dfs)
+    # Apply severity filter to exclude Critical
+    combined = filter_allowed_severity(combined)
+
+    # Use 'S/W Ver.' column with new categorization
+    column = 'S/W Ver.'
+    categorize_func = categorize_series_new
+
     series_counts = {}
-    for folder, dfs in data.items():
-        combined = combine_dataframes(dfs)
-        # Apply severity filter to exclude Critical
-        combined = filter_allowed_severity(combined)
-
-        if folder in new_logic_folders:
-            # Use 'S/W Ver.' column with new categorization
-            column = 'S/W Ver.'
-            categorize_func = categorize_series_new
-        else:
-            # Use 'Model No.' column with original categorization
-            column = 'Model No.'
-            categorize_func = categorize_series
-
-        if column in combined.columns:
-            for _, row in combined.iterrows():
-                model = str(row.get(column, '')).strip()
-                if model:
-                    series = categorize_func(model)
-                    series_counts[series] = series_counts.get(series, 0) + 1
+    if column in combined.columns:
+        for _, row in combined.iterrows():
+            model = str(row.get(column, '')).strip()
+            if model:
+                series = categorize_func(model)
+                series_counts[series] = series_counts.get(series, 0) + 1
 
     # Sort by count descending and return top series
     sorted_series = sorted(series_counts.items(), key=lambda x: x[1], reverse=True)

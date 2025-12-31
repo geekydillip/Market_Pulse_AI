@@ -921,6 +921,9 @@ function updateTopModelsChart(filter = 'ALL') {
   const avgIssuesPerModel = Math.round(totalIssues / dashboardData.totalUniqueModels);
 
   const option = {
+    title: {
+      show: false
+    },
     textStyle: {
       color: colors.textPrimary
     },
@@ -948,6 +951,7 @@ function updateTopModelsChart(filter = 'ALL') {
     },
     yAxis: {
       type: 'category',
+      show: true,
       data: modelNames,
       axisLabel: {
         interval: 0,

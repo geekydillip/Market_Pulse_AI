@@ -36,19 +36,17 @@ def transform_model_names(df):
         df.loc[mask, 'Model No.'] = df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
     return df
 
-def load_latest_excel(folder_path: str) -> pd.DataFrame:
+def load_all_excels(folder_path: str) -> pd.DataFrame:
     """
-    Load the most recent Excel file from a folder with dtype optimizations.
+    Load all Excel files from a folder and combine them with dtype optimizations.
     """
     folder = Path(folder_path)
     if not folder.exists():
         raise FileNotFoundError(f"Folder {folder_path} does not exist")
 
-    excels = list(folder.glob("*.xlsx"))
+    excels = list(folder.glob("*.xlsx")) + list(folder.glob("*.xls"))
     if not excels:
         raise FileNotFoundError(f"No Excel files in {folder_path}")
-
-    latest = max(excels, key=lambda p: p.stat().st_mtime)
 
     # Define dtypes for better performance and memory usage
     dtype_spec = {
@@ -60,18 +58,32 @@ def load_latest_excel(folder_path: str) -> pd.DataFrame:
         'S/W Ver.': 'string'
     }
 
-    # Load with optimizations
-    df = pd.read_excel(latest, dtype=dtype_spec, engine='openpyxl')
+    # Load all Excel files and combine them
+    dfs = []
+    for excel_file in excels:
+        try:
+            df = pd.read_excel(excel_file, dtype=dtype_spec, engine='openpyxl')
+            dfs.append(df)
+            print(f"Loaded {len(df)} rows from {excel_file.name}")
+        except Exception as e:
+            print(f"Warning: Failed to load {excel_file.name}: {e}")
+
+    if not dfs:
+        raise FileNotFoundError(f"Failed to load any Excel files from {folder_path}")
+
+    # Combine all DataFrames
+    combined_df = pd.concat(dfs, ignore_index=True, sort=False)
+    print(f"Combined {len(dfs)} files with total {len(combined_df)} rows")
 
     # Optimize memory for large datasets
-    if len(df) > 10000:
+    if len(combined_df) > 10000:
         # Downcast numeric types if they exist
-        for col in df.select_dtypes(include=['int64']):
-            df[col] = pd.to_numeric(df[col], downcast='integer')
-        for col in df.select_dtypes(include=['float64']):
-            df[col] = pd.to_numeric(df[col], downcast='float')
+        for col in combined_df.select_dtypes(include=['int64']):
+            combined_df[col] = pd.to_numeric(combined_df[col], downcast='integer')
+        for col in combined_df.select_dtypes(include=['float64']):
+            combined_df[col] = pd.to_numeric(combined_df[col], downcast='float')
 
-    return df
+    return combined_df
 
 def compute_kpis(df: pd.DataFrame) -> dict:
     """
@@ -143,7 +155,7 @@ if __name__ == "__main__":
     folder_path = f"./downloads/{module}"
 
     try:
-        df = load_latest_excel(folder_path)
+        df = load_all_excels(folder_path)
         # Apply model name transformation for OS Beta entries
         df = transform_model_names(df)
 
