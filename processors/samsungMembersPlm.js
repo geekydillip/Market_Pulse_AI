@@ -15,13 +15,18 @@ function normalizeHeaders(rows) {
     's/w ver.': 'S/W Ver.',
     // Title, Problem, Module, Sub-Module
     'title': 'Title',
+    'progr.stat.': 'Progr.Stat.',
+    'progress status': 'Progr.Stat.',
     'problem': 'Problem',
+    'resolve option(medium)': 'Resolve Option(Medium)',
     'module': 'Module',
     'sub-module': 'Sub-Module',
+    'issue type': 'Issue Type',
+    'sub-issue type': 'Sub-Issue Type'
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Progr.Stat.','Resolve Option(Small)','Cause','Counter Measure'];
+  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Feature','Problem','Resolve Option(Medium)','Resolve Option(Small)','Cause','Counter Measure'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -71,7 +76,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Model No.','S/W Ver.','Title','Feature','Problem','Resolve Option(Small)','Cause','Counter Measure']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Feature','Problem','Resolve Option(Medium)','Resolve Option(Small)','Cause','Counter Measure','Issue Type','Sub-Issue Type']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -250,7 +255,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'samsungMembersPlm',
-  expectedHeaders: ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem', 'Progr.Stat.', 'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment'],
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve Option(Medium)', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -302,6 +307,7 @@ module.exports = {
       Title: row.Title || '',
       Problem: row.Problem || '',
       Feature: row.Feature || '',
+      'Resolve Option(Medium)': row['Resolve Option(Medium)'] || '',
       'Resolve Option(Small)': row['Resolve Option(Small)'] || '',
       Cause: row.Cause || '',
       'Counter Measure': row['Counter Measure'] || ''
@@ -354,13 +360,16 @@ module.exports = {
       return {
         'Case Code': original['Case Code'] || '',
         'Model No.': original['Model No.'] || '',
+        'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
-        'Progr.Stat.': original['Progr.Stat.'] || '',  // From original data
+        'Resolve Option(Medium)': original['Resolve Option(Medium)'] || '',
         'Resolve Type': original['Resolve Option(Small)'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
+        'Issue Type': aiRow['Issue Type'] || '',
+        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
         'Summarized Problem': aiRow['Summarized Problem'] || '',
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || '',
@@ -376,9 +385,8 @@ module.exports = {
     return finalHeaders.map((h, idx) => {
       if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
       if (h === 'R&D Comment') return { wch: 50 };
-      if (h === 'Model No.' || h === 'Resolve Type') return { wch: 20 };
-      if (h === 'S/W Ver.') return { wch: 15 };
-      if (h === 'Progr.Stat.') return { wch: 15 };
+      if (h === 'Model No.' || h === 'Resolve Type' || h === 'Resolve Option(Medium)') return { wch: 20 };
+      if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };

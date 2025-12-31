@@ -17,13 +17,18 @@ function normalizeHeaders(rows) {
     's/w ver.': 'S/W Ver.',
     // Title, Problem, Module, Sub-Module
     'title': 'Title',
+    'progr.stat.': 'Progr.Stat.',
+    'progress status': 'Progr.Stat.',
     'problem': 'Problem',
+    'resolve option(medium)': 'Resolve Option(Medium)',
     'module': 'Module',
-    'sub-module': 'Sub-Module'
+    'sub-module': 'Sub-Module',
+    'issue type': 'Issue Type',
+    'sub-issue type': 'Sub-Issue Type'
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','S/W Ver.','Title','Problem'];
+  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -73,7 +78,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','S/W Ver.','Title','Problem']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)','Issue Type','Sub-Issue Type']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -128,7 +133,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'betaIssues',
-  expectedHeaders: ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem',  'Module', 'Sub-Module', 'Summarized Problem', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve Option(Medium)', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -200,11 +205,15 @@ module.exports = {
         'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
           ? deriveModelNameFromSwVer(original['S/W Ver.'])
           : (original['Model No.'] || ''),
+        'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Resolve Option(Medium)': original['Resolve Option(Medium)'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
+        'Issue Type': aiRow['Issue Type'] || '',
+        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
         'Summarized Problem': aiRow['Summarized Problem'] || '',
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
@@ -218,8 +227,8 @@ module.exports = {
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
       if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.') return { wch: 20 };
-      if (h === 'S/W Ver.') return { wch: 15 };
+      if (h === 'Model No.' || h === 'Resolve Option(Medium)') return { wch: 20 };
+      if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
