@@ -1,0 +1,239 @@
+{
+  "total_processing_time_ms": 749562,
+  "total_processing_time_seconds": "749.562",
+  "number_of_input_rows": 57,
+  "number_of_chunks": 57,
+  "number_of_output_rows": 57,
+  "failed_row_details": [],
+  "added_columns": [],
+  "chunks_processing_time": [
+    {
+      "chunk_id": 0,
+      "time_ms": 12082
+    },
+    {
+      "chunk_id": 1,
+      "time_ms": 40760
+    },
+    {
+      "chunk_id": 2,
+      "time_ms": 23128
+    },
+    {
+      "chunk_id": 3,
+      "time_ms": 31638
+    },
+    {
+      "chunk_id": 4,
+      "time_ms": 40703
+    },
+    {
+      "chunk_id": 5,
+      "time_ms": 39781
+    },
+    {
+      "chunk_id": 6,
+      "time_ms": 40442
+    },
+    {
+      "chunk_id": 7,
+      "time_ms": 43566
+    },
+    {
+      "chunk_id": 8,
+      "time_ms": 43878
+    },
+    {
+      "chunk_id": 9,
+      "time_ms": 43033
+    },
+    {
+      "chunk_id": 10,
+      "time_ms": 43105
+    },
+    {
+      "chunk_id": 11,
+      "time_ms": 40459
+    },
+    {
+      "chunk_id": 12,
+      "time_ms": 38029
+    },
+    {
+      "chunk_id": 13,
+      "time_ms": 39492
+    },
+    {
+      "chunk_id": 14,
+      "time_ms": 41312
+    },
+    {
+      "chunk_id": 15,
+      "time_ms": 40805
+    },
+    {
+      "chunk_id": 16,
+      "time_ms": 40803
+    },
+    {
+      "chunk_id": 17,
+      "time_ms": 41005
+    },
+    {
+      "chunk_id": 18,
+      "time_ms": 41741
+    },
+    {
+      "chunk_id": 19,
+      "time_ms": 44575
+    },
+    {
+      "chunk_id": 20,
+      "time_ms": 48993
+    },
+    {
+      "chunk_id": 21,
+      "time_ms": 49209
+    },
+    {
+      "chunk_id": 22,
+      "time_ms": 51695
+    },
+    {
+      "chunk_id": 23,
+      "time_ms": 50888
+    },
+    {
+      "chunk_id": 24,
+      "time_ms": 47956
+    },
+    {
+      "chunk_id": 25,
+      "time_ms": 45888
+    },
+    {
+      "chunk_id": 26,
+      "time_ms": 42452
+    },
+    {
+      "chunk_id": 27,
+      "time_ms": 43489
+    },
+    {
+      "chunk_id": 28,
+      "time_ms": 42911
+    },
+    {
+      "chunk_id": 29,
+      "time_ms": 44088
+    },
+    {
+      "chunk_id": 30,
+      "time_ms": 44384
+    },
+    {
+      "chunk_id": 31,
+      "time_ms": 42824
+    },
+    {
+      "chunk_id": 32,
+      "time_ms": 43219
+    },
+    {
+      "chunk_id": 33,
+      "time_ms": 42379
+    },
+    {
+      "chunk_id": 34,
+      "time_ms": 41841
+    },
+    {
+      "chunk_id": 35,
+      "time_ms": 43539
+    },
+    {
+      "chunk_id": 36,
+      "time_ms": 42191
+    },
+    {
+      "chunk_id": 37,
+      "time_ms": 44132
+    },
+    {
+      "chunk_id": 38,
+      "time_ms": 45695
+    },
+    {
+      "chunk_id": 39,
+      "time_ms": 47916
+    },
+    {
+      "chunk_id": 40,
+      "time_ms": 51652
+    },
+    {
+      "chunk_id": 41,
+      "time_ms": 52567
+    },
+    {
+      "chunk_id": 42,
+      "time_ms": 53464
+    },
+    {
+      "chunk_id": 43,
+      "time_ms": 48324
+    },
+    {
+      "chunk_id": 44,
+      "time_ms": 46683
+    },
+    {
+      "chunk_id": 45,
+      "time_ms": 45416
+    },
+    {
+      "chunk_id": 46,
+      "time_ms": 43409
+    },
+    {
+      "chunk_id": 47,
+      "time_ms": 44694
+    },
+    {
+      "chunk_id": 48,
+      "time_ms": 45294
+    },
+    {
+      "chunk_id": 49,
+      "time_ms": 46618
+    },
+    {
+      "chunk_id": 50,
+      "time_ms": 46737
+    },
+    {
+      "chunk_id": 51,
+      "time_ms": 48860
+    },
+    {
+      "chunk_id": 52,
+      "time_ms": 46962
+    },
+    {
+      "chunk_id": 53,
+      "time_ms": 46721
+    },
+    {
+      "chunk_id": 54,
+      "time_ms": 47859
+    },
+    {
+      "chunk_id": 55,
+      "time_ms": 160494
+    },
+    {
+      "chunk_id": 56,
+      "time_ms": 158136
+    }
+  ]
+}

@@ -1,55 +1,72 @@
-// Set light theme permanently
-document.body.className = 'theme-light';
+// Wrap uploader logic in IIFE to prevent global scope pollution
+(() => {
+    // Set light theme permanently
+    document.body.className = 'theme-light';
 
-// DOM Elements (will be defined inside DOMContentLoaded)
-let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, fileActions, processBtn, loadingOverlay;
-let statusElement, progressContainer, progressFill, progressText, modelSelect, stopBtn;
+    // Debug configuration
+    const DEBUG = false;
 
-// State
-let currentFile = null;
-let currentResult = '';
-let fileQueue = []; // Array of file objects with id, file, status, etc.
-let queueCounter = 0; // For unique IDs
-let isProcessingQueue = false;
-let currentProcessingIndex = -1;
+    // DOM Elements (will be defined inside DOMContentLoaded)
+    let dropzone, fileInput, filePreview, fileName, fileSize, fileContent, removeFile, fileActions, processBtn, loadingOverlay;
+    let statusElement, progressContainer, progressFill, progressText, modelSelect, stopBtn;
 
-// Initialize
+    // State
+    let currentFile = null;
+    let currentResult = '';
+    let fileQueue = []; // Array of file objects with id, file, status, etc.
+    let queueCounter = 0; // For unique IDs
+    let isProcessingQueue = false;
+    let currentProcessingIndex = -1;
+
+    // Global variables for cleanup
+    let currentSessionId = null;
+    let currentEventSource = null;
+
+    // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-    // Initialize DOM elements after DOM is loaded
-    dropzone = document.getElementById('dropzone');
-    fileInput = document.getElementById('fileInput');
-    filePreview = document.getElementById('filePreview');
-    fileName = document.getElementById('fileName');
-    fileSize = document.getElementById('fileSize');
-    fileContent = document.getElementById('fileContent');
-    fileActions = document.getElementById('fileActions');
-    removeFile = document.getElementById('removeFile');
-    processBtn = document.getElementById('processBtn');
-    loadingOverlay = document.getElementById('loadingOverlay');
-    statusElement = document.getElementById('status');
-    progressContainer = document.getElementById('progressContainer');
-    progressFill = document.getElementById('progressFill');
-    progressText = document.getElementById('progressText');
-    modelSelect = document.getElementById('modelSelect');
-    stopBtn = document.getElementById('stopBtn');
+        // Initialize DOM elements after DOM is loaded
+        dropzone = document.getElementById('dropzone');
+        fileInput = document.getElementById('fileInput');
+        filePreview = document.getElementById('filePreview');
+        fileName = document.getElementById('fileName');
+        fileSize = document.getElementById('fileSize');
+        fileContent = document.getElementById('fileContent');
+        fileActions = document.getElementById('fileActions');
+        removeFile = document.getElementById('removeFile');
+        processBtn = document.getElementById('processBtn');
+        loadingOverlay = document.getElementById('loadingOverlay');
+        statusElement = document.getElementById('status');
+        progressContainer = document.getElementById('progressContainer');
+        progressFill = document.getElementById('progressFill');
+        progressText = document.getElementById('progressText');
+        modelSelect = document.getElementById('modelSelect');
+        stopBtn = document.getElementById('stopBtn');
 
-    setupEventListeners();
-    loadModels();
-    checkOllamaConnection();
+        setupEventListeners();
+        loadModels();
+        checkOllamaConnection();
 
-    // Initialize processing options visibility - show by default (not hidden until file uploaded)
-    const processingSection = document.querySelector('.processing-section');
-    if (processingSection) {
-        processingSection.style.display = 'block';
-    }
+        // Initialize processing options visibility - show by default (not hidden until file uploaded)
+        const processingSection = document.querySelector('.processing-section');
+        if (processingSection) {
+            processingSection.style.display = 'block';
+        }
 
-    // Initialize Desire Selector visual state
-    updateSelectionState();
-    initializeProgressState();
+        // Initialize Desire Selector visual state
+        updateSelectionState();
+        initializeProgressState();
 
-    // Setup drag and drop for Processing Queue
-    setupQueueDragDrop();
-});
+        // Setup drag and drop for Processing Queue
+        setupQueueDragDrop();
+    });
+
+    // Add beforeunload event listener to close EventSource and prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+        if (currentEventSource) {
+            currentEventSource.close();
+            currentEventSource = null;
+        }
+    });
 
 function initializeProgressState() {
     progressFill.style.width = '0%';
@@ -131,10 +148,10 @@ function handleDrop(e) {
 }
 
 function handleFileSelect(e) {
-    console.log('=== FILE SELECT START ===');
+    if (DEBUG) console.log('=== FILE SELECT START ===');
     const files = Array.from(e.target.files);
-    console.log('Total files selected:', files.length);
-    console.log('Files:', files.map(f => ({name: f.name, size: f.size, type: f.type})));
+    if (DEBUG) console.log('Total files selected:', files.length);
+    if (DEBUG) console.log('Files:', files.map(f => ({name: f.name, size: f.size, type: f.type})));
 
     if (files.length > 0) {
         const excelFiles = [];
@@ -143,49 +160,49 @@ function handleFileSelect(e) {
         // Separate Excel and other files
         files.forEach(file => {
             const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-            console.log(`File: ${file.name} → extension: ${fileExt}`);
+            if (DEBUG) console.log(`File: ${file.name} → extension: ${fileExt}`);
             if (fileExt === '.xls' || fileExt === '.xlsx') {
                 excelFiles.push(file);
-                console.log(`  → Added to Excel files (${excelFiles.length} total)`);
+                if (DEBUG) console.log(`  → Added to Excel files (${excelFiles.length} total)`);
             } else {
                 otherFiles.push(file);
-                console.log(`  → Added to other files (${otherFiles.length} total)`);
+                if (DEBUG) console.log(`  → Added to other files (${otherFiles.length} total)`);
             }
         });
 
-        console.log(`Final counts - Excel: ${excelFiles.length}, Other: ${otherFiles.length}`);
+        if (DEBUG) console.log(`Final counts - Excel: ${excelFiles.length}, Other: ${otherFiles.length}`);
 
         // Handle other files (go directly to queue)
-        console.log('Adding other files to queue...');
+        if (DEBUG) console.log('Adding other files to queue...');
         otherFiles.forEach(file => {
-            console.log(`  Adding ${file.name} to queue...`);
+            if (DEBUG) console.log(`  Adding ${file.name} to queue...`);
             addFileToQueue(file);
         });
 
         // Handle Excel files (add to queue directly like other files)
         if (excelFiles.length > 0) {
-            console.log('Adding Excel files to queue...');
+            if (DEBUG) console.log('Adding Excel files to queue...');
             excelFiles.forEach(file => {
-                console.log(`  Adding ${file.name} to queue...`);
+                if (DEBUG) console.log(`  Adding ${file.name} to queue...`);
                 addFileToQueue(file);
             });
         }
 
-        console.log('Current fileQueue length:', fileQueue.length);
-        console.log('FileQueue contents:', fileQueue.map(item => ({name: item.file.name, status: item.status})));
+        if (DEBUG) console.log('Current fileQueue length:', fileQueue.length);
+        if (DEBUG) console.log('FileQueue contents:', fileQueue.map(item => ({name: item.file.name, status: item.status})));
 
         // Update queue display first
-        console.log('Updating queue UI...');
+        if (DEBUG) console.log('Updating queue UI...');
         updateQueueUI();
 
         // Now show Processing Queue (after cards are created)
-        console.log('Toggling UI state...');
+        if (DEBUG) console.log('Toggling UI state...');
         toggleUIState();
 
-        console.log('File select process complete');
-        console.log('=== FILE SELECT END ===');
+        if (DEBUG) console.log('File select process complete');
+        if (DEBUG) console.log('=== FILE SELECT END ===');
     } else {
-        console.log('No files selected');
+        if (DEBUG) console.log('No files selected');
     }
 }
 
@@ -528,7 +545,7 @@ function updateSelectionState() {
 
 async function handleModelChange(e) {
     const selectedModel = e.target.value;
-    console.log('Model changed to:', selectedModel);
+    if (DEBUG) console.log('Model changed to:', selectedModel);
 
     // Check Ollama connection with the selected model
     try {
@@ -661,7 +678,7 @@ async function processStructuredFile(file, processingType, model, sessionId) {
                         }
 
                         updateProgress(data.percent, data.message);
-                        console.log(`Progress: ${data.percent}% - ${data.message}`);
+                        if (DEBUG) console.log(`Progress: ${data.percent}% - ${data.message}`);
                     }
                 } catch (e) {
                     console.error('Error parsing SSE data:', e);
@@ -745,9 +762,9 @@ async function processStructuredFile(file, processingType, model, sessionId) {
 }
 
 function updateProgress(percent, text, timerInterval) {
-    console.log('Updating progress to ' + percent + '%', 'type:', typeof percent, 'element exists:', !!progressFill);
+    if (DEBUG) console.log('Updating progress to ' + percent + '%', 'type:', typeof percent, 'element exists:', !!progressFill);
     progressFill.style.width = percent + '%';
-    console.log('Set width to:', progressFill.style.width);
+    if (DEBUG) console.log('Set width to:', progressFill.style.width);
     if (timerInterval) {
         // If timer is running, don't override the timer text
         return;
@@ -1146,7 +1163,7 @@ document.addEventListener('click', (e) => {
 
 // Stop processing function
 async function handleStop() {
-    console.log('Stop button clicked, currentSessionId:', currentSessionId);
+    if (DEBUG) console.log('Stop button clicked, currentSessionId:', currentSessionId);
 
     if (!currentSessionId) {
         console.warn('No active session to stop');
@@ -1155,20 +1172,20 @@ async function handleStop() {
     }
 
     try {
-        console.log('Calling cancel endpoint for session:', currentSessionId);
+        if (DEBUG) console.log('Calling cancel endpoint for session:', currentSessionId);
 
         // Call cancel endpoint
         const response = await fetch(`/api/cancel/${currentSessionId}`, {
             method: 'POST'
         });
 
-        console.log('Cancel response status:', response.status);
+        if (DEBUG) console.log('Cancel response status:', response.status);
 
         const result = await response.json();
-        console.log('Cancel response:', result);
+        if (DEBUG) console.log('Cancel response:', result);
 
         if (result.success) {
-            console.log('Processing cancelled successfully');
+            if (DEBUG) console.log('Processing cancelled successfully');
 
             // Reset UI state
             resetProcessingState();
@@ -1347,10 +1364,6 @@ async function handleProcessQueue() {
 
     alert(`Batch processing completed!\nCompleted: ${completedCount}\nFailed: ${failedCount}\nDuration: ${Math.round((batchEndTime - batchStartTime) / 1000)}s`);
 }
-
-// Global variables for cleanup
-let currentSessionId = null;
-let currentEventSource = null;
 
 // Processing Queue JS
 document.addEventListener('DOMContentLoaded', function() {
@@ -1546,3 +1559,6 @@ document.addEventListener('keydown', (e) => {
         clearFile();
     }
 });
+
+// Close the IIFE
+})();

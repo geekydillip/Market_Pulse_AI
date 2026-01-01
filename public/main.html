@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Market Pulse - VOC Intelligence</title>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          primary: {
+            50: '#f0f9ff',
+            100: '#e0f2fe',
+            500: '#0ea5e9',
+            600: '#0284c7',
+            700: '#0369a1',
+          },
+          secondary: {
+            50: '#f8fafc',
+            100: '#f1f5f9',
+            500: '#64748b',
+            600: '#475569',
+            700: '#334155',
+          },
+        },
+      },
+    },
+  }
+
+  // Add custom styles for active filter buttons
+  const style = document.createElement('style');
+  style.textContent = `
+    .active-filter {
+      background-color: #0ea5e9 !important;
+      color: white !important;
+    }
+    .dark .active-filter {
+      background-color: #0284c7 !important;
+      color: white !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // System theme detection
+  function updateTheme() {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', isDark);
+  }
+
+  // Listen for theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
+  // Set initial theme
+  updateTheme();
+</script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
+<div class="max-w-7xl mx-auto px-6 py-6">
+
+<!-- HEADER -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI DASHBOARD</h1>
+
+  <div class="flex gap-2">
+    <a href="aiprocessor.html"
+       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+      <i class="fa-solid fa-brain mr-2"></i>
+      AI PROCESSOR
+    </a>
+  </div>
+</div>
+
+<!-- KPI -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total</p>
+        <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
+      </div>
+      <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
+        <i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-red-50 dark:bg-red-950/30 rounded-xl shadow-lg p-6 border-2 border-red-200 dark:border-red-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Open</p>
+        <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="high-issues">0</p>
+      </div>
+      <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
+        <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl shadow-lg p-6 border-2 border-yellow-200 dark:border-yellow-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Resolved</p>
+        <p class="text-3xl font-bold text-yellow-800 dark:text-yellow-200 mt-1" id="total-models">0</p>
+      </div>
+      <div class="p-3 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
+        <i class="fa-solid fa-check-circle text-yellow-600 dark:text-yellow-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-green-50 dark:bg-green-950/30 rounded-xl shadow-lg p-6 border-2 border-green-200 dark:border-green-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Close</p>
+        <p class="text-3xl font-bold text-green-800 dark:text-green-200 mt-1" id="total-modules">0</p>
+      </div>
+      <div class="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
+        <i class="fa-solid fa-times-circle text-green-600 dark:text-green-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAVIGATION BUTTONS -->
+<div class="flex flex-wrap gap-4 mb-6 justify-center">
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-blue-600 hover:from-slate-800 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-mobile-screen mr-2"></i>
+    BETA USER ISSUES
+  </button>
+
+  <a href="SMPLM_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-list-check mr-2"></i>
+    SAMSUNG MEMBERS PLM
+  </a>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-comments mr-2"></i>
+    SAMSUNG MEMBERS VOC
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-orange-600 hover:from-slate-700 hover:to-orange-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-question-circle mr-2"></i>
+    QINGS
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-cyan-600 hover:from-slate-800 hover:to-cyan-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-trophy mr-2"></i>
+    QUALITY INDEX
+  </button>
+
+  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-amber-600 hover:from-slate-700 hover:to-amber-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-blog mr-2"></i>
+    BLOGGER ISSUES
+  </button>
+</div>
+
+<!-- CHARTS ROW -->
+<section class="grid grid-cols-12 gap-4">
+
+<!-- SOURCE DISTRIBUTION - 100% Stacked Horizontal Bar -->
+<div class="col-span-4">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Source Distribution</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-simple text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+  </div>
+
+  <!-- Chart Container -->
+    <div class="p-4 flex items-center justify-bottom">
+      <div id="source-distribution-chart" class="h-[180px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP MODELS - Professional Design -->
+<div class="col-span-5">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top Models</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors active-filter" data-filter="ALL">ALL</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="PLM">PLM</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="VOC">VOC</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QINGS">QINGS</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QI">QI</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="Bloggers">Bloggers</button>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="top-models-chart" class="h-[180px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEVERITY SPLIT - Donut Chart -->
+<div class="col-span-3">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Issues Severity</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4 flex items-center justify-bottom">
+      <div id="severity-split-chart" class="h-[180px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+</section>
+
+
+
+<!-- MODEL SUMMARY TABLE -->
+<section class="mt-8">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Model Summary Analysis</h3>
+        <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-slate-50 dark:bg-slate-700">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">SL. NO.</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model Number</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Samsung Members PLM</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Samsung Members VOC</th>
+          </tr>
+        </thead>
+        <tbody id="model-summary-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+          <!-- Dynamic content will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- DETAILS MODAL -->
+<div id="details-modal" class="fixed inset-0 z-50 hidden">
+  <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeDetailsModal()"></div>
+  <div class="relative mx-auto my-8 max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl flex flex-col overflow-hidden">
+    <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700">
+      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Detailed Model Analysis</h2>
+      <button class="text-slate-400 hover:text-slate-600 dark:text-slate-300 text-2xl leading-none" onclick="closeDetailsModal()">×</button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-models">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">Total Models</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-issues">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">Total Issues</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-red-600 dark:text-red-400" id="modal-high-risk">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">High Risk Models</div>
+        </div>
+      </div>
+      <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
+        <table class="w-full">
+          <thead class="bg-slate-50 dark:bg-slate-700">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rank</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Module</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Source</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issues</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Severity</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Risk Level</th>
+            </tr>
+          </thead>
+          <tbody id="modal-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+            <!-- Dynamic content will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global state
+let dashboardData = {
+  kpis: {},
+  topModels: [],
+  topModules: []
+};
+
+// Current active filter for top models chart
+let currentTopModelsFilter = 'ALL';
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  loadDashboardData();
+
+  // Add filter button event listeners
+  setupFilterButtons();
+});
+
+// Setup filter button event listeners
+function setupFilterButtons() {
+  const filterButtons = document.querySelectorAll('[data-filter]');
+
+  filterButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const filter = this.getAttribute('data-filter');
+
+      // Update active button state
+      updateActiveFilterButton(filter);
+
+      // Update chart with new filter
+      updateTopModelsChart(filter);
+
+      // Store current filter
+      currentTopModelsFilter = filter;
+    });
+  });
+}
+
+// Update active filter button styling
+function updateActiveFilterButton(activeFilter) {
+  const filterButtons = document.querySelectorAll('[data-filter]');
+
+  filterButtons.forEach(button => {
+    const filter = button.getAttribute('data-filter');
+    if (filter === activeFilter) {
+      button.classList.add('active-filter');
+    } else {
+      button.classList.remove('active-filter');
+    }
+  });
+}
+
+// Add accessibility attributes to table headers
+document.addEventListener('DOMContentLoaded', function() {
+  // Add scope="col" to table headers for accessibility
+  const tableHeaders = document.querySelectorAll('th');
+  tableHeaders.forEach(header => {
+    header.setAttribute('scope', 'col');
+  });
+});
+
+// Load all dashboard data from central_dashboard.json
+async function loadDashboardData() {
+  try {
+    // Fetch data from central_dashboard.json (contains all pre-aggregated data)
+    const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
+    const jsonData = await response.json();
+
+    // Extract data from the JSON structure - use pre-computed values
+    dashboardData.kpis = jsonData.kpis;
+    dashboardData.totalIssues = jsonData.total_issues;
+    dashboardData.highIssuesCount = jsonData.high_issues_count;
+    dashboardData.topModules = jsonData.top_modules;
+    dashboardData.topModels = jsonData.top_models;
+    dashboardData.sourceModelSummary = jsonData.source_model_summary;
+    dashboardData.modelModuleMatrix = jsonData.model_module_matrix;
+    dashboardData.filteredTopModels = jsonData.filtered_top_models;
+    dashboardData.totalUniqueModels = jsonData.total_unique_models;
+    dashboardData.totalUniqueModules = jsonData.total_unique_modules;
+
+    // Update all UI elements
+    updateKPIs();
+    updateSourceDistribution();
+    updateSeveritySplit();
+    updateTopModelsChart();
+    createModelSummaryTable();
+
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    // Keep static data as fallback
+  }
+}
+
+// Update KPI values
+function updateKPIs() {
+  // Update KPI elements using correct IDs - use pre-computed values
+  const totalIssuesEl = document.getElementById('total-issues');
+  const highIssuesEl = document.getElementById('high-issues');
+  const totalModelsEl = document.getElementById('total-models');
+  const totalModulesEl = document.getElementById('total-modules');
+
+  // Use pre-computed values from backend
+  if (totalIssuesEl) totalIssuesEl.textContent = (dashboardData.totalIssues || 0).toLocaleString();
+  if (highIssuesEl) highIssuesEl.textContent = (dashboardData.highIssuesCount || 0).toLocaleString();
+
+  // Use real aggregated counts from central cache
+  if (totalModelsEl) totalModelsEl.textContent = dashboardData.totalUniqueModels || dashboardData.topModels.length;
+  if (totalModulesEl) totalModulesEl.textContent = dashboardData.totalUniqueModules || dashboardData.topModules.length;
+}
+
+// Update source distribution chart - 100% Stacked Horizontal Bar
+function updateSourceDistribution() {
+  const chartDom = document.getElementById('source-distribution-chart');
+  if (!chartDom) {
+    return;
+  }
+
+  console.log("HTML Dashboard - Updating source distribution");
+  console.log("KPIs data:", dashboardData.kpis);
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Use actual severity data from KPIs instead of classifying by count
+  const severityData = dashboardData.kpis || {};
+  console.log("Severity data from KPIs:", severityData);
+
+  // Map display names to KPI keys
+  const displayToKPI = {
+    'Beta Users': 'Beta User Issues',
+    'S.M. PLM': 'Samsung Members PLM',
+    'S.M. VOC': 'Samsung Members VOC'
+  };
+
+  const sources = ['Beta Users', 'S.M. PLM', 'S.M. VOC'];
+
+  // Extract severity counts directly from KPIs
+  const highData = sources.map(source => {
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.High || 0;
+    console.log(`High for ${source} (${kpiKey}):`, value);
+    return value;
+  });
+
+  const mediumData = sources.map(source => {
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.Medium || 0;
+    console.log(`Medium for ${source} (${kpiKey}):`, value);
+    return value;
+  });
+
+  const lowData = sources.map(source => {
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.Low || 0;
+    console.log(`Low for ${source} (${kpiKey}):`, value);
+    return value;
+  });
+
+  console.log("Final data arrays - High:", highData, "Medium:", mediumData, "Low:", lowData);
+
+  // Create mapping from display names to data keys
+  const displayNameToKey = {
+    'Beta Users': 'Beta',
+    'S.M. PLM': 'PLM',
+    'S.M. VOC': 'VOC'
+  };
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        let result = '';
+        params.forEach(param => {
+          const source = param.name;
+          const severity = param.seriesName;
+          const value = param.value;
+          result += `${source}<br/>${severity}: ${value}<br/>`;
+        });
+        return result;
+      }
+    },
+    legend: {
+      data: ['High', 'Medium', 'Low'],
+      bottom: 10,
+      orient: 'horizontal',
+      textStyle: {
+        color: colors.textPrimary
+      }
+    },
+    grid: {
+      left: '20%',
+      right: '0%',
+      top: '10%',
+      bottom: '20%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'value',
+      axisLabel: {
+        show: false,
+        fontSize: 10,
+        color: colors.textPrimary
+      },
+      splitLine: {
+        show: false
+      }
+    },
+    yAxis: {
+      type: 'category',
+      data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'], // Match the order of sources array
+      axisLabel: {
+        fontSize: 12,
+        interval: 0,
+        color: colors.textPrimary
+      }
+    },
+    series: [
+      {
+        name: 'High',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '50%', // Thicker bars for cylindrical effect
+        data: highData,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#ef4444' },
+            { offset: 0.5, color: '#dc2626' },
+            { offset: 1, color: '#b91c1c' }
+          ]),
+          borderRadius: [12, 0, 0, 12],
+          shadowBlur: 8,
+          shadowColor: 'rgba(239, 68, 68, 0.3)'
+        },
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            shadowBlur: 12,
+            shadowColor: 'rgba(239, 68, 68, 0.5)'
+          }
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Medium',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '70%',
+        data: mediumData,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#fbbf24' },
+            { offset: 0.5, color: '#f59e0b' },
+            { offset: 1, color: '#d97706' }
+          ]),
+          borderRadius: [0, 0, 0, 0],
+          shadowBlur: 8,
+          shadowColor: 'rgba(245, 158, 11, 0.3)',
+          opacity: 0.75
+        },
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            opacity: 1,
+            shadowBlur: 12,
+            shadowColor: 'rgba(245, 158, 11, 0.5)'
+          }
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Low',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '70%',
+        data: lowData,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#9ca3af' },
+            { offset: 0.5, color: '#6b7280' },
+            { offset: 1, color: '#4b5563' }
+          ]),
+          borderRadius: [4, 4, 0, 0],
+          shadowBlur: 8,
+          shadowColor: 'rgba(107, 114, 128, 0.3)'
+        },
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            shadowBlur: 12,
+            shadowColor: 'rgba(107, 114, 128, 0.5)'
+          }
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update severity split chart - Donut Chart
+function updateSeveritySplit() {
+  const chartDom = document.getElementById('severity-split-chart');
+  if (!chartDom) return;
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Calculate totals across all sources - same logic as Source Distribution
+  const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High || 0), 0);
+  const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium || 0), 0);
+  const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low || 0), 0);
+
+  const totalIssues = totalHigh + totalMedium + totalLow;
+  if (totalIssues === 0) return;
+
+  // Calculate arrow positions for each pie slice
+  const centerX = 0.5; // center x (50%)
+  const centerY = 0.45; // center y (45%)
+  const outerRadius = 0.8; // outer radius (70%)
+  const innerRadius = 0.55; // inner radius (55%)
+  const arrowLength = 0.5; // length of arrow extension
+
+  const graphicElements = [];
+  const data = [
+    { value: totalHigh, name: 'High' },
+    { value: totalMedium, name: 'Medium' },
+    { value: totalLow, name: 'Low' }
+  ].filter(item => item.value > 0); // Only show arrows for slices with values
+
+  // Calculate cumulative angles
+  let totalValue = data.reduce((sum, item) => sum + item.value, 0);
+  let currentAngle = -Math.PI / 2; // Start from top
+
+  data.forEach((item, index) => {
+    const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
+    const midAngle = currentAngle + sliceAngle / 2;
+
+    // Calculate arrow start position (outer edge of slice)
+    const startX = centerX + Math.cos(midAngle) * outerRadius;
+    const startY = centerY + Math.sin(midAngle) * outerRadius;
+
+    // Calculate arrow end position (extended outward)
+    const endX = centerX + Math.cos(midAngle) * (outerRadius + arrowLength);
+    const endY = centerY + Math.sin(midAngle) * (outerRadius + arrowLength);
+
+    // Add arrow line
+    graphicElements.push({
+      type: 'line',
+      shape: {
+        x1: startX * chartDom.clientWidth,
+        y1: startY * chartDom.clientHeight,
+        x2: endX * chartDom.clientWidth,
+        y2: endY * chartDom.clientHeight
+      },
+      style: {
+        stroke: colors.textPrimary,
+        lineWidth: 2
+      }
+    });
+
+    // Add arrowhead (triangle)
+    const arrowSize = 8;
+    const angle = Math.atan2(endY - startY, endX - startX);
+    graphicElements.push({
+      type: 'polygon',
+      shape: {
+        points: [
+          [endX * chartDom.clientWidth, endY * chartDom.clientHeight],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle - Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle - Math.PI/6)],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle + Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle + Math.PI/6)]
+        ]
+      },
+      style: {
+        fill: colors.textPrimary
+      }
+    });
+
+    currentAngle += sliceAngle;
+  });
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
+    },
+    legend: {
+      data: ['High', 'Medium', 'Low'],
+      bottom: '5%',
+      orient: 'horizontal',
+      textStyle: {
+        color: colors.textPrimary
+      }
+    },
+    series: [
+      {
+        name: 'Severity',
+        type: 'pie',
+        radius: ['55%', '70%'], // Smaller inner radius, larger outer
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {
+          show: true,
+          position: 'outside',
+          formatter: '{c}',
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: colors.textPrimary,
+          align: 'center',
+          verticalAlign: 'middle'
+        },
+        labelLine: {
+          show: true,
+          length: 12,
+          length2: 5,
+          smooth: true,
+          lineStyle: {
+            color: colors.textPrimary,
+            width: 1,
+            opacity: 0.7
+          }
+        },
+        data: [
+          {
+            value: totalHigh,
+            name: 'High',
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#ef4444' },
+                { offset: 0.5, color: '#dc2626' },
+                { offset: 1, color: '#b91c1c' }
+              ])
+            }
+          },
+          {
+            value: totalMedium,
+            name: 'Medium',
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#fbbf24' },
+                { offset: 0.5, color: '#f59e0b' },
+                { offset: 1, color: '#d97706' }
+              ])
+            }
+          },
+          {
+            value: totalLow,
+            name: 'Low',
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#9ca3af' },
+                { offset: 0.5, color: '#6b7280' },
+                { offset: 1, color: '#4b5563' }
+              ])
+            }
+          }
+        ],
+        minAngle: 5 // Ensure Low slice is visible
+      }
+    ],
+    graphic: graphicElements.length > 0 ? graphicElements : null
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update top models chart - Lollipop Bar Chart
+function updateTopModelsChart(filter = 'ALL') {
+  const chartDom = document.getElementById('top-models-chart');
+  if (!chartDom) {
+    return;
+  }
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Filter models based on selected filter
+  let filteredModels = [];
+
+  if (filter === 'ALL') {
+    // Show all models from topModels
+    filteredModels = dashboardData.topModels || [];
+  } else {
+    // Filter based on source from sourceModelSummary
+    const sourceMap = {
+      'PLM': 'PLM',
+      'VOC': 'VOC',
+      'QINGS': 'QINGS',
+      'QI': 'QI',
+      'Bloggers': 'Bloggers'
+    };
+
+    const targetSource = sourceMap[filter];
+    if (targetSource && dashboardData.sourceModelSummary) {
+      // Group models by name and sum their issue counts for the specific source
+      const modelMap = {};
+
+      dashboardData.sourceModelSummary
+        .filter(item => item.source === targetSource)
+        .forEach(item => {
+          if (!modelMap[item.model]) {
+            modelMap[item.model] = { label: item.model, value: 0 };
+          }
+          modelMap[item.model].value += item.issue_count;
+        });
+
+      filteredModels = Object.values(modelMap).sort((a, b) => b.value - a.value);
+    } else {
+      // Fallback to all models if filter not found
+      filteredModels = dashboardData.topModels || [];
+    }
+  }
+
+  if (filteredModels.length === 0) {
+    // Show empty chart if no data - clear all chart elements
+    const option = {
+      title: {
+        text: 'No data available for selected filter',
+        left: 'center',
+        top: 'middle',
+        textStyle: {
+          color: colors.textPrimary,
+          fontSize: 16,
+          fontWeight: 'bold'
+        }
+      },
+      grid: {
+        show: false
+      },
+      xAxis: {
+        show: false,
+        type: 'value'
+      },
+      yAxis: {
+        show: false,
+        type: 'category'
+      },
+      series: [],
+      tooltip: {
+        show: false
+      },
+      legend: {
+        show: false
+      }
+    };
+    chart.setOption(option, true); // Use notMerge to clear previous chart
+    return;
+  }
+
+  // Use top 10 models (reduced bar thickness allows more)
+  const top8Models = filteredModels.slice(0, 10).reverse(); // Reverse for descending order (largest at top)
+  const modelNames = top8Models.map(model => {
+    // Truncate for display but keep full name for tooltips
+    return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
+  });
+  const issueCounts = top8Models.map(model => model.value);
+
+  // Calculate total issues across all sources
+  const totalIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => {
+    return sum + (kpi?.High || 0) + (kpi?.Medium || 0) + (kpi?.Low || 0);
+  }, 0);
+  const avgIssuesPerModel = Math.round(totalIssues / dashboardData.totalUniqueModels);
+
+  const option = {
+    title: {
+      show: false
+    },
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const modelIndex = params[0].dataIndex;
+        const fullName = top8Models[modelIndex].label;
+        const count = params[0].value;
+        const percentage = ((count / totalIssues) * 100).toFixed(1);
+        return `${fullName}<br/>Issues: ${count}<br/>${percentage}% of total`;
+      }
+    },
+    grid: {
+      left: '21%',
+      right: '0%',
+      top: '8%',
+      bottom: '8%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'value',
+      show: false,
+      max: Math.max(...issueCounts) * 1.1
+    },
+    yAxis: {
+      type: 'category',
+      show: true,
+      data: modelNames,
+      axisLabel: {
+        interval: 0,
+        rotate: 0,
+        fontSize: 11,
+        color: colors.textPrimary,
+        formatter: function(value) {
+          // Truncate long names for display, full names in tooltips
+          return value.length > 12 ? value.substring(0, 12) + '...' : value;
+        }
+      }
+    },
+    series: [
+      {
+        name: 'Issues',
+        type: 'bar',
+        barWidth: '60%', // Thicker for cylindrical effect
+        data: issueCounts,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#0ea5e9' },
+            { offset: 0.5, color: '#0284c7' },
+            { offset: 1, color: '#0369a1' }
+          ]),
+          borderRadius: [4, 4, 4, 4],
+          shadowBlur: 8,
+          shadowColor: 'rgba(6, 182, 212, 0.3)'
+        },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{c}', // Show count only, no percentage
+          fontSize: 11,
+          fontWeight: 'bold',
+          color: colors.textPrimary
+        },
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 12,
+            shadowColor: 'rgba(6, 182, 212, 0.5)'
+          }
+        }
+      },
+      {
+        name: 'Markers',
+        type: 'scatter',
+        data: issueCounts.map((value, index) => [value, index]),
+        symbolSize: 6,
+        itemStyle: {
+          color: '#0369a1',
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        },
+        emphasis: {
+          itemStyle: {
+            borderWidth: 3,
+            shadowBlur: 5
+          }
+        }
+      }
+      // Reference line removed - unexplained and added cognitive load
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+
+
+
+
+// Update model summary table
+function createModelSummaryTable() {
+  console.log('createModelSummaryTable called');
+  console.log('dashboardData:', dashboardData);
+  console.log('topModels:', dashboardData.topModels);
+  console.log('sourceModelSummary:', dashboardData.sourceModelSummary);
+
+  const tbody = document.getElementById('model-summary-table-body');
+  console.log('tbody element:', tbody);
+
+  if (!tbody) {
+    console.error('Table body element not found');
+    return;
+  }
+
+  if (!dashboardData.topModels) {
+    console.error('dashboardData.topModels is not available');
+    return;
+  }
+
+  if (!dashboardData.sourceModelSummary) {
+    console.error('dashboardData.sourceModelSummary is not available');
+    return;
+  }
+
+  // Clear existing content
+  tbody.innerHTML = '';
+
+  // Get all models with PLM or VOC data and calculate total issues per model
+  const modelStats = {};
+
+  dashboardData.sourceModelSummary
+    .filter(item => item.source === 'PLM' || item.source === 'VOC')
+    .forEach(item => {
+      if (!modelStats[item.model]) {
+        modelStats[item.model] = { totalIssues: 0, sources: {} };
+      }
+      modelStats[item.model].totalIssues += item.issue_count;
+      modelStats[item.model].sources[item.source] = item;
+    });
+
+  // Sort models by total issues and take top 10
+  const topModels = Object.entries(modelStats)
+    .sort(([,a], [,b]) => b.totalIssues - a.totalIssues)
+    .slice(0, 10)
+    .map(([modelName, stats]) => ({ label: modelName, value: stats.totalIssues, sources: stats.sources }));
+
+  console.log('Top models with PLM/VOC data:', topModels);
+
+  topModels.forEach((model, index) => {
+    console.log(`Processing model ${index}:`, model);
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
+
+    // Serial Number cell
+    const slNoCell = document.createElement('td');
+    slNoCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 text-center';
+    slNoCell.textContent = index + 1;
+    tr.appendChild(slNoCell);
+
+    // Model Number cell
+    const modelCell = document.createElement('td');
+    modelCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100';
+    modelCell.textContent = model.label;
+    tr.appendChild(modelCell);
+
+    // Define source mappings
+    const sourceMapping = {
+      'Beta': 'Beta Users',
+      'PLM': 'S.M. PLM',
+      'VOC': 'S.M. VOC'
+    };
+
+    // Create cells for each source (PLM, VOC only)
+    const sources = ['PLM', 'VOC'];
+
+    sources.forEach(sourceKey => {
+      const cell = document.createElement('td');
+      cell.className = 'px-4 py-3 text-sm text-slate-700 dark:text-slate-300';
+
+      // Find model data for this source
+      const modelData = dashboardData.sourceModelSummary.find(item =>
+        item.model === model.label && item.source === sourceKey
+      );
+
+      console.log(`Model ${model.label}, Source ${sourceKey}, Data:`, modelData);
+
+      if (modelData) {
+        // Format the cell content
+        let content = `<div class="space-y-1">`;
+        content += `<div><strong>Total Issues:</strong> ${modelData.issue_count}</div>`;
+
+        // Add combined Top Modules & Issues section
+        if (modelData.top_modules && modelData.top_modules.length > 0) {
+          content += `<div><strong>Top Modules & Issues:</strong></div>`;
+          content += `<ul class="text-xs space-y-1 ml-2">`;
+
+          // Show top 5 modules with issues distributed underneath
+          const maxItems = Math.min(5, modelData.top_modules.length);
+          for (let i = 0; i < maxItems; i++) {
+            const module = modelData.top_modules[i];
+            content += `<li>• ${module}`;
+
+            // Add issue title under this module (if available)
+            if (modelData.top_titles && modelData.top_titles[i]) {
+              const title = modelData.top_titles[i];
+              const truncatedTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
+
+              content += `<br/><span class="ml-4">- ${truncatedTitle}</span>`;
+            }
+            content += `</li>`;
+          }
+          content += `</ul>`;
+        } else if (modelData.top_titles && modelData.top_titles.length > 0) {
+          // Show Top Issues section when there are no modules but there are titles (VOC data)
+          content += `<div><strong>Top Issues:</strong></div>`;
+          content += `<ul class="text-xs space-y-1 ml-2">`;
+
+          // Show top 5 issue titles
+          const maxItems = Math.min(5, modelData.top_titles.length);
+          for (let i = 0; i < maxItems; i++) {
+            const title = modelData.top_titles[i];
+            const truncatedTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
+
+            content += `<li>• ${truncatedTitle}</li>`;
+          }
+          content += `</ul>`;
+        }
+
+        content += `</div>`;
+        cell.innerHTML = content;
+      } else {
+        cell.innerHTML = '<div class="text-slate-400">No data</div>';
+      }
+
+      tr.appendChild(cell);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  console.log('Table creation completed');
+}
+
+
+
+// Update timestamp
+function updateTimestamp() {
+  const now = new Date();
+  const formatted = now.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  // Note: main.html doesn't have a timestamp element, so this is for future use
+}
+
+// Show details modal with comprehensive data
+function showDetailsModal() {
+  const modal = document.getElementById('details-modal');
+  const totalModelsEl = document.getElementById('modal-total-models');
+  const totalIssuesEl = document.getElementById('modal-total-issues');
+  const highRiskEl = document.getElementById('modal-high-risk');
+  const tbody = document.getElementById('modal-table-body');
+
+  if (!modal || !tbody) return;
+
+  // Calculate stats
+  const totalIssues = Object.values(dashboardData.kpis).reduce((sum, val) => sum + val, 0);
+  const totalModels = dashboardData.topModels.length;
+  const highRiskModels = dashboardData.topModels.filter(model =>
+    model.value > 200 // Models with more than 200 issues are considered high risk
+  ).length;
+
+  // Update stats
+  if (totalModelsEl) totalModelsEl.textContent = totalModels;
+  if (totalIssuesEl) totalIssuesEl.textContent = totalIssues;
+  if (highRiskEl) highRiskEl.textContent = highRiskModels;
+
+  // Clear existing content
+  tbody.innerHTML = '';
+
+  // Generate comprehensive table with all available models using real analytics data
+  dashboardData.topModels.forEach((model, index) => {
+    // Get real model data from source_model_summary
+    const modelData = dashboardData.sourceModelSummary?.find(item =>
+      item.model === model.label
+    );
+
+    // Use real data if available, otherwise fallback
+    const topModule = modelData?.top_modules?.[0] || 'N/A';
+    const topIssue = modelData?.top_titles?.[0] || 'Various issues reported';
+    const source = modelData?.source || 'Unknown';
+
+    // Map source to display name
+    const sourceDisplayName = {
+      'Beta': 'Beta User Issues',
+      'PLM': 'S.M. PLM',
+      'VOC': 'S.M. VOC'
+    }[source] || source;
+
+    // Determine severity based on actual issue count from analytics
+    const issueCount = modelData?.issue_count || model.value;
+    const severity = issueCount > 300 ? 'critical' : issueCount > 200 ? 'high' : issueCount > 100 ? 'medium' : 'low';
+    const severityIcon = severity === 'critical' ? 'fa-circle' :
+                        severity === 'high' ? 'fa-triangle-exclamation' :
+                        severity === 'medium' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    const severityText = severity.charAt(0).toUpperCase() + severity.slice(1);
+
+    // Risk level based on severity
+    const riskClass = severity === 'critical' ? 'high' : severity === 'high' ? 'high' : 'major';
+    const riskText = riskClass === 'high' ? 'High Risk' : 'Major Risk';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="px-4 py-3 text-sm text-slate-900">${index + 1}</td>
+      <td class="px-4 py-3 text-sm text-slate-900">${model.label}</td>
+      <td class="px-4 py-3 text-sm text-slate-500">${topModule}</td>
+      <td class="px-4 py-3 text-sm text-slate-500">${sourceDisplayName}</td>
+      <td class="px-4 py-3 text-sm text-slate-900">${issueCount}</td>
+      <td class="px-4 py-3 text-sm">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${severity === 'high' ? 'bg-red-100 text-red-800' : severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-slate-100 text-slate-800'}">
+          <i class="fa-solid ${severityIcon} mr-1"></i> ${severityText}
+        </span>
+      </td>
+      <td class="px-4 py-3 text-sm">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${riskClass === 'high' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
+          <i class="fa-solid fa-circle-exclamation"></i>
+        </span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Show modal using Tailwind classes
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+  // Add ESC key listener
+  document.addEventListener('keydown', handleModalKeydown);
+}
+
+function closeDetailsModal() {
+  const modal = document.getElementById('details-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    document.body.style.overflow = ''; // Restore scrolling
+  }
+
+  // Remove ESC key listener
+  document.removeEventListener('keydown', handleModalKeydown);
+}
+
+function handleModalKeydown(event) {
+  if (event.key === 'Escape') {
+    closeDetailsModal();
+  }
+}
+
+// Theme-aware color helper for charts
+function getChartColors() {
+  const isDark = document.documentElement.classList.contains('dark');
+
+  return {
+    textPrimary: isDark ? '#FFFFFF' : '#000000',
+    textSecondary: isDark ? '#FFFFFF' : '#000000',
+    gridLines: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+  };
+}
+
+// Error handling
+function handleError(error) {
+  console.error('Dashboard error:', error);
+  // Could show error message to user if needed
+}
+</script>
+</body>
+</html>

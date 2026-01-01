@@ -11,6 +11,10 @@ For each row:
    - Medium: partial malfunction or intermittent failure.
    - Low: minor UI issue or cosmetic/suggestion.
 7. Severity Reason → One sentence explaining the chosen severity.
+8. Issue Type: choose ONE:
+   System, Functional, Performance, Usability, Compatibility, Security, Connectivity, Battery, UI/UX, Crash, Heat.
+9. Sub-Issue Type: one of:
+   CP Crash, App Crash, ANR, Slow/Lag Performance Issue, Feature Missing, Poor Quality, UI Issue, Heating Issue, Battery Drain, Compatibility Issue, Restart, other Issue, or "".
 
 Rules:
 - Output must be only English.
@@ -28,7 +32,9 @@ Module,
 Sub-Module,
 Summarized Problem,
 Severity,
-Severity Reason
+Severity Reason,
+Issue Type,
+Sub-Issue Type
 
 Input Data:
 {INPUTDATA_JSON}`;

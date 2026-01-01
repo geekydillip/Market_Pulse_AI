@@ -1,6 +1,16 @@
 # Market Pulse AI
 
-A comprehensive web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama. Supports Excel (.xlsx, .xls) and JSON (.json) files for automated data cleaning, specialized processing across multiple issue types, and interactive dashboards - with all processing happening locally for maximum privacy and security.
+A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis platform with interactive dashboards. Features local AI processing using Ollama, supports multiple file formats (Excel, JSON, CSV), and provides specialized processing for different issue types including Beta User Issues, Samsung Members PLM/VOC, and PLM Issues. Includes advanced analytics, real-time progress tracking, and professional dashboard interfaces - all processing happens locally for maximum privacy and security.
+
+## 🌟 Key Highlights
+
+- **🔒 Privacy-First**: All AI processing stays on your local machine
+- **📊 Advanced Analytics**: Python-powered data aggregation with caching
+- **🎨 Professional UI**: Modern responsive dashboard with neumorphic design
+- **⚡ Real-Time Processing**: Live progress updates with Server-Sent Events
+- **🔧 Modular Architecture**: Extensible processing pipeline for different data types
+- **📈 Interactive Visualizations**: Multiple chart types with ECharts integration
+- **🚀 Automated Setup**: One-command installation and startup scripts
 
 ## 🚀 Features
 
@@ -17,7 +27,11 @@ A comprehensive web interface for AI-powered data processing and Voice of Custom
 - **Processing Options**:
   - **VOC Analysis**: Specialized for Voice of Customer data (module identification, severity classification, problem summarization)
   - **Generic Data Cleaning**: Basic data cleansing (trimming, date normalization, number conversion)
-- **Interactive Dashboards**: Dedicated dashboards for each processing type with charts, KPIs, and detailed tables (Beta User Issues, Samsung Members PLM)
+- **Interactive Dashboards**: Multiple dashboard interfaces with advanced analytics and visualizations
+  - **Main Dashboard** (`main.html`): Central analytics hub with 5 interactive charts and 6 navigation buttons
+  - **Specialized Dashboards**: Dedicated views for Beta User Issues, Samsung Members PLM, Samsung Members VOC, and PLM Issues
+  - **Source-wise Analytics**: New charts showing top models and modules by data source
+  - **Real-time Data**: Live KPI updates from processed data with caching system
 - **Advanced Backend Features**:
   - Concurrent processing with configurable limits (default 4)
   - AI response caching for efficiency
@@ -354,35 +368,65 @@ The aggregate count represents the number of individual issue reports grouped by
 
 ```
 Market Pulse AI/
-├── server.js                    # Main Express backend server
-├── package.json                 # Node.js dependencies and scripts
-├── package-lock.json           # Dependency lock file
-├── json_to_excel_converter.py   # Python utility for JSON to Excel conversion
-├── terminate_servers.py         # Python script for stopping running servers
-├── README.md                    # This file
-├── .gitignore                   # Git ignore patterns
-├── processors/                  # Modular processing types
-│   ├── _helpers.js              # Shared utility functions
-│   ├── betaIssues.js            # Beta User Issues processor
-│   ├── plmIssues.js             # PLM Issues processor
-│   └── samsungMembersPlm.js     # Samsung Members PLM processor
-├── prompts/                     # AI prompt templates
-│   ├── betaIssuesPrompt.js      # Beta User Issues prompt
-│   ├── plmIssuesPrompt.js       # PLM Issues prompt
-│   └── samsungMembersPlmPrompt.js # Samsung Members PLM prompt
-├── public/                      # Frontend static files
-│   ├── index.html               # Main HTML interface
-│   ├── dashboard.js             # Shared dashboard logic
-│   ├── script.js                # Main frontend logic
-│   ├── styles.css               # CSS with neumorphic design
-│   ├── beta_user_issues_dashboard.html # Beta Issues dashboard
-│   └── samsung_members_plm_dashboard.html # Samsung PLM dashboard
-├── downloads/                  # Processed file outputs and logs
-│   └── samsung_members_plm/    # Samsung Members PLM processed files
-├── uploads/                    # Temporary file storage (auto-cleaned)
-└── Samsung_MemberVOC/          # Sample data files
-    ├── *.xlsx                  # Excel sample data
-    └── *.json                  # JSON sample data
+├── server.js                          # Main Express backend server
+├── run_server.py                     # Python automation script for server startup
+├── terminate_servers.py               # Python script for stopping running servers
+├── json_to_excel_converter.py         # Python utility for JSON to Excel conversion
+├── package.json                       # Node.js dependencies and scripts
+├── package-lock.json                  # Dependency lock file
+├── README.md                          # This comprehensive documentation
+├── .gitignore                         # Git ignore patterns
+├── .eslintrc.js                       # ESLint configuration for code quality
+├── frontend/                          # Next.js frontend application (separate)
+│   ├── src/
+│   │   ├── app/                       # Next.js app router
+│   │   ├── components/                # React components
+│   │   ├── hooks/                     # Custom React hooks
+│   │   ├── styles/                    # Styling files
+│   │   └── utils/                     # Utility functions
+│   ├── package.json
+│   ├── next.config.js
+│   ├── tailwind.config.js
+│   └── postcss.config.js
+├── processors/                        # Modular processing pipeline
+│   ├── _helpers.js                    # Shared utility functions
+│   ├── betaIssues.js                  # Beta User Issues processor
+│   ├── plmIssues.js                   # PLM Issues processor
+│   ├── samsungMembersPlm.js           # Samsung Members PLM processor
+│   └── samsungMembersVoc.js           # Samsung Members VOC processor
+├── prompts/                           # AI prompt templates
+│   ├── betaIssuesPrompt.js            # Beta User Issues prompt
+│   ├── plmIssuesPrompt.js             # PLM Issues prompt
+│   ├── samsungMembersPlmPrompt.js     # Samsung Members PLM prompt
+│   └── samsungMembers_voc.js          # Samsung Members VOC prompt
+├── public/                            # Static frontend files
+│   ├── main.html                      # Main dashboard with advanced analytics
+│   ├── index.html                     # Legacy upload interface
+│   ├── dashboard.js                   # Dashboard logic and utilities
+│   ├── script.js                      # Upload interface logic
+│   ├── styles.css                     # Neumorphic design styles
+│   ├── beta_user_issues_dashboard.html # Beta Issues specialized dashboard
+│   ├── plm_issues_dashboard.html      # PLM Issues dashboard
+│   ├── samsung_members_plm_dashboard.html # Samsung PLM dashboard
+│   └── samsung_members_voc_dashboard.html # Samsung VOC dashboard
+├── server/                            # Backend analytics and processing
+│   ├── analytics/                     # Python analytics engine
+│   │   ├── central_aggregator.py      # Central data aggregation
+│   │   ├── generate_central_cache.py  # Cache generation script
+│   │   ├── pandas_aggregator.py       # Pandas-based analytics
+│   │   └── downloads/                 # Analytics cache storage
+│   └── ingestion/                     # Data ingestion utilities
+├── downloads/                         # Processed file outputs and analytics
+│   ├── __dashboard_cache__/           # Centralized dashboard cache
+│   │   └── central_dashboard.json     # Pre-aggregated dashboard data
+│   ├── beta_user_issues/              # Beta Issues processed data
+│   │   ├── analytics.json             # Aggregated analytics
+│   │   └── *.xlsx                     # Processed Excel files
+│   ├── plm_issues/                    # PLM Issues processed data
+│   ├── samsung_members_plm/           # Samsung PLM processed data
+│   └── samsung_members_voc/           # Samsung VOC processed data
+├── uploads/                           # Temporary file storage (auto-cleaned)
+└── list_models.js                     # Utility script for model management
 ```
 
 ## 🔧 Technical Implementation
@@ -468,6 +512,13 @@ Deterministic automated cleaning without AI:
 
 ## 📈 Recent Updates
 
+- **v1.5.0** - (December 2025) Advanced Main Dashboard & Source-wise Analytics
+  - **New Main Dashboard** (`main.html`): Complete redesign with 5 interactive charts and 6 navigation buttons
+  - **Source-wise Analytics**: Added "Source wise Top Model" and "Source wise Top Modules" charts
+  - **Enhanced Navigation**: 6 color-coded buttons for Beta Issues, Samsung PLM/VOC, QINGS, Quality Index, and Blogger Issues
+  - **Chart Improvements**: Removed Y-axis scales and horizontal grid lines for cleaner appearance
+  - **Chart Reordering**: Optimized layout with Source Distribution → Top Models → Issues Severity Split
+  - **Responsive Design**: Improved layout for different screen sizes
 - **v1.4.0** - (December 2025) Samsung Members PLM Dashboard & Enhanced Processing
   - Added dedicated Samsung Members PLM dashboard with specialized analytics
   - Enhanced Samsung Members PLM processor with advanced data cleaning functions

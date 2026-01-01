@@ -83,6 +83,16 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Create keep-alive agent for HTTP connections
 const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
 
+// Serve the main dashboard at root (must come before static middleware)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'main.html'));
+});
+
+// Serve main.html explicitly
+app.get('/main.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'main.html'));
+});
+
 // serve frontend static files (adjust folder if your frontend is in 'public')
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/downloads', express.static('downloads'));
@@ -1023,6 +1033,70 @@ function sendProgress(sessionId, data) {
   }
 }
 
+// Precompute analytics after Excel processing
+async function precomputeAnalytics(module, processedPath) {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/pandas_aggregator.py', module, '--save-json']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log(`✅ Analytics precomputed for ${module}`);
+
+        // Trigger central cache update after analytics are ready
+        generateCentralCache().catch(err =>
+          console.warn('⚠️ Central cache generation failed:', err.message)
+        );
+
+        resolve();
+      } else {
+        console.warn(`⚠️ Analytics precomputation failed for ${module}:`, stderr);
+        resolve(); // Don't fail the whole process
+      }
+    });
+  });
+}
+
+// Generate centralized dashboard cache
+async function generateCentralCache() {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', ['server/analytics/generate_central_cache.py']);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log('✅ Central dashboard cache updated');
+        resolve();
+      } else {
+        console.warn('⚠️ Central cache generation failed:', stderr);
+        resolve(); // Don't fail the whole process
+      }
+    });
+  });
+}
+
 // POST /api/cancel/:sessionId -> marks a session as cancelled and aborts active requests
 app.post('/api/cancel/:sessionId', (req, res) => {
   const sessionId = req.params.sessionId;
@@ -1355,6 +1429,11 @@ async function processExcel(req, res) {
 
     try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
 
+    // Precompute analytics after successful processing
+    precomputeAnalytics(processingType, processedPath).catch(err =>
+      console.warn('Analytics precomputation failed:', err.message)
+    );
+
     res.json({
       success: true,
       total_processing_time_ms: Date.now() - tStart,
@@ -1495,7 +1574,11 @@ app.get('/api/models', (req, res) => {
     const models = new Set();
     files.forEach(f => {
       const m = (f.modelFromFile || '').toString().trim();
-      if (m) models.add(m);
+      if (m) {
+        // Split comma-separated model strings and add each individual model
+        const modelList = m.split(',').map(model => model.trim()).filter(model => model);
+        modelList.forEach(model => models.add(model));
+      }
     });
     const arr = Array.from(models).sort();
     res.json({ success: true, models: arr });
@@ -1551,104 +1634,450 @@ function getFilteredRows(modelQuery, severityQuery, category) {
   return filteredRows;
 }
 
-// GET /api/dashboard?model=<modelName>&severity=<severity>&category=<category>  (all parameters optional)
-// Reads from downloads/<category>/ if category provided, otherwise whole downloads/
-// returns: { success:true, model:..., totals:{ totalCases, high, medium, low }, severityDistribution: [{severity,count}], moduleDistribution: [{module,count}], rows: [...] }
-app.get('/api/dashboard', (req, res) => {
+// GET /api/dashboard?category=<module> -> Pandas-first dashboard API
+app.get('/api/dashboard', async (req, res) => {
   try {
-    const modelQueryRaw = (req.query.model || '').toString().trim();
-    const modelQuery = (modelQueryRaw === '' || /^(all|__all__|aggregate)$/i.test(modelQueryRaw)) ? null : modelQueryRaw;
-    const severityQueryRaw = (req.query.severity || '').toString().trim();
-    const severityQuery = severityQueryRaw === '' ? null : severityQueryRaw;
-    const categoryQueryRaw = (req.query.category || '').toString().trim();
-    const category = categoryQueryRaw === '' ? null : categoryQueryRaw;
+    const module = req.query.category || 'default';
 
-    const filteredRows = getFilteredRows(modelQuery, severityQuery, category);
+    const analyticsRes = await fetch(
+      `http://localhost:${PORT}/api/analytics/${module}`
+    );
 
-    // Aggregations
-    const totals = { totalCases: filteredRows.length, high: 0, medium: 0, low: 0 };
-    const severityCounts = {};
-    const moduleCounts = {};
-
-    filteredRows.forEach(r => {
-      // Severity detection: look for common severity words in any of the severity columns
-      const sev = (r.Severity || r['Severity'] || r['Severity Level'] || '').toString().trim() || 'Unknown';
-      const sevKey = sev || 'Unknown';
-      severityCounts[sevKey] = (severityCounts[sevKey] || 0) + 1;
-
-      if (/high/i.test(sevKey)) totals.high++;
-      if (/med/i.test(sevKey)) totals.medium++;
-      if (/low/i.test(sevKey)) totals.low++;
-
-      // Module detection: check common column names and fallback to empty
-      const mod = (r.Module || r['Module'] || r['Module Name'] || r['Modules'] || '').toString().trim() || 'Unknown';
-      moduleCounts[mod] = (moduleCounts[mod] || 0) + 1;
-    });
-
-    const severityDistribution = Object.keys(severityCounts).map(k => ({ severity: k, count: severityCounts[k] })).sort((a, b) => b.count - a.count);
-    const moduleDistribution = Object.keys(moduleCounts).map(k => ({ module: k, count: moduleCounts[k] })).sort((a, b) => b.count - a.count);
-
-    // Calculate complete model counts from all rows (for sidebar)
-    let modelCounts = {};
-    if (category && !modelQuery) {
-      filteredRows.forEach(r => {
-        const modelValue = r._modelFromFile || '';
-        if (modelValue) {
-          // Handle comma-separated models
-          if (modelValue.includes(',')) {
-            const models = modelValue.split(',').map(m => normalizeModelString(m.trim())).filter(m => m && m !== 'Unknown');
-            models.forEach(model => {
-              modelCounts[model] = (modelCounts[model] || 0) + 1;
-            });
-          } else {
-            const normalizedModel = normalizeModelString(modelValue);
-            if (normalizedModel && normalizedModel !== 'Unknown') {
-              modelCounts[normalizedModel] = (modelCounts[normalizedModel] || 0) + 1;
-            }
-          }
-        }
-      });
+    if (!analyticsRes.ok) {
+      throw new Error('Analytics service failed');
     }
 
-    // Prepare table rows to return (limit to avoid huge payload)
-    const tableRows = filteredRows.slice(0, 500).map(r => {
-      const mappedRow = {
-        caseId: r['Case Code'] || r['CaseId'] || r['ID'] || '',
-        title: r['Title'] || r['Summary'] || r['Problem Title'] || '',
-        problem: r['Problem'] || r['Issue'] || '',
-        modelFromFile: r._modelFromFile || '',
-        module: r['Module'] || r['Module Name'] || '',
-        severity: r['Severity'] || '',
-        sWVer: r['S/W Ver.'] || r['S/W Version'] || r['Software Version'] || '',
-        subModule: r['Sub-Module'] || r['Sub Module'] || r['SubModule'] || '',
-        summarizedProblem: r['Summarized Problem'] || r['Summarized_Problem'] || r['Summary'] || '',
-        severityReason: r['Severity Reason'] || r['Severity_Reason'] || ''
-      };
+    const analytics = await analyticsRes.json();
 
-      return mappedRow;
-    });
-
-    const response = {
+    res.json({
       success: true,
-      model: modelQuery || 'All',
-      totals,
-      severityDistribution,
-      moduleDistribution,
-      rows: tableRows
-    };
+      model: req.query.model || 'All',
+      totals: {
+        totalCases: analytics.kpis.total_rows,
+        high: analytics.kpis.severity_distribution?.High || 0,
+        medium: analytics.kpis.severity_distribution?.Medium || 0,
+        low: analytics.kpis.severity_distribution?.Low || 0,
+        critical: analytics.kpis.severity_distribution?.Critical || 0
+      },
+      severityDistribution: analytics.kpis.severity_distribution || {},
+      moduleDistribution: analytics.categories || [],
+      rows: analytics.rows || []
+    });
 
-    // Include model counts if calculated
-    if (Object.keys(modelCounts).length > 0) {
-      response.modelCounts = modelCounts;
-    }
-
-    res.json(response);
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
 
 
+// GET /api/samsung-members-plm -> dynamically generates Excel-like summary table from actual data
+app.get('/api/samsung-members-plm', (req, res) => {
+  try {
+    // Read Excel files from downloads/samsung_members_plm directory
+    const categoryDir = path.join(__dirname, 'downloads', 'samsung_members_plm');
+
+    if (!fs.existsSync(categoryDir)) {
+      return res.json({
+        success: true,
+        data: [
+          // Return empty table structure if no data
+          Array(12).fill(""),
+          Array(12).fill(""),
+          ["", "", "", "", "", "", "", "", "Module wise Count", "Module wise Count", "Module wise Count"],
+          ["PLM Status", "PLM Status", "", "Series wise Count", "Series wise Count", "Model wise Count", "Model wise Count", "", "Module", "Grand Total", "Active (Resolved+Open)"]
+        ],
+        totalRows: 4,
+        totalColumns: 12
+      });
+    }
+
+    // Read all Excel files in the directory
+    const files = fs.readdirSync(categoryDir)
+      .filter(f => /\.(xlsx|xls)$/i.test(f))
+      .map(f => path.join(categoryDir, f));
+
+    let allRows = [];
+    for (const filePath of files) {
+      try {
+        const wb = xlsx.readFile(filePath);
+        const sheetName = wb.SheetNames[0];
+        if (!sheetName) continue;
+        const ws = wb.Sheets[sheetName];
+        const rows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+        allRows.push(...rows);
+      } catch (err) {
+        console.warn('Failed to read Excel file:', filePath, err.message);
+        continue;
+      }
+    }
+
+    if (allRows.length === 0) {
+      return res.json({
+        success: true,
+        data: [
+          Array(12).fill(""),
+          Array(12).fill(""),
+          ["", "", "", "", "", "", "", "", "Module wise Count", "Module wise Count", "Module wise Count"],
+          ["PLM Status", "PLM Status", "", "Series wise Count", "Series wise Count", "Model wise Count", "Model wise Count", "", "Module", "Grand Total", "Active (Resolved+Open)"]
+        ],
+        totalRows: 4,
+        totalColumns: 12
+      });
+    }
+
+    // Generate summary statistics dynamically
+    const stats = {
+      totalCases: allRows.length,
+      plmStatus: { Total: 0, Close: 0, Open: 0, Resolved: 0 },
+      seriesCounts: {
+        'A Series': 0,
+        'M Series': 0,
+        'F Series': 0,
+        'Fold & Flip Series': 0,
+        'S Series': 0,
+        'Tablet': 0,
+        'Ring': 0,
+        'Watch': 0,
+        'Unknown': 0
+      },
+      modelCounts: {},
+      moduleCounts: {}
+    };
+
+    // Helper to extract field values
+    function getField(row, candidates) {
+      for (const c of candidates) {
+        if (row.hasOwnProperty(c) && row[c] !== null && row[c] !== undefined) {
+          const val = String(row[c]).trim();
+          if (val !== '') return val;
+        }
+      }
+      return '';
+    }
+
+    // Process each row to build statistics
+    allRows.forEach(row => {
+      // PLM Status
+      const progrStat = getField(row, ['Progr.Stat.', 'Progress Status', 'Status']);
+      if (progrStat) {
+        if (progrStat.toLowerCase().includes('close')) stats.plmStatus.Close++;
+        else if (progrStat.toLowerCase().includes('open')) stats.plmStatus.Open++;
+        else if (progrStat.toLowerCase().includes('resolve')) stats.plmStatus.Resolved++;
+      }
+      stats.plmStatus.Total++;
+
+      // Series (derived from model)
+      const model = getField(row, ['Model No.', 'Model', 'modelFromFile']);
+      let series = 'Unknown';
+      if (model.includes('SM-A')) series = 'A Series';
+      else if (model.includes('SM-M')) series = 'M Series';
+      else if (model.includes('SM-E')) series = 'F Series';
+      else if (model.includes('SM-F9') || model.includes('SM-F7')) series = 'Fold & Flip Series';
+      else if (model.includes('SM-S') || model.includes('SM-G')) series = 'S Series';
+      else if (model.includes('SM-X') || model.includes('SM-T')) series = 'Tablet';
+      else if (model.includes('SM-Q')) series = 'Ring';
+      else if (model.includes('SM-L') || model.includes('SM-R')) series = 'Watch';
+
+      stats.seriesCounts[series] = (stats.seriesCounts[series] || 0) + 1;
+
+      // Model counts
+      stats.modelCounts[model] = (stats.modelCounts[model] || 0) + 1;
+
+      // Module counts
+      const module = getField(row, ['Module', 'Module Name']);
+      stats.moduleCounts[module] = (stats.moduleCounts[module] || 0) + 1;
+    });
+
+    // Build the Excel-like table structure
+    const excelData = [
+      // Row 1: Header row with merged cells
+      Array(12).fill("Samsung Members PLM Dashboard"),
+      // Row 2: Section headers
+      ["", "", "", "", "", "", "", "", "Module wise Count", "Module wise Count", "Module wise Count"],
+      // Row 3: Column headers
+      ["PLM Status", "PLM Status", "", "Series wise Count", "Series wise Count", "Model wise Count", "Model wise Count", "", "Module", "Grand Total", "Active (Resolved+Open)"]
+    ];
+
+    // Add PLM Status rows
+    Object.entries(stats.plmStatus).forEach(([status, count]) => {
+      excelData.push([status, count.toString(), "", "", "", "", "", "", "", "", ""]);
+    });
+
+    // Add Series rows
+    Object.entries(stats.seriesCounts).forEach(([series, count]) => {
+      excelData.push(["", "", "", series, count.toString(), "", "", "", "", "", ""]);
+    });
+
+    // Add Model rows
+    Object.entries(stats.modelCounts).forEach(([model, count]) => {
+      excelData.push(["", "", "", "", "", model, count.toString(), "", "", "", ""]);
+    });
+
+    // Add Module rows with totals and active counts
+    Object.entries(stats.moduleCounts).forEach(([module, total]) => {
+      // For demo purposes, assume active = total (in real scenario, calculate from severity/open status)
+      const active = total; // This should be calculated based on business logic
+      excelData.push(["", "", "", "", "", "", "", "", module, total.toString(), active.toString()]);
+    });
+
+    res.json({
+      success: true,
+      data: excelData,
+      totalRows: excelData.length,
+      totalColumns: 12
+    });
+  } catch (error) {
+    console.error('Samsung Members PLM API error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+
+// ---------- Centralized Dashboard API Endpoints ----------
+// GET /api/central/kpis -> Returns totals by processor type
+app.get('/api/central/kpis', async (req, res) => {
+  try {
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    // Check if cache exists and is fresh
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.kpis);
+    } else {
+      // Fallback: generate cache on-demand
+      console.log('⚠️ Cache not found, generating on-demand...');
+      const { spawn } = require('child_process');
+      const pythonProcess = spawn('python', ['server/analytics/generate_central_cache.py']);
+
+      pythonProcess.on('close', (code) => {
+        if (code === 0 && fs.existsSync(cachePath)) {
+          const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+          res.json(cacheData.kpis);
+        } else {
+          res.status(500).json({ error: 'Failed to generate dashboard cache' });
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Central KPIs error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/top-modules -> Returns top 10 modules with labels and values
+app.get('/api/central/top-modules', async (req, res) => {
+  try {
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.top_modules);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
+  } catch (error) {
+    console.error('Central top modules error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/series-distribution -> Returns series distribution (Beta/PLM/VOC)
+app.get('/api/central/series-distribution', async (req, res) => {
+  try {
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.series_distribution);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
+  } catch (error) {
+    console.error('Central series distribution error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/top-models -> Returns top 10 models with labels and values
+app.get('/api/central/top-models', async (req, res) => {
+  try {
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.top_models);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
+  } catch (error) {
+    console.error('Central top models error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/high-issues -> Returns top 10 high issues
+app.get('/api/central/high-issues', async (req, res) => {
+  try {
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.high_issues);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
+  } catch (error) {
+    console.error('Central high issues error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/top-models/:source -> Returns top 10 models for specific data source (beta, plm, voc)
+app.get('/api/central/top-models/:source', async (req, res) => {
+  try {
+    const source = req.params.source;
+    const validSources = ['beta', 'plm', 'voc'];
+    if (!validSources.includes(source)) {
+      return res.status(400).json({ error: 'Invalid source. Must be beta, plm, or voc' });
+    }
+
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.filtered_top_models[source]);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
+  } catch (error) {
+    console.error(`Central top models ${req.params.source} error:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/model-module-matrix -> Returns matrix of Top 10 Models × Top 10 Modules
+app.get('/api/central/model-module-matrix', async (req, res) => {
+  try {
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.model_module_matrix);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
+  } catch (error) {
+    console.error('Central model-module matrix error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/central/source-model-summary -> Returns detailed summary by source and model
+app.get('/api/central/source-model-summary', async (req, res) => {
+  try {
+    const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
+
+    if (fs.existsSync(cachePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      res.json(cacheData.source_model_summary);
+    } else {
+      res.status(500).json({ error: 'Dashboard cache not found' });
+    }
+  } catch (error) {
+    console.error('Central source-model summary error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/analytics/:module -> returns pre-aggregated analytics for dashboards
+app.get('/api/analytics/:module', async (req, res) => {
+  const module = req.params.module;
+  const analyticsPath = path.join(__dirname, 'downloads', module, 'analytics.json');
+
+  // Check if analytics.json exists and is newer than latest Excel
+  if (fs.existsSync(analyticsPath)) {
+    try {
+      const analyticsStat = fs.statSync(analyticsPath);
+      const latestExcel = getLatestExcelFile(module);
+
+      if (latestExcel && analyticsStat.mtime >= fs.statSync(latestExcel).mtime) {
+        // Cache is fresh, return it directly
+        console.log(`📋 Serving cached analytics for ${module}`);
+        const cachedData = JSON.parse(fs.readFileSync(analyticsPath, 'utf8'));
+        return res.json(cachedData);
+      }
+    } catch (err) {
+      console.warn('Cache read failed, falling back to computation:', err.message);
+    }
+  }
+
+  // Fallback to on-demand computation
+  console.log(`🔄 Computing analytics for ${module}`);
+  const { spawn } = require('child_process');
+
+  const pythonProcess = spawn('python', ['server/analytics/pandas_aggregator.py', module]);
+
+  let stdout = '';
+  let stderr = '';
+
+  pythonProcess.stdout.on('data', (data) => {
+    stdout += data.toString();
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    stderr += data.toString();
+  });
+
+  pythonProcess.on('close', (code) => {
+    if (code !== 0) {
+      console.error('Python analytics error:', stderr);
+      return res.status(500).json({ error: 'Analytics computation failed' });
+    }
+
+    try {
+      const result = JSON.parse(stdout);
+      if (result.error) {
+        if (result.error.includes('No Excel files')) {
+          return res.status(404).json({ error: 'No processed Excel files found' });
+        } else {
+          return res.status(500).json({ error: result.error });
+        }
+      }
+      res.json(result);
+    } catch (e) {
+      console.error('JSON parse error from analytics:', e);
+      res.status(500).json({ error: 'Invalid response from analytics' });
+    }
+  });
+});
+
+// Helper function to get latest Excel file for cache validation
+function getLatestExcelFile(module) {
+  const moduleDir = path.join(__dirname, 'downloads', module);
+  if (!fs.existsSync(moduleDir)) return null;
+
+  try {
+    const files = fs.readdirSync(moduleDir)
+      .filter(f => f.endsWith('.xlsx') || f.endsWith('.xls'))
+      .map(f => path.join(moduleDir, f))
+      .filter(f => fs.existsSync(f));
+
+    if (files.length === 0) return null;
+
+    // Return the most recently modified file
+    return files.reduce((latest, current) => {
+      const latestStat = fs.statSync(latest);
+      const currentStat = fs.statSync(current);
+      return currentStat.mtime > latestStat.mtime ? current : latest;
+    });
+  } catch (err) {
+    return null;
+  }
+}
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
@@ -2095,7 +2524,7 @@ app.get('/api/module-details', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log('\n🚀 Ollama Web Processor is running!');
+  console.log('\n🚀 Centralized Dashboard is running!');
   console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
   console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
 });

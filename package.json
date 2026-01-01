@@ -36,13 +36,14 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "echarts": "^6.0.0",
+    "echarts-for-react": "^3.0.5",
     "exceljs": "^4.4.0",
     "express": "^4.22.1",
     "multer": "^2.0.2",
     "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.2.0"
   },
-  "devDependencies": {},
   "preferGlobal": false,
   "private": false,
   "contributors": []
