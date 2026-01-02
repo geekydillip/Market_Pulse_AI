@@ -92,17 +92,20 @@ def compute_kpis(df: pd.DataFrame) -> dict:
     - unique_models
     - category_distribution
     - severity_distribution
+    - status_distribution
     """
     total_rows = len(df)
     unique_models = df.get('Model No.', pd.Series()).nunique() if 'Model No.' in df.columns else 0
     category_distribution = df.get('Module', pd.Series()).value_counts().to_dict() if 'Module' in df.columns else {}
     severity_distribution = df.get('Severity', pd.Series()).value_counts().to_dict() if 'Severity' in df.columns else {}
+    status_distribution = df.get('Progr.Stat.', pd.Series()).value_counts().to_dict() if 'Progr.Stat.' in df.columns else {}
 
     return {
         "total_rows": total_rows,
         "unique_models": unique_models,
         "category_distribution": category_distribution,
-        "severity_distribution": severity_distribution
+        "severity_distribution": severity_distribution,
+        "status_distribution": status_distribution
     }
 
 def group_by_column(df: pd.DataFrame, column: str) -> list:
@@ -172,11 +175,14 @@ if __name__ == "__main__":
                 "total_rows": kpis["total_rows"],
                 "unique_models": kpis["unique_models"],
                 "high_issues": kpis["severity_distribution"].get("High", 0),
-                "severity_distribution": kpis["severity_distribution"]
+                "severity_distribution": kpis["severity_distribution"],
+                "open_issues": kpis["status_distribution"].get("Open", 0),
+                "resolved_issues": kpis["status_distribution"].get("Resolve", 0),
+                "close_issues": kpis["status_distribution"].get("Close", 0)
             },
             "top_models": top_models,
             "categories": categories,
-            "rows": rows
+            "rows": rows,
         }
 
         if time_data:

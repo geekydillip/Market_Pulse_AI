@@ -1,13 +1,16 @@
 {
   "kpis": {
-    "total_rows": 3958,
+    "total_rows": 3858,
     "unique_models": 314,
-    "high_issues": 1674,
+    "high_issues": 1625,
     "severity_distribution": {
-      "Medium": 2244,
-      "High": 1674,
-      "Low": 40
-    }
+      "Medium": 2194,
+      "High": 1625,
+      "Low": 39
+    },
+    "open_issues": 833,
+    "resolved_issues": 0,
+    "close_issues": 2843
   },
   "top_models": [
     {
@@ -40,7 +43,7 @@
     },
     {
       "label": "SM-M356B_SWA_15_INS",
-      "count": 84
+      "count": 83
     },
     {
       "label": "SM-S908E_SWA_15_DD",
@@ -79,12 +82,12 @@
       "count": 59
     },
     {
-      "label": "SM-S911BE_SWA_14_DD",
-      "count": 54
-    },
-    {
       "label": "SM-A556E_SWA_15_INS",
       "count": 52
+    },
+    {
+      "label": "SM-S911BE_SWA_14_DD",
+      "count": 47
     },
     {
       "label": "SM-S921E_SWA_16_DD",
@@ -93,14 +96,6 @@
     {
       "label": "SM-S921BE_SWA_16_DD",
       "count": 45
-    },
-    {
-      "label": "SM-S918BE_SWA_14_DD",
-      "count": 44
-    },
-    {
-      "label": "SM-S928BE_SWA_DD",
-      "count": 43
     },
     {
       "label": "SM-M346B_SWA_15_INS",
@@ -119,20 +114,32 @@
       "count": 37
     },
     {
+      "label": "SM-S928BE_SWA_DD",
+      "count": 37
+    },
+    {
       "label": "SM-S911BE_SWA_16_DD",
       "count": 37
     },
     {
-      "label": "SM-E236B_SWA_14_INS",
-      "count": 36
+      "label": "SM-S918BE_SWA_14_DD",
+      "count": 35
     },
     {
       "label": "SM-S918BE_SWA_16_DD",
       "count": 35
     },
     {
+      "label": "SM-E236B_SWA_14_INS",
+      "count": 33
+    },
+    {
       "label": "SM-A366E_SWA_INS",
       "count": 31
+    },
+    {
+      "label": "SM-E156B_SWA_15_INS",
+      "count": 27
     },
     {
       "label": "SM-A146B_SWA_15_INS",
@@ -141,14 +148,6 @@
     {
       "label": "SM-G781B_SWA_13_DD",
       "count": 27
-    },
-    {
-      "label": "SM-E156B_SWA_15_INS",
-      "count": 27
-    },
-    {
-      "label": "SM-A356E_SWA_INS",
-      "count": 26
     },
     {
       "label": "SM-A166P_SWA_15_INS",
@@ -172,11 +171,7 @@
     },
     {
       "label": "SM-A346E_SWA_14_INS",
-      "count": 24
-    },
-    {
-      "label": "SM-M356B_SWA_INS",
-      "count": 23
+      "count": 22
     },
     {
       "label": "SM-X610_EUR_15_XX",
@@ -187,15 +182,11 @@
       "count": 21
     },
     {
-      "label": "SM-S908E_SWA_14_DD",
-      "count": 21
-    },
-    {
-      "label": "SM-A736B_SWA_15_INU",
+      "label": "SM-S926BE_SWA_16_DD",
       "count": 20
     },
     {
-      "label": "SM-S926BE_SWA_16_DD",
+      "label": "SM-A736B_SWA_15_INU",
       "count": 20
     },
     {
@@ -207,11 +198,19 @@
       "count": 19
     },
     {
-      "label": "SM-A356E_SWA_16_INS",
+      "label": "SM-A356E_SWA_INS",
+      "count": 19
+    },
+    {
+      "label": "SM-M356B_SWA_INS",
       "count": 18
     },
     {
       "label": "SM-E146B_SWA_15_INS",
+      "count": 18
+    },
+    {
+      "label": "SM-A356E_SWA_16_INS",
       "count": 18
     },
     {
@@ -227,23 +226,11 @@
       "count": 17
     },
     {
-      "label": "SM-A556E_SWA_INS",
+      "label": "SM-S908E_SWA_14_DD",
       "count": 16
     },
     {
-      "label": "SM-A536E_SWA_15_INS",
-      "count": 15
-    },
-    {
       "label": "SM-E546B_SWA_15_INS",
-      "count": 15
-    },
-    {
-      "label": "SM-A528B_SWA_14_INS",
-      "count": 15
-    },
-    {
-      "label": "SM-X216B_SWA_15_DD",
       "count": 15
     },
     {
@@ -251,15 +238,23 @@
       "count": 15
     },
     {
-      "label": "SM-S711BE_SWA_16_INS",
-      "count": 14
+      "label": "SM-X216B_SWA_15_DD",
+      "count": 15
     },
     {
-      "label": "SM-S711BE_SWA_14_INS",
-      "count": 14
+      "label": "SM-A536E_SWA_15_INS",
+      "count": 15
     },
     {
       "label": "SM-A346E_SWA_16_INS",
+      "count": 14
+    },
+    {
+      "label": "SM-A556E_SWA_INS",
+      "count": 14
+    },
+    {
+      "label": "SM-S711BE_SWA_16_INS",
       "count": 14
     },
     {
@@ -267,15 +262,7 @@
       "count": 13
     },
     {
-      "label": "SM-E556B_SWA_INS",
-      "count": 13
-    },
-    {
-      "label": "SM-M346B_SWA_14_INS",
-      "count": 13
-    },
-    {
-      "label": "SM-S921BE_SWA_DD",
+      "label": "SM-A528B_SWA_14_INS",
       "count": 13
     },
     {
@@ -287,10 +274,6 @@
       "count": 12
     },
     {
-      "label": "SM-A156E_SWA_INS",
-      "count": 12
-    },
-    {
       "label": "SM-A546E_SWA_14_INS",
       "count": 12
     },
@@ -299,19 +282,39 @@
       "count": 12
     },
     {
+      "label": "SM-M346B_SWA_14_INS",
+      "count": 12
+    },
+    {
       "label": "SM-M346B_SWA_16_INS",
       "count": 12
     },
     {
-      "label": "SM-X510_EUR_15_XX",
-      "count": 12
-    },
-    {
-      "label": "SM-A166P_SWA_INS",
+      "label": "SM-S711BE_SWA_14_INS",
       "count": 11
     },
     {
-      "label": "SM-S926BE_SWA_DD",
+      "label": "SM-X510_EUR_15_XX",
+      "count": 11
+    },
+    {
+      "label": "SM-E556B_SWA_INS",
+      "count": 11
+    },
+    {
+      "label": "SM-A156E_SWA_INS",
+      "count": 11
+    },
+    {
+      "label": "SM-A166P_SWA_INS",
+      "count": 10
+    },
+    {
+      "label": "SM-E346B_SWA_15_INS",
+      "count": 10
+    },
+    {
+      "label": "SM-M356B_SWA_16_INS",
       "count": 10
     },
     {
@@ -323,31 +326,31 @@
       "count": 10
     },
     {
-      "label": "SM-M356B_SWA_16_INS",
-      "count": 10
+      "label": "SM-A266BE_SWA_INS",
+      "count": 9
     },
     {
-      "label": "SM-A236E_SWA_14_INS",
-      "count": 10
+      "label": "SM-F946BE_SWA_15_DD",
+      "count": 9
     },
     {
-      "label": "SM-M556B_SWA_INS",
-      "count": 10
+      "label": "SM-S926BE_SWA_DD",
+      "count": 9
     },
     {
-      "label": "SM-E346B_SWA_15_INS",
-      "count": 10
-    },
-    {
-      "label": "SM-E156B_SWA_INS",
-      "count": 10
-    },
-    {
-      "label": "SM-G990E_SWA_14_DD",
-      "count": 10
+      "label": "SM-F936BE_SWA_15_DD",
+      "count": 9
     },
     {
       "label": "SM-M558B_SWA_15_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-M146B_SWA_15_INS",
+      "count": 9
+    },
+    {
+      "label": "SM-A236E_SWA_14_INS",
       "count": 9
     },
     {
@@ -359,51 +362,19 @@
       "count": 9
     },
     {
-      "label": "SM-F946BE_SWA_15_DD",
+      "label": "SM-S921BE_SWA_DD",
       "count": 9
     },
     {
-      "label": "SM-A266BE_SWA_INS",
+      "label": "SM-M556B_SWA_INS",
       "count": 9
     },
     {
-      "label": "SM-F936BE_SWA_15_DD",
+      "label": "SM-E156B_SWA_INS",
       "count": 9
-    },
-    {
-      "label": "SM-M146B_SWA_15_INS",
-      "count": 9
-    },
-    {
-      "label": "SM-A336E_SWA_14_INS",
-      "count": 9
-    },
-    {
-      "label": "SM-A146B_SWA_14_INS",
-      "count": 9
-    },
-    {
-      "label": "SM-S901E_SWA_14_DD",
-      "count": 9
-    },
-    {
-      "label": "SM-X216B_EUR_15_XX",
-      "count": 8
-    },
-    {
-      "label": "SM-S721BE_SWA_INS",
-      "count": 8
-    },
-    {
-      "label": "SM-A235F_SWA_14_INS",
-      "count": 8
     },
     {
       "label": "SM-M146B_SWA_14_INS",
-      "count": 8
-    },
-    {
-      "label": "SM-S936BE_SWA_DD",
       "count": 8
     },
     {
@@ -411,23 +382,55 @@
       "count": 8
     },
     {
+      "label": "SM-X216B_EUR_15_XX",
+      "count": 8
+    },
+    {
+      "label": "SM-S901E_SWA_14_DD",
+      "count": 8
+    },
+    {
+      "label": "SM-A146B_SWA_14_INS",
+      "count": 8
+    },
+    {
+      "label": "SM-A336E_SWA_14_INS",
+      "count": 8
+    },
+    {
       "label": "SM-E066B_SWA_INS",
       "count": 8
     },
     {
-      "label": "SM-M558B_SWA_INS",
+      "label": "SM-S936BE_SWA_DD",
       "count": 8
-    },
-    {
-      "label": "SM-E146B_SWA_14_INS",
-      "count": 7
     },
     {
       "label": "SM-M215F_SWA_12_INS",
       "count": 7
     },
     {
+      "label": "SM-M558B_SWA_INS",
+      "count": 7
+    },
+    {
+      "label": "SM-G990E_SWA_14_DD",
+      "count": 7
+    },
+    {
+      "label": "SM-X210_EUR_15_XX",
+      "count": 6
+    },
+    {
       "label": "SM-E055F_SWA_15_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-S721BE_SWA_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-E146B_SWA_14_INS",
       "count": 6
     },
     {
@@ -435,15 +438,7 @@
       "count": 6
     },
     {
-      "label": "SM-X710_EUR_15_XX",
-      "count": 6
-    },
-    {
-      "label": "SM-X210_EUR_15_XX",
-      "count": 6
-    },
-    {
-      "label": "SM-M536B_SWA_14_INS",
+      "label": "SM-M166P_SWA_15_INS",
       "count": 6
     },
     {
@@ -451,51 +446,27 @@
       "count": 6
     },
     {
-      "label": "SM-M166P_SWA_15_INS",
+      "label": "SM-M536B_SWA_14_INS",
       "count": 6
     },
     {
-      "label": "SM-A226B_SWA_13_INS",
-      "count": 5
+      "label": "SM-A235F_SWA_14_INS",
+      "count": 6
+    },
+    {
+      "label": "SM-X710_EUR_15_XX",
+      "count": 6
     },
     {
       "label": "SM-X510_EUR_14_XX",
       "count": 5
     },
     {
-      "label": "SM-E346B_SWA_14_INS",
-      "count": 5
-    },
-    {
-      "label": "SM-F926B_SWA_15_DD",
-      "count": 5
-    },
-    {
-      "label": "SM-F946BE_SWA_14_DD",
-      "count": 5
-    },
-    {
-      "label": "SM-M366B_SWA_16_INS",
-      "count": 5
-    },
-    {
-      "label": "SM-A536E_SWA_14_INS",
+      "label": "SM-A226B_SWA_13_INS",
       "count": 5
     },
     {
       "label": "SM-A066B_SWA_INS",
-      "count": 5
-    },
-    {
-      "label": "SM-E166P_SWA_15_INS",
-      "count": 5
-    },
-    {
-      "label": "SM-G990E_SWA_16_DD",
-      "count": 5
-    },
-    {
-      "label": "SM-G998B_SWA_14_DD",
       "count": 5
     },
     {
@@ -507,7 +478,27 @@
       "count": 5
     },
     {
+      "label": "SM-M366B_SWA_16_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-E346B_SWA_14_INS",
+      "count": 5
+    },
+    {
+      "label": "SM-G990E_SWA_16_DD",
+      "count": 5
+    },
+    {
       "label": "SM-G990B2_SWA_14_DD",
+      "count": 5
+    },
+    {
+      "label": "SM-F926B_SWA_15_DD",
+      "count": 5
+    },
+    {
+      "label": "SM-E166P_SWA_15_INS",
       "count": 5
     },
     {
@@ -515,19 +506,11 @@
       "count": 5
     },
     {
-      "label": "SM-E135F_SWA_14_INS",
-      "count": 5
-    },
-    {
-      "label": "SM-A736B_SWA_14_INU",
-      "count": 5
-    },
-    {
-      "label": "SM-M526B_SWA_13_INS",
-      "count": 5
-    },
-    {
       "label": "SM-E625F_SWA_13_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-A127F_SWA_13_INS",
       "count": 4
     },
     {
@@ -535,15 +518,23 @@
       "count": 4
     },
     {
-      "label": "SM-M136B_SWA_14_INS",
+      "label": "SM-A156E_SWA_16_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-A536E_SWA_14_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-A736B_SWA_14_INU",
+      "count": 4
+    },
+    {
+      "label": "SM-T735_SWA_14_DD",
       "count": 4
     },
     {
       "label": "SM-P615_SWA_13_DD",
-      "count": 4
-    },
-    {
-      "label": "SM-F741BE_SWA_15_DD",
       "count": 4
     },
     {
@@ -555,19 +546,11 @@
       "count": 4
     },
     {
-      "label": "SM-A127F_SWA_13_INS",
+      "label": "SM-M136B_SWA_14_INS",
       "count": 4
     },
     {
-      "label": "SM-A156E_SWA_16_INS",
-      "count": 4
-    },
-    {
-      "label": "SM-E366B_SWA_16_INS",
-      "count": 4
-    },
-    {
-      "label": "SM-T735_SWA_14_DD",
+      "label": "SM-F741BE_SWA_15_DD",
       "count": 4
     },
     {
@@ -575,7 +558,15 @@
       "count": 4
     },
     {
-      "label": "SM-E055F_SWA_INS",
+      "label": "SM-E366B_SWA_16_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-M526B_SWA_13_INS",
+      "count": 4
+    },
+    {
+      "label": "SM-F946BE_SWA_14_DD",
       "count": 3
     },
     {
@@ -583,15 +574,7 @@
       "count": 3
     },
     {
-      "label": "SM-X210_EUR_14_XX",
-      "count": 3
-    },
-    {
       "label": "SM-M166P_SWA_16_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-E346B_SWA_16_INS",
       "count": 3
     },
     {
@@ -603,11 +586,7 @@
       "count": 3
     },
     {
-      "label": "SM-S936BE_SWA_16_DD",
-      "count": 3
-    },
-    {
-      "label": "SM-X820_EUR_XX",
+      "label": "SM-A176BE_SWA_16_INS",
       "count": 3
     },
     {
@@ -615,43 +594,7 @@
       "count": 3
     },
     {
-      "label": "SM-A176BE_SWA_16_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-A135F_SWA_14_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-L705F_EUR_XX",
-      "count": 3
-    },
-    {
-      "label": "SM-S711BE_SWA_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-M346B_SWA_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-M315F_SWA_12_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-F127G_SWA_13_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-L315F_EUR_XX",
-      "count": 3
-    },
-    {
-      "label": "SM-X516B_SWA_15_DD",
-      "count": 3
-    },
-    {
-      "label": "SM-M325F_SWA_13_DD",
+      "label": "SM-E346B_SWA_16_INS",
       "count": 3
     },
     {
@@ -659,23 +602,11 @@
       "count": 3
     },
     {
-      "label": "SM-M127G_SWA_13_INS",
+      "label": "SM-A135F_SWA_14_INS",
       "count": 3
     },
     {
-      "label": "SM-M145F_SWA_15_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-A176BE_SWA_INS",
-      "count": 3
-    },
-    {
-      "label": "SM-A325F_SWA_13_DD",
-      "count": 3
-    },
-    {
-      "label": "SM-E566B_SWA_INS",
+      "label": "SM-S936BE_SWA_16_DD",
       "count": 3
     },
     {
@@ -683,7 +614,35 @@
       "count": 3
     },
     {
-      "label": "SM-G991B_SWA_15_DD",
+      "label": "SM-L705F_EUR_XX",
+      "count": 3
+    },
+    {
+      "label": "SM-M127G_SWA_13_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-A176BE_SWA_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-E566B_SWA_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-S711BE_SWA_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-F127G_SWA_13_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-M315F_SWA_12_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-L315F_EUR_XX",
       "count": 3
     },
     {
@@ -691,35 +650,47 @@
       "count": 3
     },
     {
-      "label": "SM-A166P_SWA_16_INS",
-      "count": 3
-    },
-    {
       "label": "SM-E566B_SWA_16_INS",
       "count": 3
     },
     {
-      "label": "SM-F731BE_SWA_14_DD",
+      "label": "SM-A166P_SWA_16_INS",
       "count": 3
     },
     {
-      "label": "SM-X516B_EUR_15_XX",
+      "label": "SM-G998B_SWA_14_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-M145F_SWA_15_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-G991B_SWA_15_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-M325F_SWA_13_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-E135F_SWA_14_INS",
+      "count": 3
+    },
+    {
+      "label": "SM-X516B_SWA_15_DD",
+      "count": 3
+    },
+    {
+      "label": "SM-M326B_SWA_13_INS",
       "count": 2
     },
     {
-      "label": "SM-R875F_EUR_E0_XX",
+      "label": "SM-M336BU_SWA_14_INS",
       "count": 2
     },
     {
       "label": "SM-F956BE_SWA_DD",
-      "count": 2
-    },
-    {
-      "label": "SM-M317F_SWA_12_INS",
-      "count": 2
-    },
-    {
-      "label": "SM-A525F_SWA_14_DD",
       "count": 2
     },
     {
@@ -731,91 +702,31 @@
       "count": 2
     },
     {
-      "label": "SM-A217F_SWA_12_INS",
+      "label": "SM-X516B_EUR_15_XX",
       "count": 2
     },
     {
-      "label": "SM-M558B_SWA_16_INS",
+      "label": "SM-F731BE_SWA_14_DD",
       "count": 2
     },
     {
-      "label": "SM-A125F_SWA_12_INS",
+      "label": "SM-A525F_SWA_14_DD",
       "count": 2
     },
     {
-      "label": "SM-M326B_SWA_13_INS",
+      "label": "SM-M215G_SWA_13_INS",
       "count": 2
     },
     {
-      "label": "SM-M066B_SWA_16_INS",
+      "label": "SM-R875F_EUR_E0_XX",
       "count": 2
     },
     {
-      "label": "SM-F926B_SWA_14_DD",
+      "label": "SM-M317F_SWA_12_INS",
       "count": 2
     },
     {
-      "label": "SM-R870_NA_USA",
-      "count": 2
-    },
-    {
-      "label": "SM-M025F_SWA_12_INS",
-      "count": 2
-    },
-    {
-      "label": "SM-T733_EUR_14_XX",
-      "count": 2
-    },
-    {
-      "label": "SM-R870_NA_E0_USA",
-      "count": 2
-    },
-    {
-      "label": "SM-X710_EUR_14_XX",
-      "count": 2
-    },
-    {
-      "label": "SM-E546B_SWA_16_INS",
-      "count": 2
-    },
-    {
-      "label": "SM-A336E_SWA_16_INS",
-      "count": 2
-    },
-    {
-      "label": "SM-R865F_EUR_D0_XX",
-      "count": 2
-    },
-    {
-      "label": "SM-X700_EUR_15_XX",
-      "count": 2
-    },
-    {
-      "label": "SM-A055F_SWA_15_INS",
-      "count": 2
-    },
-    {
-      "label": "SM-A910F_SWA_OO_DD",
-      "count": 2
-    },
-    {
-      "label": "SM-N980F_SWA_13_DD",
-      "count": 2
-    },
-    {
-      "label": "SM-X926B_EUR_16_XX",
-      "count": 2
-    },
-    {
-      "label": "SM-G991B_SWA_14_DD",
-      "count": 2
-    },
-    {
-      "label": "SM-X216B_SWA_14_DD",
-      "count": 2
-    },
-    {
-      "label": "SM-X610_EUR_14_XX",
+      "label": "SM-A256E_SWA_INS",
       "count": 2
     },
     {
@@ -823,15 +734,19 @@
       "count": 2
     },
     {
-      "label": "SM-M066B_SWA_INS",
+      "label": "SM-A125F_SWA_12_INS",
       "count": 2
     },
     {
-      "label": "SM-A042F_SWA_14_INS",
+      "label": "SM-M558B_SWA_16_INS",
       "count": 2
     },
     {
-      "label": "SM-M336BU_SWA_14_INS",
+      "label": "SM-M066B_SWA_16_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-M346B_SWA_INS",
       "count": 2
     },
     {
@@ -843,11 +758,39 @@
       "count": 2
     },
     {
-      "label": "SM-A256E_SWA_INS",
+      "label": "SM-A336E_SWA_16_INS",
       "count": 2
     },
     {
-      "label": "SM-M215G_SWA_13_INS",
+      "label": "SM-X820_EUR_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-E055F_SWA_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-E546B_SWA_16_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-M025F_SWA_12_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-X210_EUR_14_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-X926B_EUR_16_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-T733_EUR_14_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-A055F_SWA_15_INS",
       "count": 2
     },
     {
@@ -859,7 +802,39 @@
       "count": 2
     },
     {
-      "label": "SM-E426B_SWA_13_INS",
+      "label": "SM-N980F_SWA_13_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-X216B_SWA_14_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-M066B_SWA_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-X610_EUR_14_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-G991B_SWA_14_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-A217F_SWA_12_INS",
+      "count": 2
+    },
+    {
+      "label": "SM-A325F_SWA_13_DD",
+      "count": 2
+    },
+    {
+      "label": "SM-X700_EUR_15_XX",
+      "count": 2
+    },
+    {
+      "label": "SM-N770F_SWA_13_DD",
       "count": 1
     },
     {
@@ -867,11 +842,35 @@
       "count": 1
     },
     {
-      "label": "SM-N770F_SWA_13_DD",
+      "label": "SM-F711B_SWA_14_DD",
       "count": 1
     },
     {
-      "label": "SM-F711B_SWA_14_DD",
+      "label": "SM-R870X_NA_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-X616B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X816B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-G985F_SWA_13_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-M307F_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X816B_EUR_15_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-E426B_SWA_13_INS",
       "count": 1
     },
     {
@@ -880,6 +879,14 @@
     },
     {
       "label": "SM-A035F_SWA_13_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-F711B_SWA_15_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-R510_NA_XAR",
       "count": 1
     },
     {
@@ -899,7 +906,27 @@
       "count": 1
     },
     {
-      "label": "SM-T225_EUR_14_XX",
+      "label": "SM-F731BE_SWA_16_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-F926B_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-A256E_SWA_16_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-E156B_SWA_16_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-M136B_SWA_13_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X620_EUR_16_XX",
       "count": 1
     },
     {
@@ -911,27 +938,7 @@
       "count": 1
     },
     {
-      "label": "SM-F731BE_SWA_16_DD",
-      "count": 1
-    },
-    {
-      "label": "SM-X620_EUR_16_XX",
-      "count": 1
-    },
-    {
-      "label": "SM-A256E_SWA_16_INS",
-      "count": 1
-    },
-    {
-      "label": "SM-A207F_SWA_RR_INS",
-      "count": 1
-    },
-    {
-      "label": "SM-M136B_SWA_13_INS",
-      "count": 1
-    },
-    {
-      "label": "SM-M017F_SWA_INS",
+      "label": "SM-E066B_SWA_16_INS",
       "count": 1
     },
     {
@@ -939,11 +946,7 @@
       "count": 1
     },
     {
-      "label": "SM-E066B_SWA_16_INS",
-      "count": 1
-    },
-    {
-      "label": "SM-E156B_SWA_16_INS",
+      "label": "SM-M017F_SWA_INS",
       "count": 1
     },
     {
@@ -951,23 +954,19 @@
       "count": 1
     },
     {
+      "label": "SM-A207F_SWA_RR_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-T225_EUR_14_XX",
+      "count": 1
+    },
+    {
       "label": "SM-R860X_NA_USA",
       "count": 1
     },
     {
-      "label": "SM-X800_EUR_14_XX",
-      "count": 1
-    },
-    {
-      "label": "SM-A047F_SWA_14_INS",
-      "count": 1
-    },
-    {
       "label": "SM-X826B_EUR_15_XX",
-      "count": 1
-    },
-    {
-      "label": "SM-X516B_SWA_14_DD",
       "count": 1
     },
     {
@@ -979,7 +978,7 @@
       "count": 1
     },
     {
-      "label": "SM-R870X_NA_USA",
+      "label": "SM-A047F_SWA_14_INS",
       "count": 1
     },
     {
@@ -987,7 +986,7 @@
       "count": 1
     },
     {
-      "label": "SM-R510_NA_XAR",
+      "label": "SM-X800_EUR_14_XX",
       "count": 1
     },
     {
@@ -999,15 +998,19 @@
       "count": 1
     },
     {
-      "label": "SM-G975F_SWA_12_DD",
-      "count": 1
-    },
-    {
       "label": "SM-M115F_SWA_12_DD",
       "count": 1
     },
     {
+      "label": "SM-G975F_SWA_12_DD",
+      "count": 1
+    },
+    {
       "label": "SM-X916B_SWA_14_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-X516B_SWA_14_DD",
       "count": 1
     },
     {
@@ -1019,19 +1022,15 @@
       "count": 1
     },
     {
-      "label": "SM-N960F_SWA_QQ_DD",
-      "count": 1
-    },
-    {
       "label": "SM-T970_EUR_13_XX",
       "count": 1
     },
     {
-      "label": "SM-X616B_SWA_15_DD",
+      "label": "SM-N960F_SWA_QQ_DD",
       "count": 1
     },
     {
-      "label": "SM-X816B_SWA_15_DD",
+      "label": "SM-X906B_SWA_15_DD",
       "count": 1
     },
     {
@@ -1043,31 +1042,23 @@
       "count": 1
     },
     {
-      "label": "SM-M307F_SWA_INS",
+      "label": "SM-X910_EUR_15_XX",
       "count": 1
     },
     {
-      "label": "SM-X816B_EUR_15_XX",
+      "label": "SM-X706B_EUR_15_XX",
       "count": 1
     },
     {
-      "label": "SM-X906B_SWA_15_DD",
+      "label": "SM-X520_EUR_XX",
       "count": 1
     },
     {
-      "label": "SM-G985F_SWA_13_DD",
+      "label": "SM-E145F_SWA_15_INS",
       "count": 1
     },
     {
-      "label": "SM-F711B_SWA_15_DD",
-      "count": 1
-    },
-    {
-      "label": "SM-G973F_SWA_12_DD",
-      "count": 1
-    },
-    {
-      "label": "SM-M022G_SWA_INS",
+      "label": "SM-X620_EUR_XX",
       "count": 1
     },
     {
@@ -1075,7 +1066,15 @@
       "count": 1
     },
     {
-      "label": "SM-L300_ALL_F0_WW",
+      "label": "SM-L330_ALL_WW",
+      "count": 1
+    },
+    {
+      "label": "SM-R820_EUR_TE_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-R945F_EUR_E0_XX",
       "count": 1
     },
     {
@@ -1083,7 +1082,7 @@
       "count": 1
     },
     {
-      "label": "SM-S937BE_SWA_DD",
+      "label": "SM-L300_ALL_F0_WW",
       "count": 1
     },
     {
@@ -1091,7 +1090,7 @@
       "count": 1
     },
     {
-      "label": "SM-A065F_SWA_INS",
+      "label": "SM-X216B_EUR_14_XX",
       "count": 1
     },
     {
@@ -1099,11 +1098,11 @@
       "count": 1
     },
     {
-      "label": "SM-F956U_NA_USC",
+      "label": "SM-A065F_SWA_INS",
       "count": 1
     },
     {
-      "label": "SM-X216B_EUR_14_XX",
+      "label": "SM-F956U_NA_USC",
       "count": 1
     },
     {
@@ -1119,11 +1118,15 @@
       "count": 1
     },
     {
-      "label": "SM-X620_EUR_XX",
+      "label": "SM-R400N_NA_XAR",
       "count": 1
     },
     {
-      "label": "SM-E145F_SWA_15_INS",
+      "label": "SM-S937BE_SWA_DD",
+      "count": 1
+    },
+    {
+      "label": "SM-M022G_SWA_INS",
       "count": 1
     },
     {
@@ -1131,23 +1134,7 @@
       "count": 1
     },
     {
-      "label": "SM-X520_EUR_XX",
-      "count": 1
-    },
-    {
-      "label": "SM-R400N_NA_XAR",
-      "count": 1
-    },
-    {
-      "label": "SM-R945F_EUR_E0_XX",
-      "count": 1
-    },
-    {
-      "label": "SM-R820_EUR_TE_XX",
-      "count": 1
-    },
-    {
-      "label": "SM-L505F_EUR_XX",
+      "label": "SM-G973F_SWA_12_DD",
       "count": 1
     },
     {
@@ -1155,27 +1142,43 @@
       "count": 1
     },
     {
+      "label": "SM-R870_NA_USA",
+      "count": 1
+    },
+    {
+      "label": "SM-A042F_SWA_14_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-L505F_EUR_XX",
+      "count": 1
+    },
+    {
       "label": "SM-R820X_EUR_XX",
       "count": 1
     },
     {
-      "label": "SM-X706B_EUR_15_XX",
+      "label": "SM-R865F_EUR_D0_XX",
       "count": 1
     },
     {
-      "label": "SM-X910_EUR_15_XX",
+      "label": "SM-A145F_SWA_15_INS",
       "count": 1
     },
     {
-      "label": "SM-L330_ALL_WW",
+      "label": "SM-N770F_SWA_13_IND",
+      "count": 1
+    },
+    {
+      "label": "SM-E045F_SWA_14_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-E225F_SWA_13_INS",
       "count": 1
     },
     {
       "label": "SM-T975_SWA_13_DD",
-      "count": 1
-    },
-    {
-      "label": "SM-L325F_EUR_XX",
       "count": 1
     },
     {
@@ -1191,7 +1194,7 @@
       "count": 1
     },
     {
-      "label": "SM-A225F_SWA_13_DD",
+      "label": "SM-L325F_EUR_XX",
       "count": 1
     },
     {
@@ -1199,11 +1202,11 @@
       "count": 1
     },
     {
-      "label": "SM-E045F_SWA_14_INS",
+      "label": "SM-A225F_SWA_13_DD",
       "count": 1
     },
     {
-      "label": "SM-E366B_SWA_INS",
+      "label": "SM-A910F_SWA_OO_DD",
       "count": 1
     },
     {
@@ -1211,11 +1214,11 @@
       "count": 1
     },
     {
-      "label": "SM-X520_EUR_16_XX",
+      "label": "SM-E366B_SWA_INS",
       "count": 1
     },
     {
-      "label": "SM-E225F_SWA_13_INS",
+      "label": "SM-X520_EUR_16_XX",
       "count": 1
     },
     {
@@ -1223,15 +1226,15 @@
       "count": 1
     },
     {
-      "label": "SM-A145F_SWA_15_INS",
-      "count": 1
-    },
-    {
-      "label": "SM-N770F_SWA_13_IND",
-      "count": 1
-    },
-    {
       "label": "SM-S731BE_SWA_INS",
+      "count": 1
+    },
+    {
+      "label": "SM-X710_EUR_14_XX",
+      "count": 1
+    },
+    {
+      "label": "SM-R870_NA_E0_USA",
       "count": 1
     },
     {
@@ -1270,19 +1273,19 @@
   "categories": [
     {
       "label": "Settings",
-      "count": 742
+      "count": 731
     },
     {
       "label": "Camera",
-      "count": 453
+      "count": 436
     },
     {
       "label": "Network",
-      "count": 382
+      "count": 370
     },
     {
       "label": "Battery",
-      "count": 338
+      "count": 331
     },
     {
       "label": "Lock Screen",
@@ -1290,11 +1293,11 @@
     },
     {
       "label": "Display",
-      "count": 307
+      "count": 301
     },
     {
       "label": "System",
-      "count": 260
+      "count": 253
     },
     {
       "label": "Call",
@@ -1302,74 +1305,74 @@
     },
     {
       "label": "Connectivity",
-      "count": 82
+      "count": 76
     },
     {
       "label": "Gallery",
-      "count": 67
+      "count": 65
     },
     {
       "label": "UI/UX",
-      "count": 58
+      "count": 57
     },
     {
       "label": "Audio",
       "count": 57
     },
     {
-      "label": "Performance",
-      "count": 37
-    },
-    {
       "label": "Notification",
       "count": 36
     },
     {
-      "label": "Contacts",
+      "label": "Performance",
       "count": 35
     },
     {
-      "label": "Notes",
+      "label": "Contacts",
       "count": 34
     },
     {
-      "label": "Security",
+      "label": "Notes",
       "count": 31
     },
     {
-      "label": "Video Playback",
+      "label": "Security",
       "count": 30
-    },
-    {
-      "label": "Audio Sound",
-      "count": 29
     },
     {
       "label": "Heat",
       "count": 27
     },
     {
+      "label": "Video Playback",
+      "count": 27
+    },
+    {
+      "label": "Audio Sound",
+      "count": 27
+    },
+    {
       "label": "Biometrics",
-      "count": 26
+      "count": 24
     },
     {
       "label": "App",
-      "count": 22
-    },
-    {
-      "label": "Health",
-      "count": 18
+      "count": 21
     },
     {
       "label": "Launcher",
       "count": 18
     },
     {
+      "label": "Health",
+      "count": 17
+    },
+    {
       "label": "Game",
       "count": 17
     },
     {
-      "label": "My Files",
+      "label": "Media",
       "count": 16
     },
     {
@@ -1377,15 +1380,15 @@
       "count": 16
     },
     {
-      "label": "Media",
-      "count": 16
-    },
-    {
-      "label": "Messaging",
+      "label": "My Files",
       "count": 14
     },
     {
       "label": "Weather",
+      "count": 14
+    },
+    {
+      "label": "Messaging",
       "count": 14
     },
     {
@@ -1394,14 +1397,10 @@
     },
     {
       "label": "Photo Editor",
-      "count": 14
+      "count": 13
     },
     {
       "label": "Calculator",
-      "count": 12
-    },
-    {
-      "label": "Sound",
       "count": 12
     },
     {
@@ -1413,6 +1412,10 @@
       "count": 11
     },
     {
+      "label": "Sound",
+      "count": 11
+    },
+    {
       "label": "Clock",
       "count": 11
     },
@@ -1421,11 +1424,7 @@
       "count": 10
     },
     {
-      "label": "Video Editor",
-      "count": 9
-    },
-    {
-      "label": "Payment",
+      "label": "Software Update",
       "count": 8
     },
     {
@@ -1433,15 +1432,11 @@
       "count": 8
     },
     {
-      "label": "Software Update",
-      "count": 8
-    },
-    {
       "label": "Quick Panel",
       "count": 7
     },
     {
-      "label": "Video Player",
+      "label": "Video Editor",
       "count": 7
     },
     {
@@ -1449,7 +1444,7 @@
       "count": 7
     },
     {
-      "label": "Touch",
+      "label": "Payment",
       "count": 7
     },
     {
@@ -1457,7 +1452,7 @@
       "count": 7
     },
     {
-      "label": "Wallet",
+      "label": "Touch",
       "count": 7
     },
     {
@@ -1465,7 +1460,7 @@
       "count": 7
     },
     {
-      "label": "Sensor",
+      "label": "Recent",
       "count": 6
     },
     {
@@ -1473,11 +1468,11 @@
       "count": 6
     },
     {
-      "label": "Game Performance",
+      "label": "Video Player",
       "count": 6
     },
     {
-      "label": "Digital Wellbeing",
+      "label": "Wallet",
       "count": 6
     },
     {
@@ -1485,11 +1480,23 @@
       "count": 6
     },
     {
-      "label": "Recent",
-      "count": 6
+      "label": "Sensor",
+      "count": 5
+    },
+    {
+      "label": "Digital Wellbeing",
+      "count": 5
     },
     {
       "label": "Wallpaper",
+      "count": 5
+    },
+    {
+      "label": "Location",
+      "count": 5
+    },
+    {
+      "label": "Game Performance",
       "count": 5
     },
     {
@@ -1497,15 +1504,11 @@
       "count": 5
     },
     {
-      "label": "Browser",
-      "count": 5
-    },
-    {
       "label": "Photo",
       "count": 5
     },
     {
-      "label": "Location",
+      "label": "Browser",
       "count": 5
     },
     {
@@ -1517,27 +1520,27 @@
       "count": 4
     },
     {
-      "label": "Home Screen",
-      "count": 4
-    },
-    {
       "label": "Video",
       "count": 4
-    },
-    {
-      "label": "Navigation bar",
-      "count": 3
-    },
-    {
-      "label": "Watch",
-      "count": 3
     },
     {
       "label": "Multi-Window",
       "count": 3
     },
     {
+      "label": "Edge",
+      "count": 3
+    },
+    {
       "label": "USB",
+      "count": 3
+    },
+    {
+      "label": "Home Screen",
+      "count": 3
+    },
+    {
+      "label": "Navigation bar",
       "count": 3
     },
     {
@@ -1573,11 +1576,15 @@
       "count": 3
     },
     {
-      "label": "Edge",
-      "count": 3
+      "label": "Watch",
+      "count": 2
     },
     {
       "label": "Compatibility",
+      "count": 2
+    },
+    {
+      "label": "Gaming Hub",
       "count": 2
     },
     {
@@ -1585,19 +1592,15 @@
       "count": 2
     },
     {
-      "label": "Boot",
-      "count": 2
-    },
-    {
       "label": "Bluetooth",
       "count": 2
     },
     {
-      "label": "Account",
+      "label": "Email",
       "count": 2
     },
     {
-      "label": "Gaming Hub",
+      "label": "Account",
       "count": 2
     },
     {
@@ -1625,7 +1628,7 @@
       "count": 2
     },
     {
-      "label": "Email",
+      "label": "Fitness",
       "count": 2
     },
     {
@@ -1641,8 +1644,8 @@
       "count": 2
     },
     {
-      "label": "Fitness",
-      "count": 2
+      "label": "Recording",
+      "count": 1
     },
     {
       "label": "Sensors",
@@ -1657,7 +1660,7 @@
       "count": 1
     },
     {
-      "label": "Recording",
+      "label": "Boot",
       "count": 1
     },
     {
@@ -71241,1806 +71244,6 @@
       "Severity Reason": "Users lose data during a critical operation, which results in irreversible loss of photos and videos.",
       "Resolve Type": null,
       "R&D Comment": null
-    },
-    {
-      "Case Code": "P250106-04128",
-      "Model No.": "SM-A166P_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A166PXXU2AXL2",
-      "Title": "Proximity sensor is not working",
-      "Problem": "The proximity sensor is not working",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Sensor",
-      "Sub-Module": "Proximity",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The proximity sensor is not functioning properly.",
-      "Severity": "High",
-      "Severity Reason": "The sensor is not working, which prevents the device from detecting when the phone is near the user's face, leading to potential malfunction during calls.",
-      "Resolve Type": "H/W Issue",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250106-04201",
-      "Model No.": "SM-A356E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A356EXXU4AXK7",
-      "Title": "Studio App Keeps Stopping after save edit video",
-      "Problem": "The Studio App crashes when saving changes to a video after editing in the gallery app.",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "Video Editor",
-      "Sub-Module": "Save Function",
-      "Issue Type": "Crash",
-      "Sub-Issue Type": "App Crash",
-      "Summarized Problem": "The Studio App crashes when saving edited videos.",
-      "Severity": "High",
-      "Severity Reason": "The app crashes during a critical operation (saving video edits), making it unusable.",
-      "Resolve Type": "Fixing error",
-      "R&D Comment": "We added defense code to prevent crash in this case. Please check it with app version 7.1.8.0 or later."
-    },
-    {
-      "Case Code": "P250106-04212",
-      "Model No.": "SM-G998B_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "G998BXXSEGXK1",
-      "Title": "System's UI not responding",
-      "Problem": "System's UI not responding",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "System",
-      "Sub-Module": "UI",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The system's user interface is not responding.",
-      "Severity": "High",
-      "Severity Reason": "The UI is unresponsive, making the device unusable.",
-      "Resolve Type": "Transfer of next project",
-      "R&D Comment": "ANR occur in SystemUI due to accessing telephonyManager API in MobileConnectionRepositoryImpl. Telephony team suggested to apply try catch in problem code block and it is applied in UTAH branch with CL#30708369. As discussed with our Part Leader, only critical patches are allowed to be applied in PROD_UTAH, so it will not be applied in PROD_UTAH. The changes will reflect in B OS (OneUI 8.0). Please maintain current state for UTAH models."
-    },
-    {
-      "Case Code": "P250106-04322",
-      "Model No.": "SM-S928BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S928BXXS4AXKA",
-      "Title": "AI generative icon not available in gallery",
-      "Problem": "unable to see AI generative logo between favorite and edit icon",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Gallery",
-      "Sub-Module": "AI Generative Icon",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The AI generative icon is missing in the gallery interface between the favorite and edit icons.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction of a UI element, preventing visibility of a feature but not rendering the app unusable.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "This issue may occur if \"Show menu in viewer bottom\" is turned on through Gallery labs. Gallery Labs is not an official setting; users should reset it and avoid using it."
-    },
-    {
-      "Case Code": "P250106-04342",
-      "Model No.": "SM-S711BE_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S711BXXS6DXK8",
-      "Title": "Eye comfort shield doesn't work while using Samsung wallet",
-      "Problem": "Eye comfort shield doesn't work while using Samsung wallet",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Display",
-      "Sub-Module": "Eye Comfort Shield",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The eye comfort shield feature does not function while using Samsung Wallet.",
-      "Severity": "Medium",
-      "Severity Reason": "The feature fails during use, but does not render the device unusable or cause data loss.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": "The eye comfort shield is temporarily disabled during fingerprint authentication to ensure proper sensor performance; this is a known limitation due to optical fingerprint sensor sensitivity to screen lighting."
-    },
-    {
-      "Case Code": "P250106-04498",
-      "Model No.": "SM-M346B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M346BXXU7CXL1",
-      "Title": "Face issue with recyclebin",
-      "Problem": "When deleting an image, it does not delete and shows 'can move the file please try again' with an error acquired message at the bottom of the screen",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Gallery",
-      "Sub-Module": "Recyclebin",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Images are not properly deleted and instead show a 'can move the file please try again' error message in the recyclebin.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction where deletion fails and shows an error, but the device remains usable and no data is lost.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": "Cause: User is using an incorrect version of the My Files app. Countermeasure: Uninstall updates and reinstall the app."
-    },
-    {
-      "Case Code": "P250106-04522",
-      "Model No.": "SM-S928BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S928BXXS4AXKA",
-      "Title": "Camera failed",
-      "Problem": "Issue persists after reset; device still shows camera failure",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Rear Wide (x1.0) Camera",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The rear wide (x1.0) camera is not functioning despite reset attempts.",
-      "Severity": "High",
-      "Severity Reason": "The camera function is completely failing, rendering a key device feature unusable.",
-      "Resolve Type": "Defective device",
-      "R&D Comment": "There is some rear Wide(x1.0) camera HW error in the attached log. Please visit to CS center and request to check the rear Wide(x1.0) camera module or related HW."
-    },
-    {
-      "Case Code": "P250106-04601",
-      "Model No.": "SM-M356B_SWA_15_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M356BXXU4AXL1",
-      "Title": "Screen refresh rate issue at 60Hz",
-      "Problem": "The 60Hz refresh rate is very unoptimized and feels like it is operating at 10-12Hz, making the experience highly unsatisfactory.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Display",
-      "Sub-Module": "Refresh Rate",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "The screen refresh rate at 60Hz is poorly optimized and appears to operate at a much lower effective rate, causing a laggy and unsatisfactory user experience.",
-      "Severity": "High",
-      "Severity Reason": "The screen feels unresponsive and operates at a drastically reduced refresh rate, significantly impairing usability and performance.",
-      "Resolve Type": "Insufficient log time coverage",
-      "R&D Comment": "There are no abnormal logs; reproduction steps and video are missing. If issue recurs, provide reproduction steps, video, and time logs with systrace."
-    },
-    {
-      "Case Code": "P250106-04735",
-      "Model No.": "SM-S911BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S911BXXS7CXK6",
-      "Title": "PIP Mode not working properly while rotating device",
-      "Problem": "Inconsistencies in auto rotate and PIP mode animations on a flagship level phone",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Display",
-      "Sub-Module": "PIP Mode",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "PIP mode fails to function correctly during device rotation, causing inconsistent animations.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves partial malfunction of a core UI feature during device rotation, affecting user experience but not rendering the device unusable.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "No further OS VER 14 release planned. Please check issue on latest OS VER 15 and update accordingly."
-    },
-    {
-      "Case Code": "P250106-05243",
-      "Model No.": "SM-S921BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S921BXXS5AXKA",
-      "Title": "Overheating issue",
-      "Problem": "Phone heats abnormally after using Amazon UPI scan, causing glitches and inability to type, internet drops, and device performance issues",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Battery",
-      "Sub-Module": "Overheat",
-      "Issue Type": "Heat",
-      "Sub-Issue Type": "Heating Issue",
-      "Summarized Problem": "Phone overheats during Amazon UPI scan, leading to performance glitches and internet disconnection.",
-      "Severity": "High",
-      "Severity Reason": "Device overheats during use, causing functional glitches and loss of usability, making it unusable for basic tasks.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": "During use of in.amazon.mShop.android.shopping for Amazon UPI scan, heating is due to high CPU and network consumption, multiple app launches, and increased battery thermistor readings."
-    },
-    {
-      "Case Code": "P250106-05261",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXK6",
-      "Title": "Battery drainage issue",
-      "Problem": "Battery level rapidly decreased from 7% to 3% without significant usage, dropping to 1% by 4:24 PM despite no major device usage.",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Battery",
-      "Sub-Module": "Battery Drain",
-      "Issue Type": "Battery",
-      "Sub-Issue Type": "Battery Drain",
-      "Summarized Problem": "The device experiences rapid battery drain without significant usage.",
-      "Severity": "High",
-      "Severity Reason": "The battery drains rapidly to 1% in a short period without noticeable usage, indicating a major power consumption issue that renders the device unusable quickly.",
-      "Resolve Type": null,
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250106-06587",
-      "Model No.": "SM-M356B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M356BXXU4AXL1",
-      "Title": "AOD not working",
-      "Problem": "The Always on display is very dim and not visible in normal lighting conditions. It shows time, date, and battery percentage only when double-tapped, and the brightness increases upon tapping. Otherwise, it remains very dim.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Display",
-      "Sub-Module": "Always On Display",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The Always On Display is too dim and not visible under normal lighting conditions, making time, date, and battery percentage unreadable.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects visibility of key information under normal lighting but does not cause device crash or data loss.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250106-06620",
-      "Model No.": "SM-A356E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A356EXXU4AXK7",
-      "Title": "video recording problem",
-      "Problem": "Video shows 50/50 stuttering when switching from 1440P 60 HDR to 2160P 60 HDR, with screen recording struggling to capture the stuttering accurately.",
-      "Resolve Option(Medium)": "Request to 3rd Party(Non Samsung Issue)",
-      "Module": "Camera",
-      "Sub-Module": "Video Recording",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "Video recording stutters at 2160P 60 HDR resolution due to unsupported playback on the device.",
-      "Severity": "High",
-      "Severity Reason": "The device cannot handle 2160P 60 HDR playback, causing significant stuttering that affects video quality and usability during recording.",
-      "Resolve Type": "3rd Party App Defect",
-      "R&D Comment": "This model uses Exynos1380 chipset which has max support of playback is UHD@30fps (2160p@30fps). When playing in Youtube app 4K 60fps resolution is selected, which is not supported. So it should be played at FHD 60fps, but it seems to be played at lower resolution. This is problem from Youtube side so it's reported to Google and they are checking it: b/329373194 [SHADOWED b/329373032] [Youtube]"
-    },
-    {
-      "Case Code": "P250106-07074",
-      "Model No.": "SM-F926B_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "F926BXXSAIXK9",
-      "Title": "Wi-Fi isn't turning On",
-      "Problem": "Please check it",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Network",
-      "Sub-Module": "Wi-Fi",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "Wi-Fi is not turning on, indicating a hardware or connection failure.",
-      "Severity": "High",
-      "Severity Reason": "The device fails to establish Wi-Fi connectivity, which is essential for basic network functionality, making the device unusable without internet access.",
-      "Resolve Type": "Defective device",
-      "R&D Comment": "PCIe link down has been failed with Wi-Fi and AP. Please guide that customer should contact to local service center for checking FPCB."
-    },
-    {
-      "Case Code": "P250106-07107",
-      "Model No.": "SM-X510_EUR_15_XX",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "X510XXU7BXK1",
-      "Title": "Notes Functions not working",
-      "Problem": "When trying to open the notes app and go to drawing option, it doesn't work and automatically reaches the home page.",
-      "Resolve Option(Medium)": "App Update via App Store",
-      "Module": "Notes",
-      "Sub-Module": "Drawing Function",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The drawing function in the Notes app fails and redirects to the home screen when accessed.",
-      "Severity": "Medium",
-      "Severity Reason": "The function does not work properly but does not cause device crash or complete failure, only partial malfunction.",
-      "Resolve Type": null,
-      "R&D Comment": "Issue fixed in new version. Please wait for new version of Samsung Notes on market app update will release soon."
-    },
-    {
-      "Case Code": "P250106-07119",
-      "Model No.": "SM-E236B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E236BXXS8EXJ1",
-      "Title": "Auto restart device but not turn on",
-      "Problem": "Phone restart automatically but not turning on when cx hold the power for longer then usual then it turned on",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Boot",
-      "Sub-Module": "Boot Process",
-      "Issue Type": "System",
-      "Sub-Issue Type": "Restart",
-      "Summarized Problem": "Device restarts automatically without turning on when power is held for an extended duration.",
-      "Severity": "High",
-      "Severity Reason": "The device fails to power on after restart, making it unusable until the issue is resolved.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Please provide complete ramdump logs to analyse the root cause of the issue."
-    },
-    {
-      "Case Code": "P250106-07175",
-      "Model No.": "SM-M356B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M356BXXU4AXL1",
-      "Title": "Unable to use Keep open Setting",
-      "Problem": "Users cannot keep more than one application open in recent apps on Galaxy M35. The feature works flawlessly on other devices like Galaxy F15 and M53.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Settings",
-      "Sub-Module": "Idle/No Action",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot keep more than one application open in recent apps on Galaxy M35, while the same feature works on other devices.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves partial malfunction of a feature, limited to specific devices, not causing device crash or data loss.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": "As per current scenario, devices with 8GB RAM can only have one app kept open in recents. This is normal behavior; if changed, it will be addressed in future updates. Keep open app limit: <8 GB = 0, 8 GB = 1, 12 GB = 3, 16 GB = 5."
-    },
-    {
-      "Case Code": "P250108-04609",
-      "Model No.": "SM-S926BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S926BXXS5AXKA",
-      "Title": "Jitter and Lag while scrolling apps",
-      "Problem": "Stuttering and jitters occur while scrolling apps, with pauses of up to a second. The issue persists across all applications, including Samsung apps, and has been present since purchase.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "System",
-      "Sub-Module": "Performance",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "Apps stutter and jitter during scrolling due to poor system performance.",
-      "Severity": "High",
-      "Severity Reason": "The issue causes noticeable lag and interruptions during app usage, making navigation difficult and impacting overall device usability.",
-      "Resolve Type": "Unclear Issue/Reproduction Route/Issue time",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250108-04703",
-      "Model No.": "SM-M356B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M356BXXU4AXL1",
-      "Title": "Storage not updating after file deletion",
-      "Problem": "Storage display shows incorrect size after file deletion; correct after device restart",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "My Files",
-      "Sub-Module": "Storage Display",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The device shows incorrect storage size after file deletion, only correcting after a restart.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects storage accuracy after deletion but resolves after restart, causing partial malfunction of file management.",
-      "Resolve Type": "Adding/Fixing exception-handling",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250108-05548",
-      "Model No.": "SM-M558B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M558BXXS2AXK5",
-      "Title": "Tap & Pay feature unavailable in Samsung Wallet",
-      "Problem": "Tap & Pay feature unavailable in Samsung Wallet despite NFC capability",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Wallet",
-      "Sub-Module": "Tap & Pay",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Tap & Pay feature is unavailable in Samsung Wallet despite the device having NFC capability.",
-      "Severity": "Medium",
-      "Severity Reason": "The feature is missing but not fully broken; the device has NFC capability but the feature is not available due to platform limitations.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": "As the device does not have DRK support, Pay card is not supported. Hence it is decided to go with Mini version of Samsung Wallet which is the current expected behavior."
-    },
-    {
-      "Case Code": "P250108-05621",
-      "Model No.": "SM-S911BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S911BXXS7CXK6",
-      "Title": "Device lags while playing any game",
-      "Problem": "Device lags during gameplay, especially with small games like Shadow Fight 4, despite having ample free memory and RAM Plus enabled. Performance degrades significantly when gaming, even on a device with Snapdragon Gen 2 chip.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Performance",
-      "Sub-Module": "Game Performance",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "The device experiences significant lag when playing games, even small ones, despite sufficient memory and optimized settings.",
-      "Severity": "High",
-      "Severity Reason": "Gameplay is severely impacted, making the device unusable for typical usage scenarios, especially under load.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": "Device temperature rises during gaming, particularly in multiwindow mode; recommend disabling alternate game performance management and playing in cooler, stable environments to reduce thermal load."
-    },
-    {
-      "Case Code": "P250108-06367",
-      "Model No.": "SM-A346E_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A346EXXU9CXK1",
-      "Title": "Battery reducing rapidly",
-      "Problem": "Battery is reducing by 1 percent every 30 seconds, even with no background apps running and memory cleaned. Device care shows great condition, yet battery drains continuously.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Battery",
-      "Sub-Module": "Battery Drain",
-      "Issue Type": "Battery",
-      "Sub-Issue Type": "Battery Drain",
-      "Summarized Problem": "Battery is draining at an abnormal rate of 1% every 30 seconds despite no background apps and clean memory.",
-      "Severity": "High",
-      "Severity Reason": "Device is losing battery at a rapid rate, which makes it unusable without charging, indicating a critical hardware or system issue.",
-      "Resolve Type": "Defective device",
-      "R&D Comment": "Voltage has dropped below 3.4V with observed fluctuations; device should be sent to HQ for hardware inspection to check SOC-voltage mismatch."
-    },
-    {
-      "Case Code": "P250108-06382",
-      "Model No.": "SM-A236E_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A236EXXU9EXK1",
-      "Title": "Network fluctuating",
-      "Problem": "Losing signal while using 5G mode, during calls and data usage",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "Network Registration",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "Users experience intermittent signal loss while using 5G mode during calls and data activity.",
-      "Severity": "High",
-      "Severity Reason": "Signal loss during active calls and data usage renders the device unusable in real-world scenarios.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250108-06402",
-      "Model No.": "SM-A235F_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A235FXXU9EXL2",
-      "Title": "Network Issue",
-      "Problem": "VoLTE not working on A23 with BSNL SIM, downgrades to 2G during calls, no internet available. Works on A14 with same SIM. Works on A23 with BSN4G SIM. Issue appears to be device-specific with SIM.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Network",
-      "Sub-Module": "Network Registration",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "VoLTE is not working on A23 with BSNL SIM, downgrading to 2G during calls and losing internet, while working on other devices and with different SIMs.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves partial functionality failure (VoLTE not working) under specific conditions, but does not cause device crash or data loss.",
-      "Resolve Type": "Network Issue",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250108-06548",
-      "Model No.": "SM-R865F_EUR_D0_XX",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "-",
-      "Title": "Bug report Captured popup appeared in watch repeatedly",
-      "Problem": "Error reports appear repeatedly on Galaxy Watch indicating the report will be sent to mobile, but it is not happening. User experience with Samsung support has been poor.",
-      "Resolve Option(Medium)": "Not problem",
-      "Module": "Connectivity",
-      "Sub-Module": "Watch Connection",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "A repeated popup appears on the Galaxy Watch indicating a bug report will be sent to mobile, but the report is not actually sent.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue prevents the user from receiving confirmation that a report has been sent, but does not cause device malfunction or data loss.",
-      "Resolve Type": "Intentional operation/Phenomenon/Unsupported",
-      "R&D Comment": "When an accessory log is sent from Samsung Members, the connected watch's log is acquired and a screen for log acquisition is shown. This is normal behavior."
-    },
-    {
-      "Case Code": "P250108-06622",
-      "Model No.": "SM-G998B_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "G998BXXSEGXK1",
-      "Title": "GPS is not working",
-      "Problem": "GPS is not working. I tried all the troubleshooting steps, but no success.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "GPS",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "GPS functionality is not working on the device.",
-      "Severity": "High",
-      "Severity Reason": "GPS is a core navigation and location feature; its failure prevents basic device functionality.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250113-06405",
-      "Model No.": "SM-A556E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A556EXXU6AXL3",
-      "Title": "Suttle vibration when increasing or decreasing volume",
-      "Problem": "Suttle vibration when increasing or decreasing volume to extreme high or low levels, which sometimes does not work after December update on A55 device.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Audio Sound",
-      "Sub-Module": "Volume Control",
-      "Issue Type": "Usability",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "Users experience subtle vibration when adjusting volume to extreme levels, with intermittent failure after the December update.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects volume control functionality intermittently, impacting user experience but not causing device failure or data loss.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "The problem is hard to diagnose due to lack of logs when volume is adjusted to extreme levels. If it occurs again, users should provide logs immediately after the event."
-    },
-    {
-      "Case Code": "P250113-06479",
-      "Model No.": "SM-G990E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "G990EXXSCFXL2",
-      "Title": "haptic feedback vibration is low",
-      "Problem": "the haptic feedback vibration on my s21fe exynos is very low after the latest november security patch update",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "UI/UX",
-      "Sub-Module": "Haptic Feedback",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The haptic feedback vibration is significantly reduced after the latest software update.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects user experience but does not cause device malfunction or data loss.",
-      "Resolve Type": "Defective device",
-      "R&D Comment": "Logs show no abnormalities; likely hardware motor defect. Recommend checking and replacing the motor component."
-    },
-    {
-      "Case Code": "P250113-06614",
-      "Model No.": "SM-A356E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A356EXXU4AXK7",
-      "Title": "Poor Network warnings popup during online gaming",
-      "Problem": "Game shows 'Poor Network' warnings despite stable internet and low ping, even when connected to other devices.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "Network Warning Popup",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "Online games display 'Poor Network' warnings despite stable internet and low ping.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves intermittent network warning display during gameplay, affecting user experience but not causing device crash or data loss.",
-      "Resolve Type": "Insufficient log time coverage",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250113-06704",
-      "Model No.": "SM-A536E_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A536EXXSDEXL3",
-      "Title": "Camera Failed popup",
-      "Problem": "please find pic of the issue along with system log",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Popup",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "A popup appears indicating camera failure on the device.",
-      "Severity": "High",
-      "Severity Reason": "The camera failure popup prevents normal device usage and indicates a critical malfunction.",
-      "Resolve Type": "Defective device",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250113-06798",
-      "Model No.": "SM-A528B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A528BXXSAGXK1",
-      "Title": "Screen freeze error",
-      "Problem": "Screen freezing occurs even after reset, cache clearing, and storage deletion. No third-party apps installed.",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Display",
-      "Sub-Module": "Screen Freeze",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "The device screen freezes despite device reset, cache clearing, and storage deletion, with no third-party apps installed.",
-      "Severity": "High",
-      "Severity Reason": "Screen freezing prevents normal device operation and renders the device unusable until resolved.",
-      "Resolve Type": "H/W Issue",
-      "R&D Comment": "Cause: OCTA's touch I2C signal operation is not working properly; Countermeasure: Replace OCTA first, then mainboard if symptoms persist."
-    },
-    {
-      "Case Code": "P250113-06820",
-      "Model No.": "SM-M556B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M556BXXS4AXK5",
-      "Title": "Sound not coming in recorded video",
-      "Problem": "Unable to hear sound after recording video",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "Camera",
-      "Sub-Module": "Audio Recording",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "No sound is heard when recording videos using the camera.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction of audio recording functionality, preventing sound from being captured during video recording.",
-      "Resolve Type": "Fixing error",
-      "R&D Comment": "Modify the \"va-mic-mono-lpi\" and \"speaker-dmic-endfire\" controls to make them compatible"
-    },
-    {
-      "Case Code": "P250113-06939",
-      "Model No.": "SM-E055F_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E055FXXU2AXJ2",
-      "Title": "Lagging in device while playing game in low graphics",
-      "Problem": "Lag and heat issue on Samsung phone while playing short term games in low graphics, resulting in choppiness, slow performance, and overheating",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Performance",
-      "Sub-Module": "Game Performance",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "The device experiences lag and overheating when playing games in low graphics, leading to choppiness and slow performance.",
-      "Severity": "High",
-      "Severity Reason": "The lag and overheating significantly impair gameplay, making the device unusable during gaming sessions.",
-      "Resolve Type": "Server Issue",
-      "R&D Comment": "After charging, the phone's initial temperature is relatively high; using Instagram voice calls while gaming increases temperature, causing frequency limitations and lag. To prevent overheating, users should cool the phone to room temperature and manage background apps and in-game voice chat."
-    },
-    {
-      "Case Code": "P250113-06945",
-      "Model No.": "SM-A356E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A356EXXU4AXK7",
-      "Title": "Can't change the password of \"App timer\" in digital wellbeing application",
-      "Problem": "I can't change the password of \"App timer\" in digital wellbeing application because I forgot the password. There's no option to re-set it, all it's showing is to contact the customer care service. But the customer care service is asking to go on a physical Samsung service centre. And the centre is too far from",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Digital Wellbeing",
-      "Sub-Module": "App Timer Password Reset",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot reset the password for the App Timer in the Digital Wellbeing application, as there is no password recovery option available.",
-      "Severity": "Medium",
-      "Severity Reason": "The feature is missing but does not prevent full device usage or cause crashes or data loss; users are directed to a physical service centre, which is inconvenient but not critical.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "If you don't remember your password, use the master pin code. Master pin code is Digital Wellbeing's App version. If Digital Wellbeing's App version is 5.1.02.8, please input pin code 51028. We plan to support a password retrieval function in the next version."
-    },
-    {
-      "Case Code": "P250113-07086",
-      "Model No.": "SM-M356B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M356BXXU4AXL1",
-      "Title": "Fast charging stop working",
-      "Problem": "Phone does not detect charger initially, requires multiple plug-in attempts to detect, then charges slowly, taking approximately 4 hours to fully charge.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Battery",
-      "Sub-Module": "Charging",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "Phone fails to detect charger initially and charges slowly after multiple attempts, taking over 4 hours to fully charge.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves partial malfunction of charging functionality, where the device does not immediately detect the charger and charges slowly, but the device remains usable.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "In the log, there is no information when your phone connected with charger. Please guide the customer to get the log when issue occurs for further analysis."
-    },
-    {
-      "Case Code": "P250113-07345",
-      "Model No.": "SM-S911BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S911BXXS7CXK6",
-      "Title": "usb device not recognise error during call",
-      "Problem": "usb device not recognise error during call. ethernet works fine when connected, but usb device not recognised during call. after cutting the call, ethernet adapter works again. please fix in s23",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Connectivity",
-      "Sub-Module": "USB",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "USB device is not recognised during phone calls, even when ethernet is working.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue occurs intermittently during calls and affects functionality under specific conditions, but does not cause device failure or data loss.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "No further OS VER 14 release planned. Please check issue on latest OS VER 15 and update accordingly."
-    },
-    {
-      "Case Code": "P250113-07359",
-      "Model No.": "SM-X710_EUR_14_XX",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "X710XXU5BXKC",
-      "Title": "Drawing does not work in notes app widget",
-      "Problem": "Drawing does not work in notes app widget. This happens always.",
-      "Resolve Option(Medium)": "App Update via App Store",
-      "Module": "Notes",
-      "Sub-Module": "Drawing",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Drawing functionality is not working in the notes app widget.",
-      "Severity": "High",
-      "Severity Reason": "The feature is completely non-functional and prevents users from using the widget as intended.",
-      "Resolve Type": null,
-      "R&D Comment": "Issue fixed in new version. Please wait new version of samsung Notes on market app update will release soon. Thank you"
-    },
-    {
-      "Case Code": "P250113-07455",
-      "Model No.": "SM-A356E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A356EXXU4AXK7",
-      "Title": "Samsung Photo Editor Not Functioning Properly",
-      "Problem": "Issue with Samsung Photo Editor Not Functioning Properly",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "Photo Editor",
-      "Sub-Module": "Photo Editor Function",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The Samsung Photo Editor fails to function properly due to issues during restoration of photo analysis data during smart switch.",
-      "Severity": "Medium",
-      "Severity Reason": "The photo editor does not work correctly after smart switch, but functionality is partially restored and can be fixed automatically, indicating partial malfunction.",
-      "Resolve Type": "Issue Fixed(Fixed automatically by Main branch)",
-      "R&D Comment": "When the smart switch occurs, if the analyzed information of the photos from the previous device is restored in new device, the analysis information increased. But there was an issue during restoration so photo editor cannot saved normally. Duplicate restoration issue was resolved during Smart switch with large amount of analyzed images. - P240213-05083 : modification done. Please guide to user like below [Guide] In this issue case, analyzed information will not be deleted automatically."
-    },
-    {
-      "Case Code": "P250113-07473",
-      "Model No.": "SM-S908E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S908EXXSBEXL2",
-      "Title": "Rear camera slow to start",
-      "Problem": "Rear camera is slow to start after recent update; front camera works fine",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Rear Camera",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "The rear camera takes a long time to start after a recent software update.",
-      "Severity": "Medium",
-      "Severity Reason": "The camera startup delay affects usability but does not render the device unusable or cause data loss.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "Cause: Camera module fails to open fast AEC; Timeout in Fast Aec Completion. Countermeasure: User to clear camera data/cache and restart; check 3rd party apps; share logs post-restart."
-    },
-    {
-      "Case Code": "P250114-04384",
-      "Model No.": "SM-A556E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A556EXXU6AXL3",
-      "Title": "No network problem after recent update",
-      "Problem": "Phone faces no network and no SIM for 1-3 minutes, repeated 4-5 times per hour after system update",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "Network Registration",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "Device fails to register network and detect SIM after system update, with repeated occurrences every hour.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves intermittent network registration failure, which affects functionality but does not render the device unusable or cause data loss.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250114-04409",
-      "Model No.": "SM-S908E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S908EXXSBEXL2",
-      "Title": "Mobile phone is still lagging or froze",
-      "Problem": "Phone getting slow and suddenly restarting. Then heating up. Cpu temperature going around and above 70\u00b0C",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "System",
-      "Sub-Module": "Performance",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "The mobile phone is experiencing persistent lag and sudden restarts, accompanied by excessive heating and high CPU temperature.",
-      "Severity": "High",
-      "Severity Reason": "The device is becoming unresponsive and frequently restarting, leading to a loss of usability and potential hardware instability.",
-      "Resolve Type": "Defective device",
-      "R&D Comment": "There are multiple KP on different call stacks in a single day, check for hardware inspection"
-    },
-    {
-      "Case Code": "P250114-04439",
-      "Model No.": "SM-X820_EUR_XX",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "X820XXU2AXKB",
-      "Title": "Video player is unresponsive when trying to generate slow-motion video",
-      "Problem": "My Galaxy Tab S10 video player is unresponsive when attempting to generate slow-motion video clips from existing footage",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "Video Editor",
-      "Sub-Module": "Slow-Motion Video Generation",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The video player fails to respond when attempting to generate slow-motion video clips from existing footage.",
-      "Severity": "High",
-      "Severity Reason": "The video player crashes during slow-motion video generation, making the feature completely unusable.",
-      "Resolve Type": "Fixing error",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250114-04533",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXK6",
-      "Title": "latency between video and sound on every app",
-      "Problem": "When playing something while connected to Bluetooth headphones, there is latency between video and sound on every app, with videos lagging for a second and audio delay starting. The issue persists after system cache wipe and factory reset on both device and headphones. Headphones work fine on other devices.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Audio Sound",
-      "Sub-Module": "Bluetooth Audio",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "There is a latency issue between video and audio when using Bluetooth headphones on all apps, with persistent lag and audio delay.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects audio synchronization across apps but does not cause device crash or complete failure, and is reproducible only with specific hardware.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "From logs, a2dp delay can be seen. Please check settings in soundassistant app: Soundassistant -> Bluetooth Metronome"
-    },
-    {
-      "Case Code": "P250114-04692",
-      "Model No.": "SM-R870_NA_E0_USA",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "R870XXU1IXK1",
-      "Title": "Wrist detection on Watch 4 device is broken",
-      "Problem": "Wrist detection on the Watch 4 device is broken after the One UI 6 Watch update, with no foreign matter or damage found on the sensor, and the device is worn with a snug fit.",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Watch",
-      "Sub-Module": "Wrist Detection",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Wrist detection function is no longer working on the Galaxy Watch 4 after the One UI 6 update.",
-      "Severity": "High",
-      "Severity Reason": "The device cannot detect wrist presence, which is a core functionality for operation and user interaction, rendering the watch unusable without proper wear detection.",
-      "Resolve Type": "H/W Issue",
-      "R&D Comment": "Wear-off occurred due to non-contact of electrode sensor; recommend checking for foreign matter or visiting a service center for electrode sensor inspection."
-    },
-    {
-      "Case Code": "P250114-04732",
-      "Model No.": "SM-S921BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S921BXXS5AXKA",
-      "Title": "camera captured blurry image with poor focus",
-      "Problem": "camera captures blurry images with poor focus when scanning documents",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Image Capture",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The camera fails to capture clear images with proper focus when scanning documents.",
-      "Severity": "High",
-      "Severity Reason": "The camera cannot produce clear images of documents, making scanning functionality unusable.",
-      "Resolve Type": null,
-      "R&D Comment": "When capturing close and slanted objects with a large sensor, lens design leads to poor focus; customers should be guided to stay farther away and use zoom."
-    },
-    {
-      "Case Code": "P250114-04834",
-      "Model No.": "SM-G990E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "G990EXXSCFXL2",
-      "Title": "Pro video mode 9:21 ratio causes elongated video",
-      "Problem": "When using pro video mode with 9:21 ratio in UHD 60fps, the resulting video appears elongated, making objects look stretched and video quality significantly degraded.",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "Camera",
-      "Sub-Module": "Video Recording Settings",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Video recorded in pro video mode with 9:21 ratio appears elongated, distorting object sizes and degrading video quality.",
-      "Severity": "High",
-      "Severity Reason": "The distortion causes significant visual degradation, making the video unusable and undermining core camera functionality.",
-      "Resolve Type": "Adding implemention",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250115-05076",
-      "Model No.": "SM-F946BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "F946BXXS4DXKC",
-      "Title": "Unable to change wallpaper",
-      "Problem": "Unable to change lock screen wallpaper",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Settings",
-      "Sub-Module": "Wallpaper",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "Users cannot change their lock screen wallpaper.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction of a UI feature, preventing users from updating their wallpaper but not causing device failure or data loss.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "No further OS VER 14 release planned. Please check issue on latest OS VER 15 and update accordingly."
-    },
-    {
-      "Case Code": "P250115-05187",
-      "Model No.": "SM-A528B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A528BXXSAGXK1",
-      "Title": "TITLE not showing while playing the video",
-      "Problem": "After updating the app, TITLE not showing while playing the video. Previously it was working normally without any issues. After the latest updates, many problems occurred.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Video Player",
-      "Sub-Module": "Video Title Display",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The video title is not displayed during playback.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction of a UI element, where the title is missing during video playback but the core functionality of playing video remains intact.",
-      "Resolve Type": "Intentional operation/Phenomenon/Unsupported",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250115-05224",
-      "Model No.": "SM-A356E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A356EXXU4AXK7",
-      "Title": "frame drop issue when switch to 2160p hdr 60 fps on youtube",
-      "Problem": "frame drop issue when switch to 2160p hdr 60 fps on youtube",
-      "Resolve Option(Medium)": "Request to 3rd Party(Non Samsung Issue)",
-      "Module": "Video Playback",
-      "Sub-Module": "YouTube",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "YouTube experiences frame drops when switching to 2160p HDR at 60fps.",
-      "Severity": "High",
-      "Severity Reason": "The device cannot support 2160p at 60fps due to hardware limitations, causing visible frame drops that impair video playback experience.",
-      "Resolve Type": "3rd Party App Defect",
-      "R&D Comment": "The issue is caused by Exynos1380 chipset limiting playback to UHD@30fps; YouTube app requests 4K 60fps, which is unsupported. Countermeasure: YouTube should adjust resolution to FHD 60fps."
-    },
-    {
-      "Case Code": "P250117-04807",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXL2",
-      "Title": "Camera captured hazy effect image on 10X zoom",
-      "Problem": "Camera on 10x zoom shows hazy effect, very irritating, requires developer fix",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Zoom Function",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The camera produces a hazy image when using 10X zoom, affecting image clarity and user experience.",
-      "Severity": "High",
-      "Severity Reason": "The hazy effect significantly degrades image quality, especially at high zoom, making photos unusable and impacting core camera functionality.",
-      "Resolve Type": "Product Requirement, UX Guide, Standard Technical Specification",
-      "R&D Comment": "When zoom is operated during shooting, reduced angle of view and varying light exposure cause image degradation; this issue is due to differences in camera modules and lens conditions."
-    },
-    {
-      "Case Code": "P250120-04048",
-      "Model No.": "SM-A336E_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A336EDXUCEXK5",
-      "Title": "Battery draining fast",
-      "Problem": "Phone battery is draining fast after December software update",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Battery",
-      "Sub-Module": "Battery Drain",
-      "Issue Type": "Battery",
-      "Sub-Issue Type": "Battery Drain",
-      "Summarized Problem": "Phone battery drains rapidly after the December software update.",
-      "Severity": "Medium",
-      "Severity Reason": "Battery drain is significant but not causing device freeze or crash, and functionality remains usable.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "Device battery drain issue is likely due to software update; require extended battery usage logs for accurate analysis."
-    },
-    {
-      "Case Code": "P250120-04104",
-      "Model No.": "SM-S911BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S911BXXS7CXL2",
-      "Title": "Phone getting lags during normal usage",
-      "Problem": "Phone experiences input lags, app loading delays, jitters, and stutters during normal usage.",
-      "Resolve Option(Medium)": "Request to 3rd Party(Non Samsung Issue)",
-      "Module": "System",
-      "Sub-Module": "Performance",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "The phone experiences significant input lag and stutters during normal usage.",
-      "Severity": "High",
-      "Severity Reason": "The device becomes unresponsive and difficult to use due to severe lag and stuttering, impairing core user interaction.",
-      "Resolve Type": "3rd Party App Defect",
-      "R&D Comment": "The lag is caused by power saving mode limiting device performance and an ANR in a third-party VPN app; countermeasure is to disable the VPN app."
-    },
-    {
-      "Case Code": "P250120-04160",
-      "Model No.": "SM-M346B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M346BXXU7CXL1",
-      "Title": "5G network takes considerable time to connect after turning on mobile data",
-      "Problem": "5G network takes considerable time to connect after turning on mobile data",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "Mobile Networks",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "The device takes a long time to connect to 5G networks after turning on mobile data.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction in 5G connection behavior, which persists despite user troubleshooting and proper settings.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250120-04187",
-      "Model No.": "SM-S911BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S911BXXS7CXL2",
-      "Title": "Lag While Recording video",
-      "Problem": "Lag while recording video happening in every S23 I own. After the November patch update.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Camera",
-      "Sub-Module": "Recording",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "Video recording experiences lag after the November patch update on all S23 devices.",
-      "Severity": "High",
-      "Severity Reason": "Lag during recording prevents smooth video capture, making the feature unusable for users.",
-      "Resolve Type": "Unclear Issue/Reproduction Route/Issue time",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250120-04271",
-      "Model No.": "SM-S711BE_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S711BXXS6DXK8",
-      "Title": "wifi Calling is not working",
-      "Problem": "I tried all the options you suggested. Nothing has helped. I am uploading video of issue. Please have a look. This is consistent issue and causing lot of inconvenience.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Connectivity",
-      "Sub-Module": "WiFi Calling",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "WiFi calling is not functioning on the device, despite attempts to resolve it.",
-      "Severity": "High",
-      "Severity Reason": "The issue is consistent and prevents a core communication feature from working, causing significant user inconvenience.",
-      "Resolve Type": "Insufficient log time coverage",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250120-04317",
-      "Model No.": "SM-S911BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S911BXXS7CXL2",
-      "Title": "Imobile app keep crashing",
-      "Problem": "Imobile app crashes every time when trying to login, started after last security patch update on Samsung Galaxy S23",
-      "Resolve Option(Medium)": "Request to 3rd Party(Non Samsung Issue)",
-      "Module": "App",
-      "Sub-Module": "iMobile App",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "App Crash",
-      "Summarized Problem": "The iMobile app crashes repeatedly during login attempts on Samsung Galaxy S23 after a security patch update.",
-      "Severity": "High",
-      "Severity Reason": "The app crashes during login, a critical function, making the user unable to access banking services.",
-      "Resolve Type": "3rd Party App Defect",
-      "R&D Comment": "This issue belongs to third-party application; it should be checked and fixed by the third-party app owner."
-    },
-    {
-      "Case Code": "P250120-04405",
-      "Model No.": "SM-S928BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S928BXXS4AXKA",
-      "Title": "Camera zooming produces painted and crayon-like images",
-      "Problem": "Photos captured during camera zooming appear painted and like crayon drawings",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Zoom Function",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Camera produces painted and crayon-like images when zooming in.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction in image quality during zoom, affecting visual output but not rendering the device unusable or causing crashes.",
-      "Resolve Type": "Transfer of next project",
-      "R&D Comment": "Cause: Poor texture rendering during zoom. Countermeasure: Improve texture rendering in camera zoom function to enhance photo quality."
-    },
-    {
-      "Case Code": "P250120-04709",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXL2",
-      "Title": "Home Page getting changed Automatically",
-      "Problem": "Customer upgraded the OS to the latest version, which is Jan 2025, but the issue still persists. I've attached a screen recording and logs for the same which was taken within 5-10 mins of the occurrence of the issue. Please let me know if any further details are needed.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Home Screen",
-      "Sub-Module": "Idle/No Action",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The home page is changing automatically after OS upgrade, disrupting user experience.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction of the home screen behavior, affecting user experience but not rendering the device unusable or causing data loss.",
-      "Resolve Type": "Product Requirement, UX Guide, Standard Technical Specification",
-      "R&D Comment": "It is a \"Add to Home\" concept that the apps will be added: 1. Initially to first available position on the first available (left most) page except the Home Page (default). 2. If all other pages are full then app will be added to Home Page. 3. If Home Page is also full, then new page will be created (on the right) and app will be added to it. Thus, the app was not added on the home page even if the space was available. This ensures clean home screen layout on default page as per UX concept."
-    },
-    {
-      "Case Code": "P250120-04732",
-      "Model No.": "SM-E135F_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E135FXXS9EXK1",
-      "Title": "Unable to update S wallet App",
-      "Problem": "Samsung wallet couldn't update and has many bugs",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Payment",
-      "Sub-Module": "Samsung Wallet",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Samsung Wallet app cannot update and has multiple bugs.",
-      "Severity": "High",
-      "Severity Reason": "The app fails to update and has multiple bugs, preventing proper functionality.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250120-04746",
-      "Model No.": "SM-E236B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E236BXXS8EXJ1",
-      "Title": "Biometric option in security and privacy causing phone restart",
-      "Problem": "Touching biometric option in security and privacy causes phone to restart multiple times",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Security",
-      "Sub-Module": "Biometrics",
-      "Issue Type": "System",
-      "Sub-Issue Type": "Restart",
-      "Summarized Problem": "Tapping the biometric option in security and privacy triggers repeated phone restarts.",
-      "Severity": "High",
-      "Severity Reason": "The device restarts repeatedly, making it unusable during the interaction, which is a critical system-level failure.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Given logs are insufficient to identify the root cause; complete RDX logs are required for analysis."
-    },
-    {
-      "Case Code": "P250123-03069",
-      "Model No.": "SM-S908E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S908EXXSBEXL2",
-      "Title": "System UI keep Stop popup Occur",
-      "Problem": "Automatically stopped",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "System",
-      "Sub-Module": "UI",
-      "Issue Type": "System",
-      "Sub-Issue Type": "ANR",
-      "Summarized Problem": "System UI automatically stops and shows a popup due to ANR caused by accessing telephonyManager API in MobileConnectionRepositoryImpl.",
-      "Severity": "High",
-      "Severity Reason": "The system UI stopping leads to device instability and user disruption, making the device unusable during operation.",
-      "Resolve Type": "Transfer of next project",
-      "R&D Comment": "ANR occur in SystemUI due to accessing telephonyManager API in MobileConnectionRepositoryImpl. Telephony team suggested to apply try catch in problem code block and it is applied in UTAH branch with CL#30708369. As discussed with our Part Leader, only critical patches are allowed to be applied in PROD_UTAH, so it will not be applied in PROD_UTAH. The changes will reflect in B OS (OneUI 8.0). Please maintain current state for UTAH models."
-    },
-    {
-      "Case Code": "P250123-03099",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXL2",
-      "Title": "Unable to access document session in My Files",
-      "Problem": "Unable to access the document session within My Files",
-      "Resolve Option(Medium)": "App Update via App Store",
-      "Module": "My Files",
-      "Sub-Module": "Document Session",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot access document sessions within the My Files app.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction of a core feature, preventing access to document sessions but not rendering the app unusable.",
-      "Resolve Type": null,
-      "R&D Comment": "Added code to fix in next app update version (15.0.07.5 or higher); users can sign out of Google Drive and re-sign in to resolve."
-    },
-    {
-      "Case Code": "P250123-03118",
-      "Model No.": "SM-A325F_SWA_13_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A325FXXSBDXJ2",
-      "Title": "Camera stop working",
-      "Problem": "Camera is not working suddenly",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Camera",
-      "Sub-Module": "Camera Function",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The camera suddenly stops working and fails to function.",
-      "Severity": "High",
-      "Severity Reason": "The camera is completely non-functional, preventing basic device usage.",
-      "Resolve Type": "H/W Issue",
-      "R&D Comment": "Cause: Power on camera failed; sensor open fail, possibly due to hardware failure. Counter Measure: Reboot device and send to SS center if issue persists."
-    },
-    {
-      "Case Code": "P250123-03229",
-      "Model No.": "SM-S711BE_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S711BXXS6DXK8",
-      "Title": "Fingerprint sensor not working",
-      "Problem": "After software update to UI 6.1, fingerprint sensor is not responding despite multiple attempts to register the fingerprint.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Biometrics",
-      "Sub-Module": "Fingerprint",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Fingerprint sensor is not responding after a software update.",
-      "Severity": "High",
-      "Severity Reason": "User cannot authenticate using biometrics, rendering a core security and access function inoperable.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "Fingerprint recognition may be affected by protective films or glass with poor light transmission; recommend checking for such usage."
-    },
-    {
-      "Case Code": "P250123-03516",
-      "Model No.": "SM-E236B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E236BXXS8EXJ1",
-      "Title": "Wifi and Hotspot not working",
-      "Problem": "WiFi and Hotspot settings fail to turn on; the interface briefly brightens but stops, and the feature hangs when attempting to toggle via settings or long press. Same behavior observed with Bluetooth.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Connectivity",
-      "Sub-Module": "WiFi",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "WiFi and Hotspot fail to activate and hang during setup, with no response after initial visual feedback.",
-      "Severity": "High",
-      "Severity Reason": "The device cannot establish wireless connections, making basic network functionality unusable.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "WLAN driver loading fails, suspecting a hardware issue within the WiFi chipset. HW inspection required at CS center."
-    },
-    {
-      "Case Code": "P250124-04353",
-      "Model No.": "SM-E135F_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E135FXXS9EXK1",
-      "Title": "Drag and drop for text from browser not working",
-      "Problem": "Drag and drop for text from browser not working",
-      "Resolve Option(Medium)": "Request to 3rd Party(Non Samsung Issue)",
-      "Module": "Settings",
-      "Sub-Module": "Text Drag and Drop",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Drag and drop functionality for text from browser is not working.",
-      "Severity": "Medium",
-      "Severity Reason": "The feature is partially missing, preventing users from copying text from browsers to other apps, but does not cause device crash or data loss.",
-      "Resolve Type": "3rd Party App Defect",
-      "R&D Comment": "This issue is caused because Google Docs does not accept text drop from Samsung Internet. This is a third party app issue. Please maintain current status."
-    },
-    {
-      "Case Code": "P250127-00659",
-      "Model No.": "SM-S928BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S928BXXS4AYA1",
-      "Title": "Fingerprint sensor not working",
-      "Problem": "Fingerprint sensor not working",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Biometrics",
-      "Sub-Module": "Fingerprint Sensor",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The fingerprint sensor is not functioning properly due to poor image quality.",
-      "Severity": "High",
-      "Severity Reason": "The fingerprint sensor is a core biometric function; failure prevents user authentication and device access.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "Cause: Poor image quality from fingerprint sensor. Countermeasure: Thick protective film may interfere; recommend checking at customer service center without film."
-    },
-    {
-      "Case Code": "P250127-00703",
-      "Model No.": "SM-S921BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S921BXXS5AYA1",
-      "Title": "Unable to connect eSIM in watch",
-      "Problem": "Please check screen recording",
-      "Resolve Option(Medium)": "Not problem",
-      "Module": "Connectivity",
-      "Sub-Module": "eSIM Connection",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "Users cannot connect to eSIM on the watch, and no eSIM profile is present or downloaded.",
-      "Severity": "High",
-      "Severity Reason": "The device fails to establish eSIM connectivity, which is a fundamental functionality required for operation.",
-      "Resolve Type": "Intentional operation/Phenomenon/Unsupported",
-      "R&D Comment": "Cause: No eSIM profile found in device; Counter Measure: Verify customer has properly downloaded eSIM profile."
-    },
-    {
-      "Case Code": "P250127-00709",
-      "Model No.": "SM-A736B_SWA_14_INU",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A736BXXUAEXK2",
-      "Title": "Camera is not working",
-      "Problem": "Front and back camera including torch is not working; torch shows can't turn on because light is being used by another app",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Torch",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Front and back camera and torch are not working, with torch unable to activate due to another app using the light.",
-      "Severity": "High",
-      "Severity Reason": "The camera system is completely non-functional, including torch, preventing core device usage.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250127-00768",
-      "Model No.": "SM-A042F_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A042FXXSAEXJ3",
-      "Title": "Mouse cannot resize any apps in multi-window mode",
-      "Problem": "The Mouse cannot resize any apps in multi-window mode. The click instead registers on the app/objects in the background. This causes major inconvenience when working with multiple apps. This issue happens with all apps. There is no issue with the window buttons and moving the entire window. A screen recording is attached where it clearly shows any attempts to resize the window fail, and instead the home screen scrolls.",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Settings",
-      "Sub-Module": "Multi-Window",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The mouse fails to resize apps in multi-window mode, causing clicks to register on background elements instead.",
-      "Severity": "High",
-      "Severity Reason": "The issue prevents effective app management in multi-window mode, making it unusable for users working with multiple applications.",
-      "Resolve Type": "Reflect design changes",
-      "R&D Comment": "The issue has been fixed in the latest binary."
-    },
-    {
-      "Case Code": "P250127-00781",
-      "Model No.": "SM-E556B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E556BXXS4AXL1",
-      "Title": "Captured Images look dull and there is lack of focus in the photo",
-      "Problem": "Photos taken on Samsung f55 look dull and lack focus compared to Redmi k50i, with visible dullness in pink and brown colors under same lighting and distance conditions",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Camera",
-      "Sub-Module": "Image Quality",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "Poor Quality",
-      "Summarized Problem": "Photos taken on the device appear dull and lack focus, especially in colors like pink and brown, under consistent lighting and distance conditions.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects image clarity and color accuracy but does not cause device malfunction or data loss, and is visible only in specific color tones.",
-      "Resolve Type": "Server Issue",
-      "R&D Comment": "Cause: Normal phenomenon; Countermeasure: Normal phenomenon"
-    },
-    {
-      "Case Code": "P250127-00795",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXL2",
-      "Title": "Dolby Atmos sound has broken",
-      "Problem": "Dolby Atmos sound has broken after the 6.1.1 AI update on S23 Ultra. Before the update, the sound felt excellent; after, it is significantly weaker. Many users report the same issue. No fix has been provided despite customer feedback and moderator acknowledgment.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Sound",
-      "Sub-Module": "Dolby Atmos",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Dolby Atmos sound functionality has degraded significantly after the 6-1-1 AI update on S23 Ultra, with users reporting much weaker audio output.",
-      "Severity": "High",
-      "Severity Reason": "The sound is no longer functioning as expected, leading to a major degradation in audio experience, which is a core feature of the device.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "Please communicate with customers to select their favorite mode among Dolby Auto/Movie/Music or Dolby Off."
-    },
-    {
-      "Case Code": "P250127-00832",
-      "Model No.": "SM-S908E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S908EXXSBEYA1",
-      "Title": "Google play system update failed",
-      "Problem": "Google play system update failed to update error",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "System",
-      "Sub-Module": "System Update",
-      "Issue Type": "System",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Google Play system update fails to update due to credential re-entry requirement.",
-      "Severity": "High",
-      "Severity Reason": "The update process fails and requires user to re-enter credentials, making the system update unusable and preventing device from receiving critical updates.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250127-00848",
-      "Model No.": "SM-E146B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E146BXXU7CYA1",
-      "Title": "Sound Picker keeps stopping",
-      "Problem": "Sound picker stops working",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Settings",
-      "Sub-Module": "Sound Settings",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The sound picker feature stops working unexpectedly.",
-      "Severity": "High",
-      "Severity Reason": "The feature fails to function, preventing users from selecting sound settings, which is a core usability function.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "NullPointerException occurred in SecSoundPickerFragment when accessing internal routine; solution applied in V OS via CL#30191070."
-    },
-    {
-      "Case Code": "P250127-00856",
-      "Model No.": "SM-A356E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A356EXXU4AXK7",
-      "Title": "Lines appear while taking video",
-      "Problem": "2 lines appear while taking video",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Video Recording",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Two lines appear during video recording.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial malfunction in video recording functionality, where visual artifacts appear but do not cause device failure or crash.",
-      "Resolve Type": "Yield confirmation completed",
-      "R&D Comment": "This failure is due to camera sensor hardware fault. Please visit nearest Samsung support Centre for further help."
-    },
-    {
-      "Case Code": "P250127-00879",
-      "Model No.": "SM-A346E_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A346EXXU9CXK1",
-      "Title": "Mobile Data is Not working",
-      "Problem": "Mobile data is on but no network symbol. Tried phone restart, network reset, airplane mode, sim tray eject and insert, but no network connection.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "Mobile Data",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "Mobile data is enabled but shows no network symbol despite proper SIM insertion and device restarts.",
-      "Severity": "High",
-      "Severity Reason": "Device shows no network signal despite mobile data being on, making basic connectivity impossible and rendering the device unusable for internet or calls.",
-      "Resolve Type": "Insufficient log time coverage",
-      "R&D Comment": "No disconnection observed; data call response shows cause=NONE, indicating no network failure, but no actual connection. Recommend providing CP silent logs for deeper analysis."
-    },
-    {
-      "Case Code": "P250127-00955",
-      "Model No.": "SM-R870_NA_USA",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "R870XXU1IXK1",
-      "Title": "Unable to Update sleep tracking",
-      "Problem": "Sleep tracking is gone haywire with missing hours and incorrect start and end times. Heart rate data is also missing. The watch detects sleep start and end times significantly off from actual times.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Health",
-      "Sub-Module": "Sleep Tracking",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Sleep tracking is malfunctioning with incorrect start and end times and missing heart rate data.",
-      "Severity": "High",
-      "Severity Reason": "Sleep tracking is critical for user health data and is completely off, leading to inaccurate health insights and potential user confusion.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250127-01017",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXL2",
-      "Title": "AI chat assistance not working",
-      "Problem": "AI chat assistance is not working on Samsung Messages after an update. Tried clearing cache and restarting phone, but issue persists.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Settings",
-      "Sub-Module": "AI Chat Assistance",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "AI chat assistance is not functioning in Samsung Messages after a system update.",
-      "Severity": "Medium",
-      "Severity Reason": "The feature is missing after an update, but the device remains usable and basic functions operate normally.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "No further OS VER 14 release planned. Please check issue on latest OS VER 15 and update accordingly."
-    },
-    {
-      "Case Code": "P250127-01031",
-      "Model No.": "SM-S928BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S928BXXS4AYA1",
-      "Title": "Cannot find Good Lock app in Galaxy Store",
-      "Problem": "Unable to find Good Lock app on Galaxy Store; app is not available in user's region despite being useful and supported by Samsung users.",
-      "Resolve Option(Medium)": "Not problem",
-      "Module": "Settings",
-      "Sub-Module": "App Store",
-      "Issue Type": "Usability",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot find the Good Lock app in the Galaxy Store due to regional restrictions.",
-      "Severity": "Medium",
-      "Severity Reason": "The app is missing from the store in certain regions, preventing users from accessing a useful feature, but does not cause device malfunction or data loss.",
-      "Resolve Type": "Intentional operation/Phenomenon/Unsupported",
-      "R&D Comment": "Good Lock is not available in the user's region currently, but plans exist to launch globally in the future."
-    },
-    {
-      "Case Code": "P250127-01052",
-      "Model No.": "SM-S721BE_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S721BXXS3AXL1",
-      "Title": "Network reception issue with BSNL 4G",
-      "Problem": "Samsung Galaxy S24 FE has poor 4G network reception on BSNL, while other brands offer better reception at the same location and with the same SIM.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "4G Reception",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "Samsung Galaxy S24 FE has poor 4G network reception on BSN",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves inconsistent network performance compared to other devices, indicating partial malfunction rather than complete device failure.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250128-01736",
-      "Model No.": "SM-M356B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M356BXXU4AXL1",
-      "Title": "Battery Getting drain in normal Usage",
-      "Problem": "Battery usage summary shows 53% consumption in a day, but sum of individual app battery usage adds up to only 29.3%. This suggests unlisted background processes or activities are causing additional drain.",
-      "Resolve Option(Medium)": "Not problem",
-      "Module": "Battery",
-      "Sub-Module": "Battery Drain",
-      "Issue Type": "Battery",
-      "Sub-Issue Type": "Battery Drain",
-      "Summarized Problem": "Device battery drains faster than expected during normal usage due to unlisted background processes.",
-      "Severity": "Medium",
-      "Severity Reason": "Partial malfunction: battery consumption data does not match app-level breakdown, indicating background drain but not full system failure or crash.",
-      "Resolve Type": "Intentional operation/Phenomenon/Unsupported",
-      "R&D Comment": "Battery usage may differ from the sum of battery usage for each app in the app list because system usage and low-usage apps are not displayed. This is normal operation based on concept."
-    },
-    {
-      "Case Code": "P250128-01746",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXL2",
-      "Title": "Camera quality degraded after Update",
-      "Problem": "Camera quality has degraded after software update, especially in low light with high zoom, resulting in blurry and shaky star images due to camera shake and noise reduction algorithms in night mode.",
-      "Resolve Option(Medium)": "Not problem",
-      "Module": "Camera",
-      "Sub-Module": "Night Mode",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Camera quality degrades significantly in low-light conditions with high zoom due to shaky images and noise reduction algorithms in night mode.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects image quality in specific conditions but does not cause device crash or complete failure, and is not universally disruptive.",
-      "Resolve Type": "Intentional operation/Phenomenon/Unsupported",
-      "R&D Comment": "Cause: Night mode in high zoom, low light produces shaky images due to camera shake and noise reduction algorithm. Counter Measure: Same as cause."
-    },
-    {
-      "Case Code": "P250128-01786",
-      "Model No.": "SM-A235F_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A235FXXU9EXL2",
-      "Title": "Volte does not latch in BSNL SIM",
-      "Problem": "No composer or file upload option; background log collection occurs; VoLTE works with 4G BSNL SIM but not with 5G BSNL SIM; issue occurs during flight mode toggle and SIM change",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "VoLTE Registration",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "VoLTE fails to register on BSNL 5G SIM but works on 4G BSN",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves intermittent functionality under specific network conditions, but does not cause device crash or complete failure.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "Please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250129-01170",
-      "Model No.": "SM-S918BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S918BXXS7CXL2",
-      "Title": "Camera not working",
-      "Problem": "Camera is not working after device update",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Camera Function",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "The camera function is not working after a device update.",
-      "Severity": "High",
-      "Severity Reason": "The camera is a major functionality that is completely non-operational, making the device unusable for basic tasks.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "There are not enough logs to find root cause; please provide CP silent logs for the issue."
-    },
-    {
-      "Case Code": "P250129-01217",
-      "Model No.": "SM-S901E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S901EXXSBEYA1",
-      "Title": "Unable to Add Phone Number in Profile Sharing Card",
-      "Problem": "The phone number cannot be added for profile card sharing",
-      "Resolve Option(Medium)": "Not problem",
-      "Module": "Contacts",
-      "Sub-Module": "Profile Sharing Card",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot add a phone number to a profile sharing card.",
-      "Severity": "Medium",
-      "Severity Reason": "The feature is partially missing, preventing phone number input but not causing device crash or data loss.",
-      "Resolve Type": "Intentional operation/Phenomenon/Unsupported",
-      "R&D Comment": "Cause: Cannot get phone number from USIM. Countermeasure: Verify USIM information is valid."
-    },
-    {
-      "Case Code": "P250129-01294",
-      "Model No.": "SM-S908E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S908EXXSBEYA1",
-      "Title": "Phone heats up after rough usage of 2 mins of camera",
-      "Problem": "Phone heats up during camera usage, especially with continuous on/off cycling, 5G data usage, and package usage. Temperature rises to 39-40 degrees but is within spec. Thermal management system is working fine.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Battery",
-      "Sub-Module": "Heat",
-      "Issue Type": "Heat",
-      "Sub-Issue Type": "Heating Issue",
-      "Summarized Problem": "Phone heats up during continuous camera usage due to on/off cycling and 5G data, with temperature rising to 39-40 degrees but within specified limits.",
-      "Severity": "Low",
-      "Severity Reason": "Temperature rise is within specified limits and does not affect device usability or performance.",
-      "Resolve Type": "Platform/System Limitation",
-      "R&D Comment": "In the given set of logs no overheating found when using social media apps. Temperature only rise to 39-40 degree due to continuously camera on/off, 5G data usage and pkg usage. Temperature raise in this scenario is under spec. Thermal management system is working fine to control heat in the device."
-    },
-    {
-      "Case Code": "P250129-01361",
-      "Model No.": "SM-F946BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "F946BXXS4DXLF",
-      "Title": "Not able to play 4k content on phone",
-      "Problem": "Using Z Fold 5 with Netflix 4K UHD plan but unable to play 4K content despite software and app updates",
-      "Resolve Option(Medium)": "Not reproduced",
-      "Module": "Video Playback",
-      "Sub-Module": "4K Content Playback",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot play 4K content on their phones despite having a 4K UHD Netflix plan and updated software.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial failure in video playback functionality, not complete device failure or data loss.",
-      "Resolve Type": null,
-      "R&D Comment": "Issue is irreproducible on our end; no widevine errors in logs. User may need to clear app data/cache to resolve."
-    },
-    {
-      "Case Code": "P250129-01444",
-      "Model No.": "SM-E156B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E156BXXU4AXL1",
-      "Title": "Theme not applying fully in dark mode",
-      "Problem": "Theme does not apply fully when dark mode is enabled or disabled; user reports inconsistent behavior and lack of resolution despite multiple complaints",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Settings",
-      "Sub-Module": "Theme",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The theme does not apply fully when dark mode is enabled or disabled, resulting in inconsistent visual appearance.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves partial malfunction of a UI feature but does not render the device unusable or cause data loss.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "When dark mode is applied, theme resources are not applied; users should be guided that dark mode and theme resources cannot be used together."
-    },
-    {
-      "Case Code": "P250129-01471",
-      "Model No.": "SM-S721BE_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S721BXXS3AXL1",
-      "Title": "Network reception issue",
-      "Problem": "Device has network reception issue with 4G frequency bands 70",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "Network Reception",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "The device has poor network reception with 4G frequency bands 700MHz and 2100MHz, especially with BSNL SIM.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue affects network connectivity in specific bands but does not cause device crash or complete failure.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": "In the shared logs device was in LTE RAT. Please share the modem logs for detailed analysis of issue."
-    },
-    {
-      "Case Code": "P250130-01177",
-      "Model No.": "SM-A156E_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A156EDXS5BYA1",
-      "Title": "Camera not working",
-      "Problem": "Camera not functioning on both front and back after several attempts to resolve, including restarting and updating the mobile software.",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Camera",
-      "Sub-Module": "Camera Function",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Both front and back cameras are not working despite multiple attempts to fix.",
-      "Severity": "High",
-      "Severity Reason": "Camera is a core functionality; failure to access both cameras renders the device unusable for basic photo and video capture.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "Camera module is faulty; recommend hardware inspection and replacement at service center."
-    },
-    {
-      "Case Code": "P250130-01314",
-      "Model No.": "SM-X210_EUR_14_XX",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "X210XXU5CXL1",
-      "Title": "unable to draw small circles using capacitive stylus",
-      "Problem": "Cannot draw small circles using capacitive stylus. It reads as a dot or a long press. There is excessive touch lag. The stylus works fine with all other devices. Small dots in video are attempts to draw small circles.",
-      "Resolve Option(Medium)": "Not problem",
-      "Module": "Notes",
-      "Sub-Module": "Drawing",
-      "Issue Type": "Usability",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "Users cannot draw small circles with the capacitive stylus, which instead registers as dots or long presses, with noticeable touch lag.",
-      "Severity": "Medium",
-      "Severity Reason": "The stylus fails to register small circles accurately, resulting in a partial malfunction of the drawing function, but the device remains usable for general tasks.",
-      "Resolve Type": "Product Requirement, UX Guide, Standard Technical Specification",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250131-03595",
-      "Model No.": "SM-S928BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S928BXXS4AYA1",
-      "Title": "Unable to add widgets",
-      "Problem": "Unable to add widgets attaching recording",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "Settings",
-      "Sub-Module": "Widget Management",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot add widgets that attach recording functionality.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue prevents a specific feature from working, but does not cause device crash or total unavailability.",
-      "Resolve Type": "Fixing error",
-      "R&D Comment": "Launcher code has been updated and fix to prevent NameNotFoundException when loading application info in widget list"
-    },
-    {
-      "Case Code": "P250131-03685",
-      "Model No.": "SM-G990E_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "G990EXXSCFYA2",
-      "Title": "No Compatible display error occurs while trying to connect via dex",
-      "Problem": "Here is the screen recording you asked",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Connectivity",
-      "Sub-Module": "Display Compatibility",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Compatibility Issue",
-      "Summarized Problem": "A display compatibility error occurs when attempting to connect via Samsung DeX.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue involves a partial failure in connectivity during DeX setup, preventing successful display connection but not causing device crash or data loss.",
-      "Resolve Type": "No required Logs/Broken files",
-      "R&D Comment": null
-    },
-    {
-      "Case Code": "P250131-03739",
-      "Model No.": "SM-M526B_SWA_13_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "M526BXXS6CXJ1",
-      "Title": "Unable to Set Routine Wallpaper",
-      "Problem": "Unable to set routine-based wallpaper in the Modes & Routines app, despite multiple attempts and troubleshooting steps including app updates, restart, and permission checks.",
-      "Resolve Option(Medium)": "App Update via App Store",
-      "Module": "Settings",
-      "Sub-Module": "Wallpaper & Routine",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot set a routine-based wallpaper in the Modes & Routines app.",
-      "Severity": "Medium",
-      "Severity Reason": "The feature is missing or not functioning properly, preventing users from setting routine-based wallpapers, but the device remains usable overall.",
-      "Resolve Type": null,
-      "R&D Comment": "Corrections have been applied to U OS Wallpaper & Style app 2.5.29 version. Users are advised to clear app data via Settings > Apps > Show system apps: ON > Wallpaper and Style > Storage > Clear Data."
-    },
-    {
-      "Case Code": "P250131-03751",
-      "Model No.": "SM-A146B_SWA_14_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A146BXXU8CXK1",
-      "Title": "Can't open RINGTONES to change it",
-      "Problem": "I did everything you said But I m still facing the same issue Can't open RINGTONES to change it",
-      "Resolve Option(Medium)": "Issue Fixed(Source changes)",
-      "Module": "Settings",
-      "Sub-Module": "Ringtones",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "Users cannot open the ringtones settings to change their sound settings.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue prevents users from changing their ringtones, which is a core functionality in settings, but does not cause device crash or data loss.",
-      "Resolve Type": "Adding implemention",
-      "R&D Comment": "Fixed with commit id a3603c2d8e9abab65545a5b9c6142f500019a680 for master branch. NullPointerException was thrown while accessing internal routine. Prevention code added and delivered with V OS deployment."
-    },
-    {
-      "Case Code": "P250203-03482",
-      "Model No.": "SM-A910F_SWA_OO_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "A910FXXU1CSJ1",
-      "Title": "Lag and frame drops while playing game",
-      "Problem": "Lag and frame drops during gameplay, with slow touch responses",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Game Performance",
-      "Sub-Module": "Game Performance",
-      "Issue Type": "Performance",
-      "Sub-Issue Type": "Slow/Lag Performance Issue",
-      "Summarized Problem": "Game experiences lag and frame drops with slow touch responses during gameplay.",
-      "Severity": "High",
-      "Severity Reason": "The issue causes noticeable performance degradation during gameplay, making the device unusable for gaming activities.",
-      "Resolve Type": "Unclear Issue/Reproduction Route/Issue time",
-      "R&D Comment": "Please help to reproduce issue again, take screen record and log right after issue occurs."
-    },
-    {
-      "Case Code": "P250203-03787",
-      "Model No.": "SM-E556B_SWA_INS",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "E556BXXS4AXL1",
-      "Title": "Unable to upload images to any website using chrome browser",
-      "Problem": "Images are greyed out and unable to select images or files to upload. Download manager shows download unsuccessful for files and PDFs from any app.",
-      "Resolve Option(Medium)": "Insufficient Defect Info.",
-      "Module": "Network",
-      "Sub-Module": "Media Upload",
-      "Issue Type": "Connectivity",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "Users cannot select or upload images in Chrome browser, and file downloads via native download manager fail.",
-      "Severity": "Medium",
-      "Severity Reason": "Partial functionality failure in media upload and file download, but device remains usable.",
-      "Resolve Type": "Delayed log extraction by user",
-      "R&D Comment": "We are unable to reproduce the issue. Further analysis is difficult without timely logs and reproduction. Requesting user to clear app data and retry on stable network."
-    },
-    {
-      "Case Code": "P250203-03855",
-      "Model No.": "SM-S911BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S911BXXS7CXL2",
-      "Title": "Video in YouTube going back to portrait after leaving landscape",
-      "Problem": "Video in YouTube goes back to portrait mode when leaving landscape orientation and re-entering the app, despite being set to landscape.",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "Video Playback",
-      "Sub-Module": "Orientation Handling",
-      "Issue Type": "Functional",
-      "Sub-Issue Type": "Feature Missing",
-      "Summarized Problem": "YouTube video playback resets from landscape to portrait orientation when the user leaves and re-enters the app.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue causes inconsistent behavior in video playback orientation, affecting user experience but does not cause device crash or data loss.",
-      "Resolve Type": "Reflect design changes",
-      "R&D Comment": "The root cause is unclear from logs; if the issue persists, further investigation with logs is needed."
-    },
-    {
-      "Case Code": "P250203-04115",
-      "Model No.": "SM-F731BE_SWA_14_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "F731BXXS4DXLF",
-      "Title": "Wallpaper frozen when phone is completely open",
-      "Problem": "Wallpaper is frozen when phone is completely open and restores when opened or closed",
-      "Resolve Option(Medium)": "Maintain current status",
-      "Module": "Display",
-      "Sub-Module": "Wallpaper",
-      "Issue Type": "UI/UX",
-      "Sub-Issue Type": "UI Issue",
-      "Summarized Problem": "The wallpaper freezes when the phone is fully open and returns to normal when the phone is opened or closed.",
-      "Severity": "Medium",
-      "Severity Reason": "The issue causes intermittent display behavior but does not prevent device usage or cause data loss.",
-      "Resolve Type": "CS guiding",
-      "R&D Comment": "No further OS VER 14 release planned. Please check issue on latest OS VER 15 and update accordingly."
-    },
-    {
-      "Case Code": "P250203-04130",
-      "Model No.": "SM-S921BE_SWA_DD",
-      "Progr.Stat.": "Close",
-      "S/W Ver.": "S921BXXS5AYA1",
-      "Title": "phone got automatically reset",
-      "Problem": "My phone was getting reset multiple times from last 2 days, up to 30 to 40 times, while opening and using the phone.",
-      "Resolve Option(Medium)": "Issue Fixed(Except Source changes)",
-      "Module": "System",
-      "Sub-Module": "Platform Reset",
-      "Issue Type": "System",
-      "Sub-Issue Type": "CP Crash",
-      "Summarized Problem": "The phone is experiencing frequent automatic resets, up to 30 to 40 times in two days, while in use.",
-      "Severity": "High",
-      "Severity Reason": "The device is repeatedly resetting, which renders it unusable and indicates a critical system failure.",
-      "Resolve Type": "H/W Issue",
-      "R&D Comment": "Hardware defects such as AP can cause these problems. It is necessary to check for hardware defects."
     }
   ]
 }

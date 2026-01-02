@@ -127,34 +127,59 @@ def get_per_source_data():
 
     return per_source_data
 
-def run_aggregator_command(command_args=None):
+def run_aggregator_directly():
     """
-    Run central_aggregator.py with specified arguments and return parsed JSON result.
+    Run central_aggregator.py functions directly to avoid subprocess issues.
     """
-    # Use absolute path to ensure correct execution
-    script_dir = Path(__file__).parent
-    aggregator_path = script_dir / 'central_aggregator.py'
-
-    cmd = [sys.executable, str(aggregator_path)]
-    if command_args:
-        cmd.extend(command_args)
-
     try:
-        # Run from the project root directory
-        print(f"Running command: {' '.join(cmd)} from {script_dir.parent.parent}")
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=script_dir.parent.parent)
-        print(f"Return code: {result.returncode}")
-        if result.stdout:
-            print(f"STDOUT: {result.stdout[:500]}...")
-        if result.stderr:
-            print(f"STDERR: {result.stderr[:500]}...")
-        if result.returncode != 0:
-            print(f"Error running aggregator with args {command_args}: {result.stderr}")
-            return None
+        # Import and run the aggregator functions directly
+        import central_aggregator as ca
 
-        return json.loads(result.stdout.strip())
+        base_path = "./downloads"
+        data = ca.load_all_excels(base_path)
+        kpis, status_kpis = ca.compute_central_kpis(data)
+        top_modules = ca.compute_top_modules(data)
+        series_distribution = ca.compute_series_distribution(data)
+        top_models = ca.compute_top_models(data)
+        high_issues = ca.compute_high_issues(data)
+
+        # Include additional data for cache generation efficiency
+        model_module_matrix = ca.compute_model_module_matrix(data)
+        source_model_summary = ca.compute_source_model_summary(data)
+
+        # Get filtered top models for each source
+        filtered_top_models = {}
+        for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
+            filtered_top_models[folder_name] = ca.compute_top_models_by_source(data, folder_name)
+
+        # Compute total issues and high issues counts
+        total_issues = sum(kpis[source]['total'] for source in kpis)
+        high_issues_count = sum(kpis[source]['High'] for source in kpis)
+
+        response = {
+            "kpis": kpis,
+            "status_kpis": {
+                "open": status_kpis["Open"],
+                "close": status_kpis["Close"],
+                "resolved": status_kpis["Resolve"]
+            },
+            "total_issues": total_issues,
+            "high_issues_count": high_issues_count,
+            "top_modules": top_modules,
+            "series_distribution": series_distribution,
+            "top_models": top_models,
+            "high_issues": high_issues,
+            "model_module_matrix": model_module_matrix,
+            "source_model_summary": source_model_summary,
+            "filtered_top_models": filtered_top_models
+        }
+
+        # Sanitize NaN values
+        response = ca.sanitize_nan(response)
+
+        return response
     except Exception as e:
-        print(f"Exception running aggregator: {e}")
+        print(f"Exception running aggregator directly: {e}")
         return None
 
 def compute_data_hash(data):
@@ -172,14 +197,15 @@ def generate_central_cache():
     """
     print("Generating centralized dashboard cache...")
 
-    # Get all aggregation data in a single call
-    base_data = run_aggregator_command()
+    # Get all aggregation data directly (avoid subprocess issues)
+    base_data = run_aggregator_directly()
     if not base_data:
         print("Failed to get base aggregation data")
         return False
 
     # Extract data from the single response
     kpis = base_data.get("kpis", {})
+    status_kpis = base_data.get("status_kpis", {})
     total_issues = base_data.get("total_issues", 0)
     high_issues_count = base_data.get("high_issues_count", 0)
     top_modules = base_data.get("top_modules", [])
@@ -199,6 +225,7 @@ def generate_central_cache():
     # Create core data for hash computation (exclude metadata)
     core_data = {
         "kpis": kpis,
+        "status_kpis": status_kpis,
         "total_issues": total_issues,
         "high_issues_count": high_issues_count,
         "top_modules": top_modules,
@@ -262,6 +289,7 @@ def validate_cache_freshness():
         # Extract current core data for hash computation
         current_core_data = {
             "kpis": current_data.get("kpis", {}),
+            "status_kpis": current_data.get("status_kpis", {}),
             "total_issues": current_data.get("total_issues", 0),
             "high_issues_count": current_data.get("high_issues_count", 0),
             "top_modules": current_data.get("top_modules", []),

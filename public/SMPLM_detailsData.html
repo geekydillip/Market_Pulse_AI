@@ -568,10 +568,14 @@
                     topIssueTitle: topTitlesText
                 };
             }).sort((a, b) => {
-                // Sort by model name first, then by count descending
+                // Sort by count descending first, then by model name
+                if (b.count !== a.count) {
+                    return b.count - a.count;
+                }
+                // If counts are equal, sort by model name alphabetically
                 if (a.model < b.model) return -1;
                 if (a.model > b.model) return 1;
-                return b.count - a.count;
+                return 0;
             });
         }
 

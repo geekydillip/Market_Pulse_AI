@@ -104,7 +104,7 @@
     <div class="flex items-center justify-between relative z-10">
       <div>
         <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Open</p>
-        <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="high-issues">0</p>
+        <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="open-issues">0</p>
       </div>
       <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
         <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
@@ -117,7 +117,7 @@
     <div class="flex items-center justify-between relative z-10">
       <div>
         <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Resolved</p>
-        <p class="text-3xl font-bold text-yellow-800 dark:text-yellow-200 mt-1" id="total-models">0</p>
+        <p class="text-3xl font-bold text-yellow-800 dark:text-yellow-200 mt-1" id="resolved-issues">0</p>
       </div>
       <div class="p-3 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
         <i class="fa-solid fa-check-circle text-yellow-600 dark:text-yellow-400 text-xl"></i>
@@ -130,7 +130,7 @@
     <div class="flex items-center justify-between relative z-10">
       <div>
         <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Close</p>
-        <p class="text-3xl font-bold text-green-800 dark:text-green-200 mt-1" id="total-modules">0</p>
+        <p class="text-3xl font-bold text-green-800 dark:text-green-200 mt-1" id="close-issues">0</p>
       </div>
       <div class="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
         <i class="fa-solid fa-times-circle text-green-600 dark:text-green-400 text-xl"></i>
@@ -175,13 +175,13 @@
 <!-- CHARTS ROW -->
 <section class="grid grid-cols-12 gap-4">
 
-<!-- SOURCE DISTRIBUTION - 100% Stacked Horizontal Bar -->
+<!-- Source Wise Severity - 100% Stacked Horizontal Bar -->
 <div class="col-span-4">
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Source Distribution</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Source Wise Severity</h3>
         <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
           <i class="fa-solid fa-chart-simple text-blue-600 dark:text-blue-400"></i>
         </div>
@@ -233,7 +233,7 @@
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Issues Severity</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Wise Issue Count</h3>
         <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
           <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
         </div>
@@ -428,17 +428,21 @@ async function loadDashboardData() {
 function updateKPIs() {
   // Update KPI elements using correct IDs - use pre-computed values
   const totalIssuesEl = document.getElementById('total-issues');
-  const highIssuesEl = document.getElementById('high-issues');
-  const totalModelsEl = document.getElementById('total-models');
-  const totalModulesEl = document.getElementById('total-modules');
+  const openIssuesEl = document.getElementById('open-issues');
+  const resolvedIssuesEl = document.getElementById('resolved-issues');
+  const closeIssuesEl = document.getElementById('close-issues');
 
   // Use pre-computed values from backend
   if (totalIssuesEl) totalIssuesEl.textContent = (dashboardData.totalIssues || 0).toLocaleString();
-  if (highIssuesEl) highIssuesEl.textContent = (dashboardData.highIssuesCount || 0).toLocaleString();
 
-  // Use real aggregated counts from central cache
-  if (totalModelsEl) totalModelsEl.textContent = dashboardData.totalUniqueModels || dashboardData.topModels.length;
-  if (totalModulesEl) totalModulesEl.textContent = dashboardData.totalUniqueModules || dashboardData.topModules.length;
+  // Calculate total status counts across all sources
+  const totalOpen = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+  const totalResolved = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.resolved || 0), 0);
+  const totalClose = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.close || 0), 0);
+
+  if (openIssuesEl) openIssuesEl.textContent = totalOpen.toLocaleString();
+  if (resolvedIssuesEl) resolvedIssuesEl.textContent = totalResolved.toLocaleString();
+  if (closeIssuesEl) closeIssuesEl.textContent = totalClose.toLocaleString();
 }
 
 // Update source distribution chart - 100% Stacked Horizontal Bar

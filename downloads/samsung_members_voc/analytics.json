@@ -3,7 +3,10 @@
     "total_rows": 4999,
     "unique_models": 186,
     "high_issues": 0,
-    "severity_distribution": {}
+    "severity_distribution": {},
+    "open_issues": 0,
+    "resolved_issues": 0,
+    "close_issues": 0
   },
   "top_models": [
     {

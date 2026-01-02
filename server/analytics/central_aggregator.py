@@ -62,6 +62,10 @@ def load_all_excels(base_path: str) -> dict:
             if excels:
                 dfs = []
                 for excel in excels:
+                    # Skip temporary Excel files that start with ~$
+                    if excel.name.startswith('~$'):
+                        print(f"Warning: Skipping temporary Excel file: {excel}")
+                        continue
                     try:
                         df = pd.read_excel(excel)
                         # Apply model name transformation for OS Beta entries
@@ -95,6 +99,7 @@ def compute_central_kpis(data: dict) -> dict:
     """
     Compute KPIs for each processor type with severity breakdowns.
     Filter out Critical severity issues as per requirements.
+    Also compute status KPIs across all sources.
     """
     kpis = {}
     processor_map = {
@@ -102,11 +107,21 @@ def compute_central_kpis(data: dict) -> dict:
         'samsung_members_plm': 'Samsung Members PLM',
         'samsung_members_voc': 'Samsung Members VOC'
     }
+    total_status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
     for folder, dfs in data.items():
         if folder in processor_map:
             combined = combine_dataframes(dfs)
             # Apply severity filter to exclude Critical
             combined = filter_allowed_severity(combined)
+
+            # Normalize status names - handle variants
+            if "Progr.Stat." in combined.columns:
+                combined["Progr.Stat."] = combined["Progr.Stat."].astype(str).apply(lambda x:
+                    "Resolve" if x.startswith("Resolve") else
+                    "Close" if x.startswith("Close") else
+                    "Open" if x.startswith("Open") else x
+                )
+
             total = len(combined)
 
             # Compute severity counts
@@ -116,13 +131,30 @@ def compute_central_kpis(data: dict) -> dict:
                 for severity in severity_counts.keys():
                     severity_counts[severity] = int(severity_series.get(severity, 0))
 
+            # Compute status counts for this source
+            status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
+            if "Progr.Stat." in combined.columns:
+                vc = combined["Progr.Stat."].value_counts()
+                status_counts["Open"] = int(vc.get("Open", 0))
+                status_counts["Close"] = int(vc.get("Close", 0))
+                status_counts["Resolve"] = int(vc.get("Resolve", 0))
+
             kpis[processor_map[folder]] = {
                 'total': total,
                 'High': severity_counts['High'],
                 'Medium': severity_counts['Medium'],
-                'Low': severity_counts['Low']
+                'Low': severity_counts['Low'],
+                'open': status_counts['Open'],
+                'close': status_counts['Close'],
+                'resolved': status_counts['Resolve']
             }
-    return kpis
+
+            # Accumulate total status counts
+            total_status_counts["Open"] += status_counts["Open"]
+            total_status_counts["Close"] += status_counts["Close"]
+            total_status_counts["Resolve"] += status_counts["Resolve"]
+
+    return kpis, total_status_counts
 
 def compute_top_modules(data: dict) -> list:
     """
@@ -513,7 +545,7 @@ if __name__ == "__main__":
     base_path = "./downloads"
     try:
         data = load_all_excels(base_path)
-        kpis = compute_central_kpis(data)
+        kpis, status_kpis = compute_central_kpis(data)
         top_modules = compute_top_modules(data)
         series_distribution = compute_series_distribution(data)
         top_models = compute_top_models(data)
@@ -534,6 +566,11 @@ if __name__ == "__main__":
 
         response = {
             "kpis": kpis,
+            "status_kpis": {
+                "open": status_kpis["Open"],
+                "close": status_kpis["Close"],
+                "resolved": status_kpis["Resolve"]
+            },
             "total_issues": total_issues,
             "high_issues_count": high_issues_count,
             "top_modules": top_modules,

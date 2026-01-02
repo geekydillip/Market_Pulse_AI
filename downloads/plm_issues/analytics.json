@@ -6,7 +6,10 @@
     "severity_distribution": {
       "Medium": 98,
       "High": 59
-    }
+    },
+    "open_issues": 0,
+    "resolved_issues": 0,
+    "close_issues": 157
   },
   "top_models": [
     {
