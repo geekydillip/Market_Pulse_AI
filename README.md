@@ -512,6 +512,12 @@ Deterministic automated cleaning without AI:
 
 ## 📈 Recent Updates
 
+- **v1.6.0** - (January 2026) Project Structure Refinement & Enhanced Dashboard Features
+  - **NewChangedStructure**: Major project restructuring for improved maintainability
+  - **Enhanced Dashboard UI**: Updated card labels, improved styling, and better user experience
+  - **Model and Module Analytics**: Added comprehensive model-wise and module-wise PLM summary tables
+  - **Beta User Issue Integration**: Updated dashboards with new beta user issue files and processing
+  - **File Management**: Improved file cleanup and organization in downloads directories
 - **v1.5.0** - (December 2025) Advanced Main Dashboard & Source-wise Analytics
   - **New Main Dashboard** (`main.html`): Complete redesign with 5 interactive charts and 6 navigation buttons
   - **Source-wise Analytics**: Added "Source wise Top Model" and "Source wise Top Modules" charts
