@@ -2105,6 +2105,113 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// POST /api/download-excel -> Generate Excel file using Python script
+app.post('/api/download-excel', async (req, res) => {
+  try {
+    const { data, exportType, filename } = req.body;
+
+    // Validate input
+    if (!data || !Array.isArray(data)) {
+      return res.status(400).json({ error: 'Data must be provided as an array' });
+    }
+
+    const validTypes = ['modules', 'total', 'high', 'video'];
+    if (!validTypes.includes(exportType)) {
+      return res.status(400).json({ error: 'Invalid export type. Must be one of: ' + validTypes.join(', ') });
+    }
+
+    // Create temporary JSON file for Python script
+    const tempJsonPath = path.join(__dirname, 'temp_data_' + Date.now() + '.json');
+    fs.writeFileSync(tempJsonPath, JSON.stringify(data, null, 2));
+
+    // Call Python script
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python', [
+      'excel_download_handler.py',
+      tempJsonPath,
+      exportType,
+      filename ? '--output' : '',
+      filename || ''
+    ].filter(arg => arg !== ''));
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      // Clean up temporary file
+      try {
+        if (fs.existsSync(tempJsonPath)) {
+          fs.unlinkSync(tempJsonPath);
+        }
+      } catch (e) {
+        console.warn('Failed to clean up temp file:', e.message);
+      }
+
+      if (code !== 0) {
+        console.error('Python script error:', stderr);
+        return res.status(500).json({ error: 'Failed to generate Excel file: ' + stderr });
+      }
+
+      // Parse the output to get the filename
+      const outputLines = stdout.trim().split('\n');
+      const excelFileLine = outputLines.find(line => line.startsWith('Excel file created:'));
+      if (!excelFileLine) {
+        return res.status(500).json({ error: 'Failed to get Excel file path from Python script' });
+      }
+
+      const excelPath = excelFileLine.replace('Excel file created:', '').trim();
+
+      // Check if file exists
+      if (!fs.existsSync(excelPath)) {
+        return res.status(500).json({ error: 'Excel file was not created' });
+      }
+
+      // Send file for download
+      const fileName = path.basename(excelPath);
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+      const fileStream = fs.createReadStream(excelPath);
+      fileStream.pipe(res);
+
+      // Clean up file after sending (optional - could be kept for caching)
+      fileStream.on('end', () => {
+        try {
+          if (fs.existsSync(excelPath)) {
+            fs.unlinkSync(excelPath);
+          }
+        } catch (e) {
+          console.warn('Failed to clean up Excel file:', e.message);
+        }
+      });
+    });
+
+    pythonProcess.on('error', (error) => {
+      // Clean up temporary file
+      try {
+        if (fs.existsSync(tempJsonPath)) {
+          fs.unlinkSync(tempJsonPath);
+        }
+      } catch (e) {}
+
+      console.error('Failed to start Python process:', error);
+      res.status(500).json({ error: 'Failed to start Excel generation process' });
+    });
+
+  } catch (error) {
+    console.error('Excel download error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate Excel file' });
+  }
+});
+
 /**
  * Read all .xlsx/.xls files from candidate directories and aggregate summary
  * Returns an array of { model, swver, grade, module, voc, count }
