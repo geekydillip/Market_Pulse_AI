@@ -1137,7 +1137,7 @@ function createModelSummaryTable() {
             // Add issue title under this module (if available)
             if (modelData.top_titles && modelData.top_titles[i]) {
               const title = modelData.top_titles[i];
-              const truncatedTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
+              const truncatedTitle = title.length > 80 ? title.substring(0, 80) + '...' : title;
 
               content += `<br/><span class="ml-4">- ${truncatedTitle}</span>`;
             }
@@ -1153,7 +1153,7 @@ function createModelSummaryTable() {
           const maxItems = Math.min(5, modelData.top_titles.length);
           for (let i = 0; i < maxItems; i++) {
             const title = modelData.top_titles[i];
-            const truncatedTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
+            const truncatedTitle = title.length > 80 ? title.substring(0, 80) + '...' : title;
 
             content += `<li>• ${truncatedTitle}</li>`;
           }

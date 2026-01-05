@@ -15,6 +15,25 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
+    <style>
+        /* Custom styles for severity sorting */
+        .sorted-desc {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6 !important;
+        }
+        .sorted-asc {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6 !important;
+        }
+        .dark .sorted-desc, .dark .sorted-asc {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+        .sort-indicator {
+            margin-left: 4px;
+            font-size: 10px;
+        }
+    </style>
+
     <script>
         // Tailwind config for theme support
         tailwind.config = {
@@ -1106,10 +1125,21 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
 
-                const severity = (row.severity || '').toLowerCase();
-                const severityClass = severity === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
-                                   severity === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
-                                   'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+                // Extract severity value with comprehensive field name support (same as sortRowsBySeverity)
+                const getSeverity = (row) => {
+                    const candidates = ['severity', 'Severity', 'SEVERITY', 'severity_level', 'severityLevel'];
+                    for (const field of candidates) {
+                        if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
+                            return String(row[field]).toLowerCase().trim();
+                        }
+                    }
+                    return 'low'; // Default to low if no severity found
+                };
+
+                const severity = getSeverity(row);
+                const severityClass = severity === 'high' ? 'bg-red-400 dark:bg-red-500 text-white dark:text-white' :
+                                   severity === 'medium' ? 'bg-orange-400 dark:bg-orange-500 text-white dark:text-white' :
+                                   'bg-gray-400 dark:bg-gray-500 text-white dark:text-white';
 
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
@@ -1131,10 +1161,24 @@
         }
 
         function sortRowsBySeverity(rows, order) {
-            return rows.sort((a, b) => {
+            // Create a new array to avoid mutating the original
+            const rowsCopy = [...rows];
+
+            return rowsCopy.sort((a, b) => {
+                // Extract severity value with comprehensive field name support
+                const getSeverity = (row) => {
+                    const candidates = ['severity', 'Severity', 'SEVERITY', 'severity_level', 'severityLevel'];
+                    for (const field of candidates) {
+                        if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
+                            return String(row[field]).toLowerCase().trim();
+                        }
+                    }
+                    return 'low'; // Default to low if no severity found
+                };
+
                 const severityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-                const aSeverity = severityOrder[(a.severity || '').toLowerCase()] || 1;
-                const bSeverity = severityOrder[(b.severity || '').toLowerCase()] || 1;
+                const aSeverity = severityOrder[getSeverity(a)] || 1;
+                const bSeverity = severityOrder[getSeverity(b)] || 1;
 
                 if (order === 'desc') {
                     return bSeverity - aSeverity;
@@ -1145,15 +1189,27 @@
         }
 
         function sortModalBySeverity() {
+            // Toggle sort order
             modalSortOrder = modalSortOrder === 'desc' ? 'asc' : 'desc';
+
+            // Find the module data and re-render with new sort order
             const moduleData = currentData.aggregatedData.find(m => m.module === selectedModule);
             if (moduleData) {
                 renderModalTable(moduleData.rows);
             }
 
-            // Update sort indicator
+            // Update sort indicator with better visual feedback
             const header = document.getElementById('severity-header');
-            header.innerHTML = `Severity ${modalSortOrder === 'desc' ? '↓' : '↑'}`;
+            header.innerHTML = `Severity <span class="sort-indicator">${modalSortOrder === 'desc' ? '↓' : '↑'}</span>`;
+
+            // Add visual styling to the header when sorted
+            if (modalSortOrder === 'desc') {
+                header.classList.add('sorted-desc');
+                header.classList.remove('sorted-asc');
+            } else {
+                header.classList.add('sorted-asc');
+                header.classList.remove('sorted-desc');
+            }
         }
 
         function closeModal() {

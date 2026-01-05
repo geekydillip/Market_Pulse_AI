@@ -40,7 +40,21 @@ def convert_single_json(source_path: Path, dest_dir: Path, overwrite: bool=False
         return False
 
     try:
-        if isinstance(data, dict):
+        # Check for nested structure with sheets.Sheet1.data pattern
+        if (isinstance(data, dict) and
+            "sheets" in data and
+            isinstance(data["sheets"], dict) and
+            "Sheet1" in data["sheets"] and
+            isinstance(data["sheets"]["Sheet1"], dict) and
+            "data" in data["sheets"]["Sheet1"] and
+            isinstance(data["sheets"]["Sheet1"]["data"], list)):
+
+            # Handle the nested structure
+            sheet_data = data["sheets"]["Sheet1"]["data"]
+            df = pd.DataFrame(sheet_data)
+            df.to_excel(output_file, sheet_name="Sheet1", index=False)
+
+        elif isinstance(data, dict):
             with pd.ExcelWriter(output_file) as writer:
                 for sheet_name, records in data.items():
                     safe_sheet = (str(sheet_name) or "Sheet1")[:31]
