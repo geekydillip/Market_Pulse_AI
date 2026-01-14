@@ -1086,8 +1086,11 @@ function updateEstimatedTime(progressMessage, percent) {
             });
 
             // also show remaining duration (human friendly)
-            const sec = Math.round(estimatedRemainingMs / 1000);
-            const durationText = sec >= 60 ? Math.floor(sec / 60) + 'm ' + (sec % 60) + 's' : sec + 's';
+            const totalSeconds = Math.round(estimatedRemainingMs / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            const durationText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
             estimatedTimeElement.textContent = `Estimated time remaining: ${durationText}`;
             estimatedTimeElement.style.display = 'block';

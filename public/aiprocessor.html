@@ -837,9 +837,11 @@ function updateEstimatedTime(message, percent, queueItem) {
     const estimatedTotal = (elapsed / percent) * 100;
     const estimatedRemaining = estimatedTotal - elapsed;
     if (estimatedRemaining > 0) {
-      const minutes = Math.floor(estimatedRemaining / 60000);
-      const seconds = Math.floor((estimatedRemaining % 60000) / 1000);
-      timeText = `~${minutes}m ${seconds}s remaining`;
+      const totalSeconds = Math.floor(estimatedRemaining / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      timeText = `~${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} remaining`;
     } else {
       timeText = 'Almost done...';
     }
