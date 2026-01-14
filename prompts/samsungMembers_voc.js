@@ -69,7 +69,7 @@ Smart View, Samsung Flow, Link Sharing
 
 - If NOT Native, set value to "3rd Party".
 
-Module/Apps
+Module
 - Identify EXACTLY ONE primary affected product module from the content.
 - Choose the BEST possible match only.
 
@@ -77,13 +77,18 @@ Allowed examples (not limited to):
 Lock Screen, Camera, Battery, Network, Display, Settings, Performance,
 Heating, Charging, App Crash, UI/UX, Notifications, Audio, Bluetooth, Storage
 
-Sub-Category
+Sub-Module
 Classify the issue into EXACTLY ONE of the following values:
 - Functional → Feature not working or behaving incorrectly
 - System → OS-level issue such as crash, freeze, reboot, severe lag
 - Other → Cosmetic issue, usability feedback, suggestion, or non-functional complaint
 
-Remarks
+Issue Type: choose ONE:
+- System, Functional, Performance, Usability, Compatibility, Security, Connectivity, Battery, UI/UX, Crash, Heat.
+Sub-Issue Type: one of:
+- CP Crash, App Crash, ANR, Slow/Lag Performance Issue, Feature Missing, Poor Quality, UI Issue, Heating Issue, Battery Drain, Compatibility Issue, Restart, other Issue, or "".
+
+AI Insight
 - Write EXACTLY ONE clean English sentence.
 - Clearly describe the actual customer issue.
 - Do NOT repeat the content verbatim.
@@ -102,9 +107,11 @@ Each object MUST contain EXACTLY the following keys
 IN THIS EXACT ORDER:
 
 3rd Party/Native,
-Module/Apps,
-Sub-Category,
-Remarks,
+Module,
+Sub-Module,
+Issue Type
+Sub-Issue Type,
+AI Insight,
 Members
 
 GLOBAL RULES

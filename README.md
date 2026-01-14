@@ -53,9 +53,15 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
 
 1. **Clone or download this repository**
 2. **Navigate to the project directory**
-3. **Install dependencies**:
+3. **Install backend dependencies**:
    ```bash
    npm install
+   ```
+4. **Install frontend dependencies** (optional, for Next.js dashboard):
+   ```bash
+   cd frontend
+   npm install
+   cd ..
    ```
 
 ## 🚀 Usage
@@ -109,7 +115,7 @@ Each dashboard provides:
 3. **Table Features**:
    - **S/N Column**: Sequential numbering based on filtered results (1, 2, 3...)
    - **Pagination**: Choose page size (10, 25, 50 items), navigate with Prev/Next buttons
-- **Search Filtering**: Search across model, grade, module, and top issue titles (debounced, 300ms)
+   - **Search Filtering**: Search across model, grade, module, and top issue titles (debounced, 300ms)
    - **Client-side CSV Export**: Download filtered results as CSV with S/N numbering
 4. **Modal Drill-Down**: Click Count buttons to see detailed individual issue rows for that grouping
 5. **Keyboard Shortcuts**: Press "/" to focus search input field
@@ -372,6 +378,10 @@ Market Pulse AI/
 ├── run_server.py                     # Python automation script for server startup
 ├── terminate_servers.py               # Python script for stopping running servers
 ├── json_to_excel_converter.py         # Python utility for JSON to Excel conversion
+├── excel_download_handler.py          # Python utility for Excel downloads
+├── fetch_api.js                       # API fetching utility
+├── list_models.js                     # Utility script for model management
+├── requirements.txt                   # Python dependencies
 ├── package.json                       # Node.js dependencies and scripts
 ├── package-lock.json                  # Dependency lock file
 ├── README.md                          # This comprehensive documentation
@@ -380,14 +390,35 @@ Market Pulse AI/
 ├── frontend/                          # Next.js frontend application (separate)
 │   ├── src/
 │   │   ├── app/                       # Next.js app router
+│   │   │   ├── layout.jsx             # App layout component
+│   │   │   └── page.jsx               # Main page component
 │   │   ├── components/                # React components
+│   │   │   ├── charts/                # Chart components
+│   │   │   │   ├── SeveritySplit.jsx  # Severity split chart
+│   │   │   │   ├── SourceStackedBar.jsx # Source stacked bar chart
+│   │   │   │   └── TopModelsBar.jsx   # Top models bar chart
+│   │   │   ├── common/                # Common components
+│   │   │   │   └── Card.jsx           # Card component
+│   │   │   ├── filters/               # Filter components
+│   │   │   │   └── DashboardFilters.jsx # Dashboard filters
+│   │   │   ├── kpi/                   # KPI components
+│   │   │   │   └── KPICard.jsx        # KPI card component
+│   │   │   └── table/                 # Table components
+│   │   │       └── TopIssuesTable.jsx # Top issues table
 │   │   ├── hooks/                     # Custom React hooks
+│   │   │   ├── useDashboardData.js    # Dashboard data hook
+│   │   │   └── useTheme.js            # Theme hook
 │   │   ├── styles/                    # Styling files
+│   │   │   └── globals.css            # Global styles
 │   │   └── utils/                     # Utility functions
-│   ├── package.json
-│   ├── next.config.js
-│   ├── tailwind.config.js
-│   └── postcss.config.js
+│   │       ├── formatters.js          # Data formatters
+│   │       └── severity.js            # Severity utilities
+│   ├── package.json                   # Frontend dependencies
+│   ├── package-lock.json              # Frontend dependency lock file
+│   ├── next.config.js                 # Next.js configuration
+│   ├── tailwind.config.js             # Tailwind CSS configuration
+│   ├── postcss.config.js              # PostCSS configuration
+│   └── tsconfig.json                  # TypeScript configuration
 ├── processors/                        # Modular processing pipeline
 │   ├── _helpers.js                    # Shared utility functions
 │   ├── betaIssues.js                  # Beta User Issues processor
@@ -402,20 +433,21 @@ Market Pulse AI/
 ├── public/                            # Static frontend files
 │   ├── main.html                      # Main dashboard with advanced analytics
 │   ├── index.html                     # Legacy upload interface
+│   ├── aiprocessor.html               # AI processor interface
 │   ├── dashboard.js                   # Dashboard logic and utilities
 │   ├── script.js                      # Upload interface logic
 │   ├── styles.css                     # Neumorphic design styles
-│   ├── beta_user_issues_dashboard.html # Beta Issues specialized dashboard
-│   ├── plm_issues_dashboard.html      # PLM Issues dashboard
-│   ├── samsung_members_plm_dashboard.html # Samsung PLM dashboard
-│   └── samsung_members_voc_dashboard.html # Samsung VOC dashboard
+│   ├── BetaIssues_Dashboard.html      # Beta Issues specialized dashboard
+│   ├── BetaIssues_detailsData.html    # Beta Issues detailed data
+│   ├── SMPLM_Dashboard.html           # Samsung PLM dashboard
+│   ├── SMPLM_detailsData.html         # Samsung PLM detailed data
+│   ├── SMVOC_Dashboard.html           # Samsung VOC dashboard
+│   └── SMVOC_detailsData.html         # Samsung VOC detailed data
 ├── server/                            # Backend analytics and processing
-│   ├── analytics/                     # Python analytics engine
-│   │   ├── central_aggregator.py      # Central data aggregation
-│   │   ├── generate_central_cache.py  # Cache generation script
-│   │   ├── pandas_aggregator.py       # Pandas-based analytics
-│   │   └── downloads/                 # Analytics cache storage
-│   └── ingestion/                     # Data ingestion utilities
+│   └── analytics/                     # Python analytics engine
+│       ├── central_aggregator.py      # Central data aggregation
+│       ├── generate_central_cache.py  # Cache generation script
+│       └── pandas_aggregator.py       # Pandas-based analytics
 ├── downloads/                         # Processed file outputs and analytics
 │   ├── __dashboard_cache__/           # Centralized dashboard cache
 │   │   └── central_dashboard.json     # Pre-aggregated dashboard data
@@ -423,10 +455,16 @@ Market Pulse AI/
 │   │   ├── analytics.json             # Aggregated analytics
 │   │   └── *.xlsx                     # Processed Excel files
 │   ├── plm_issues/                    # PLM Issues processed data
+│   │   ├── analytics.json             # Aggregated analytics
+│   │   └── *.xlsx                     # Processed Excel files
 │   ├── samsung_members_plm/           # Samsung PLM processed data
+│   │   ├── analytics.json             # Aggregated analytics
+│   │   └── *.xlsx                     # Processed Excel files
 │   └── samsung_members_voc/           # Samsung VOC processed data
+│       ├── analytics.json             # Aggregated analytics
+│       └── *.xlsx                     # Processed Excel files
 ├── uploads/                           # Temporary file storage (auto-cleaned)
-└── list_models.js                     # Utility script for model management
+└── __pycache__/                       # Python cache files
 ```
 
 ## 🔧 Technical Implementation
@@ -442,13 +480,13 @@ Market Pulse AI/
 - **Progress Updates**: Server-Sent Events (SSE) for real-time progress reporting to frontend
 - **Logging**: Detailed JSON logs with processing times, errors, and chunk statistics
 
-### Frontend (Vanilla JavaScript)
-- **UI Framework**: Pure HTML5 + CSS3 with modern gradients and shadows
-- **Charts**: Chart.js integration for bar charts in visualization dashboard
+### Frontend (Vanilla JavaScript + Next.js)
+- **UI Framework**: Pure HTML5 + CSS3 with modern gradients and shadows, Next.js React components
+- **Charts**: ECharts integration for interactive bar charts, donut charts, and data visualizations
 - **Real-time Features**: SSE event listeners for live progress updates, connection health checks
-- **File Handling**: Drag-and-drop with preview, file type validation, size limits (10MB)
+- **File Handling**: Drag-and-drop with preview, file type validation, size limits (200MB)
 - **State Management**: Dynamic model selection from Ollama API, progress tracking per session
-- **Accessibility**: Keyboard shortcuts (Ctrl+Enter to process, Ctrl+K to clear)
+- **Accessibility**: Keyboard shortcuts (Ctrl+Enter to process, "/" for search focus)
 
 ### Data Processing Options
 - **VOC Analysis**: Specialized prompts for customer feedback data cleaning and analysis (module identification, severity classification, problem summarization)
@@ -501,7 +539,7 @@ Deterministic automated cleaning without AI:
 - Check if Ollama is accessible on localhost:11434
 
 ### "File upload failed"
-- Check file size (max 10MB)
+- Check file size (max 200MB)
 - Verify file type (.txt, .md, .json, .csv, .log, .xls, .xlsx)
 - Ensure proper permissions
 

@@ -16,7 +16,7 @@ const DEFAULT_OLLAMA_PORT = 11434;
 const DEFAULT_AI_MODEL = 'qwen3:4b-instruct';
 
 // Security constants
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.json', '.csv'];
 const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -40,7 +40,7 @@ function validateFileUpload(req, res, next) {
     if (req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    return res.status(400).json({ error: 'File too large. Maximum size is 10MB' });
+    return res.status(400).json({ error: 'File too large. Maximum size is 200MB' });
   }
 
   // Check file extension
@@ -77,8 +77,8 @@ function sanitizeInput(input) {
 }
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ extended: true, limit: '200mb' }));
 
 // Create keep-alive agent for HTTP connections
 const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
@@ -1366,7 +1366,7 @@ async function processExcel(req, res) {
     });
 
     // === Apply Header Styling ===
-    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment', '3rd Party/Native', 'Module/Apps', 'Sub-Category', 'Remarks', 'Members'];
+    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment', '3rd Party/Native', 'Module/Apps', 'AI Insight', 'Members'];
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;

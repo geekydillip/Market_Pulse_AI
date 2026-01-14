@@ -38,20 +38,20 @@ function normalizeHeaders(rows) {
     //3rd Party/Native
     '3rd Party/Native': '3rd Party/Native',
     '3rd party/native': '3rd Party/Native',
-    // Module/Apps
-    'module/apps': 'Module/Apps',
-    'module': 'Module/Apps',
-    // Sub-Category
-    'sub-category': 'Sub-Category',
-    'sub category': 'Sub-Category',
-    // Remarks
-    'remarks': 'Remarks',
+    // Module
+    'module/apps': 'Module',
+    'module': 'Module',
+    // Sub-Module
+    'sub-module': 'Sub-Module',
+    'sub module': 'Sub-Module',
+    // AI Insight
+    'AI Insight': 'AI Insight',
     // Members
     'members': 'Members'
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','3rd Party/Native','Module/Apps','Sub-Category','Remarks','Members'];
+  const canonicalCols = ['Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','3rd Party/Native','Module','Sub-Module','AI Insight','Members'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -145,7 +145,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'samsungMembersVoc',
-  expectedHeaders: ['S/N', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', '3rd Party/Native', 'Module/Apps', 'Sub-Category', 'Remarks', 'Members'],
+  expectedHeaders: ['S/N', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', '3rd Party/Native', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight', 'Members'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -237,9 +237,11 @@ module.exports = {
         'Main Type': original['Main Type'] || '',
         'Sub Type': original['Sub Type'] || '',
         '3rd Party/Native': aiRow['3rd Party/Native'] || '',
-        'Module/Apps': aiRow['Module/Apps'] || '',
-        'Sub-Category': aiRow['Sub-Category'] || '',
-        'Remarks': aiRow['Remarks'] || '',
+        'Module': aiRow['Module'] || '',
+        'Sub-Module': aiRow['Sub-Module'] || '',
+        'Issue Type': aiRow['Issue Type'] || '',
+        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
+        'AI Insight': aiRow['AI Insight'] || '',
         'Members': aiRow['Members'] || ''
       };
     });
@@ -250,10 +252,10 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['content', 'Remarks'].includes(h)) return { wch: 41 };
+      if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
       if (h === 'Application Name') return { wch: 25 };
       if (['Model No.', 'S/N', 'OS', 'CSC'].includes(h)) return { wch: 15 };
-      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module/Apps', 'Sub-Category', 'Members'].includes(h)) return { wch: 15 };
+      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Members'].includes(h)) return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
     });

@@ -216,9 +216,9 @@ function handleFile(file) {
         return;
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-        alert('File size must be less than 10MB');
+    // Validate file size (200MB max)
+    if (file.size > 200 * 1024 * 1024) {
+        alert('File size must be less than 200MB');
         return;
     }
 
@@ -284,9 +284,9 @@ function addFileToQueue(file) {
         return;
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-        alert(`File too large: ${file.name}. Maximum size is 10MB`);
+    // Validate file size (200MB max)
+    if (file.size > 200 * 1024 * 1024) {
+        alert(`File too large: ${file.name}. Maximum size is 200MB`);
         return;
     }
 

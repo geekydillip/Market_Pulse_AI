@@ -1,6 +1,6 @@
 {
-  "name": "ollama-web-processor",
-  "version": "1.0.0",
+  "name": "market-pulse-ai",
+  "version": "1.6.0",
   "description": "Professional web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama",
   "main": "server.js",
   "scripts": {

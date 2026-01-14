@@ -151,7 +151,7 @@
     <div class="mb-4">
       <i class="fa-solid fa-cloud-upload-alt text-4xl text-slate-400 dark:text-slate-500 mb-4"></i>
       <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">Drop files here or click to browse</h3>
-      <p class="text-slate-600 dark:text-slate-400">Supported formats: .xlsx, .xls, .json, .csv (Max 10MB each)</p>
+      <p class="text-slate-600 dark:text-slate-400">Supported formats: .xlsx, .xls, .json, .csv (Max 200MB each)</p>
     </div>
   </div>
 
@@ -346,11 +346,11 @@ function addFilesToQueue(files) {
   const validExtensions = ['.xlsx', '.xls', '.json', '.csv'];
   const validFiles = files.filter(file => {
     const ext = '.' + file.name.split('.').pop().toLowerCase();
-    return validExtensions.includes(ext) && file.size <= 10 * 1024 * 1024; // 10MB limit
+    return validExtensions.includes(ext) && file.size <= 200 * 1024 * 1024; // 200MB limit
   });
 
   if (validFiles.length === 0) {
-    alert('No valid files selected. Please upload .xlsx, .xls, .json, or .csv files under 10MB each.');
+    alert('No valid files selected. Please upload .xlsx, .xls, .json, or .csv files under 200MB each.');
     return;
   }
 
