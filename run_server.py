@@ -141,10 +141,13 @@ def run_server():
             except Exception as e:
                 print(f"Warning: Could not check/kill existing server: {e}")
 
-        # Install dependencies
-        print("Installing Node.js dependencies...")
+        # Install dependencies (only if not already installed)
         use_shell = os.name == 'nt'  # True on Windows
-        subprocess.run(["npm", "install"], check=True, shell=use_shell)
+        if not os.path.exists('node_modules'):
+            print("Installing Node.js dependencies...")
+            subprocess.run(["npm", "install"], check=True, shell=use_shell)
+        else:
+            print("Node.js dependencies already installed, skipping...")
 
         # Generate analytics and cache before starting server
         generate_analytics_and_cache()

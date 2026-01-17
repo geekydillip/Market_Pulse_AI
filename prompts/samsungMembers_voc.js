@@ -48,15 +48,17 @@ CLASSIFICATION RULES
 ========================
 
 Module
-- Identify the primary affected product area from cleaned Title + Problem.
+- Identify the primary affected product area from cleaned Application Name + content.
 - Examples: Camera, Battery, Network, Display, Lock Screen, Settings, System, UI, Performance, Power, Sensors, Charging, Audio, Messaging, Storage, Security, Accessibility, Media, Connectivity, USB, User Trial.
 
 Sub-Module
 - Identify the specific functional component affected.
-- Example: "Now Bar not working on Lock Screen"
+- Example1: "Now Bar not working on Lock Screen"
   → Module: Now Bar
   → Sub-Module: Lock Screen
-
+  Example2: "Green line issue from 1 week." 
+  → Module: Display
+  → Sub-Module: Green Line
 Sub-Module Examples:
 Camera: Front Camera, Rear Camera, Zoom, HDR, Flash, Photo Capture, Video Recording
 Battery: Charging, Discharging, Health, Extreme Drain, Power Saving Mode

@@ -35,9 +35,6 @@ function normalizeHeaders(rows) {
     // Sub Type
     'sub type': 'Sub Type',
     'sub_type': 'Sub Type',
-    //3rd Party/Native
-    '3rd Party/Native': '3rd Party/Native',
-    '3rd party/native': '3rd Party/Native',
     // Module
     'module/apps': 'Module',
     'module': 'Module',
@@ -45,13 +42,11 @@ function normalizeHeaders(rows) {
     'sub-module': 'Sub-Module',
     'sub module': 'Sub-Module',
     // AI Insight
-    'AI Insight': 'AI Insight',
-    // Members
-    'members': 'Members'
+    'AI Insight': 'AI Insight'
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','3rd Party/Native','Module','Sub-Module','AI Insight','Members'];
+  const canonicalCols = ['Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -145,7 +140,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'samsungMembersVoc',
-  expectedHeaders: ['S/N', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', '3rd Party/Native', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight', 'Members'],
+  expectedHeaders: ['S/N', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -217,14 +212,50 @@ module.exports = {
       return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
     }
 
+    // Handle different response formats: unwrap objects containing arrays
+    if (!Array.isArray(aiRows) && typeof aiRows === 'object') {
+      // Check for common wrapper keys that contain the actual array
+      const possibleKeys = ['data', 'result', 'response', 'output', 'items', 'records'];
+      for (const key of possibleKeys) {
+        if (aiRows[key] && Array.isArray(aiRows[key])) {
+          aiRows = aiRows[key];
+          break;
+        }
+      }
+
+      // If still not an array, check if it's a single result object and wrap it
+      if (!Array.isArray(aiRows)) {
+        // Check if this object has the expected fields for a single result
+        const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
+        const hasExpectedFields = expectedFields.some(field => aiRows.hasOwnProperty(field));
+
+        if (hasExpectedFields) {
+          // Wrap single object in array
+          aiRows = [aiRows];
+        } else {
+          return [{ error: `AI response is not an array and doesn't contain expected fields: ${typeof aiRows} - ${Object.keys(aiRows).slice(0, 5).join(', ')}...` }];
+        }
+      }
+    }
+
     // Ensure aiRows is an array
     if (!Array.isArray(aiRows)) {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
-    // Merge AI results with original core identifiers
+    // Validate that AI response contains expected fields per new prompt format
+    const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
+
+    // Merge AI results with original core identifiers (preserving original Excel fields + AI fields)
     const mergedRows = aiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
+
+      // Validate AI row has expected fields
+      const isValidAiRow = expectedFields.every(field => aiRow.hasOwnProperty(field));
+      if (!isValidAiRow) {
+        console.warn(`AI row ${index} missing expected fields. Available:`, Object.keys(aiRow));
+      }
+
       return {
         'S/N': index + 1,  // Add sequential numbering
         'Model No.': original['Model No.'] || '',
@@ -236,13 +267,11 @@ module.exports = {
         'content': original['content'] || '',  // Reuse from input (already cleaned)
         'Main Type': original['Main Type'] || '',
         'Sub Type': original['Sub Type'] || '',
-        '3rd Party/Native': aiRow['3rd Party/Native'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'AI Insight': aiRow['AI Insight'] || '',
-        'Members': aiRow['Members'] || ''
+        'AI Insight': aiRow['AI Insight'] || ''
       };
     });
 
@@ -255,7 +284,7 @@ module.exports = {
       if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
       if (h === 'Application Name') return { wch: 25 };
       if (['Model No.', 'S/N', 'OS', 'CSC'].includes(h)) return { wch: 15 };
-      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Members'].includes(h)) return { wch: 15 };
+      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type'].includes(h)) return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
     });
