@@ -7,12 +7,11 @@ const promptTemplate = require('../prompts/samsungMembers_voc');
 function normalizeHeaders(rows) {
   // Map header name variants to canonical names
   const headerMap = {
+    // No
+    'no': 'No',
     // Model variants
     'model no.': 'Model No.',
     'model_no': 'Model No.',
-    // S/N
-    's/n': 'S/N',
-    'serial no.': 'S/N',
     // OS
     'os': 'OS',
     // CSC
@@ -46,7 +45,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
+  const canonicalCols = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -140,7 +139,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'samsungMembersVoc',
-  expectedHeaders: ['S/N', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
+  expectedHeaders: ['No', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -257,7 +256,7 @@ module.exports = {
       }
 
       return {
-        'S/N': index + 1,  // Add sequential numbering
+        'No': original['No'] || original['S/N'] || '',  // Preserve original No column data
         'Model No.': original['Model No.'] || '',
         'OS': original['OS'] || '',
         'CSC': original['CSC'] || '',
@@ -283,7 +282,7 @@ module.exports = {
     return finalHeaders.map((h, idx) => {
       if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
       if (h === 'Application Name') return { wch: 25 };
-      if (['Model No.', 'S/N', 'OS', 'CSC'].includes(h)) return { wch: 15 };
+      if (['No', 'Model No.', 'OS', 'CSC'].includes(h)) return { wch: 15 };
       if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type'].includes(h)) return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };

@@ -49,7 +49,7 @@ CLASSIFICATION RULES
 
 Module
 - Identify the primary affected product area from cleaned Application Name + content.
-- Examples: Camera, Battery, Network, Display, Lock Screen, Settings, System, UI, Performance, Power, Sensors, Charging, Audio, Messaging, Storage, Security, Accessibility, Media, Connectivity, USB, User Trial.
+- Examples: Camera, Battery, Network, Display, Lock Screen, Settings, System, UI, Performance, Power, Sensors, Charging, Audio, Messaging, Storage, Security, Accessibility, Media, Connectivity, USB, User Trial, GPS, 3rd Party.
 
 Sub-Module
 - Identify the specific functional component affected.
@@ -59,12 +59,15 @@ Sub-Module
   Example2: "Green line issue from 1 week." 
   → Module: Display
   → Sub-Module: Green Line
+
 Sub-Module Examples:
 Camera: Front Camera, Rear Camera, Zoom, HDR, Flash, Photo Capture, Video Recording
 Battery: Charging, Discharging, Health, Extreme Drain, Power Saving Mode
-Network: CP Crash, Signal, Data, Calling, IMS, SIM, PLMN Selection, Roaming
+Network: CP Crash, Signal, Data, Calling, IMS, SIM, PLMN Selection, Roaming, Wifi Calling, eSIM
 Display: Brightness, Flicker, Black Screen, Resolution, Touch, Rotation
 Heating: Thermal Rise, Overheating, High Surface Temperature, Hot Back Panel, Thermal Throttling
+Connectivity: Wifi, Bluetooth, NFC, pairing, Android Auto, Screen Cast, Smart View, Hotspot, Tethering, Quick share, Smart tag, Wearable
+3rd paty Apps: WhatsAPP, Instagram, Snapchat, Facebook, BGMI, Game, Coin Master, TikTok, Telegram, Temu, ChatGPT, Capcut, Discord, YouTube, PDF, etc..
 
 Issue Type (choose ONE ONLY):
 - System
