@@ -66,8 +66,9 @@ Battery: Charging, Discharging, Health, Extreme Drain, Power Saving Mode
 Network: CP Crash, Signal, Data, Calling, IMS, SIM, PLMN Selection, Roaming, Wifi Calling, eSIM
 Display: Brightness, Flicker, Black Screen, Resolution, Touch, Rotation
 Heating: Thermal Rise, Overheating, High Surface Temperature, Hot Back Panel, Thermal Throttling
-Connectivity: Wifi, Bluetooth, NFC, pairing, Android Auto, Screen Cast, Smart View, Hotspot, Tethering, Quick share, Smart tag, Wearable
+Connectivity: Wifi, Bluetooth, NFC, pairing, Android Auto, Screen Cast, Smart View, Hotspot, Tethering, Quick share, Smart tag, Wearable, Internet
 3rd paty Apps: WhatsAPP, Instagram, Snapchat, Facebook, BGMI, Game, Coin Master, TikTok, Telegram, Temu, ChatGPT, Capcut, Discord, YouTube, PDF, etc..
+Samsung Apps: Samsung Members, Good Lock, Bixby, Samsung Notes, Longwriter, Studio app, Samsung Wallet, Samsung Notes, OneDrive, Samsung Music, Gallery, Discover App, Samsung Health
 
 Issue Type (choose ONE ONLY):
 - System
@@ -119,7 +120,6 @@ Sub-Issue Type,
 AI Insight
 
 GLOBAL RULES
-- S/N starts from 1 and increments sequentially within the chunk.
 - Do NOT remove or add rows.
 - Do NOT hallucinate values.
 - Do NOT modify Excel-derived fields except translated content.
