@@ -6,6 +6,31 @@ const { callOllamaEmbeddings } = require('../server');
 const { cleanExcelStyling } = require('./_helpers');
 
 /**
+ * Deep clean objects to remove Excel styling artifacts recursively
+ * @param {any} obj - Object to clean
+ * @returns {any} Cleaned object
+ */
+function cleanObjectRecursively(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return cleanExcelStyling(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanObjectRecursively(item));
+  }
+
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip Excel styling keys and metadata keys
+    if (key === 's' || key === 'w' || key.startsWith('!') || key === 't' || key === 'r') {
+      continue;
+    }
+    cleaned[key] = cleanObjectRecursively(value);
+  }
+  return cleaned;
+}
+
+/**
  * Shared header normalization utility - eliminates code duplication
  */
 function normalizeHeaders(rows) {
@@ -73,50 +98,72 @@ function normalizeHeaders(rows) {
 }
 
 function readAndNormalizeExcel(uploadedPath) {
+  console.log('[DEBUG] Reading Excel file:', uploadedPath);
   const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
+  console.log('[DEBUG] Sheet name:', sheetName);
 
   // Read sheet as 2D array so we can find header row robustly
   const sheetRows = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+  console.log('[DEBUG] Total rows in sheet:', sheetRows.length);
+  console.log('[DEBUG] First 3 rows:', sheetRows.slice(0, 3));
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
   const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)','Issue Type','Sub-Issue Type']; // lowercase checks
+  console.log('[DEBUG] Looking for header row...');
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
     const rowText = row.map(c => String(c || '').toLowerCase()).join(' | ');
+    console.log(`[DEBUG] Row ${r}: ${rowText}`);
     // if the row contains any expected header keyword, choose it as header
     if (expectedHeaderKeywords.some(k => rowText.includes(k))) {
       headerRowIndex = r;
+      console.log(`[DEBUG] Found header row at index ${r} (contains expected keywords)`);
       break;
     }
     // fallback: first non-empty row becomes header
     if (row.some(cell => String(cell).trim() !== '')) {
       headerRowIndex = r;
+      console.log(`[DEBUG] Using row ${r} as header (first non-empty row)`);
       break;
     }
   }
 
+  console.log(`[DEBUG] Selected header row index: ${headerRowIndex}`);
+
   // Build raw headers and trim
   const rawHeaders = (sheetRows[headerRowIndex] || []).map(h => String(h || '').trim());
+  console.log('[DEBUG] Raw headers:', rawHeaders);
 
   // Build data rows starting after headerRowIndex
   const dataRows = sheetRows.slice(headerRowIndex + 1);
+  console.log(`[DEBUG] Data rows count: ${dataRows.length}`);
+  console.log('[DEBUG] First data row:', dataRows[0]);
 
   // Convert dataRows to array of objects keyed by rawHeaders
-  let rows = dataRows.map(r => {
+  let rows = dataRows.map((r, idx) => {
     const obj = {};
     for (let ci = 0; ci < rawHeaders.length; ci++) {
       const key = rawHeaders[ci] || `col_${ci}`;
       obj[key] = r[ci] !== undefined && r[ci] !== null ? r[ci] : '';
     }
+    if (idx < 3) { // Log first 3 rows
+      console.log(`[DEBUG] Processed row ${idx}:`, { Title: obj.Title, Problem: obj.Problem });
+    }
     return obj;
   });
+  console.log(`[DEBUG] Total processed rows: ${rows.length}`);
 
   // Use shared normalization function
-  return normalizeHeaders(rows);
+  const normalizedRows = normalizeHeaders(rows);
+  console.log('[DEBUG] After normalization, first 3 rows:');
+  normalizedRows.slice(0, 3).forEach((row, idx) => {
+    console.log(`[DEBUG] Normalized row ${idx}:`, { Title: row.Title, Problem: row.Problem });
+  });
+  return normalizedRows;
 }
 
 /**
@@ -154,16 +201,19 @@ module.exports = {
   },
 
   buildPrompt(rows, mode = 'regular') {
-    // Send only content fields to AI for analysis
-    const aiInputRows = rows.map(row => ({
-      Title: row.Title || '',
-      Problem: row.Problem || ''
-    }));
+    // Send only content fields to AI for analysis using numbered JSON format
+    const numberedInput = {};
+    rows.forEach((row, index) => {
+      numberedInput[(index + 1).toString()] = {
+        Title: row.Title || '',
+        Problem: row.Problem || ''
+      };
+    });
 
     if (mode === 'discovery') {
-      return discoveryPromptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+      return discoveryPromptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(numberedInput, null, 2));
     } else {
-      return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+      return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(numberedInput, null, 2));
     }
   },
 
@@ -284,12 +334,16 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
+    // Clean AI response to remove Excel styling artifacts
+    const cleanedAiRows = aiRows.map(row => cleanObjectRecursively(row));
+    console.log(`[Discovery] Cleaned ${cleanedAiRows.length} AI rows of styling artifacts`);
+
     // Generate discovery data with embeddings
     const discoveryData = [];
     const embeddingTasks = [];
 
-    for (let i = 0; i < aiRows.length; i++) {
-      const aiRow = aiRows[i];
+    for (let i = 0; i < cleanedAiRows.length; i++) {
+      const aiRow = cleanedAiRows[i];
       const original = originalRows[i] || {};
 
       // Create row text for embedding (Title + Problem)
@@ -396,10 +450,7 @@ module.exports = {
       }
     }
 
-    // Clean Excel styling artifacts from discovery data
-    const cleanedResults = embeddingResults.map(result => cleanExcelStyling(result));
-
-    return cleanedResults;
+    return embeddingResults;
   },
 
   // Excel reading function used by server.js

@@ -1,0 +1,438 @@
+{
+  "timestamp": "2026-01-21T17:33:25.386Z",
+  "total_queries": 12,
+  "successful_queries": 12,
+  "failed_queries": 0,
+  "evaluation_metrics": {
+    "average_retrieval_relevance": 0,
+    "module_prediction_accuracy": 0,
+    "answer_quality_score": 0.39999999999999997,
+    "overall_success_rate": 1
+  },
+  "query_results": [
+    {
+      "query": "Phone heating during calls",
+      "expected_modules": [
+        "Thermal",
+        "Performance",
+        "Battery"
+      ],
+      "category": "thermal_performance",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Thermal",
+            "Performance",
+            "Battery"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "5G disconnects after airplane mode",
+      "expected_modules": [
+        "Network",
+        "Connectivity"
+      ],
+      "category": "network_connectivity",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Network",
+            "Connectivity"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "Camera app crashes on video recording",
+      "expected_modules": [
+        "Camera",
+        "Multimedia"
+      ],
+      "category": "camera_multimedia",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Camera",
+            "Multimedia"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "Battery drains quickly in standby",
+      "expected_modules": [
+        "Battery",
+        "Power Management"
+      ],
+      "category": "battery_power",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Battery",
+            "Power Management"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "WiFi calling not working after update",
+      "expected_modules": [
+        "Network",
+        "VoIP",
+        "Telephony"
+      ],
+      "category": "network_telephony",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Network",
+            "VoIP",
+            "Telephony"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "Screen flickering in low light",
+      "expected_modules": [
+        "Display",
+        "Graphics"
+      ],
+      "category": "display_graphics",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Display",
+            "Graphics"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "Bluetooth audio stutters during playback",
+      "expected_modules": [
+        "Bluetooth",
+        "Audio",
+        "Multimedia"
+      ],
+      "category": "bluetooth_audio",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Bluetooth",
+            "Audio",
+            "Multimedia"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "GPS accuracy poor in urban areas",
+      "expected_modules": [
+        "Location",
+        "GPS",
+        "Navigation"
+      ],
+      "category": "location_gps",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Location",
+            "GPS",
+            "Navigation"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "App installation fails with insufficient storage",
+      "expected_modules": [
+        "Storage",
+        "System",
+        "Package Manager"
+      ],
+      "category": "storage_system",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Storage",
+            "System",
+            "Package Manager"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "Touch screen unresponsive after water exposure",
+      "expected_modules": [
+        "Touch",
+        "Display",
+        "Hardware"
+      ],
+      "category": "touch_hardware",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Touch",
+            "Display",
+            "Hardware"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "Samsung Pay not working in stores",
+      "expected_modules": [
+        "NFC",
+        "Payment",
+        "Security"
+      ],
+      "category": "nfc_payment",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "NFC",
+            "Payment",
+            "Security"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    },
+    {
+      "query": "Video calls have poor quality on LTE",
+      "expected_modules": [
+        "Network",
+        "Camera",
+        "VoIP"
+      ],
+      "category": "network_video",
+      "success": true,
+      "response": "I do not have enough information to answer this.",
+      "sources": [],
+      "evaluation": {
+        "retrieval_relevance": {
+          "score": 0,
+          "reason": "No sources retrieved"
+        },
+        "module_prediction": {
+          "score": 0,
+          "detected_modules": [],
+          "expected_modules": [
+            "Network",
+            "Camera",
+            "VoIP"
+          ],
+          "accuracy": 0
+        },
+        "answer_quality": {
+          "score": 0.4,
+          "reasons": [
+            "Response too short",
+            "Appropriately indicated insufficient information"
+          ]
+        },
+        "overall_score": 0.13333333333333333
+      }
+    }
+  ]
+}

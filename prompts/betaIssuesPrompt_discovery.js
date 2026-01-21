@@ -20,15 +20,28 @@ Rules:
 - Categories should be organic discoveries from the data
 
 Output:
-Return a **single valid JSON array**.
-Each object must contain EXACTLY these keys:
+Return a **single valid JSON array** where each element is an object.
+Each object in the array must contain EXACTLY these keys:
+- module
+- sub_module
+- issue_type
+- sub_issue_type
 
-{
-  "module": "string",
-  "sub_module": "string",
-  "issue_type": "string",
-  "sub_issue_type": "string"
-}
+Example format:
+[
+  {
+    "module": "Camera",
+    "sub_module": "Focus",
+    "issue_type": "Functionality",
+    "sub_issue_type": "App Crash"
+  },
+  {
+    "module": "Battery",
+    "sub_module": "Charging",
+    "issue_type": "Performance",
+    "sub_issue_type": "Slow Charging"
+  }
+]
 
 Input Data:
 {INPUTDATA_JSON}`;

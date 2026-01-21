@@ -310,7 +310,8 @@ def compute_high_issues(data: dict) -> list:
         # Apply severity filter to exclude Critical, only count High issues for module ranking
         combined = filter_allowed_severity(combined)
         if 'Module' in combined.columns and 'Severity' in combined.columns:
-            # Only count High severity issues for module ranking
+            # Convert Severity to string and filter for High issues
+            combined['Severity'] = combined['Severity'].astype(str).fillna('')
             high_issues = combined[combined['Severity'].str.lower() == 'high']
             if not high_issues.empty:
                 modules = high_issues['Module'].value_counts()
@@ -331,6 +332,9 @@ def compute_high_issues(data: dict) -> list:
         if folder in processor_map:
             combined = combine_dataframes(dfs)
             if 'Severity' in combined.columns and 'Module' in combined.columns:
+                # Convert columns to string before using string methods
+                combined['Severity'] = combined['Severity'].astype(str).fillna('')
+                combined['Module'] = combined['Module'].astype(str).fillna('')
                 # Filter for high severity AND the max issue module
                 high_df = combined[
                     (combined['Severity'].str.lower() == 'high') &

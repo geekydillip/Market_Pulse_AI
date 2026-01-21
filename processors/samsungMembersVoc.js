@@ -4,6 +4,31 @@ const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/samsungMembers_voc');
 const { cleanExcelStyling } = require('./_helpers');
 
+/**
+ * Deep clean objects to remove Excel styling artifacts recursively
+ * @param {any} obj - Object to clean
+ * @returns {any} Cleaned object
+ */
+function cleanObjectRecursively(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return cleanExcelStyling(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanObjectRecursively(item));
+  }
+
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip Excel styling keys and metadata keys
+    if (key === 's' || key === 'w' || key.startsWith('!') || key === 't' || key === 'r') {
+      continue;
+    }
+    cleaned[key] = cleanObjectRecursively(value);
+  }
+  return cleaned;
+}
+
 // Fix Path Resolution (MANDATORY) - relative to file location, not process.cwd()
 const DISCOVERY_DIR = path.join(__dirname, '..', 'Embed_data', 'samsung_members_voc');
 const DISCOVERY_FILE = path.join(DISCOVERY_DIR, 'discovery_data.json');
@@ -202,11 +227,14 @@ module.exports = {
   },
 
   buildPrompt(rows) {
-    // Send only content field to AI for analysis
-    const aiInputRows = rows.map(row => ({
-      content: row.content || ''
-    }));
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+    // Send only content field to AI for analysis using numbered JSON format
+    const numberedInput = {};
+    rows.forEach((row, index) => {
+      numberedInput[(index + 1).toString()] = {
+        content: row.content || ''
+      };
+    });
+    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(numberedInput, null, 2));
   },
 
   formatResponse(aiResult, originalRows) {
@@ -331,12 +359,16 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
+    // Clean AI response to remove Excel styling artifacts
+    const cleanedAiRows = aiRows.map(row => cleanObjectRecursively(row));
+    console.log(`[Discovery] Cleaned ${cleanedAiRows.length} AI rows of styling artifacts`);
+
     // Generate unique run_id for this discovery run
     const runId = context.runId || new Date().toISOString().replace(/[:.]/g, '').substring(0, 15);
     const chunkId = context.chunkId || 0;
 
     // Build discovery results and save each record
-    const discoveryResults = aiRows.map((aiRow, index) => {
+    const discoveryResults = cleanedAiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
 
       // Use composite identity: run_id + chunk_id + row_index
@@ -372,10 +404,7 @@ module.exports = {
       return cleanResult;
     });
 
-    // Clean Excel styling artifacts from discovery data
-    const cleanedResults = discoveryResults.map(result => cleanExcelStyling(result));
-
-    return cleanedResults;
+    return discoveryResults;
   },
 
   // Returns column width configurations for Excel export

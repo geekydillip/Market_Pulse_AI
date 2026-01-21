@@ -11,8 +11,8 @@ const multer = require('multer');
 const http = require('http');
 
 // Initialize embedding services
-const EmbeddingService = require('./server/embeddings/embedding_service');
-const VectorStore = require('./server/embeddings/vector_store');
+const EmbeddingService = require('./embeddings/embedding_service');
+const VectorStore = require('./embeddings/vector_store');
 
 let embeddingService = null;
 let vectorStore = null;
@@ -50,10 +50,18 @@ const {
   isDiscoveryMode,
   validateThreshold,
   getThreshold
-} = require('./server/embeddings/similarity_config');
+} = require('./embeddings/similarity');
 
 // Initialize cache manager
-const cacheManager = require('./cache_manager');
+const cacheManager = require('../cache_manager');
+
+// Import batching utilities
+const { createOptimalBatches } = require('../processors/_helpers');
+
+// Import route modules
+const { initProcessingServices, setOllamaFunctions, setupProgressRoute, setupSessionRoutes, setupProcessRoute } = require('./routes/processExcel');
+const ragRouter = require('./routes/rag');
+const { initRAG } = require('./rag/init');
 
 // Step 1: Define Global / Server-Level Mode
 const SERVER_PROCESSING_MODE = process.env.PROCESSING_MODE || 'discovery';
@@ -138,16 +146,16 @@ const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
 
 // Serve the main dashboard at root (must come before static middleware)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'main.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'main.html'));
 });
 
 // Serve main.html explicitly
 app.get('/main.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'main.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'main.html'));
 });
 
 // serve frontend static files (adjust folder if your frontend is in 'public')
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/downloads', express.static('downloads'));
 
 // Configure multer for file uploads with security
@@ -177,6 +185,29 @@ const upload = multer({
   }
 });
 
+// Initialize all services after embedding services are ready
+async function initializeServices() {
+  try {
+    // Initialize RAG services (depends on vectorStore and embeddingService)
+    await initRAG(vectorStore, embeddingService);
+
+    console.log('✅ All services initialized successfully');
+  } catch (error) {
+    console.error('❌ Service initialization failed:', error);
+    process.exit(1);
+  }
+}
+
+// Set up route modules
+initProcessingServices(embeddingService, vectorStore, keepAliveAgent);
+setOllamaFunctions(callOllama, callOllamaCached, callOllamaEmbeddings);
+setupProgressRoute(app);
+setupSessionRoutes(app);
+setupProcessRoute(app, upload);
+
+// Mount RAG router (will check for initialization internally)
+app.use('/api/rag', ragRouter);
+
 // simple health route (optional)
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
@@ -188,6 +219,14 @@ const processorMap = {
   'samsung_members_plm': 'samsungMembersPlm',
   'plm_issues': 'plmIssues',
   'samsung_members_voc': 'samsungMembersVoc'
+};
+
+// Mapping of processing types to human-readable source labels for embeddings
+const PROCESSOR_SOURCES = {
+  'beta_user_issues': 'Beta Issues',
+  'plm_issues': 'PLM Issues',
+  'samsung_members_plm': 'Samsung Members PLM',
+  'samsung_members_voc': 'Samsung Members VOC'
 };
 
 // Cache for identical prompts
@@ -569,71 +608,96 @@ async function applySimilarityShortCircuiting(rows, processingType) {
 
   console.log(`[SimilarityShortCircuit] Checking ${rows.length} rows for similar existing results...`);
 
-  for (const row of rows) {
+  // Collect all texts that need embedding first
+  const textsToEmbed = [];
+  const rowIndexMap = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+
     // Skip rows that already have embeddings (they went through duplicate filtering)
     if (row._rowEmbedding) {
       shortCircuitedRows.push(row);
       continue;
     }
 
-    // Check if we have similar existing results to reuse
+    // Generate text for similarity check
     const rowText = processingType === 'samsung_members_voc'
       ? `${row.content || ''} ${row['Application Name'] || ''} ${row.Category || ''}`.trim()
       : processingType === 'beta_user_issues'
       ? `${row.Title || ''} ${row.Problem || ''}`.trim()
       : Object.values(row).join(' ').trim();
 
-    // Generate embedding for similarity check
-    const embeddings = await embeddingService.batchEmbed([rowText], vectorStore);
-    const currentEmbedding = embeddings.get(rowText);
+    // Apply text normalization before embedding
+    const { normalizeForEmbedding } = require('./processors/_helpers');
+    const normalizedText = normalizeForEmbedding(rowText);
 
-    if (!currentEmbedding) {
-      // If embedding fails, process normally
-      shortCircuitedRows.push(row);
-      continue;
-    }
+    textsToEmbed.push(normalizedText);
+    rowIndexMap.push(i);
+  }
 
-    // Find similar existing row embeddings
-    const similarResults = await vectorStore.findSimilarEmbeddings(
-      currentEmbedding,
-      'row',
-      1, // Just need the most similar
-      reuseThreshold
-    );
+  // Batch embed all texts at once (much more efficient)
+  if (textsToEmbed.length > 0) {
+    console.log(`[SimilarityShortCircuit] Batch embedding ${textsToEmbed.length} texts...`);
 
-    if (similarResults.length > 0) {
-      const mostSimilar = similarResults[0];
+    const embeddingsMap = await embeddingService.batchEmbed(textsToEmbed, vectorStore);
 
-      // Try to find the corresponding processed result
-      const existingResult = await findExistingProcessedResult(mostSimilar, processingType);
+    // Process similarity checks for each text
+    for (let i = 0; i < textsToEmbed.length; i++) {
+      const text = textsToEmbed[i];
+      const originalRowIndex = rowIndexMap[i];
+      const row = rows[originalRowIndex];
 
-      if (existingResult) {
-        console.log(`[SimilarityShortCircuit] Reusing existing result for "${rowText.substring(0, 50)}..." (similarity: ${mostSimilar.similarity.toFixed(3)})`);
+      const currentEmbedding = embeddingsMap.get(text);
 
-        // Create a copy of the row with reused result
-        const reusedRow = {
-          ...row,
-          _reused_from: mostSimilar.hash,
-          _similarity_score: mostSimilar.similarity,
-          // Copy the AI-discovered fields from the existing result
-          Module: existingResult.Module,
-          'Sub-Module': existingResult['Sub-Module'],
-          'Issue Type': existingResult['Issue Type'],
-          'Sub-Issue Type': existingResult['Sub-Issue Type'],
-          // Add any other AI-generated fields
-          ...(existingResult.AI_Insight && { 'AI Insight': existingResult.AI_Insight }),
-          ...(existingResult.Severity && { Severity: existingResult.Severity }),
-          ...(existingResult['Severity Reason'] && { 'Severity Reason': existingResult['Severity Reason'] }),
-          ...(existingResult['Summarized Problem'] && { 'Summarized Problem': existingResult['Summarized Problem'] })
-        };
-
-        shortCircuitedRows.push(reusedRow);
+      if (!currentEmbedding) {
+        // If embedding fails, process normally
+        shortCircuitedRows.push(row);
         continue;
       }
-    }
 
-    // No similar result found, process normally
-    shortCircuitedRows.push(row);
+      // Find similar existing row embeddings
+      const similarResults = await vectorStore.findSimilarEmbeddings(
+        currentEmbedding,
+        'row',
+        1, // Just need the most similar
+        reuseThreshold
+      );
+
+      if (similarResults.length > 0) {
+        const mostSimilar = similarResults[0];
+
+        // Try to find the corresponding processed result
+        const existingResult = await findExistingProcessedResult(mostSimilar, processingType);
+
+        if (existingResult) {
+          console.log(`[SimilarityShortCircuit] Reusing existing result for "${text.substring(0, 50)}..." (similarity: ${mostSimilar.similarity.toFixed(3)})`);
+
+          // Create a copy of the row with reused result
+          const reusedRow = {
+            ...row,
+            _reused_from: mostSimilar.hash,
+            _similarity_score: mostSimilar.similarity,
+            // Copy the AI-discovered fields from the existing result
+            Module: existingResult.Module,
+            'Sub-Module': existingResult['Sub-Module'],
+            'Issue Type': existingResult['Issue Type'],
+            'Sub-Issue Type': existingResult['Sub-Issue Type'],
+            // Add any other AI-generated fields
+            ...(existingResult.AI_Insight && { 'AI Insight': existingResult.AI_Insight }),
+            ...(existingResult.Severity && { Severity: existingResult.Severity }),
+            ...(existingResult['Severity Reason'] && { 'Severity Reason': existingResult['Severity Reason'] }),
+            ...(existingResult['Summarized Problem'] && { 'Summarized Problem': existingResult['Summarized Problem'] })
+          };
+
+          shortCircuitedRows.push(reusedRow);
+          continue;
+        }
+      }
+
+      // No similar result found, process normally
+      shortCircuitedRows.push(row);
+    }
   }
 
   const reusedCount = rows.length - shortCircuitedRows.filter(r => !r._reused_from).length;
@@ -861,8 +925,11 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId, pr
           return Object.values(row).join(' ').trim();
         });
 
-        // Get embeddings with IDs for discovery traceability
-        const embedResult = await embeddingService.batchEmbed(textsToEmbed, vectorStore, { returnIds: true });
+    // Get embeddings with IDs for discovery traceability
+        const embedResult = await embeddingService.batchEmbed(textsToEmbed, vectorStore, {
+          returnIds: true,
+          source: PROCESSOR_SOURCES[processingType] || processingType
+        });
         const embeddings = embedResult.embeddings;
         const ids = embedResult.ids;
 
@@ -1150,9 +1217,11 @@ async function processCSV(req, res) {
           });
         });
       } else if (Array.isArray(result.processedRows)) {
-        // include failed chunk rows (they may contain error fields)
+        // For failed chunks, still include rows with error
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
+          // Calculate original index using batch start index from row_indices
+          const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           allProcessedRows[originalIdx] = row;
           if (row && row.error) addedColumns.add('error');
         });
@@ -1316,11 +1385,12 @@ async function processJSON(req, res) {
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
-    const ROWSCOUNT = rows.length || 0;
 
-    // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 20;
-    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
+    // Create optimal batches using token-bounded chunking (5-20 rows per batch)
+    const batches = createOptimalBatches(rows, processingType);
+    const numberOfChunks = batches.length;
+
+    console.log(`[BATCHING] Created ${numberOfChunks} optimal batches from ${numberOfInputRows} rows`);
 
     // Initialize monotonically increasing completion counter
     let completedChunks = 0;
@@ -1334,26 +1404,28 @@ async function processJSON(req, res) {
       totalChunks: numberOfChunks
     });
 
-    // Build chunk tasks - start from resumeFromChunk if resuming
+    // Build batch tasks
     const tasks = [];
-    for (let i = resumeFromChunk; i < numberOfChunks; i++) {
-      const startIdx = i * chunkSize;
-      const endIdx = Math.min(startIdx + chunkSize, rows.length);
-      const chunkRows = rows.slice(startIdx, endIdx);
-      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
+    let currentOffset = 0; // Track offset for original indices
+    batches.forEach((batchRows, batchIndex) => {
+      const batchStartIdx = currentOffset;
+      const batchEndIdx = currentOffset + batchRows.length - 1;
+      const chunk = { file_name: originalName, chunk_id: batchIndex, row_indices: [batchStartIdx, batchEndIdx], headers, rows: batchRows };
+      currentOffset += batchRows.length; // Update offset for next batch
+
       tasks.push(async () => {
         // Check for cancellation before processing
         const session = activeSessions.get(sessionId);
         if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
-          return { chunkId: i, status: 'cancelled', processedRows: [] };
+          console.log(`Session ${sessionId} cancelled, skipping batch ${batchIndex}`);
+          return { chunkId: batchIndex, status: 'cancelled', processedRows: [] };
         }
 
-        const result = await processChunk(chunk, processingType, model, i, sessionId, processingMode);
+        const result = await processChunk(chunk, processingType, model, batchIndex, sessionId, processingMode);
 
         // Check for cancellation after processing
         if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
+          console.log(`Session ${sessionId} cancelled after processing batch ${batchIndex}`);
           return result; // Still return the result but mark as potentially cancelled
         }
 
@@ -1372,7 +1444,7 @@ async function processJSON(req, res) {
         });
         return result;
       });
-    }
+    });
 
     // Run with concurrency limit (4)
     const chunkResults = await runTasksWithLimit(tasks, 4);
@@ -1746,11 +1818,12 @@ async function processExcel(req, res, processingMode = 'regular') {
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
-    const ROWSCOUNT = rows.length || 0;
 
-    // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 20;
-    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
+    // Create optimal batches using token-bounded chunking (5-20 rows per batch)
+    const batches = createOptimalBatches(rows, processingType);
+    const numberOfChunks = batches.length;
+
+    console.log(`[BATCHING] Created ${numberOfChunks} optimal batches from ${numberOfInputRows} rows`);
 
     // Initialize monotonically increasing completion counter
     let completedChunks = 0;
@@ -1764,26 +1837,28 @@ async function processExcel(req, res, processingMode = 'regular') {
       totalChunks: numberOfChunks
     });
 
-    // Build chunk tasks
+    // Build batch tasks
     const tasks = [];
-    for (let i = 0; i < numberOfChunks; i++) {
-      const startIdx = i * chunkSize;
-      const endIdx = Math.min(startIdx + chunkSize, rows.length);
-      const chunkRows = rows.slice(startIdx, endIdx);
-      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
+    let currentOffset = 0; // Track offset for original indices
+    batches.forEach((batchRows, batchIndex) => {
+      const batchStartIdx = currentOffset;
+      const batchEndIdx = currentOffset + batchRows.length - 1;
+      const chunk = { file_name: originalName, chunk_id: batchIndex, row_indices: [batchStartIdx, batchEndIdx], headers, rows: batchRows };
+      currentOffset += batchRows.length; // Update offset for next batch
+
       tasks.push(async () => {
         // Check for cancellation before processing
         const session = activeSessions.get(sessionId);
         if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
-          return { chunkId: i, status: 'cancelled', processedRows: [] };
+          console.log(`Session ${sessionId} cancelled, skipping batch ${batchIndex}`);
+          return { chunkId: batchIndex, status: 'cancelled', processedRows: [] };
         }
 
-        const result = await processChunk(chunk, processingType, model, i, sessionId, processingMode);
+        const result = await processChunk(chunk, processingType, model, batchIndex, sessionId, processingMode);
 
         // Check for cancellation after processing
         if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
+          console.log(`Session ${sessionId} cancelled after processing batch ${batchIndex}`);
           return result; // Still return the result but mark as potentially cancelled
         }
 
@@ -1802,7 +1877,7 @@ async function processExcel(req, res, processingMode = 'regular') {
         });
         return result;
       });
-    }
+    });
 
     // Run with concurrency limit (4)
     const chunkResults = await runTasksWithLimit(tasks, 4) || [];
@@ -1816,23 +1891,30 @@ async function processExcel(req, res, processingMode = 'regular') {
       if (!result) return;
       if (result.status === 'ok' && Array.isArray(result.processedRows)) {
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = result.chunkId * chunkSize + idx;
+          // Calculate original index using batch start index from row_indices
+          const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           allProcessedRows[originalIdx] = row;
 
-          // For discovery mode, collect discovery data
+          // For discovery mode, collect discovery data with proper guards
           if (processingMode === 'discovery') {
-            console.log(`[DISCOVERY COLLECTION] Processing row ${idx} from chunk ${result.chunkId}:`, {
-              hasRawDiscovery: !!row.raw_discovery,
-              rowKeys: Object.keys(row),
-              mode: row.mode
-            });
-
-            // In discovery mode, all rows should be discovery results with raw_discovery
-            if (row.raw_discovery || row.mode === 'discovery') {
-              discoveryData.push(row);
-              console.log(`[DISCOVERY COLLECTION] Added discovery data for row ${idx}, total discovery data: ${discoveryData.length}`);
+            // Guard: ensure we have a valid result structure
+            if (!result || !Array.isArray(result.processedRows)) {
+              console.warn(`[DISCOVERY COLLECTION] Invalid result structure for batch ${result?.chunkId || 'unknown'}`);
             } else {
-              console.log(`[DISCOVERY COLLECTION] Row ${idx} missing raw_discovery, keys:`, Object.keys(row));
+              console.log(`[DISCOVERY COLLECTION] Processing row ${idx} from batch ${result.chunkId}:`, {
+                hasRawDiscovery: !!row.raw_discovery,
+                rowKeys: Object.keys(row),
+                mode: row.mode
+              });
+
+              // In discovery mode, all rows should be discovery results with raw_discovery
+              if (row.raw_discovery || row.mode === 'discovery') {
+                discoveryData.push(row);
+                console.log(`[DISCOVERY COLLECTION] Added discovery data for row ${idx}, total discovery data: ${discoveryData.length}`);
+              } else {
+                console.log(`[DISCOVERY COLLECTION] Row ${idx} missing raw_discovery, keys:`, Object.keys(row));
+              }
             }
           }
 
@@ -1843,12 +1925,14 @@ async function processExcel(req, res, processingMode = 'regular') {
       } else if (Array.isArray(result.processedRows)) {
         // For failed chunks, still include rows with error
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = result.chunkId * chunkSize + idx;
+          // Calculate original index using batch start index from row_indices
+          const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           allProcessedRows[originalIdx] = row;
 
           // For discovery mode, include failed rows in discovery data
           if (processingMode === 'discovery') {
-            console.log(`[DISCOVERY COLLECTION] Failed chunk row ${idx}:`, row);
+            console.log(`[DISCOVERY COLLECTION] Failed batch row ${idx}:`, row);
             discoveryData.push(row);
           }
 
@@ -1978,10 +2062,12 @@ async function processExcel(req, res, processingMode = 'regular') {
     (chunkResults || []).forEach(cr => {
       (cr && cr.processedRows || []).forEach((row, idx) => {
         if (row && row.error) {
-          const originalIdx = cr.chunkId * chunkSize + idx;
+          // Calculate original index using batch start index from row_indices
+          const batchStartIdx = cr.chunk ? cr.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           failedRows.push({
             row_index: originalIdx,
-            chunk_id: cr.chunkId,
+            batch_id: cr.chunkId,
             error_reason: row.error
           });
         }
@@ -1992,11 +2078,11 @@ async function processExcel(req, res, processingMode = 'regular') {
       total_processing_time_ms: elapsedMs,
       total_processing_time_seconds: elapsedSec.toFixed(3),
       number_of_input_rows: numberOfInputRows,
-      number_of_chunks: numberOfChunks,
+      number_of_batches: numberOfChunks, // Updated terminology
       number_of_output_rows: schemaMergedRows.length,
       failed_row_details: failedRows,
       added_columns: Array.from(addedColumns),
-      chunks_processing_time: (chunkResults || []).map(cr => ({ chunk_id: cr && cr.chunkId, time_ms: cr && cr.processingTime }))
+      batch_processing_time: (chunkResults || []).map(cr => ({ batch_id: cr && cr.chunkId, time_ms: cr && cr.processingTime })) // Updated terminology
     };
 
     if (processingType === 'clean') {
@@ -2089,8 +2175,16 @@ async function processExcel(req, res, processingMode = 'regular') {
             console.log(`[EMBED ACCUMULATE] No existing discovery data found, starting fresh`);
           }
 
-          // Accumulate data: combine existing + new
-          const accumulatedData = [...existingData, ...discoveryData];
+          // Strip embeddings from JSON after persistence - compact discovery data
+          const compactDiscoveryData = discoveryData.map(row => ({
+            row_id: row.row_id,
+            raw_discovery: row.raw_discovery,
+            embedding_refs: row.embedding_refs,
+            mode: row.mode
+          }));
+
+          // Accumulate data: combine existing + new (using compact format)
+          const accumulatedData = [...existingData, ...compactDiscoveryData];
           const accumulatedSourceFiles = [...new Set([...existingSourceFiles, originalName])]; // Remove duplicates
 
           // Save accumulated discovery data with updated metadata
@@ -3334,9 +3428,15 @@ module.exports.callOllamaEmbeddings = callOllamaEmbeddings;
 
 // Start server only if this file is run directly (not imported)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log('\n🚀 Centralized Dashboard is running!');
-    console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
-    console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
+  // Initialize services before starting server
+  initializeServices().then(() => {
+    app.listen(PORT, () => {
+      console.log('\n🚀 Centralized Dashboard is running!');
+      console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
+      console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
+    });
+  }).catch(err => {
+    console.error('❌ Failed to initialize services:', err);
+    process.exit(1);
   });
 }

@@ -4,8 +4,8 @@
   "description": "Professional web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js --dev",
+    "start": "node server/server.js",
+    "dev": "node server/server.js --dev",
     "test": "echo \"No tests specified\"",
     "lint": "echo \"No linting configured\""
   },

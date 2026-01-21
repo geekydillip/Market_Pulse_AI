@@ -6,6 +6,31 @@ const { callOllamaEmbeddings } = require('../server');
 const { cleanExcelStyling } = require('./_helpers');
 
 /**
+ * Deep clean objects to remove Excel styling artifacts recursively
+ * @param {any} obj - Object to clean
+ * @returns {any} Cleaned object
+ */
+function cleanObjectRecursively(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return cleanExcelStyling(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanObjectRecursively(item));
+  }
+
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip Excel styling keys and metadata keys
+    if (key === 's' || key === 'w' || key.startsWith('!') || key === 't' || key === 'r') {
+      continue;
+    }
+    cleaned[key] = cleanObjectRecursively(value);
+  }
+  return cleaned;
+}
+
+/**
  * Shared header normalization utility - eliminates code duplication
  */
 function normalizeHeaders(rows) {
@@ -141,19 +166,22 @@ module.exports = {
   },
 
   buildPrompt(rows, mode = 'regular') {
-    // Send only content fields to AI for analysis
-    const aiInputRows = rows.map(row => ({
-      Title: row.Title || '',
-      Problem: (row.Problem || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
-      'Dev. Mdl. Name/Item Name': row['Model No.'] || '',
-      Priority: row.Priority || '',
-      'Occurr. Freq.': row['Occurr. Freq.'] || ''
-    }));
+    // Send only content fields to AI for analysis using numbered JSON format
+    const numberedInput = {};
+    rows.forEach((row, index) => {
+      numberedInput[(index + 1).toString()] = {
+        Title: row.Title || '',
+        Problem: (row.Problem || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
+        'Dev. Mdl. Name/Item Name': row['Model No.'] || '',
+        Priority: row.Priority || '',
+        'Occurr. Freq.': row['Occurr. Freq.'] || ''
+      };
+    });
 
     if (mode === 'discovery') {
-      return discoveryPromptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+      return discoveryPromptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(numberedInput, null, 2));
     } else {
-      return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+      return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(numberedInput, null, 2));
     }
   },
 
@@ -281,12 +309,16 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
+    // Clean AI response to remove Excel styling artifacts
+    const cleanedAiRows = aiRows.map(row => cleanObjectRecursively(row));
+    console.log(`[Discovery] Cleaned ${cleanedAiRows.length} AI rows of styling artifacts`);
+
     // Generate discovery data with embeddings
     const discoveryData = [];
     const embeddingTasks = [];
 
-    for (let i = 0; i < aiRows.length; i++) {
-      const aiRow = aiRows[i];
+    for (let i = 0; i < cleanedAiRows.length; i++) {
+      const aiRow = cleanedAiRows[i];
       const original = originalRows[i] || {};
 
       // Create row text for embedding (Title + Problem + Priority + Occurr. Freq.)
@@ -393,10 +425,7 @@ module.exports = {
       }
     }
 
-    // Clean Excel styling artifacts from discovery data
-    const cleanedResults = embeddingResults.map(result => cleanExcelStyling(result));
-
-    return cleanedResults;
+    return embeddingResults;
   },
 
   // Returns column width configurations for Excel export

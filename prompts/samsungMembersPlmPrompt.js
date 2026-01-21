@@ -1,6 +1,7 @@
 module.exports = `You are an assistant for cleaning and structuring PLM issue reports.
 
-For each input row, perform the following:
+Process the following numbered rows:
+For each numbered row, perform the following:
 
 1. Title → Clean the Title field by removing IDs, tags, usernames, timestamps, content inside [ ... ], non-English text, and duplicates. Keep only the essential title text.
 2. Problem → Clean the Problem field by removing IDs, tags, usernames, timestamps, content inside [ ... ], non-English text, and duplicates. Keep only the essential problem description.

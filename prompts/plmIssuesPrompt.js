@@ -1,6 +1,7 @@
 module.exports = `You clean, interpret, and normalize reported issues from device Testing Phase.
 
-For each input row (JSON), produce ONE object following the exact schema and key order listed below. Output ONLY a JSON array containing the processed objects. No text outside the array.
+Process the following numbered rows:
+For each numbered row, produce ONE object following the exact schema and key order listed below. Output ONLY a JSON array containing the processed objects. No text outside the array.
 
 PRE-PROCESSING (Title & Problem):
 - Remove tags, metadata and ALL text inside [ ... ].

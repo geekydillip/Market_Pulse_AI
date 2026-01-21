@@ -99,10 +99,11 @@ class EmbeddingService {
    * @param {Object} vectorStore - Vector store instance for caching
    * @param {Object} options - Additional options
    * @param {boolean} options.returnIds - Whether to return embedding IDs along with embeddings
+   * @param {string} options.source - Source identifier for embeddings (default: 'embedding_service')
    * @returns {Map|Object} Map of text -> embedding, or {embeddings: Map, ids: Map} if returnIds is true
    */
   async batchEmbed(texts, vectorStore = null, options = {}) {
-    const { returnIds = false } = options;
+    const { returnIds = false, source = 'embedding_service' } = options;
     const results = new Map();
     const ids = new Map();
     const toProcess = [];
@@ -165,7 +166,7 @@ class EmbeddingService {
             if (vectorStore) {
               try {
                 const safeType = this.normalizeEmbeddingType('text'); // 'text' -> 'row'
-                storeResult = await vectorStore.storeEmbedding(text, embedding, safeType, 'embedding_service');
+                storeResult = await vectorStore.storeEmbedding(text, embedding, safeType, source);
                 if (returnIds) ids.set(text, storeResult.id);
               } catch (storeErr) {
                 console.warn('Failed to store embedding in vector store:', storeErr.message);

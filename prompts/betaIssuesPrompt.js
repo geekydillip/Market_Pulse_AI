@@ -1,6 +1,6 @@
 module.exports = `You are an assistant for cleaning and structuring "Voice of Customer" issue reports.
 
-For each row:
+Process the following numbered rows:
 1. Title → Clean the Title field by removing IDs, tags, usernames, timestamps, content inside [ ... ], non-English text, and duplicates. Keep only the essential title text.
 2. Problem → Clean the Problem field by removing IDs, tags, usernames, timestamps, content inside [ ... ], non-English text, and duplicates. Keep only the essential problem description.
 3. Module → Identify product module from cleaned Title + Problem (e.g., Lock Screen, Camera, Battery, Network, Display, Settings, etc.).

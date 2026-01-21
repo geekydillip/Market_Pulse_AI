@@ -13,6 +13,7 @@ Trigger conditions:
 """
 
 import os
+import pandas as pd
 import json
 import subprocess
 import sys
@@ -178,6 +179,7 @@ def run_aggregator_directly():
         response = ca.sanitize_nan(response)
 
         return response
+
     except Exception as e:
         print(f"Exception running aggregator directly: {e}")
         return None
@@ -280,8 +282,18 @@ def validate_cache_freshness():
         return False
 
     try:
+        # Load cached data
+        with open(cache_file, 'r', encoding='utf-8') as f:
+            cached_data = json.load(f)
+
+        # Get cached hash
+        cached_hash = cached_data.get("data_hash")
+        if not cached_hash:
+            print("Cache is stale - no hash found in cached data")
+            return False
+
         # Get current data
-        current_data = run_aggregator_command()
+        current_data = run_aggregator_directly()
         if not current_data:
             print("Cache is stale - cannot get current data")
             return False
@@ -312,16 +324,6 @@ def validate_cache_freshness():
 
         # Compute current data hash
         current_hash = compute_data_hash(current_core_data)
-
-        # Load cached data
-        with open(cache_file, 'r', encoding='utf-8') as f:
-            cached_data = json.load(f)
-
-        # Get cached hash
-        cached_hash = cached_data.get("data_hash")
-        if not cached_hash:
-            print("Cache is stale - no hash found in cached data")
-            return False
 
         # Compare hashes
         if current_hash != cached_hash:

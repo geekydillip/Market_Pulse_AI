@@ -1,0 +1,62 @@
+[
+  {
+    "query": "Phone heating during calls",
+    "expected_modules": ["Thermal", "Performance", "Battery"],
+    "category": "thermal_performance"
+  },
+  {
+    "query": "5G disconnects after airplane mode",
+    "expected_modules": ["Network", "Connectivity"],
+    "category": "network_connectivity"
+  },
+  {
+    "query": "Camera app crashes on video recording",
+    "expected_modules": ["Camera", "Multimedia"],
+    "category": "camera_multimedia"
+  },
+  {
+    "query": "Battery drains quickly in standby",
+    "expected_modules": ["Battery", "Power Management"],
+    "category": "battery_power"
+  },
+  {
+    "query": "WiFi calling not working after update",
+    "expected_modules": ["Network", "VoIP", "Telephony"],
+    "category": "network_telephony"
+  },
+  {
+    "query": "Screen flickering in low light",
+    "expected_modules": ["Display", "Graphics"],
+    "category": "display_graphics"
+  },
+  {
+    "query": "Bluetooth audio stutters during playback",
+    "expected_modules": ["Bluetooth", "Audio", "Multimedia"],
+    "category": "bluetooth_audio"
+  },
+  {
+    "query": "GPS accuracy poor in urban areas",
+    "expected_modules": ["Location", "GPS", "Navigation"],
+    "category": "location_gps"
+  },
+  {
+    "query": "App installation fails with insufficient storage",
+    "expected_modules": ["Storage", "System", "Package Manager"],
+    "category": "storage_system"
+  },
+  {
+    "query": "Touch screen unresponsive after water exposure",
+    "expected_modules": ["Touch", "Display", "Hardware"],
+    "category": "touch_hardware"
+  },
+  {
+    "query": "Samsung Pay not working in stores",
+    "expected_modules": ["NFC", "Payment", "Security"],
+    "category": "nfc_payment"
+  },
+  {
+    "query": "Video calls have poor quality on LTE",
+    "expected_modules": ["Network", "Camera", "VoIP"],
+    "category": "network_video"
+  }
+]
