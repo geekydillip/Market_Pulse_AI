@@ -1,5 +1,37 @@
+const fs = require('fs');
+const path = require('path');
 const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/samsungMembers_voc');
+const { cleanExcelStyling } = require('./_helpers');
+
+// Fix Path Resolution (MANDATORY) - relative to file location, not process.cwd()
+const DISCOVERY_DIR = path.join(__dirname, '..', 'Embed_data', 'samsung_members_voc');
+const DISCOVERY_FILE = path.join(DISCOVERY_DIR, 'discovery_data.json');
+
+// Step 2: Ensure Folder Exists (MANDATORY)
+if (!fs.existsSync(DISCOVERY_DIR)) {
+  fs.mkdirSync(DISCOVERY_DIR, { recursive: true });
+  console.log(`[DISCOVERY DIR] Created directory: ${DISCOVERY_DIR}`);
+}
+
+// Step 3: FORCE Persistence in Discovery Mode (CRITICAL)
+function saveDiscoveryRecord(record) {
+  let existing = [];
+
+  if (fs.existsSync(DISCOVERY_FILE)) {
+    existing = JSON.parse(fs.readFileSync(DISCOVERY_FILE, 'utf-8'));
+  }
+
+  existing.push(record);
+
+  fs.writeFileSync(
+    DISCOVERY_FILE,
+    JSON.stringify(existing, null, 2),
+    'utf-8'
+  );
+
+  console.log(`[DISCOVERY SAVE] Saved record to: ${DISCOVERY_FILE}, total records: ${existing.length}`);
+}
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -277,6 +309,75 @@ module.exports = {
     return mergedRows;
   },
 
+  // Discovery mode response formatter
+  formatDiscoveryResponse(aiResult, originalRows, sourceFile = '', context = {}) {
+    let aiRows;
+
+    // Handle different response formats: object, JSON string, or raw text
+    if (typeof aiResult === 'object' && aiResult !== null) {
+      aiRows = aiResult;
+    } else if (typeof aiResult === 'string') {
+      const text = aiResult.trim();
+      try {
+        aiRows = JSON.parse(text);
+      } catch (e) {
+        return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
+      }
+    } else {
+      return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
+    }
+
+    if (!Array.isArray(aiRows)) {
+      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
+    }
+
+    // Generate unique run_id for this discovery run
+    const runId = context.runId || new Date().toISOString().replace(/[:.]/g, '').substring(0, 15);
+    const chunkId = context.chunkId || 0;
+
+    // Build discovery results and save each record
+    const discoveryResults = aiRows.map((aiRow, index) => {
+      const original = originalRows[index] || {};
+
+      // Use composite identity: run_id + chunk_id + row_index
+      const globalRowId = `${runId}_${chunkId}_${index}`;
+
+      const discoveryRecord = {
+        run_id: runId,
+        row_id: globalRowId,
+        raw_discovery: {
+          module: aiRow.module || aiRow.Module || '',
+          sub_module: aiRow.sub_module || aiRow['Sub-Module'] || '',
+          issue_type: aiRow.issue_type || aiRow['Issue Type'] || '',
+          sub_issue_type: aiRow.sub_issue_type || aiRow['Sub-Issue Type'] || ''
+        },
+        raw_text: original.content || '',
+        source_file: sourceFile,
+        timestamp: new Date().toISOString(),
+        embedding_ids: context.embeddingIds || {}, // Link to stored embeddings
+        mode: 'discovery'
+      };
+
+      // FORCE Persistence - call unconditionally in discovery mode
+      saveDiscoveryRecord(discoveryRecord);
+
+      // Return only essential discovery fields (exclude Excel styling metadata)
+      // Explicitly create clean object to prevent any metadata contamination
+      const cleanResult = {
+        row_id: globalRowId,
+        raw_discovery: discoveryRecord.raw_discovery,
+        mode: 'discovery'
+      };
+
+      return cleanResult;
+    });
+
+    // Clean Excel styling artifacts from discovery data
+    const cleanedResults = discoveryResults.map(result => cleanExcelStyling(result));
+
+    return cleanedResults;
+  },
+
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
@@ -290,5 +391,8 @@ module.exports = {
   },
 
   // Excel reading function used by server.js
-  readAndNormalizeExcel: readAndNormalizeExcel
+  readAndNormalizeExcel: readAndNormalizeExcel,
+
+  // Export for testing
+  saveDiscoveryRecord: saveDiscoveryRecord
 };

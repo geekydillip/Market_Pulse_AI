@@ -58,14 +58,16 @@
 
 <style>
   /* Custom styles for select dropdown in dark mode */
-  .dark select#aiModel {
+  .dark select#aiModel,
+  .dark select#processingMode {
     background-color: rgb(31 41 55); /* slate-800 */
     color: rgb(241 245 249); /* slate-100 */
     border-color: rgb(71 85 105); /* slate-600 */
   }
 
   /* Webkit browsers (Chrome, Safari, Edge) */
-  .dark select#aiModel option {
+  .dark select#aiModel option,
+  .dark select#processingMode option {
     background-color: rgb(31 41 55); /* slate-800 */
     color: rgb(241 245 249); /* slate-100 */
   }
@@ -77,20 +79,24 @@
   }
 
   /* Ensure proper styling for the dropdown arrow and scrollbar */
-  .dark select#aiModel::-webkit-scrollbar {
+  .dark select#aiModel::-webkit-scrollbar,
+  .dark select#processingMode::-webkit-scrollbar {
     width: 8px;
   }
 
-  .dark select#aiModel::-webkit-scrollbar-track {
+  .dark select#aiModel::-webkit-scrollbar-track,
+  .dark select#processingMode::-webkit-scrollbar-track {
     background: rgb(31 41 55); /* slate-800 */
   }
 
-  .dark select#aiModel::-webkit-scrollbar-thumb {
+  .dark select#aiModel::-webkit-scrollbar-thumb,
+  .dark select#processingMode::-webkit-scrollbar-thumb {
     background: rgb(71 85 105); /* slate-600 */
     border-radius: 4px;
   }
 
-  .dark select#aiModel::-webkit-scrollbar-thumb:hover {
+  .dark select#aiModel::-webkit-scrollbar-thumb:hover,
+  .dark select#processingMode::-webkit-scrollbar-thumb:hover {
     background: rgb(100 116 139); /* slate-500 */
   }
 </style>
@@ -126,6 +132,21 @@
       <div class="relative">
         <select id="aiModel" class="appearance-none px-4 py-2 pr-8 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer min-w-[180px]">
           <option value="">Loading models...</option>
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none text-xs"></i>
+      </div>
+    </div>
+
+    <!-- Processing Mode Selector -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-lg shadow-sm border border-slate-300 dark:border-slate-500">
+        <i class="fa-solid fa-cogs text-blue-600 dark:text-blue-400 text-sm"></i>
+        <label for="processingMode" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</label>
+      </div>
+      <div class="relative">
+        <select id="processingMode" class="appearance-none px-4 py-2 pr-8 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer min-w-[140px]">
+          <option value="regular">Regular</option>
+          <option value="discovery">Discovery</option>
         </select>
         <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none text-xs"></i>
       </div>
@@ -168,6 +189,18 @@
       </div>
       <div class="flex items-center gap-3 flex-shrink-0">
         <div class="text-sm font-medium text-slate-700 dark:text-slate-300" id="processingTypeDisplay">No type selected</div>
+        <button class="px-3 py-1 text-sm bg-yellow-600 hover:bg-yellow-700 text-white rounded transition-colors hidden" id="pauseBtn">
+          <i class="fa-solid fa-pause mr-1"></i>
+          Pause
+        </button>
+        <button class="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors hidden" id="resumeBtn">
+          <i class="fa-solid fa-play mr-1"></i>
+          Resume
+        </button>
+        <button class="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors hidden" id="stopBtn">
+          <i class="fa-solid fa-stop mr-1"></i>
+          Stop
+        </button>
         <button class="px-3 py-1 text-sm bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 rounded transition-colors" id="clearQueueBtn">
           <i class="fa-solid fa-trash mr-1"></i>
           Clear All
@@ -243,12 +276,14 @@
 <script>
 // Global state
 let selectedProcessingType = null;
+let selectedProcessingMode = 'regular'; // Default to regular mode
 let fileQueue = [];
 let queueCounter = 0;
 let currentSessionId = null;
 let currentEventSource = null;
 let processingStartTime = null;
 let isProcessingActive = false; // Flag to prevent multiple simultaneous processing sessions
+let isPaused = false; // Flag for pause/resume functionality
 
 // Processing metrics for ETC calculation
 const EST_ALPHA = 0.30;
@@ -259,11 +294,100 @@ let processingMetrics = {
   ewmaIntervalMs: null
 };
 
+// localStorage keys
+const STORAGE_KEYS = {
+  QUEUE_DATA: 'ai_processor_queue',
+  PROCESSING_TYPE: 'ai_processor_type',
+  PROCESSING_MODE: 'ai_processor_mode',
+  SESSION_STATE: 'ai_processor_session'
+};
+
+// localStorage utility functions
+function saveQueueToStorage() {
+  try {
+    const queueData = fileQueue.map(item => ({
+      id: item.id,
+      fileName: item.file.name,
+      fileSize: item.file.size,
+      fileType: item.file.type,
+      fileLastModified: item.file.lastModified,
+      status: item.status,
+      progress: item.progress || 0,
+      addedAt: item.addedAt,
+      processingStartedAt: item.processingStartedAt,
+      downloads: item.downloads,
+      sessionId: item.sessionId
+    }));
+    localStorage.setItem(STORAGE_KEYS.QUEUE_DATA, JSON.stringify(queueData));
+    localStorage.setItem(STORAGE_KEYS.PROCESSING_TYPE, selectedProcessingType || '');
+    localStorage.setItem(STORAGE_KEYS.PROCESSING_MODE, selectedProcessingMode || 'regular');
+  } catch (error) {
+    console.warn('Failed to save queue to localStorage:', error);
+  }
+}
+
+function loadQueueFromStorage() {
+  try {
+    const queueData = localStorage.getItem(STORAGE_KEYS.QUEUE_DATA);
+    const processingType = localStorage.getItem(STORAGE_KEYS.PROCESSING_TYPE);
+    const processingMode = localStorage.getItem(STORAGE_KEYS.PROCESSING_MODE);
+
+    if (queueData) {
+      const parsedQueue = JSON.parse(queueData);
+      // Restore queue items with placeholder files (files will need to be re-uploaded)
+      fileQueue = parsedQueue.map(item => ({
+        ...item,
+        file: new File([], item.fileName, {
+          type: item.fileType,
+          lastModified: item.fileLastModified
+        }),
+        addedAt: new Date(item.addedAt),
+        processingStartedAt: item.processingStartedAt ? new Date(item.processingStartedAt) : null,
+        needsReupload: true // Flag to indicate file needs to be re-uploaded
+      }));
+      queueCounter = Math.max(queueCounter, ...fileQueue.map(item => item.id));
+    }
+
+    if (processingType) {
+      selectedProcessingType = processingType;
+      // Restore UI state for processing type
+      const typeButton = document.querySelector(`[data-type="${processingType}"]`);
+      if (typeButton) {
+        selectProcessingType(typeButton);
+      }
+    }
+
+    if (processingMode) {
+      selectedProcessingMode = processingMode;
+      const modeSelect = document.getElementById('processingMode');
+      if (modeSelect) modeSelect.value = processingMode;
+    }
+  } catch (error) {
+    console.warn('Failed to load queue from localStorage:', error);
+  }
+}
+
+function clearQueueFromStorage() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.QUEUE_DATA);
+    localStorage.removeItem(STORAGE_KEYS.PROCESSING_TYPE);
+    localStorage.removeItem(STORAGE_KEYS.PROCESSING_MODE);
+  } catch (error) {
+    console.warn('Failed to clear queue from localStorage:', error);
+  }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+  // Load saved queue and settings from localStorage
+  loadQueueFromStorage();
+
   setupEventListeners();
   checkOllamaStatus();
   loadModels();
+
+  // Update queue display after loading from storage
+  updateQueueDisplay();
 
   // Check Ollama status every 30 seconds
   setInterval(checkOllamaStatus, 30000);
@@ -275,6 +399,10 @@ function setupEventListeners() {
   document.querySelectorAll('.processing-btn').forEach(btn => {
     btn.addEventListener('click', () => selectProcessingType(btn));
   });
+
+  // Processing mode selector
+  const modeSelect = document.getElementById('processingMode');
+  if (modeSelect) modeSelect.addEventListener('change', handleModeChange);
 
   // File upload
   const dropZone = document.getElementById('dropZone');
@@ -293,6 +421,20 @@ function setupEventListeners() {
   // Stop processing button
   const stopBtn = document.getElementById('stopBtn');
   if (stopBtn) stopBtn.addEventListener('click', stopProcessing);
+
+  // Pause processing button
+  const pauseBtn = document.getElementById('pauseBtn');
+  if (pauseBtn) pauseBtn.addEventListener('click', pauseProcessing);
+
+  // Resume processing button
+  const resumeBtn = document.getElementById('resumeBtn');
+  if (resumeBtn) resumeBtn.addEventListener('click', resumeProcessing);
+}
+
+// Processing mode selection
+function handleModeChange(event) {
+  selectedProcessingMode = event.target.value;
+  console.log('Processing mode changed to:', selectedProcessingMode);
 }
 
 // Processing type selection
@@ -375,6 +517,7 @@ function addFilesToQueue(files) {
     fileQueue.push(queueItem);
   });
 
+  saveQueueToStorage();
   updateQueueDisplay();
 
   // Show processing queue
@@ -434,7 +577,7 @@ function updateQueueStatus() {
 
   queueDetailsEl.textContent = details.length > 0 ? details.join(', ') : 'No files in queue';
 
-  // Processing type
+  // Processing type and mode
   if (selectedProcessingType) {
     const typeLabels = {
       'beta_user_issues': 'Beta User Issues',
@@ -445,9 +588,37 @@ function updateQueueStatus() {
       'blogger_issues': 'Blogger Issues',
       'plm_issues': 'PLM Issues'
     };
-    processingTypeDisplayEl.textContent = typeLabels[selectedProcessingType] || selectedProcessingType;
+    const modeLabels = {
+      'regular': 'Regular',
+      'discovery': 'Discovery'
+    };
+    const typeText = typeLabels[selectedProcessingType] || selectedProcessingType;
+    const modeText = modeLabels[selectedProcessingMode] || selectedProcessingMode;
+    processingTypeDisplayEl.textContent = `${typeText} (${modeText})`;
   } else {
     processingTypeDisplayEl.textContent = 'No type selected';
+  }
+
+  // Show/hide pause/resume/stop buttons based on processing state
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
+  const stopBtn = document.getElementById('stopBtn');
+
+  if (processingCount > 0 && !isPaused) {
+    // Processing is active and not paused - show pause and stop buttons
+    if (pauseBtn) pauseBtn.classList.remove('hidden');
+    if (resumeBtn) resumeBtn.classList.add('hidden');
+    if (stopBtn) stopBtn.classList.remove('hidden');
+  } else if (processingCount > 0 && isPaused) {
+    // Processing is paused - show resume and stop buttons
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+    if (resumeBtn) resumeBtn.classList.remove('hidden');
+    if (stopBtn) stopBtn.classList.remove('hidden');
+  } else {
+    // No active processing - hide all control buttons
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+    if (resumeBtn) resumeBtn.classList.add('hidden');
+    if (stopBtn) stopBtn.classList.add('hidden');
   }
 }
 
@@ -469,9 +640,18 @@ function createFileCard(item) {
   fileInfo.appendChild(icon);
 
   const name = document.createElement('div');
-  name.className = 'font-medium text-slate-900 dark:text-slate-100 truncate';
+  name.className = 'font-medium text-slate-900 dark:text-slate-100 truncate flex items-center gap-2';
   name.textContent = item.file.name;
   name.title = item.file.name; // Show full filename on hover
+
+  // Add warning indicator for files that need re-upload
+  if (item.needsReupload) {
+    const warningIcon = document.createElement('i');
+    warningIcon.className = 'fa-solid fa-exclamation-triangle text-amber-500 text-sm';
+    warningIcon.title = 'File needs to be re-uploaded to continue processing';
+    name.appendChild(warningIcon);
+  }
+
   fileInfo.appendChild(name);
 
   // Right section: Size + Status + Actions
@@ -533,6 +713,13 @@ function createFileCard(item) {
         actions.appendChild(downloadBtn);
       }
     });
+  } else if (item.status === 'failed') {
+    // Add retry button for failed files
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'px-3 py-1 text-sm bg-orange-600 hover:bg-orange-700 text-white rounded transition-colors';
+    retryBtn.textContent = 'Retry';
+    retryBtn.onclick = () => retryFailedFile(item.id);
+    actions.appendChild(retryBtn);
   }
 
   rightSection.appendChild(actions);
@@ -611,6 +798,7 @@ function createFileCard(item) {
 
 function removeFromQueue(id) {
   fileQueue = fileQueue.filter(item => item.id !== id);
+  saveQueueToStorage();
   updateQueueDisplay();
 
   if (fileQueue.length === 0) {
@@ -620,6 +808,7 @@ function removeFromQueue(id) {
 
 function clearQueue() {
   fileQueue = [];
+  clearQueueFromStorage();
   updateQueueDisplay();
   document.getElementById('processingQueue').classList.add('hidden');
 }
@@ -704,6 +893,7 @@ async function startProcessing() {
 
   processingItem.status = 'processing';
   processingItem.processingStartedAt = Date.now(); // Track when processing started
+  saveQueueToStorage();
   updateQueueDisplay();
 
   try {
@@ -759,6 +949,7 @@ async function processFile(queueItem, processingType, model) {
       formData.append('file', queueItem.file);
       formData.append('processingType', processingType);
       formData.append('model', model);
+      formData.append('mode', selectedProcessingMode);
       formData.append('sessionId', currentSessionId);
 
       const response = await fetch('/api/process', {
@@ -776,6 +967,7 @@ async function processFile(queueItem, processingType, model) {
         // Mark as completed
         queueItem.status = 'completed';
         queueItem.downloads = result.downloads;
+        saveQueueToStorage();
 
         // Update UI to show completed status and download buttons
         updateQueueDisplay();
@@ -890,8 +1082,11 @@ async function stopProcessing() {
 
     if (result.success) {
       // Reset UI
-      document.getElementById('progressSection').classList.add('hidden');
-      document.getElementById('progressBar').style.width = '0%';
+      const progressSection = document.getElementById('progressSection');
+      const progressBar = document.getElementById('progressBar');
+
+      if (progressSection) progressSection.classList.add('hidden');
+      if (progressBar) progressBar.style.width = '0%';
 
       // Mark current processing item as failed
       const processingItem = fileQueue.find(item => item.status === 'processing');
@@ -907,6 +1102,82 @@ async function stopProcessing() {
   } catch (error) {
     alert('Error cancelling processing: ' + error.message);
   }
+}
+
+async function pauseProcessing() {
+  if (!currentSessionId) {
+    alert('No active processing session to pause.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/pause/${currentSessionId}`, {
+      method: 'POST'
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      isPaused = true;
+      updateQueueStatus();
+      alert('Processing paused successfully.');
+    } else {
+      alert('Failed to pause processing: ' + result.error);
+    }
+  } catch (error) {
+    alert('Error pausing processing: ' + error.message);
+  }
+}
+
+async function resumeProcessing() {
+  if (!currentSessionId) {
+    alert('No active processing session to resume.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/resume/${currentSessionId}`, {
+      method: 'POST'
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      isPaused = false;
+      updateQueueStatus();
+      alert('Processing resumed successfully.');
+    } else {
+      alert('Failed to resume processing: ' + result.error);
+    }
+  } catch (error) {
+    alert('Error resuming processing: ' + error.message);
+  }
+}
+
+async function retryFailedFile(fileId) {
+  const queueItem = fileQueue.find(item => item.id === fileId);
+  if (!queueItem || queueItem.status !== 'failed') {
+    alert('File is not in failed state.');
+    return;
+  }
+
+  // Check if file needs to be re-uploaded
+  if (queueItem.needsReupload) {
+    alert('This file needs to be re-uploaded before retrying. Please remove it from the queue and upload again.');
+    return;
+  }
+
+  // Reset file status to queued
+  queueItem.status = 'queued';
+  queueItem.progress = 0;
+  queueItem.processingStartedAt = null;
+  saveQueueToStorage();
+  updateQueueDisplay();
+
+  // Auto-start processing if conditions are met
+  setTimeout(checkAutoStart, 100);
+
+  alert('File queued for retry.');
 }
 
 // Utility functions

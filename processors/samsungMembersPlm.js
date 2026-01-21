@@ -1,5 +1,9 @@
 const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/samsungMembersPlmPrompt');
+const discoveryPromptTemplate = require('../prompts/samsungMembersPlmPrompt_discovery');
+const embeddingsStore = require('../server/embeddings_store');
+const { callOllamaEmbeddings } = require('../server');
+const { cleanExcelStyling } = require('./_helpers');
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -301,7 +305,7 @@ module.exports = {
     return normalizedRows;
   },
 
-  buildPrompt(rows) {
+  buildPrompt(rows, mode = 'regular') {
     // Send only content fields to AI for analysis
     const aiInputRows = rows.map(row => ({
       Title: row.Title || '',
@@ -312,7 +316,12 @@ module.exports = {
       Cause: row.Cause || '',
       'Counter Measure': row['Counter Measure'] || ''
     }));
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+
+    if (mode === 'discovery') {
+      return discoveryPromptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+    } else {
+      return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+    }
   },
 
   formatResponse(aiResult, originalRows) {
@@ -378,6 +387,164 @@ module.exports = {
     });
 
     return mergedRows;
+  },
+
+  // Discovery mode methods
+  async formatDiscoveryResponse(aiResult, originalRows, sourceFile = '') {
+    let aiRows;
+
+    // Handle different response formats: object, JSON string, or raw text
+    if (typeof aiResult === 'object' && aiResult !== null) {
+      aiRows = aiResult;
+    } else if (typeof aiResult === 'string') {
+      const text = aiResult.trim();
+
+      // First try to parse as complete JSON
+      try {
+        aiRows = JSON.parse(text);
+      } catch (e) {
+        // If that fails, try to extract JSON array from text
+        const firstBracket = text.indexOf('[');
+        const lastBracket = text.lastIndexOf(']');
+        if (firstBracket !== -1 && lastBracket > firstBracket) {
+          const jsonStr = text.substring(firstBracket, lastBracket + 1);
+          try {
+            aiRows = JSON.parse(jsonStr);
+          } catch (e2) {
+            // If JSON parsing fails, return array with error info
+            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
+          }
+        } else {
+          // Last resort: return array with error info
+          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
+        }
+      }
+    } else {
+      // Fallback for unexpected types - return array
+      return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
+    }
+
+    // Ensure aiRows is an array
+    if (!Array.isArray(aiRows)) {
+      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
+    }
+
+    // Generate discovery data with embeddings
+    const discoveryData = [];
+    const embeddingTasks = [];
+
+    for (let i = 0; i < aiRows.length; i++) {
+      const aiRow = aiRows[i];
+      const original = originalRows[i] || {};
+
+      // Create row text for embedding (Title + Problem + Feature)
+      const rowText = `${original.Title || ''} ${original.Problem || ''} ${original.Feature || ''}`.trim();
+
+      // Extract discovered labels
+      const rawDiscovery = {
+        module: aiRow.module || '',
+        sub_module: aiRow.sub_module || '',
+        issue_type: aiRow.issue_type || '',
+        sub_issue_type: aiRow.sub_issue_type || ''
+      };
+
+      // Prepare embedding tasks
+      const textsToEmbed = [rowText];
+      if (rawDiscovery.module) textsToEmbed.push(rawDiscovery.module);
+      if (rawDiscovery.sub_module) textsToEmbed.push(rawDiscovery.sub_module);
+      if (rawDiscovery.issue_type) textsToEmbed.push(rawDiscovery.issue_type);
+      if (rawDiscovery.sub_issue_type) textsToEmbed.push(rawDiscovery.sub_issue_type);
+
+      embeddingTasks.push({
+        index: i,
+        texts: textsToEmbed,
+        rowText,
+        rawDiscovery,
+        original
+      });
+    }
+
+    // Generate embeddings for all texts
+    const embeddingResults = [];
+    for (const task of embeddingTasks) {
+      const embeddings = {};
+      const embeddingRefs = {};
+
+      try {
+        // Check cache first
+        const cachedEmbeddings = await embeddingsStore.getMultipleEmbeddings(task.texts);
+
+        // Generate missing embeddings
+        for (const text of task.texts) {
+          let embedding = null;
+          const cached = cachedEmbeddings.get(embeddingsStore.generateHash(text));
+
+          if (cached) {
+            embedding = cached.embedding;
+          } else {
+            // Generate new embedding
+            try {
+              embedding = await callOllamaEmbeddings(text);
+              // Store in cache
+              await embeddingsStore.storeEmbedding(text, embedding);
+            } catch (embedErr) {
+              console.warn(`Failed to generate embedding for text: ${text.substring(0, 50)}...`, embedErr.message);
+              embedding = null;
+            }
+          }
+
+          // Store embedding by text type
+          if (text === task.rowText) {
+            embeddings.rowText = embedding;
+          } else if (text === task.rawDiscovery.module) {
+            embeddings.module = embedding;
+          } else if (text === task.rawDiscovery.sub_module) {
+            embeddings.sub_module = embedding;
+          } else if (text === task.rawDiscovery.issue_type) {
+            embeddings.issue_type = embedding;
+          } else if (text === task.rawDiscovery.sub_issue_type) {
+            embeddings.sub_issue_type = embedding;
+          }
+        }
+
+        // Create embedding reference IDs
+        const rowEmbeddingId = embeddings.rowText ? `vec_${Date.now()}_${task.index}_row` : null;
+        const labelEmbeddingIds = [];
+        if (embeddings.module) labelEmbeddingIds.push(`vec_${Date.now()}_${task.index}_module`);
+        if (embeddings.sub_module) labelEmbeddingIds.push(`vec_${Date.now()}_${task.index}_sub_module`);
+        if (embeddings.issue_type) labelEmbeddingIds.push(`vec_${Date.now()}_${task.index}_issue_type`);
+        if (embeddings.sub_issue_type) labelEmbeddingIds.push(`vec_${Date.now()}_${task.index}_sub_issue_type`);
+
+        embeddingResults.push({
+          row_id: `row_${task.index}`,
+          raw_discovery: task.rawDiscovery,
+          embedding_refs: {
+            row_embedding_id: rowEmbeddingId,
+            label_embedding_ids: labelEmbeddingIds
+          },
+          embeddings, // Keep actual embeddings for storage
+          mode: 'discovery'
+        });
+
+      } catch (err) {
+        console.warn(`Failed to process embeddings for row ${task.index}:`, err.message);
+        embeddingResults.push({
+          row_id: `row_${task.index}`,
+          raw_discovery: task.rawDiscovery,
+          embedding_refs: {
+            row_embedding_id: null,
+            label_embedding_ids: []
+          },
+          embeddings: {},
+          mode: 'discovery'
+        });
+      }
+    }
+
+    // Clean Excel styling artifacts from discovery data
+    const cleanedResults = embeddingResults.map(result => cleanExcelStyling(result));
+
+    return cleanedResults;
   },
 
   // Returns column width configurations for Excel export

@@ -23,3 +23,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+#Folders
+cache
+Embed_data
+downloads
