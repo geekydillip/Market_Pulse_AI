@@ -1,0 +1,26 @@
+# Development dependencies for Market Pulse AI
+# Install with: pip install -r requirements-dev.txt
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# Code Quality & Linting
+black>=22.0.0
+flake8>=5.0.0
+isort>=5.10.0
+
+# Type Checking (if needed for Python scripts)
+mypy>=1.0.0
+
+# Development Tools
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.2.0
+
+# Development Utilities
+pre-commit>=3.0.0
+tox>=4.0.0

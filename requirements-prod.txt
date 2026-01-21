@@ -1,0 +1,12 @@
+# Production dependencies for Market Pulse AI
+# Install with: pip install -r requirements-prod.txt
+
+# Core runtime dependencies
+-r requirements.txt
+
+# Production optimizations (if needed)
+# Add any production-specific packages here
+# For example:
+# gunicorn>=20.1.0  # WSGI server for production deployment
+# psycopg2-binary>=2.9.0  # If using PostgreSQL in production
+# redis>=4.5.0  # If using Redis for caching
