@@ -64,16 +64,16 @@ def load_all_excels(folder_path: str) -> pd.DataFrame:
         try:
             df = pd.read_excel(excel_file, dtype=dtype_spec, engine='openpyxl')
             dfs.append(df)
-            print(f"Loaded {len(df)} rows from {excel_file.name}")
+            print(f"Loaded {len(df)} rows from {excel_file.name}", file=sys.stderr)
         except Exception as e:
-            print(f"Warning: Failed to load {excel_file.name}: {e}")
+            print(f"Warning: Failed to load {excel_file.name}: {e}", file=sys.stderr)
 
     if not dfs:
         raise FileNotFoundError(f"Failed to load any Excel files from {folder_path}")
 
     # Combine all DataFrames
     combined_df = pd.concat(dfs, ignore_index=True, sort=False)
-    print(f"Combined {len(dfs)} files with total {len(combined_df)} rows")
+    print(f"Combined {len(dfs)} files with total {len(combined_df)} rows", file=sys.stderr)
 
     # Optimize memory for large datasets
     if len(combined_df) > 10000:
@@ -155,10 +155,13 @@ if __name__ == "__main__":
 
     module = sys.argv[1]
     save_json = '--save-json' in sys.argv
-    folder_path = f"./downloads/{module}"
+
+    # Get project root directory (works regardless of execution context)
+    script_dir = Path(__file__).parent.parent.parent  # server/analytics -> server -> project_root
+    folder_path = script_dir / 'downloads' / module
 
     try:
-        df = load_all_excels(folder_path)
+        df = load_all_excels(str(folder_path))
         # Apply model name transformation for OS Beta entries
         df = transform_model_names(df)
 
@@ -192,8 +195,8 @@ if __name__ == "__main__":
         response = sanitize_nan(response)
 
         if save_json:
-            # Save to ./downloads/<module>/analytics.json
-            json_path = f"{folder_path}/analytics.json"
+            # Save to downloads/<module>/analytics.json
+            json_path = folder_path / 'analytics.json'
             with open(json_path, 'w') as f:
                 json.dump(response, f, indent=2)
             print(f"Analytics saved to {json_path}")

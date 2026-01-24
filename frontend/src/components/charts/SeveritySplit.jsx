@@ -7,8 +7,8 @@ export default function SeveritySplit({ data }) {
 
   // Calculate totals across all sources
   const totalHigh = data.high || 0;
-  const totalMedium = (data["Beta User Issues"]?.Medium || 0) + (data["Samsung Members PLM"]?.Medium || 0) + (data["Samsung Members VOC"]?.Medium || 0);
-  const totalLow = (data["Beta User Issues"]?.Low || 0) + (data["Samsung Members PLM"]?.Low || 0) + (data["Samsung Members VOC"]?.Low || 0);
+  const totalMedium = (data["Beta User Issues"]?.Medium_open || 0) + (data["Samsung Members PLM"]?.Medium_open || 0) + (data["Samsung Members VOC"]?.Medium_open || 0);
+  const totalLow = (data["Beta User Issues"]?.Low_open || 0) + (data["Samsung Members PLM"]?.Low_open || 0) + (data["Samsung Members VOC"]?.Low_open || 0);
   const totalIssues = totalHigh + totalMedium + totalLow;
 
   const option = {

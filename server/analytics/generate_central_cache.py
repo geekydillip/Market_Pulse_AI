@@ -13,7 +13,6 @@ Trigger conditions:
 """
 
 import os
-import pandas as pd
 import json
 import subprocess
 import sys
@@ -27,11 +26,15 @@ def aggregate_analytics_data():
     Read all analytics.json files and aggregate unique models and modules.
     Returns tuple: (total_unique_models, total_unique_modules)
     """
+    # Get project root directory (works regardless of execution context)
+    script_dir = Path(__file__).parent.parent.parent  # server/analytics -> server -> project_root
+    downloads_dir = script_dir / 'downloads'
+
     analytics_files = [
-        './downloads/beta_user_issues/analytics.json',
-        './downloads/plm_issues/analytics.json',
-        './downloads/samsung_members_plm/analytics.json',
-        './downloads/samsung_members_voc/analytics.json'
+        downloads_dir / 'beta_user_issues' / 'analytics.json',
+        downloads_dir / 'plm_issues' / 'analytics.json',
+        downloads_dir / 'samsung_members_plm' / 'analytics.json',
+        downloads_dir / 'samsung_members_voc' / 'analytics.json'
     ]
 
     unique_models = set()
@@ -39,7 +42,7 @@ def aggregate_analytics_data():
 
     for file_path in analytics_files:
         try:
-            if os.path.exists(file_path):
+            if file_path.exists():
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
 
@@ -55,14 +58,14 @@ def aggregate_analytics_data():
                         if 'label' in module:
                             unique_modules.add(module['label'])
 
-                print(f"[OK] Processed {file_path}: {len(data.get('top_models', []))} models, {len(data.get('categories', []))} modules")
+                print(f"[OK] Processed {file_path}: {len(data.get('top_models', []))} models, {len(data.get('categories', []))} modules", file=sys.stderr)
             else:
-                print(f"[WARNING] Analytics file not found: {file_path}")
+                print(f"[WARNING] Analytics file not found: {file_path}", file=sys.stderr)
 
         except Exception as e:
-            print(f"[ERROR] Error reading {file_path}: {e}")
+            print(f"[ERROR] Error reading {file_path}: {e}", file=sys.stderr)
 
-    print(f"Aggregated totals: {len(unique_models)} unique models, {len(unique_modules)} unique modules")
+    print(f"Aggregated totals: {len(unique_models)} unique models, {len(unique_modules)} unique modules", file=sys.stderr)
     return len(unique_models), len(unique_modules)
 
 def get_per_source_data():
@@ -71,18 +74,22 @@ def get_per_source_data():
     top_titles_CaseCode contains one "CaseCode : Title" entry per top_module.
     Returns dict with per-source data.
     """
+    # Get project root directory (works regardless of execution context)
+    script_dir = Path(__file__).parent.parent.parent  # server/analytics -> server -> project_root
+    downloads_dir = script_dir / 'downloads'
+
     analytics_files = [
-        ('./downloads/beta_user_issues/analytics.json', 'beta_user_issues'),
-        ('./downloads/plm_issues/analytics.json', 'plm_issues'),
-        ('./downloads/samsung_members_plm/analytics.json', 'samsung_members_plm'),
-        ('./downloads/samsung_members_voc/analytics.json', 'samsung_members_voc')
+        (downloads_dir / 'beta_user_issues' / 'analytics.json', 'beta_user_issues'),
+        (downloads_dir / 'plm_issues' / 'analytics.json', 'plm_issues'),
+        (downloads_dir / 'samsung_members_plm' / 'analytics.json', 'samsung_members_plm'),
+        (downloads_dir / 'samsung_members_voc' / 'analytics.json', 'samsung_members_voc')
     ]
 
     per_source_data = {}
 
     for file_path, source_name in analytics_files:
         try:
-            if os.path.exists(file_path):
+            if file_path.exists():
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
 
@@ -119,12 +126,12 @@ def get_per_source_data():
                 per_source_data[f"{source_name}_top_modules"] = top_modules
                 per_source_data[f"{source_name}_top_titles_CaseCode"] = top_titles_CaseCode
 
-                print(f"[OK] Extracted data for {source_name}: {len(top_models)} models, {len(top_modules)} modules, {len(top_titles_CaseCode)} top titles with case codes")
+                print(f"[OK] Extracted data for {source_name}: {len(top_models)} models, {len(top_modules)} modules, {len(top_titles_CaseCode)} top titles with case codes", file=sys.stderr)
             else:
-                print(f"[WARNING] Analytics file not found: {file_path}")
+                print(f"[WARNING] Analytics file not found: {file_path}", file=sys.stderr)
 
         except Exception as e:
-            print(f"[ERROR] Error reading {file_path}: {e}")
+            print(f"[ERROR] Error reading {file_path}: {e}", file=sys.stderr)
 
     return per_source_data
 
@@ -155,7 +162,7 @@ def run_aggregator_directly():
 
         # Compute total issues and high issues counts
         total_issues = sum(kpis[source]['total'] for source in kpis)
-        high_issues_count = sum(kpis[source]['High'] for source in kpis)
+        high_issues_count = sum(kpis[source]['High_open'] for source in kpis)
 
         response = {
             "kpis": kpis,
@@ -179,9 +186,8 @@ def run_aggregator_directly():
         response = ca.sanitize_nan(response)
 
         return response
-
     except Exception as e:
-        print(f"Exception running aggregator directly: {e}")
+        print(f"Exception running aggregator directly: {e}", file=sys.stderr)
         return None
 
 def compute_data_hash(data):
@@ -197,12 +203,12 @@ def generate_central_cache():
     Generate the centralized dashboard cache by aggregating all dashboard data.
     Uses single aggregator call for efficiency.
     """
-    print("Generating centralized dashboard cache...")
+    print("Generating centralized dashboard cache...", file=sys.stderr)
 
     # Get all aggregation data directly (avoid subprocess issues)
     base_data = run_aggregator_directly()
     if not base_data:
-        print("Failed to get base aggregation data")
+        print("Failed to get base aggregation data", file=sys.stderr)
         return False
 
     # Extract data from the single response
@@ -262,12 +268,12 @@ def generate_central_cache():
     try:
         with open(cache_file, 'w', encoding='utf-8') as f:
             json.dump(cache_data, f, indent=2, ensure_ascii=False)
-        print(f"Cache generated successfully: {cache_file}")
-        print(f"Cache size: {os.path.getsize(cache_file)} bytes")
-        print(f"Data hash: {data_hash[:16]}...")
+        print(f"Cache generated successfully: {cache_file}", file=sys.stderr)
+        print(f"Cache size: {os.path.getsize(cache_file)} bytes", file=sys.stderr)
+        print(f"Data hash: {data_hash[:16]}...", file=sys.stderr)
         return True
     except Exception as e:
-        print(f"Failed to write cache file: {e}")
+        print(f"Failed to write cache file: {e}", file=sys.stderr)
         return False
 
 def validate_cache_freshness():
@@ -278,24 +284,14 @@ def validate_cache_freshness():
     """
     cache_file = Path("./downloads/__dashboard_cache__/central_dashboard.json")
     if not cache_file.exists():
-        print("Cache file missing")
+        print("Cache file missing", file=sys.stderr)
         return False
 
     try:
-        # Load cached data
-        with open(cache_file, 'r', encoding='utf-8') as f:
-            cached_data = json.load(f)
-
-        # Get cached hash
-        cached_hash = cached_data.get("data_hash")
-        if not cached_hash:
-            print("Cache is stale - no hash found in cached data")
-            return False
-
         # Get current data
         current_data = run_aggregator_directly()
         if not current_data:
-            print("Cache is stale - cannot get current data")
+            print("Cache is stale - cannot get current data", file=sys.stderr)
             return False
 
         # Extract current core data for hash computation
@@ -325,18 +321,28 @@ def validate_cache_freshness():
         # Compute current data hash
         current_hash = compute_data_hash(current_core_data)
 
-        # Compare hashes
-        if current_hash != cached_hash:
-            print("Cache is stale - data hash changed")
-            print(f"Current hash: {current_hash[:16]}...")
-            print(f"Cached hash:  {cached_hash[:16]}...")
+        # Load cached data
+        with open(cache_file, 'r', encoding='utf-8') as f:
+            cached_data = json.load(f)
+
+        # Get cached hash
+        cached_hash = cached_data.get("data_hash")
+        if not cached_hash:
+            print("Cache is stale - no hash found in cached data", file=sys.stderr)
             return False
 
-        print("Cache is fresh - data hash matches")
+        # Compare hashes
+        if current_hash != cached_hash:
+            print("Cache is stale - data hash changed", file=sys.stderr)
+            print(f"Current hash: {current_hash[:16]}...", file=sys.stderr)
+            print(f"Cached hash:  {cached_hash[:16]}...", file=sys.stderr)
+            return False
+
+        print("Cache is fresh - data hash matches", file=sys.stderr)
         return True
 
     except Exception as e:
-        print(f"Error validating cache freshness: {e}")
+        print(f"Error validating cache freshness: {e}", file=sys.stderr)
         return False
 
 if __name__ == "__main__":

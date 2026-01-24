@@ -131,6 +131,15 @@ def compute_central_kpis(data: dict) -> dict:
                 for severity in severity_counts.keys():
                     severity_counts[severity] = int(severity_series.get(severity, 0))
 
+            # Compute open severity counts (severity counts where Progr.Stat. == 'Open')
+            open_severity_counts = {'High': 0, 'Medium': 0, 'Low': 0}
+            if 'Severity' in combined.columns and "Progr.Stat." in combined.columns:
+                open_df = combined[combined["Progr.Stat."] == "Open"]
+                if not open_df.empty:
+                    open_severity_series = open_df['Severity'].value_counts()
+                    for severity in open_severity_counts.keys():
+                        open_severity_counts[severity] = int(open_severity_series.get(severity, 0))
+
             # Compute status counts for this source
             status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
             if "Progr.Stat." in combined.columns:
@@ -144,6 +153,9 @@ def compute_central_kpis(data: dict) -> dict:
                 'High': severity_counts['High'],
                 'Medium': severity_counts['Medium'],
                 'Low': severity_counts['Low'],
+                'High_open': open_severity_counts['High'],
+                'Medium_open': open_severity_counts['Medium'],
+                'Low_open': open_severity_counts['Low'],
                 'open': status_counts['Open'],
                 'close': status_counts['Close'],
                 'resolved': status_counts['Resolve']
@@ -566,7 +578,7 @@ if __name__ == "__main__":
 
         # Compute total issues and high issues counts
         total_issues = sum(kpis[source]['total'] for source in kpis)
-        high_issues_count = sum(kpis[source]['High'] for source in kpis)
+        high_issues_count = sum(kpis[source]['High_open'] for source in kpis)
 
         response = {
             "kpis": kpis,
