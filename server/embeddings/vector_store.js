@@ -427,7 +427,7 @@ class VectorStore {
               continue; // Skip invalid embeddings
             }
 
-            const similarity = this.cosineSimilarity(targetEmbedding, embedding);
+            const similarity = cosineSimilarity(targetEmbedding, embedding);
             if (similarity >= minSimilarity) {
               similarities.push({
                 id: row.id,
@@ -496,7 +496,7 @@ class VectorStore {
 
               try {
                 const embeddingB = JSON.parse(rows[j].embedding);
-                const similarity = this.cosineSimilarity(embeddingA, embeddingB);
+                const similarity = cosineSimilarity(embeddingA, embeddingB);
 
                 if (similarity >= similarityThreshold) {
                   group.push(rows[j]);

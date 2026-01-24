@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import json
 import math
+import re
 from pathlib import Path
 
 def sanitize_nan(obj):
@@ -35,6 +36,117 @@ def transform_model_names(df):
         mask = df['Model No.'].astype(str).str.startswith('[OS Beta]')
         df.loc[mask, 'Model No.'] = df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
     return df
+
+def load_model_name_mapping():
+    """
+    Load model name mapping from modelName.json
+    """
+    try:
+        model_name_file = Path(__file__).parent.parent.parent / 'modelName.json'
+        if model_name_file.exists():
+            with open(model_name_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            print(f"Warning: modelName.json not found at {model_name_file}")
+            return {}
+    except Exception as e:
+        print(f"Error loading model name mapping: {e}")
+        return {}
+
+def get_friendly_model_name(model_str, model_name_map):
+    """
+    Get friendly model name with smart matching for extended variants.
+    Handles both exact matches and extended variants like SM-S911BE_SWA_15_DD
+    """
+    if not model_str or not isinstance(model_str, str):
+        return model_str
+    
+    model_str = model_str.strip()
+    
+    # Try exact match first
+    if model_str in model_name_map:
+        return model_name_map[model_str]
+    
+    # If no exact match, try to extract base model from extended variant
+    # Extended variants typically follow pattern: SM-XXXXX_XXX_XX_XX
+    # We want to extract the base model: SM-XXXXX
+    if model_str.startswith('SM-') and '_' in model_str:
+        # Extract base model by taking characters up to the first underscore
+        # Examples:
+        # SM-S911BE_SWA_15_DD -> SM-S911BE
+        # SM-S928BE_SWA_15_DD -> SM-S928BE
+        # SM-A356E_SWA_15_INS -> SM-A356E
+        base_model = model_str.split('_')[0]
+        
+        # Try to match the base model
+        if base_model in model_name_map:
+            return model_name_map[base_model]
+        
+        # If base model doesn't match, try to extract the core model number
+        # SM-S911BE -> SM-S911B (remove last character)
+        # SM-A356E -> SM-A356B (replace E with B)
+        if len(base_model) >= 8:
+            # Remove the last character to get the core model
+            core_model = base_model[:-1]
+            if core_model in model_name_map:
+                return model_name_map[core_model]
+            
+            # If still no match and the model ends with 'E', try replacing with 'B'
+            if base_model.endswith('E'):
+                model_with_b = base_model[:-1] + 'B'
+                if model_with_b in model_name_map:
+                    return model_name_map[model_with_b]
+    
+    # Enhanced Samsung model variant mapping logic
+    # Handle extended variants by mapping to friendly names directly
+    if model_str.startswith('SM-'):
+        # Extract the model series and number for pattern matching
+        # Examples: S928, S938, A356, M55, etc.
+        
+        # Pattern to extract model series and number
+        # SM-S928BE_SWA_15_DD -> S928
+        # SM-A356E_SWA_15_INS -> A356
+        # SM-M556B -> M55
+        match = re.search(r'SM-([A-Z]*)(\d+)', model_str)
+        if match:
+            series = match.group(1)  # S, A, M, etc.
+            number = match.group(2)  # 928, 938, 356, 55, etc.
+            
+            # Create potential friendly name patterns based on series
+            if series == 'S':
+                # Galaxy S series
+                if len(number) >= 3:
+                    # S928 -> S24 Ultra, S938 -> S25 Ultra, etc.
+                    # Extract the last digit to determine generation
+                    generation = number[1]  # 928 -> 2, 938 -> 3
+                    if generation == '2':
+                        return "S24 Ultra" if number == '928' else f"S24+"
+                    elif generation == '3':
+                        return "S25 Ultra" if number == '938' else f"S25+"
+                    elif generation == '1':
+                        return "S23 Ultra" if number == '918' else f"S23+"
+                    elif generation == '0':
+                        return "S22 Ultra" if number == '908' else f"S22+"
+                    else:
+                        return f"S{generation} Series"
+            elif series == 'A':
+                # Galaxy A series
+                if len(number) >= 3:
+                    return f"A{number}"
+            elif series == 'M':
+                # Galaxy M series
+                if len(number) >= 3:
+                    return f"M{number}"
+            elif series == 'F':
+                # Galaxy Fold/Flip series
+                if len(number) >= 3:
+                    if number.startswith('9'):
+                        return f"Z Fold{number[1]}"
+                    elif number.startswith('7'):
+                        return f"Z Flip{number[1]}"
+    
+    # Return original if no mapping found
+    return model_str
 
 def load_all_excels(folder_path: str) -> pd.DataFrame:
     """
@@ -93,6 +205,7 @@ def compute_kpis(df: pd.DataFrame) -> dict:
     - category_distribution
     - severity_distribution
     - status_distribution
+    - open_severity_distribution (High, Medium, Low issues with Prog.Stat. = Open only)
     """
     total_rows = len(df)
     unique_models = df.get('Model No.', pd.Series()).nunique() if 'Model No.' in df.columns else 0
@@ -100,19 +213,34 @@ def compute_kpis(df: pd.DataFrame) -> dict:
     severity_distribution = df.get('Severity', pd.Series()).value_counts().to_dict() if 'Severity' in df.columns else {}
     status_distribution = df.get('Progr.Stat.', pd.Series()).value_counts().to_dict() if 'Progr.Stat.' in df.columns else {}
 
+    # Compute open severity distribution - High, Medium, Low issues with Prog.Stat. = Open only
+    open_severity_distribution = {'High': 0, 'Medium': 0, 'Low': 0}
+    if 'Severity' in df.columns and 'Progr.Stat.' in df.columns:
+        # Filter for Open status only
+        open_df = df[df['Progr.Stat.'].astype(str).str.strip() == 'Open']
+        if not open_df.empty:
+            # Filter for allowed severity levels only (exclude Critical)
+            allowed_severity = ['High', 'Medium', 'Low']
+            open_severity_df = open_df[open_df['Severity'].isin(allowed_severity)]
+            if not open_severity_df.empty:
+                open_severity_series = open_severity_df['Severity'].value_counts()
+                for severity in open_severity_distribution.keys():
+                    open_severity_distribution[severity] = int(open_severity_series.get(severity, 0))
+
     return {
         "total_rows": total_rows,
         "unique_models": unique_models,
         "category_distribution": category_distribution,
         "severity_distribution": severity_distribution,
-        "status_distribution": status_distribution
+        "status_distribution": status_distribution,
+        "open_severity_distribution": open_severity_distribution
     }
 
-def group_by_column(df: pd.DataFrame, column: str) -> list:
+def group_by_column(df: pd.DataFrame, column: str, model_name_map: dict = None) -> list:
     """
     Return grouped counts sorted descending:
     [
-        {"label": "SM-F761B", "count": 128},
+        {"label": "S24 Ultra", "count": 128},
         ...
     ]
     """
@@ -123,7 +251,15 @@ def group_by_column(df: pd.DataFrame, column: str) -> list:
         col_data = df[column]
         if isinstance(col_data, pd.DataFrame):
             col_data = col_data.iloc[:, 0]
-        counts = col_data.value_counts().sort_values(ascending=False)
+        
+        # Apply model name mapping if this is the Model No. column and mapping is available
+        if column == 'Model No.' and model_name_map:
+            # Apply model name mapping to each model value
+            mapped_data = col_data.apply(lambda x: get_friendly_model_name(str(x) if pd.notna(x) else '', model_name_map))
+            counts = mapped_data.value_counts().sort_values(ascending=False)
+        else:
+            counts = col_data.value_counts().sort_values(ascending=False)
+        
         return [{"label": str(idx), "count": int(count)} for idx, count in counts.items()]
     except Exception:
         # Fallback: return empty list if there's any issue
@@ -161,12 +297,16 @@ if __name__ == "__main__":
     folder_path = script_dir / 'downloads' / module
 
     try:
+        # Load model name mapping
+        model_name_map = load_model_name_mapping()
+        print(f"Loaded {len(model_name_map)} model name mappings", file=sys.stderr)
+
         df = load_all_excels(str(folder_path))
         # Apply model name transformation for OS Beta entries
         df = transform_model_names(df)
 
         kpis = compute_kpis(df)
-        top_models = group_by_column(df, 'Model No.')
+        top_models = group_by_column(df, 'Model No.', model_name_map)
         categories = group_by_column(df, 'Module')
         # Include time_series if 'Date' column exists
         time_data = time_series(df, 'Date') if 'Date' in df.columns else []
@@ -181,7 +321,8 @@ if __name__ == "__main__":
                 "severity_distribution": kpis["severity_distribution"],
                 "open_issues": kpis["status_distribution"].get("Open", 0),
                 "resolved_issues": kpis["status_distribution"].get("Resolve", 0),
-                "close_issues": kpis["status_distribution"].get("Close", 0)
+                "close_issues": kpis["status_distribution"].get("Close", 0),
+                "open_severity_distribution": kpis["open_severity_distribution"]
             },
             "top_models": top_models,
             "categories": categories,

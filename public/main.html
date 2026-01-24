@@ -143,17 +143,22 @@
 <div class="flex flex-wrap gap-4 mb-6 justify-center">
   <a href="BetaIssues_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-blue-600 hover:from-slate-800 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-mobile-screen mr-2"></i>
-    BETA UT ISSUES
+    BETA ISSUES
+  </a>
+  
+  <a href="#" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-indigo-600 hover:from-slate-800 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-briefcase mr-2"></i>
+    UT PORTAL
   </a>
 
   <a href="SMPLM_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-list-check mr-2"></i>
-    SAMSUNG MEMBERS PLM
+    S M PLM
   </a>
 
   <a href="SMVOC_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-comments mr-2"></i>
-    SAMSUNG MEMBERS VOC
+    S M VOC
   </a>
 
   <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
@@ -471,24 +476,24 @@ function updateSourceDistribution() {
 
   const sources = ['Beta Users', 'S.M. PLM', 'S.M. VOC'];
 
-  // Extract severity counts directly from KPIs
+  // Extract severity counts directly from KPIs (using open issues only)
   const highData = sources.map(source => {
     const kpiKey = displayToKPI[source];
-    const value = severityData[kpiKey]?.High || 0;
+    const value = severityData[kpiKey]?.High_open || 0;
     console.log(`High for ${source} (${kpiKey}):`, value);
     return value;
   });
 
   const mediumData = sources.map(source => {
     const kpiKey = displayToKPI[source];
-    const value = severityData[kpiKey]?.Medium || 0;
+    const value = severityData[kpiKey]?.Medium_open || 0;
     console.log(`Medium for ${source} (${kpiKey}):`, value);
     return value;
   });
 
   const lowData = sources.map(source => {
     const kpiKey = displayToKPI[source];
-    const value = severityData[kpiKey]?.Low || 0;
+    const value = severityData[kpiKey]?.Low_open || 0;
     console.log(`Low for ${source} (${kpiKey}):`, value);
     return value;
   });
@@ -665,10 +670,10 @@ function updateSeveritySplit() {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Calculate totals across all sources - same logic as Source Distribution
-  const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High || 0), 0);
-  const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium || 0), 0);
-  const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low || 0), 0);
+  // Calculate totals across all sources - using open issues only
+  const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High_open || 0), 0);
+  const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium_open || 0), 0);
+  const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low_open || 0), 0);
 
   const totalIssues = totalHigh + totalMedium + totalLow;
   if (totalIssues === 0) return;
@@ -915,8 +920,9 @@ function updateTopModelsChart(filter = 'ALL') {
   // Use top 10 models (reduced bar thickness allows more)
   const top8Models = filteredModels.slice(0, 10).reverse(); // Reverse for descending order (largest at top)
   const modelNames = top8Models.map(model => {
-    // Truncate for display but keep full name for tooltips
-    return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
+    // Truncate model numbers for display but keep full name for tooltips
+    const modelNumber = model.label;
+    return modelNumber.length > 12 ? modelNumber.substring(0, 12) + '...' : modelNumber;
   });
   const issueCounts = top8Models.map(model => model.value);
 
@@ -937,10 +943,10 @@ function updateTopModelsChart(filter = 'ALL') {
       trigger: 'axis',
       formatter: function(params) {
         const modelIndex = params[0].dataIndex;
-        const fullName = top8Models[modelIndex].label;
+        const modelNumber = top8Models[modelIndex].label;
         const count = params[0].value;
         const percentage = ((count / totalIssues) * 100).toFixed(1);
-        return `${fullName}<br/>Issues: ${count}<br/>${percentage}% of total`;
+        return `${modelNumber}<br/>Issues: ${count}<br/>${percentage}% of total`;
       }
     },
     grid: {

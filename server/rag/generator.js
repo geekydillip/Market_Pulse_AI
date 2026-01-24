@@ -249,6 +249,16 @@ class Generator {
   }
 
   /**
+   * Cleanup HTTP agent to prevent memory leaks
+   */
+  cleanup() {
+    if (this.keepAliveAgent) {
+      this.keepAliveAgent.destroy();
+      console.log('[Generator] HTTP agent destroyed');
+    }
+  }
+
+  /**
    * Generate embeddings using Ollama
    * @param {string} text - Text to embed
    * @param {string} model - Embedding model (default: nomic-embed-text)

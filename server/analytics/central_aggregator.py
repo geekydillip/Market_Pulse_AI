@@ -265,11 +265,128 @@ def compute_series_distribution(data: dict) -> list:
     sorted_series = sorted(series_counts.items(), key=lambda x: x[1], reverse=True)
     return [{"label": series, "value": int(cnt)} for series, cnt in sorted_series]
 
+def load_model_name_mapping():
+    """
+    Load model name mapping from modelName.json
+    """
+    try:
+        model_name_file = Path(__file__).parent.parent.parent / 'modelName.json'
+        if model_name_file.exists():
+            with open(model_name_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            print(f"Warning: modelName.json not found at {model_name_file}")
+            return {}
+    except Exception as e:
+        print(f"Error loading model name mapping: {e}")
+        return {}
+
+def get_friendly_model_name(model_str, model_name_map):
+    """
+    Get friendly model name with smart matching for extended variants.
+    Handles both exact matches and extended variants like SM-S911BE_SWA_15_DD
+    """
+    if not model_str or not isinstance(model_str, str):
+        return model_str
+    
+    model_str = model_str.strip()
+    
+    # Try exact match first
+    if model_str in model_name_map:
+        return model_name_map[model_str]
+    
+    # If no exact match, try to extract base model from extended variant
+    # Extended variants typically follow pattern: SM-XXXXX_XXX_XX_XX
+    # We want to extract the base model: SM-XXXXX
+    if model_str.startswith('SM-') and '_' in model_str:
+        # Extract base model by taking characters up to the first underscore
+        # Examples:
+        # SM-S911BE_SWA_15_DD -> SM-S911BE
+        # SM-S928BE_SWA_15_DD -> SM-S928BE
+        # SM-A356E_SWA_15_INS -> SM-A356E
+        base_model = model_str.split('_')[0]
+        
+        # Try to match the base model
+        if base_model in model_name_map:
+            return model_name_map[base_model]
+        
+        # If base model doesn't match, try to extract the core model number
+        # SM-S911BE -> SM-S911B (remove last character)
+        # SM-A356E -> SM-A356B (replace E with B)
+        if len(base_model) >= 8:
+            # Remove the last character to get the core model
+            core_model = base_model[:-1]
+            if core_model in model_name_map:
+                return model_name_map[core_model]
+            
+            # If still no match and the model ends with 'E', try replacing with 'B'
+            if base_model.endswith('E'):
+                model_with_b = base_model[:-1] + 'B'
+                if model_with_b in model_name_map:
+                    return model_name_map[model_with_b]
+    
+    # Enhanced Samsung model variant mapping logic
+    # Handle extended variants by mapping to friendly names directly
+    if model_str.startswith('SM-'):
+        # Extract the model series and number for pattern matching
+        # Examples: S928, S938, A356, M55, etc.
+        import re
+        
+        # Pattern to extract model series and number
+        # SM-S928BE_SWA_15_DD -> S928
+        # SM-A356E_SWA_15_INS -> A356
+        # SM-M556B -> M55
+        match = re.search(r'SM-([A-Z]*)(\d+)', model_str)
+        if match:
+            series = match.group(1)  # S, A, M, etc.
+            number = match.group(2)  # 928, 938, 356, 55, etc.
+            
+            # Create potential friendly name patterns based on series
+            if series == 'S':
+                # Galaxy S series
+                if len(number) >= 3:
+                    # S928 -> S24 Ultra, S938 -> S25 Ultra, etc.
+                    # Extract the last digit to determine generation
+                    generation = number[1]  # 928 -> 2, 938 -> 3
+                    if generation == '2':
+                        return "S24 Ultra" if number == '928' else f"S24+"
+                    elif generation == '3':
+                        return "S25 Ultra" if number == '938' else f"S25+"
+                    elif generation == '1':
+                        return "S23 Ultra" if number == '918' else f"S23+"
+                    elif generation == '0':
+                        return "S22 Ultra" if number == '908' else f"S22+"
+                    else:
+                        return f"S{generation} Series"
+            elif series == 'A':
+                # Galaxy A series
+                if len(number) >= 3:
+                    return f"A{number}"
+            elif series == 'M':
+                # Galaxy M series
+                if len(number) >= 3:
+                    return f"M{number}"
+            elif series == 'F':
+                # Galaxy Fold/Flip series
+                if len(number) >= 3:
+                    if number.startswith('9'):
+                        return f"Z Fold{number[1]}"
+                    elif number.startswith('7'):
+                        return f"Z Flip{number[1]}"
+    
+    # Return original if no mapping found
+    return model_str
+
 def compute_top_models(data: dict) -> list:
     """
     Top 10 models by issue count across all data.
     Filter out Critical severity issues as per requirements.
+    Apply model name mapping to display friendly names.
     """
+    # Load model name mapping
+    model_name_map = load_model_name_mapping()
+    print(f"Loaded {len(model_name_map)} model name mappings")
+    
     all_models = {}
     for folder, dfs in data.items():
         combined = combine_dataframes(dfs)
@@ -280,7 +397,9 @@ def compute_top_models(data: dict) -> list:
             for model, count in models.items():
                 if pd.notna(model) and str(model).strip():
                     model_str = str(model).strip()
-                    all_models[model_str] = all_models.get(model_str, 0) + count
+                    # Apply smart model name mapping
+                    friendly_name = get_friendly_model_name(model_str, model_name_map)
+                    all_models[friendly_name] = all_models.get(friendly_name, 0) + count
     sorted_models = sorted(all_models.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_models[:10]]
 
@@ -288,7 +407,12 @@ def compute_top_models_by_source(data: dict, source_folder: str) -> list:
     """
     Top 10 models by issue count for a specific data source.
     Filter out Critical severity issues as per requirements.
+    Apply model name mapping to display friendly names.
     """
+    # Load model name mapping
+    model_name_map = load_model_name_mapping()
+    print(f"Loaded {len(model_name_map)} model name mappings for compute_top_models_by_source")
+    
     all_models = {}
     if source_folder in data:
         combined = combine_dataframes(data[source_folder])
@@ -299,9 +423,37 @@ def compute_top_models_by_source(data: dict, source_folder: str) -> list:
             for model, count in models.items():
                 if pd.notna(model) and str(model).strip():
                     model_str = str(model).strip()
-                    all_models[model_str] = all_models.get(model_str, 0) + count
+                    # Apply smart model name mapping
+                    friendly_name = get_friendly_model_name(model_str, model_name_map)
+                    all_models[friendly_name] = all_models.get(friendly_name, 0) + count
     sorted_models = sorted(all_models.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_models[:10]]
+
+def compute_top_models_by_source_raw(data: dict, source_folder: str) -> list:
+    """
+    Top 10 models by issue count for a specific data source - RAW VERSION.
+    Filter out Critical severity issues as per requirements.
+    Returns friendly model names with mapping applied for central cache consistency.
+    """
+    # Load model name mapping for reference
+    model_name_map = load_model_name_mapping()
+    print(f"Loaded {len(model_name_map)} model name mappings for compute_top_models_by_source_raw")
+    
+    all_models = {}
+    if source_folder in data:
+        combined = combine_dataframes(data[source_folder])
+        # Apply severity filter to exclude Critical
+        combined = filter_allowed_severity(combined)
+        if 'Model No.' in combined.columns:
+            models = combined['Model No.'].value_counts()
+            for model, count in models.items():
+                if pd.notna(model) and str(model).strip():
+                    model_str = str(model).strip()
+                    # Apply smart model name mapping for central cache consistency
+                    friendly_name = get_friendly_model_name(model_str, model_name_map)
+                    all_models[friendly_name] = all_models.get(friendly_name, 0) + count
+    sorted_models = sorted(all_models.items(), key=lambda x: x[1], reverse=True)
+    return [{"label": mod, "count": int(cnt)} for mod, cnt in sorted_models[:10]]
 
 def compute_high_issues(data: dict) -> list:
     """
@@ -424,7 +576,12 @@ def compute_source_model_summary(data: dict) -> list:
     """
     Create a summary table with Source, Model, Top 5 Modules, Issue Count, Top 5 Issue Titles.
     Filter out Critical severity issues as per requirements.
+    Apply model name mapping to display friendly names.
     """
+    # Load model name mapping
+    model_name_map = load_model_name_mapping()
+    print(f"Loaded {len(model_name_map)} model name mappings for source model summary")
+    
     source_map = {
         'beta_user_issues': 'Beta',
         'samsung_members_plm': 'PLM',
@@ -451,6 +608,8 @@ def compute_source_model_summary(data: dict) -> list:
         for model, total_count in models_in_source.items():
             if pd.notna(model) and str(model).strip():
                 model_str = str(model).strip()
+                # Apply smart model name mapping
+                friendly_name = get_friendly_model_name(model_str, model_name_map)
 
                 # Filter data for this specific model
                 model_data = combined[combined['Model No.'].astype(str).str.strip() == model_str]
@@ -510,14 +669,14 @@ def compute_source_model_summary(data: dict) -> list:
                 if source_name == 'VOC':
                     summary.append({
                         'source': source_name,
-                        'model': model_str,
+                        'model': friendly_name,
                         'issue_count': int(total_count),
                         'top_titles': top_titles
                     })
                 else:
                     summary.append({
                         'source': source_name,
-                        'model': model_str,
+                        'model': friendly_name,
                         'top_modules': top_modules,
                         'issue_count': int(total_count),
                         'top_titles': top_titles
@@ -575,6 +734,12 @@ if __name__ == "__main__":
         filtered_top_models = {}
         for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
             filtered_top_models[folder_name] = compute_top_models_by_source(data, folder_name)
+        
+        # Get raw model counts for legacy compatibility (for samsung_members_plm_top_models section)
+        raw_top_models = {}
+        for folder_name in ['beta_user_issues', 'plm_issues', 'samsung_members_plm', 'samsung_members_voc']:
+            if folder_name in data:
+                raw_top_models[folder_name] = compute_top_models_by_source_raw(data, folder_name)
 
         # Compute total issues and high issues counts
         total_issues = sum(kpis[source]['total'] for source in kpis)
@@ -595,7 +760,8 @@ if __name__ == "__main__":
             "high_issues": high_issues,
             "model_module_matrix": model_module_matrix,
             "source_model_summary": source_model_summary,
-            "filtered_top_models": filtered_top_models
+            "filtered_top_models": filtered_top_models,
+            "raw_top_models": raw_top_models
         }
 
         # Sanitize NaN values

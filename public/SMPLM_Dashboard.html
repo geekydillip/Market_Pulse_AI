@@ -128,22 +128,22 @@
 <!-- CHARTS ROW -->
 <section class="grid grid-cols-12 gap-4">
 
-<!-- SERIES DISTRIBUTION - 100% Stacked Horizontal Bar -->
+<!-- SEVERITY WISE ISSUE COUNT - Professional Design -->
 <div class="col-span-4">
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[260px]">
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Series Distribution</h3>
-        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-chart-simple text-blue-600 dark:text-blue-400"></i>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Wise Issue Count</h3>
+        <div class="w-8 h-8 bg-red-50 dark:bg-red-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-pie text-red-600 dark:text-red-400"></i>
         </div>
       </div>
     </div>
 
     <!-- Chart Container -->
-    <div class="p-4">
-      <div id="series-distribution-chart" class="h-[180px] w-full"></div>
+    <div class="p-4 flex items-center justify-bottom">
+      <div id="severity-chart" class="h-[180px] w-full"></div>
     </div>
   </div>
 </div>
@@ -281,15 +281,36 @@
 <script>
 // Global state
 let dashboardData = {};
+let modelNameMap = {};
 
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', function() {
   loadDashboardData();
 });
 
+// Load model names from modelName.json
+async function loadModelNames() {
+  try {
+    const response = await fetch('/modelName.json');
+    modelNameMap = await response.json();
+    console.log('Model names loaded:', modelNameMap);
+  } catch (error) {
+    console.error('Error loading model names:', error);
+    modelNameMap = {};
+  }
+}
+
+// Helper function to get model name from model number
+function getModelName(modelNumber) {
+  return modelNameMap[modelNumber] || modelNumber;
+}
+
 // Load all dashboard data from central_dashboard.json and analytics.json
 async function loadDashboardData() {
   try {
+    // Load model names first
+    await loadModelNames();
+
     // Fetch data from central_dashboard.json
     const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
     const jsonData = await response.json();
@@ -300,19 +321,13 @@ async function loadDashboardData() {
 
     // Extract Samsung Members PLM specific data
     dashboardData.kpis = jsonData.kpis['Samsung Members PLM'];
-    dashboardData.seriesDistribution = jsonData.series_distribution;
     dashboardData.topModels = jsonData.samsung_members_plm_top_models;
     dashboardData.topModules = jsonData.samsung_members_plm_top_modules;
     dashboardData.analytics = analyticsData;
 
-    // Use corrected counts from central dashboard (fixed aggregation) instead of local analytics.json
-    dashboardData.kpis.resolved_issues = dashboardData.kpis.resolved || 0;
-    dashboardData.kpis.open_issues = dashboardData.kpis.open || 0;
-    dashboardData.kpis.close_issues = dashboardData.kpis.close || 0;
-
     // Update all UI elements
     updateKPIs();
-    updateSeriesDistribution();
+    updateSeverityChart();
     updateTopModelsChart();
     updateTopModulesChart();
     updateModelSummaryTable();
@@ -332,95 +347,220 @@ function updateKPIs() {
   const resolvedEl = document.getElementById('resolved-issues');
   const closeEl = document.getElementById('close-issues');
 
-  // Total comes from analytics (row count), status counts come from corrected central dashboard data
+  // Total comes from analytics (row count)
   if (totalEl) totalEl.textContent = (dashboardData.analytics.kpis.total_rows || 0).toLocaleString();
+
+  // Use corrected counts from central dashboard (fixed aggregation) instead of local analytics.json
+  dashboardData.kpis.resolved_issues = dashboardData.kpis.resolved || 0;
+  dashboardData.kpis.open_issues = dashboardData.kpis.open || 0;
+  dashboardData.kpis.close_issues = dashboardData.kpis.close || 0;
+
+  // Update status counts
   if (openEl) openEl.textContent = (dashboardData.kpis.open_issues || 0).toLocaleString();
   if (resolvedEl) resolvedEl.textContent = (dashboardData.kpis.resolved_issues || 0).toLocaleString();
   if (closeEl) closeEl.textContent = (dashboardData.kpis.close_issues || 0).toLocaleString();
 }
 
-// Update series distribution chart - Horizontal Stacked Bar
-function updateSeriesDistribution() {
-  const chartDom = document.getElementById('series-distribution-chart');
-  if (!chartDom || !dashboardData.seriesDistribution) return;
+// Update severity chart - Donut Chart
+function updateSeverityChart() {
+  const chartDom = document.getElementById('severity-chart');
+  if (!chartDom) {
+    console.error('Severity chart container not found');
+    return;
+  }
+
+  console.log('=== Severity Chart Debug ===');
+  console.log('dashboardData:', dashboardData);
+  console.log('dashboardData.kpis:', dashboardData.kpis);
+
+  if (!dashboardData.kpis) {
+    console.error('No KPIs data available');
+    return;
+  }
 
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Take top series for display and sort by value descending (max to min), then reverse for chart display
-  const topSeries = dashboardData.seriesDistribution
-    .slice(0, 8)
-    .sort((a, b) => b.value - a.value)
-    .reverse(); // Reverse to show highest at top, lowest at bottom
+  // Get Open severity data - High, Medium, Low issues with Prog.Stat. = Open only
+  const openSeverityData = dashboardData.analytics.kpis.open_severity_distribution || {};
+  const totalIssues = dashboardData.analytics.kpis.total_rows || 0;
+
+  // Calculate totals for Open issues only
+  const totalHigh = openSeverityData.High || 0;
+  const totalMedium = openSeverityData.Medium || 0;
+  const totalLow = openSeverityData.Low || 0;
+
+  const totalSeverityIssues = totalHigh + totalMedium + totalLow;
+  if (totalSeverityIssues === 0) {
+    console.log('No Open severity issues to display');
+    return;
+  }
+
+  console.log(`Open severity issues: ${totalSeverityIssues} (High: ${totalHigh}, Medium: ${totalMedium}, Low: ${totalLow})`);
+
+  // Calculate arrow positions for each pie slice
+  const centerX = 0.5; // center x (50%)
+  const centerY = 0.45; // center y (45%)
+  const outerRadius = 0.8; // outer radius (70%)
+  const innerRadius = 0.55; // inner radius (55%)
+  const arrowLength = 0.5; // length of arrow extension
+
+  const graphicElements = [];
+  const data = [
+    { value: totalHigh, name: 'High' },
+    { value: totalMedium, name: 'Medium' },
+    { value: totalLow, name: 'Low' }
+  ].filter(item => item.value > 0); // Only show arrows for slices with values
+
+  console.log('Chart data:', data);
+
+  // Calculate cumulative angles
+  let totalValue = data.reduce((sum, item) => sum + item.value, 0);
+  let currentAngle = -Math.PI / 2; // Start from top
+
+  data.forEach((item, index) => {
+    const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
+    const midAngle = currentAngle + sliceAngle / 2;
+
+    // Calculate arrow start position (outer edge of slice)
+    const startX = centerX + Math.cos(midAngle) * outerRadius;
+    const startY = centerY + Math.sin(midAngle) * outerRadius;
+
+    // Calculate arrow end position (extended outward)
+    const endX = centerX + Math.cos(midAngle) * (outerRadius + arrowLength);
+    const endY = centerY + Math.sin(midAngle) * (outerRadius + arrowLength);
+
+    // Add arrow line
+    graphicElements.push({
+      type: 'line',
+      shape: {
+        x1: startX * chartDom.clientWidth,
+        y1: startY * chartDom.clientHeight,
+        x2: endX * chartDom.clientWidth,
+        y2: endY * chartDom.clientHeight
+      },
+      style: {
+        stroke: colors.textPrimary,
+        lineWidth: 2
+      }
+    });
+
+    // Add arrowhead (triangle)
+    const arrowSize = 8;
+    const angle = Math.atan2(endY - startY, endX - startX);
+    graphicElements.push({
+      type: 'polygon',
+      shape: {
+        points: [
+          [endX * chartDom.clientWidth, endY * chartDom.clientHeight],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle - Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle - Math.PI/6)],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle + Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle + Math.PI/6)]
+        ]
+      },
+      style: {
+        fill: colors.textPrimary
+      }
+    });
+
+    currentAngle += sliceAngle;
+  });
 
   const option = {
     textStyle: {
       color: colors.textPrimary
     },
     tooltip: {
-      trigger: 'axis',
-      formatter: function(params) {
-        let result = '';
-        params.forEach(param => {
-          result += `${param.name}: ${param.value}<br/>`;
-        });
-        return result;
-      }
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
     },
-    grid: {
-      left: '30%',
-      right: '5%',
-      top: '10%',
-      bottom: '10%',
-      borderColor: colors.gridLines
-    },
-    xAxis: {
-      type: 'value',
-      axisLabel: {
-        show: false, // Hide X-axis labels
+    legend: {
+      data: ['High', 'Medium', 'Low'],
+      bottom: '5%',
+      orient: 'horizontal',
+      textStyle: {
         color: colors.textPrimary
-      },
-      splitLine: {
-        show: false
-      }
-    },
-    yAxis: {
-      type: 'category',
-      data: topSeries.map(s => s.label),
-      axisLabel: {
-        show: true, // Show Y-axis labels
-        color: colors.textPrimary,
-        interval: 0,
-        rotate: 0
       }
     },
     series: [
       {
-        name: 'Issues',
-        type: 'bar',
-        barWidth: '60%',
-        data: topSeries.map(s => s.value),
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#8b5cf6' },
-            { offset: 0.5, color: '#7c3aed' },
-            { offset: 1, color: '#6d28d9' }
-          ]),
-          borderRadius: [4, 4, 4, 4]
-        },
+        name: 'Severity',
+        type: 'pie',
+        radius: ['55%', '70%'], // Smaller inner radius, larger outer
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
         label: {
           show: true,
-          position: 'right',
+          position: 'outside',
           formatter: '{c}',
-          fontSize: 11,
-          color: colors.textPrimary
-        }
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: colors.textPrimary,
+          align: 'center',
+          verticalAlign: 'middle'
+        },
+        labelLine: {
+          show: true,
+          length: 12,
+          length2: 5,
+          smooth: true,
+          lineStyle: {
+            color: colors.textPrimary,
+            width: 1,
+            opacity: 0.7
+          }
+        },
+        data: [
+          {
+            value: totalHigh,
+            name: 'High',
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#ef4444' },
+                { offset: 0.5, color: '#dc2626' },
+                { offset: 1, color: '#b91c1c' }
+              ])
+            }
+          },
+          {
+            value: totalMedium,
+            name: 'Medium',
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#fbbf24' },
+                { offset: 0.5, color: '#f59e0b' },
+                { offset: 1, color: '#d97706' }
+              ])
+            }
+          },
+          {
+            value: totalLow,
+            name: 'Low',
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#9ca3af' },
+                { offset: 0.5, color: '#6b7280' },
+                { offset: 1, color: '#4b5563' }
+              ])
+            }
+          }
+        ],
+        minAngle: 5 // Ensure Low slice is visible
       }
-    ]
+    ],
+    graphic: graphicElements.length > 0 ? graphicElements : null
   };
 
-  chart.setOption(option);
-  window.addEventListener('resize', () => chart.resize());
+  console.log('Setting chart option:', option);
+  
+  try {
+    chart.setOption(option);
+    window.addEventListener('resize', () => chart.resize());
+    console.log('Chart initialized successfully');
+  } catch (error) {
+    console.error('Error setting chart option:', error);
+  }
 }
 
 // Update top models chart - Bar Chart
@@ -433,9 +573,13 @@ function updateTopModelsChart() {
 
   // Take top 10 models
   const topModels = dashboardData.topModels.slice(0, 10).reverse();
+  
+  // Convert model numbers to model names for display
   const modelNames = topModels.map(model => {
-    return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
+    const fullName = getModelName(model.label);
+    return fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName;
   });
+  
   const issueCounts = topModels.map(model => model.count);
 
   const option = {
@@ -446,9 +590,10 @@ function updateTopModelsChart() {
       trigger: 'axis',
       formatter: function(params) {
         const modelIndex = params[0].dataIndex;
-        const fullName = topModels[modelIndex].label;
+        const modelNumber = topModels[modelIndex].label;
+        const modelName = getModelName(modelNumber);
         const count = params[0].value;
-        return `${fullName}<br/>Issues: ${count}`;
+        return `${modelName}<br/>(${modelNumber})<br/>Issues: ${count}`;
       }
     },
     grid: {
@@ -664,8 +809,11 @@ function updateModelSummaryTable() {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
 
+    // Get model name from model number
+    const modelName = getModelName(model);
+
     tr.innerHTML = `
-      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${model}</td>
+      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${modelName}<br/><span class="text-xs text-slate-500 dark:text-slate-400">(${model})</span></td>
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Open'] || 0}</td>
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Duplicated'] || 0}</td>

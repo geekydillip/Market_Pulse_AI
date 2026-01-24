@@ -129,7 +129,7 @@ class EmbeddingService {
       if (vectorStore) {
         try {
           const cached = await vectorStore.getEmbedding(hash);
-          if (cached) {
+          if (cached && cached.embedding) {
             this.sessionCache.set(hash, cached.embedding); // Update session cache
             results.set(text, cached.embedding);
             if (returnIds) ids.set(text, cached.id);

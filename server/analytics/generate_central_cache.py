@@ -21,11 +21,32 @@ from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
 
+def load_model_name_mapping():
+    """
+    Load model name mapping from modelName.json
+    """
+    try:
+        model_name_file = Path(__file__).parent.parent.parent / 'modelName.json'
+        if model_name_file.exists():
+            with open(model_name_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            print(f"Warning: modelName.json not found at {model_name_file}", file=sys.stderr)
+            return {}
+    except Exception as e:
+        print(f"Error loading model name mapping: {e}", file=sys.stderr)
+        return {}
+
 def aggregate_analytics_data():
     """
     Read all analytics.json files and aggregate unique models and modules.
     Returns tuple: (total_unique_models, total_unique_modules)
+    Apply model name mapping to display friendly names.
     """
+    # Load model name mapping
+    model_name_map = load_model_name_mapping()
+    print(f"Loaded {len(model_name_map)} model name mappings for analytics aggregation", file=sys.stderr)
+    
     # Get project root directory (works regardless of execution context)
     script_dir = Path(__file__).parent.parent.parent  # server/analytics -> server -> project_root
     downloads_dir = script_dir / 'downloads'
@@ -50,7 +71,10 @@ def aggregate_analytics_data():
                 if 'top_models' in data and data['top_models']:
                     for model in data['top_models']:
                         if 'label' in model:
-                            unique_models.add(model['label'])
+                            model_label = model['label']
+                            # Apply model name mapping
+                            friendly_name = model_name_map.get(model_label, model_label)
+                            unique_models.add(friendly_name)
 
                 # Aggregate modules from categories
                 if 'categories' in data and data['categories']:
@@ -159,6 +183,12 @@ def run_aggregator_directly():
         filtered_top_models = {}
         for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
             filtered_top_models[folder_name] = ca.compute_top_models_by_source(data, folder_name)
+        
+        # Get raw model counts for legacy compatibility (for samsung_members_plm_top_models section)
+        raw_top_models = {}
+        for folder_name in ['beta_user_issues', 'plm_issues', 'samsung_members_plm', 'samsung_members_voc']:
+            if folder_name in data:
+                raw_top_models[folder_name] = ca.compute_top_models_by_source_raw(data, folder_name)
 
         # Compute total issues and high issues counts
         total_issues = sum(kpis[source]['total'] for source in kpis)
@@ -179,7 +209,8 @@ def run_aggregator_directly():
             "high_issues": high_issues,
             "model_module_matrix": model_module_matrix,
             "source_model_summary": source_model_summary,
-            "filtered_top_models": filtered_top_models
+            "filtered_top_models": filtered_top_models,
+            "raw_top_models": raw_top_models
         }
 
         # Sanitize NaN values
