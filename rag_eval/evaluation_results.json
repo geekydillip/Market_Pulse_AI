@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-01-24T20:06:01.492Z",
+  "timestamp": "2026-01-24T21:48:28.467Z",
   "total_queries": 12,
   "successful_queries": 12,
   "failed_queries": 0,
@@ -24,7 +24,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -59,7 +63,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -93,7 +101,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -127,7 +139,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -162,7 +178,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -197,7 +217,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -232,7 +256,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -268,7 +296,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -304,7 +336,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -340,7 +376,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -376,7 +416,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,
@@ -412,7 +456,11 @@
       "evaluation": {
         "retrieval_relevance": {
           "score": 0,
-          "reason": "No sources retrieved"
+          "reason": "No sources retrieved",
+          "recall_at_5": 0,
+          "recall_at_10": 0,
+          "precision_at_5": 0,
+          "precision_at_10": 0
         },
         "module_prediction": {
           "score": 0,

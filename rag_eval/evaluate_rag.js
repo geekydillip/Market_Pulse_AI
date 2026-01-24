@@ -10,6 +10,7 @@ const http = require('http');
 // Configuration
 const RAG_ENDPOINT = 'http://localhost:3001/api/rag/query';
 const GOLD_QUERIES_FILE = path.join(__dirname, 'gold_queries.json');
+const GOLDEN_QUERIES_FILE = path.join(__dirname, 'golden_queries.json');
 const RESULTS_FILE = path.join(__dirname, 'evaluation_results.json');
 
 // Keywords that indicate module mentions in responses
@@ -119,11 +120,18 @@ class RAGEvaluator {
   }
 
   /**
-   * Evaluate retrieval relevance based on source similarity scores
+   * Evaluate retrieval relevance based on source similarity scores with rank awareness
    */
   evaluateRetrievalRelevance(sources, expectedModules) {
     if (!sources || sources.length === 0) {
-      return { score: 0, reason: 'No sources retrieved' };
+      return { 
+        score: 0, 
+        reason: 'No sources retrieved',
+        recall_at_5: 0,
+        recall_at_10: 0,
+        precision_at_5: 0,
+        precision_at_10: 0
+      };
     }
 
     // Calculate average similarity score
@@ -133,13 +141,31 @@ class RAGEvaluator {
     const relevantSources = sources.filter(source => parseFloat(source.similarity) > 0.7).length;
     const relevanceRatio = relevantSources / sources.length;
 
-    let score = (avgSimilarity * 0.6) + (relevanceRatio * 0.4); // Weighted score
+    // Rank-aware scoring: reward earlier retrieval
+    let rankScore = 0;
+    const K = Math.min(sources.length, 10);
+    for (let i = 0; i < K; i++) {
+      rankScore += (K - i) / K; // Higher score for earlier ranks
+    }
+    rankScore = rankScore / K; // Normalize
+
+    // Calculate precision and recall metrics
+    const recall_at_5 = Math.min(sources.length, 5) / 5;
+    const recall_at_10 = Math.min(sources.length, 10) / 10;
+    const precision_at_5 = relevantSources / Math.min(sources.length, 5);
+    const precision_at_10 = relevantSources / Math.min(sources.length, 10);
+
+    let score = (avgSimilarity * 0.4) + (relevanceRatio * 0.3) + (rankScore * 0.3); // Weighted score
 
     return {
       score: Math.min(score, 1.0), // Cap at 1.0
       avg_similarity: avgSimilarity,
       relevant_sources: relevantSources,
-      total_sources: sources.length
+      total_sources: sources.length,
+      recall_at_5: recall_at_5,
+      recall_at_10: recall_at_10,
+      precision_at_5: precision_at_5,
+      precision_at_10: precision_at_10
     };
   }
 
@@ -240,6 +266,9 @@ class RAGEvaluator {
     }
 
     this.results.total_queries = goldQueries.length;
+    
+    // Test Phase 2A features
+    console.log('🧪 Testing Phase 2A features...\n');
 
     for (let i = 0; i < goldQueries.length; i++) {
       const goldQuery = goldQueries[i];

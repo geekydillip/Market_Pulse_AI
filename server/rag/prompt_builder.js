@@ -97,7 +97,7 @@ RULES:
   }
 
   /**
-   * Format retrieved documents into context text
+   * Format retrieved documents into context text with source grouping
    * @param {Array} docs - Array of retrieved documents
    * @returns {string} Formatted context
    */
@@ -106,13 +106,48 @@ RULES:
       return 'No context available.';
     }
 
-    const contextParts = docs.map((doc, index) => {
-      const header = this.formatDocumentHeader(doc, index + 1);
-      const content = this.formatDocumentContent(doc);
-      return `${header}\n${content}`;
+    // Group documents by source for better LLM comprehension
+    const groupedDocs = this.groupDocsBySource(docs);
+
+    const contextParts = [];
+
+    // Format each source group
+    Object.entries(groupedDocs).forEach(([source, sourceDocs], groupIndex) => {
+      const sourceHeader = `📁 Source: ${source} (${sourceDocs.length} chunks)`;
+      contextParts.push(sourceHeader);
+
+      sourceDocs.forEach((doc, docIndex) => {
+        const header = this.formatDocumentHeader(doc, docIndex + 1);
+        const content = this.formatDocumentContent(doc);
+        contextParts.push(`${header}\n${content}`);
+      });
+
+      // Add separator between source groups
+      if (groupIndex < Object.keys(groupedDocs).length - 1) {
+        contextParts.push('---');
+      }
     });
 
-    return contextParts.join('\n\n---\n\n');
+    return contextParts.join('\n\n');
+  }
+
+  /**
+   * Group documents by source for better context organization
+   * @param {Array} docs - Array of retrieved documents
+   * @returns {Object} Documents grouped by source
+   */
+  groupDocsBySource(docs) {
+    const grouped = {};
+
+    docs.forEach(doc => {
+      const source = doc.source || 'unknown';
+      if (!grouped[source]) {
+        grouped[source] = [];
+      }
+      grouped[source].push(doc);
+    });
+
+    return grouped;
   }
 
   /**
