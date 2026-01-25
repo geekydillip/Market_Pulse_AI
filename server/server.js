@@ -56,12 +56,13 @@ const {
 const cacheManager = require('../cache_manager');
 
 // Import batching utilities
-const { createOptimalBatches } = require('../processors/_helpers');
+const { createOptimalBatches } = require('./processors/_helpers');
 
 // Import route modules
-const { initProcessingServices, setOllamaFunctions, setupProgressRoute, setupSessionRoutes, setupProcessRoute } = require('./routes/processExcel');
+const { initProcessingServices, setupProgressRoute, setupSessionRoutes, setupProcessRoute } = require('./routes/processExcel');
 const ragRouter = require('./routes/rag');
 const { initRAG } = require('./rag/init');
+const ollamaClient = require('./ollamaClient');
 
 // Step 1: Define Global / Server-Level Mode
 const SERVER_PROCESSING_MODE = process.env.PROCESSING_MODE || 'discovery';
@@ -200,10 +201,16 @@ async function initializeServices() {
 
 // Set up route modules
 initProcessingServices(embeddingService, vectorStore, keepAliveAgent);
-setOllamaFunctions(callOllama, callOllamaCached, callOllamaEmbeddings);
 setupProgressRoute(app);
 setupSessionRoutes(app);
 setupProcessRoute(app, upload);
+
+// Set the processing mode in the routes module
+const processExcelRoutes = require('./routes/processExcel');
+processExcelRoutes.PROCESSING_MODE_CANONICAL = SERVER_PROCESSING_MODE;
+
+// Also update the module's internal variable
+processExcelRoutes.PROCESSING_MODE_CANONICAL = SERVER_PROCESSING_MODE;
 
 // Mount RAG router (will check for initialization internally)
 app.use('/api/rag', ragRouter);
@@ -255,255 +262,6 @@ async function runTasksWithLimit(tasks, limit = 4) {
   return Promise.all(results);
 }
 
-/**
- * Cached version of callOllama
- */
-async function callOllamaCached(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
-  const key = `${model}|${typeof prompt === 'string' ? prompt : JSON.stringify(prompt)}`;
-  if (aiCache.has(key)) {
-    console.log('[callOllamaCached] cache hit for key length=%d', key.length);
-    return aiCache.get(key);
-  }
-  const res = await callOllama(prompt, model, opts);
-  aiCache.set(key, res);
-  return res;
-}
-
-/**
- * callOllamaEmbeddings - generate embeddings using Ollama
- * text: string to embed
- * model: embedding model (default: nomic-embed-text)
- * opts: { port:number, timeoutMs:number }
- */
-async function callOllamaEmbeddings(text, model = 'nomic-embed-text', opts = {}) {
-  const port = opts.port || DEFAULT_OLLAMA_PORT;
-  const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 30 * 1000; // 30s for embeddings
-
-  return new Promise((resolve, reject) => {
-    try {
-      const payload = { model, prompt: text };
-      const data = JSON.stringify(payload);
-
-      console.log('[callOllamaEmbeddings] port=%d model=%s textLen=%d', port, model, text.length);
-
-      const options = {
-        hostname: '127.0.0.1',
-        port,
-        path: '/api/embeddings',
-        method: 'POST',
-        agent: keepAliveAgent,
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(data),
-          'Connection': 'keep-alive'
-        }
-      };
-
-      const req = http.request(options, (res) => {
-        res.setEncoding('utf8');
-
-        let raw = '';
-        res.on('data', (chunk) => raw += chunk);
-        res.on('end', () => {
-          if (!raw) return reject(new Error(`Empty response from Ollama embeddings (status ${res.statusCode})`));
-          try {
-            const json = JSON.parse(raw);
-            if (res.statusCode >= 200 && res.statusCode < 300 && json.embedding) {
-              resolve(json.embedding);
-            } else {
-              reject(new Error(`Ollama embeddings failed: ${JSON.stringify(json)}`));
-            }
-          } catch (err) {
-            reject(new Error('Failed to parse Ollama embeddings response: ' + err.message));
-          }
-        });
-      });
-
-      if (timeoutMs !== false && timeoutMs !== 0) {
-        req.setTimeout(timeoutMs, () => {
-          req.destroy(new Error(`Embedding timeout after ${timeoutMs} ms`));
-        });
-      }
-
-      req.on('error', (err) => {
-        reject(new Error('Failed to connect to Ollama for embeddings: ' + err.message));
-      });
-
-      req.write(data);
-      req.end();
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
-/**
- * callOllama - robust HTTP call to local Ollama server with cancellation support
- * prompt: string or object
- * model: string (e.g. "qwen3:4b-instruct")
- * opts: { port:number, timeoutMs:number, stream:boolean, sessionId:string }
- */
-async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
-  const port = opts.port || DEFAULT_OLLAMA_PORT;
-  const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
-  const useStream = opts.stream === true;
-  const sessionId = opts.sessionId;
-
-  const callStart = Date.now();
-
-  return new Promise((resolve, reject) => {
-    try {
-      // Check if session is already cancelled
-      const session = activeSessions.get(sessionId);
-      if (session && session.cancelled) {
-        return reject(new Error('Request cancelled'));
-      }
-
-      // Create AbortController for this request
-      const controller = new AbortController();
-
-      // Add to session's active requests if session exists
-      if (session) {
-        session.activeRequests.add(controller);
-      }
-
-      const payload = typeof prompt === 'string'
-        ? { model, prompt, stream: useStream }
-        : { model, prompt, stream: useStream };
-      const data = JSON.stringify(payload);
-
-      console.log('[callOllama] port=%d model=%s byteLen=%d stream=%s session=%s',
-        port, model, Buffer.byteLength(data), useStream, sessionId);
-
-      const options = {
-        hostname: '127.0.0.1',
-        port,
-        path: '/api/generate',
-        method: 'POST',
-        agent: keepAliveAgent,
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(data),
-          'Connection': 'keep-alive'
-        },
-        signal: controller.signal  // Attach abort signal
-      };
-
-      const req = http.request(options, (res) => {
-        res.setEncoding('utf8');
-
-        // If not streaming, accumulate as before and parse once
-        if (!useStream) {
-          let raw = '';
-          res.on('data', (chunk) => raw += chunk);
-          res.on('end', () => {
-            if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
-            try {
-              const json = JSON.parse(raw);
-              const out = json.response ?? json; // prefer response field if present
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(out);
-            } catch (err) {
-              return reject(new Error('Failed to parse Ollama response: ' + err.message + ' raw:' + raw.slice(0,2000)));
-            }
-          });
-          return;
-        }
-
-        // STREAMING: attempt to parse line-delimited JSON or accumulate response fields
-        let buffer = '';
-        let lastResponsePart = '';
-        res.on('data', (chunk) => {
-          buffer += chunk;
-
-          // Try to split by newline and parse per-line JSON when possible
-          const lines = buffer.split(/\r?\n/);
-          // keep incomplete last line in buffer
-          buffer = lines.pop();
-
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              // some stream endpoints emit raw JSON objects per line
-              const obj = JSON.parse(line);
-              // If model sends a "response" field per event, prefer the last one
-              if (obj && (obj.response || obj.text || obj.output)) {
-                lastResponsePart = (obj.response ?? obj.text ?? obj.output);
-              } else if (typeof obj === 'string') {
-                lastResponsePart = obj;
-              } else {
-                // fallback: stringify object
-                lastResponsePart = JSON.stringify(obj);
-              }
-            } catch (e) {
-              // not JSON — append as raw text
-              lastResponsePart += line;
-            }
-          }
-        });
-
-        res.on('end', () => {
-          // Use lastResponsePart if found, otherwise try to parse remaining buffer
-          if (lastResponsePart) {
-            aiRequestTimes.push(Date.now() - callStart);
-            aiRequestCount++;
-            return resolve(lastResponsePart);
-          }
-
-          // try parse buffer as JSON
-          if (buffer && buffer.trim()) {
-            try {
-              const json = JSON.parse(buffer);
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(json.response ?? json);
-            } catch (err) {
-              // last-resort: return buffer as text
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(buffer);
-            }
-          }
-
-          reject(new Error(`Empty stream end from Ollama (status ${res.statusCode})`));
-        });
-      });
-
-      // Handle abortion
-      controller.signal.addEventListener('abort', () => {
-        console.log('[callOllama] Request aborted for session', sessionId);
-        req.destroy(new Error('Request aborted'));
-      });
-
-      if (timeoutMs !== false && timeoutMs !== 0) {
-        req.setTimeout(timeoutMs, () => {
-          req.destroy(new Error(`Client timeout after ${timeoutMs} ms`));
-        });
-      }
-
-      req.on('error', (err) => {
-        // Remove from active requests on error
-        if (session) {
-          session.activeRequests.delete(controller);
-        }
-        reject(new Error('Failed to connect to Ollama: ' + (err && err.message)));
-      });
-
-      req.on('close', () => {
-        // Clean up when request completes
-        if (session) {
-          session.activeRequests.delete(controller);
-        }
-      });
-
-      req.write(data);
-      req.end();
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
 
     // Route: Upload and process file (Excel or JSON only)
     app.post('/api/process', upload.single('file'), validateFileUpload, async (req, res) => {
@@ -3424,7 +3182,6 @@ app.get('/api/module-details', async (req, res) => {
 });
 
 // Export functions for testing
-module.exports.callOllamaEmbeddings = callOllamaEmbeddings;
 
 // Start server only if this file is run directly (not imported)
 if (require.main === module) {
