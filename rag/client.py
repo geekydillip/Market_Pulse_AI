@@ -72,13 +72,13 @@ class RAGClient:
     
     def format_context_for_prompt(self, context_results: List[Dict[str, Any]]) -> str:
         """
-        Format retrieved context for inclusion in prompts.
+        Format retrieved context for inclusion in prompts with structured classification.
         
         Args:
             context_results: List of context passages from retrieval
             
         Returns:
-            Formatted context string
+            Formatted context string with structured classification metadata
         """
         if not context_results:
             return ""
@@ -86,8 +86,20 @@ class RAGClient:
         context_parts = []
         for i, result in enumerate(context_results, 1):
             content = result.get("content", "").strip()
-            if content:
-                context_parts.append(f"[Context {i}]: {content}")
+            module = result.get("module", "N/A")
+            sub_module = result.get("sub_module", "N/A")
+            issue_type = result.get("issue_type", "N/A")
+            sub_issue_type = result.get("sub_issue_type", "N/A")
+            
+            # Format with structured classification metadata
+            formatted_context = (
+                f"[Context {i}]: {content} | "
+                f"Module: {module} | "
+                f"Sub-Module: {sub_module} | "
+                f"Issue Type: {issue_type} | "
+                f"Sub-Issue Type: {sub_issue_type}"
+            )
+            context_parts.append(formatted_context)
                 
         return "\n".join(context_parts)
     

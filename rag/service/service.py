@@ -178,12 +178,13 @@ class RAGService:
     
     def add_documents(self, documents: List[Dict[str, Any]]):
         """
-        Add documents to the RAG service.
+        Add documents with structured classification metadata to the RAG service.
+        Expected keys: content, module, sub_module, issue_type, sub_issue_type
         
         Args:
-            documents: List of document dictionaries with 'content' field
+            documents: List of document dictionaries with structured classification fields
         """
-        logger.info(f"Adding {len(documents)} documents to RAG service")
+        logger.info(f"Adding {len(documents)} structured documents to RAG service")
         
         # Prepare embeddings
         embeddings = []
@@ -192,9 +193,19 @@ class RAGService:
         for doc in documents:
             content = doc.get('content', '')
             if content.strip():  # Skip empty documents
+                # Ensure all structured classification fields exist, defaulting to empty strings if missing
+                structured_doc = {
+                    "content": content,
+                    "module": doc.get("module", "Other"),
+                    "sub_module": doc.get("sub_module", ""),
+                    "issue_type": doc.get("issue_type", ""),
+                    "sub_issue_type": doc.get("sub_issue_type", ""),
+                    "source": doc.get("source", "Unknown")
+                }
+                
                 embedding = self.encode_text(content)
                 embeddings.append(embedding)
-                valid_documents.append(doc)
+                valid_documents.append(structured_doc)
         
         if embeddings:
             # Convert to numpy array
@@ -209,7 +220,7 @@ class RAGService:
             # Save updated index
             self.save_index()
             
-            logger.info(f"Successfully added {len(valid_documents)} documents")
+            logger.info(f"Successfully added {len(valid_documents)} structured documents")
         else:
             logger.warning("No valid documents to add")
     

@@ -49,7 +49,18 @@ function formatContextForPrompt(contextResults) {
   const contextParts = [];
   contextResults.forEach((result, index) => {
     if (result.content) {
-      contextParts.push(`[Context ${index + 1}]: ${result.content}`);
+      const module = result.module || 'N/A';
+      const subModule = result.sub_module || 'N/A';
+      const issueType = result.issue_type || 'N/A';
+      const subIssueType = result.sub_issue_type || 'N/A';
+      
+      contextParts.push(
+        `[Context ${index + 1}]: ${result.content} | ` +
+        `Module: ${module} | ` +
+        `Sub-Module: ${subModule} | ` +
+        `Issue Type: ${issueType} | ` +
+        `Sub-Issue Type: ${subIssueType}`
+      );
     }
   });
   
