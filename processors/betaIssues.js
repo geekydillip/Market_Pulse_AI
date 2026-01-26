@@ -1,5 +1,7 @@
 const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/betaIssuesPrompt');
+const { buildRagPrompt } = require('../rag/prompts/ragPromptWrapper');
+const { callOllamaCached } = require('../server');
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -68,52 +70,6 @@ function normalizeHeaders(rows) {
   return normalizedRows;
 }
 
-function readAndNormalizeExcel(uploadedPath) {
-  const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-
-  // Read sheet as 2D array so we can find header row robustly
-  const sheetRows = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-
-  // Find a header row: first row that contains at least one expected key or at least one non-empty cell
-  let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)','Issue Type','Sub-Issue Type']; // lowercase checks
-  for (let r = 0; r < sheetRows.length; r++) {
-    const row = sheetRows[r];
-    if (!Array.isArray(row)) continue;
-    const rowText = row.map(c => String(c || '').toLowerCase()).join(' | ');
-    // if the row contains any expected header keyword, choose it as header
-    if (expectedHeaderKeywords.some(k => rowText.includes(k))) {
-      headerRowIndex = r;
-      break;
-    }
-    // fallback: first non-empty row becomes header
-    if (row.some(cell => String(cell).trim() !== '')) {
-      headerRowIndex = r;
-      break;
-    }
-  }
-
-  // Build raw headers and trim
-  const rawHeaders = (sheetRows[headerRowIndex] || []).map(h => String(h || '').trim());
-
-  // Build data rows starting after headerRowIndex
-  const dataRows = sheetRows.slice(headerRowIndex + 1);
-
-  // Convert dataRows to array of objects keyed by rawHeaders
-  let rows = dataRows.map(r => {
-    const obj = {};
-    for (let ci = 0; ci < rawHeaders.length; ci++) {
-      const key = rawHeaders[ci] || `col_${ci}`;
-      obj[key] = r[ci] !== undefined && r[ci] !== null ? r[ci] : '';
-    }
-    return obj;
-  });
-
-  // Use shared normalization function
-  return normalizeHeaders(rows);
-}
 
 /**
  * Derive model name from S/W Ver. for OS Beta entries
@@ -131,110 +87,21 @@ function normalizeRows(rows) {
   return normalizeHeaders(rows);
 }
 
-module.exports = {
-  id: 'betaIssues',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve Option(Medium)', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'],
 
-  validateHeaders(rawHeaders) {
-    // Check if required fields are present
-    const required = ['Title', 'Problem'];
-    return required.some(header =>
-      rawHeaders.includes(header) ||
-      rawHeaders.some(h => h.toLowerCase().trim() === header.toLowerCase().trim())
-    );
-  },
-
-  transform(rows) {
-    // Apply normalization using the local normalizeHeaders function
-    return normalizeHeaders(rows);
-  },
-
-  buildPrompt(rows) {
-    // Send only content fields to AI for analysis
-    const aiInputRows = rows.map(row => ({
-      Title: row.Title || '',
-      Problem: row.Problem || ''
-    }));
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
-  },
-
-  formatResponse(aiResult, originalRows) {
-    let aiRows;
-
-    // Handle different response formats: object, JSON string, or raw text
-    if (typeof aiResult === 'object' && aiResult !== null) {
-      aiRows = aiResult;
-    } else if (typeof aiResult === 'string') {
-      const text = aiResult.trim();
-
-      // First try to parse as complete JSON
-      try {
-        aiRows = JSON.parse(text);
-      } catch (e) {
-        // If that fails, try to extract JSON array from text
-        const firstBracket = text.indexOf('[');
-        const lastBracket = text.lastIndexOf(']');
-        if (firstBracket !== -1 && lastBracket > firstBracket) {
-          const jsonStr = text.substring(firstBracket, lastBracket + 1);
-          try {
-            aiRows = JSON.parse(jsonStr);
-          } catch (e2) {
-            // If JSON parsing fails, return array with error info
-            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
-          }
-        } else {
-          // Last resort: return array with error info
-          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
-        }
-      }
-    } else {
-      // Fallback for unexpected types - return array
-      return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
-    }
-
-    // Ensure aiRows is an array
-    if (!Array.isArray(aiRows)) {
-      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
-    }
-
-    // Merge AI results with original core identifiers
-    const mergedRows = aiRows.map((aiRow, index) => {
-      const original = originalRows[index] || {};
-      return {
-        'Case Code': original['Case Code'] || '',
-        'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
-          ? deriveModelNameFromSwVer(original['S/W Ver.'])
-          : (original['Model No.'] || ''),
-        'Progr.Stat.': original['Progr.Stat.'] || '',
-        'S/W Ver.': original['S/W Ver.'] || '',
-        'Title': aiRow['Title'] || '',  // From AI (cleaned)
-        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
-        'Resolve Option(Medium)': original['Resolve Option(Medium)'] || '',
-        'Module': aiRow['Module'] || '',
-        'Sub-Module': aiRow['Sub-Module'] || '',
-        'Issue Type': aiRow['Issue Type'] || '',
-        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Summarized Problem': aiRow['Summarized Problem'] || '',
-        'Severity': aiRow['Severity'] || '',
-        'Severity Reason': aiRow['Severity Reason'] || ''
-      };
-    });
-
-    return mergedRows;
-  },
-
-  // Returns column width configurations for Excel export
-  getColumnWidths(finalHeaders) {
-    return finalHeaders.map((h, idx) => {
-      if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.' || h === 'Resolve Option(Medium)') return { wch: 20 };
-      if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
-      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
-      if (h === 'error') return { wch: 15 };
-      return { wch: 20 };
-    });
-  },
-
-  // Excel reading function used by server.js
-  readAndNormalizeExcel: readAndNormalizeExcel
+// Create the processor object
+const betaIssuesProcessor = {
+  // Add expected headers for the processor
+  expectedHeaders: ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)'],
+  
+  // Add readAndNormalizeExcel function (will be imported from _helpers in server.js)
+  // This is just a placeholder to maintain the interface
+  readAndNormalizeExcel: null,
+  
+  // Add normalizeRows function
+  normalizeRows: normalizeRows,
+  
+  // Add deriveModelNameFromSwVer function
+  deriveModelNameFromSwVer: deriveModelNameFromSwVer
 };
+
+module.exports = betaIssuesProcessor;

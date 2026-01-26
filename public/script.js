@@ -706,6 +706,7 @@ async function processStructuredFile(file, processingType, model, sessionId) {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('processingType', processingType);
+            formData.append('processingMode', 'discovery');  // Enable discovery mode with embeddings
 
             formData.append('model', model);
             formData.append('sessionId', sessionId);
@@ -763,13 +764,13 @@ async function processStructuredFile(file, processingType, model, sessionId) {
 
 function updateProgress(percent, text, timerInterval) {
     if (DEBUG) console.log('Updating progress to ' + percent + '%', 'type:', typeof percent, 'element exists:', !!progressFill);
-    progressFill.style.width = percent + '%';
-    if (DEBUG) console.log('Set width to:', progressFill.style.width);
+    if (progressFill) progressFill.style.width = percent + '%';
+    if (DEBUG) console.log('Set width to:', progressFill ? progressFill.style.width : 'N/A');
     if (timerInterval) {
         // If timer is running, don't override the timer text
         return;
     }
-    progressText.textContent = text;
+    if (progressText) progressText.textContent = text;
 
     // Update currently processing queue item progress if in queue mode
     updateCurrentQueueItemProgress(percent, text);
@@ -837,17 +838,23 @@ function downloadText(text, filename) {
 }
 
 function showLoading(model) {
-    const loadingText = loadingOverlay.querySelector('p');
-    loadingText.textContent = `Processing with ${model}...`;
-    loadingOverlay.style.display = 'flex';
-    processBtn.disabled = true;
-    processBtn.classList.add('processing');
+    if (loadingOverlay) {
+        const loadingText = loadingOverlay.querySelector('p');
+        if (loadingText) loadingText.textContent = `Processing with ${model}...`;
+        loadingOverlay.style.display = 'flex';
+    }
+    if (processBtn) {
+        processBtn.disabled = true;
+        processBtn.classList.add('processing');
+    }
 }
 
 function hideLoading() {
-    loadingOverlay.style.display = 'none';
-    processBtn.disabled = false;
-    processBtn.classList.remove('processing');
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+    if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.classList.remove('processing');
+    }
 }
 
 // Connection status functions
@@ -1196,8 +1203,8 @@ async function handleStop() {
             // Show cancellation message
             updateProgress(0, 'Processing cancelled by user');
             setTimeout(() => {
-                progressContainer.style.display = 'none';
-                progressFill.style.width = '0%';
+                if (progressContainer) progressContainer.style.display = 'none';
+                if (progressFill) progressFill.style.width = '0%';
             }, 2000);
 
         } else {
@@ -1234,15 +1241,17 @@ function resetProcessingState() {
     };
 
     // Hide progress elements
-    progressContainer.style.display = 'none';
-    stopBtn.style.display = 'none';
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'none';
 
     // Reset progress bar
-    progressFill.style.width = '0%';
+    if (progressFill) progressFill.style.width = '0%';
 
     // Re-enable process button
-    processBtn.disabled = false;
-    processBtn.classList.remove('processing');
+    if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.classList.remove('processing');
+    }
 
     // Clear session ID
     currentSessionId = null;

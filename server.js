@@ -15,6 +15,108 @@ const PORT = process.env.PORT || 3001;
 const DEFAULT_OLLAMA_PORT = 11434;
 const DEFAULT_AI_MODEL = 'qwen3:4b-instruct';
 
+// RAG Service Integration
+const { startRagService, waitForRagReady } = require('./rag/server');
+
+// RAG Service Health Management
+const RAG_SERVICE_URL = 'http://localhost:5000';
+const RAG_HEALTH_CHECK_INTERVAL = 30000; // 30 seconds
+const RAG_RETRY_ATTEMPTS = 3;
+const RAG_RETRY_DELAY = 5000; // 5 seconds
+
+let ragServiceHealth = {
+  status: 'unknown',
+  lastCheck: null,
+  retryCount: 0
+};
+
+/**
+ * Check RAG service health
+ */
+async function checkRagServiceHealth() {
+  try {
+    const response = await fetch(`${RAG_SERVICE_URL}/health`, {
+      method: 'GET',
+      timeout: 5000
+    });
+    
+    if (response.ok) {
+      const healthData = await response.json();
+      ragServiceHealth = {
+        status: healthData.status === 'healthy' ? 'healthy' : 'unhealthy',
+        lastCheck: new Date(),
+        retryCount: 0
+      };
+      return true;
+    } else {
+      throw new Error(`HTTP ${response.status}`);
+    }
+  } catch (error) {
+    ragServiceHealth = {
+      status: 'unhealthy',
+      lastCheck: new Date(),
+      retryCount: ragServiceHealth.retryCount + 1
+    };
+    console.warn(`[RAG] Health check failed: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Start RAG service with retry logic
+ */
+async function startRagServiceWithRetry() {
+  let attempts = 0;
+  
+  while (attempts < RAG_RETRY_ATTEMPTS) {
+    try {
+      console.log(`[RAG] Starting RAG service (attempt ${attempts + 1}/${RAG_RETRY_ATTEMPTS})...`);
+      await startRagService();
+      await waitForRagReady();
+      
+      // Verify service is actually healthy
+      const isHealthy = await checkRagServiceHealth();
+      if (isHealthy) {
+        console.log('[RAG] Service started successfully and is healthy');
+        return true;
+      } else {
+        throw new Error('Service started but health check failed');
+      }
+    } catch (error) {
+      attempts++;
+      console.warn(`[RAG] Failed to start service (attempt ${attempts}): ${error.message}`);
+      
+      if (attempts < RAG_RETRY_ATTEMPTS) {
+        console.log(`[RAG] Retrying in ${RAG_RETRY_DELAY / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, RAG_RETRY_DELAY));
+      }
+    }
+  }
+  
+  console.error('[RAG] Failed to start RAG service after all attempts');
+  return false;
+}
+
+/**
+ * Monitor RAG service health periodically
+ */
+function startRagHealthMonitor() {
+  setInterval(async () => {
+    const isHealthy = await checkRagServiceHealth();
+    
+    if (!isHealthy && ragServiceHealth.retryCount < 3) {
+      console.warn('[RAG] Service appears unhealthy, attempting to restart...');
+      const restartSuccess = await startRagServiceWithRetry();
+      
+      if (restartSuccess) {
+        console.log('[RAG] Service restarted successfully');
+      } else {
+        console.error('[RAG] Failed to restart service');
+      }
+    }
+  }, RAG_HEALTH_CHECK_INTERVAL);
+}
+
 // Security constants
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.json', '.csv'];
@@ -50,14 +152,6 @@ function validateFileUpload(req, res, next) {
       fs.unlinkSync(req.file.path);
     }
     return res.status(400).json({ error: 'Invalid file type. Only .xlsx, .xls, .json, and .csv files are allowed' });
-  }
-
-  // Check MIME type (basic validation)
-  if (req.file.mimetype && !ALLOWED_MIME_TYPES.includes(req.file.mimetype)) {
-    if (req.file.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    return res.status(400).json({ error: 'Invalid file format' });
   }
 
   // Sanitize filename to prevent path traversal
@@ -119,11 +213,20 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (req, file, cb) => {
-    // Additional MIME type validation
-    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    // Allow all files with the correct extensions regardless of MIME type
+    const ext = path.extname(file.originalname).toLowerCase();
+    const isExcel = ext === '.xlsx' || ext === '.xls';
+    const isJSON = ext === '.json';
+    const isCSV = ext === '.csv';
+    
+    console.log(`[fileFilter] originalname: ${file.originalname}, ext: ${ext}, mimetype: ${file.mimetype}`);
+    
+    if (isExcel || isJSON || isCSV) {
+      cb(null, true);
+    } else {
+      console.log(`[fileFilter] rejecting file: ${file.originalname}`);
       return cb(new Error('Invalid file type'), false);
     }
-    cb(null, true);
   }
 });
 
@@ -139,6 +242,48 @@ const processorMap = {
   'plm_issues': 'plmIssues',
   'samsung_members_voc': 'samsungMembersVoc'
 };
+
+// Define content fields per processor for dynamic content detection
+const CONTENT_FIELDS_BY_PROCESSOR = {
+  betaIssues: ['Title', 'Problem'],
+  plmIssues: ['Title', 'Problem'],
+  samsungMembersVoc: ['Title', 'Problem'], // Samsung Members VOC uses Title and Problem fields
+  samsungMembersPlm: ['content', 'Application Name']
+};
+
+/**
+ * Processor-aware normalization function
+ * Creates standardized objects for downstream processing
+ */
+function normalizeRowForProcessor(row, processorName) {
+  if (processorName === 'samsungMembersVoc') {
+    // Samsung Members VOC uses Title and Problem fields, not content and Application Name
+    return {
+      content: String(row['Title'] || row['Problem'] || '').trim(),
+      applicationName: String(row['Application Name'] || '').trim(),
+      title: String(row['Title'] || '').trim(),
+      raw: row
+    };
+  }
+
+  // default (beta / plm)
+  return {
+    Title: String(row['Title'] || '').trim(),
+    Problem: String(row['Problem'] || '').trim(),
+    raw: row
+  };
+}
+
+/**
+ * Extract content for processor using defined content fields
+ */
+function extractContentForProcessor(row, processorName) {
+  const fields = CONTENT_FIELDS_BY_PROCESSOR[processorName] || [];
+  return fields
+    .map(f => row[f])
+    .filter(v => v && String(v).trim() !== '')
+    .join('\n');
+}
 
 // Cache for identical prompts
 const aiCache = new Map();
@@ -1168,22 +1313,35 @@ async function processExcel(req, res) {
     const processorName = processorMap[processingType];
     const processor = require('./processors/' + processorName);
 
-    // Use processor's readAndNormalizeExcel if available, else fallback to betaIssues
-    const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/betaIssues').readAndNormalizeExcel;
+    // Use shared readAndNormalizeExcel from _helpers
+    const { readAndNormalizeExcel } = require('./processors/_helpers');
     let rows = readAndNormalizeExcel(uploadedPath) || [];
 
     // Sanity check: verify we have meaningful rows with relevant data based on processor type
-    let meaningful;
-    if (processingType === 'samsung_members_voc') {
-      meaningful = rows.filter(r => String(r['content']||'').trim() !== '');
-      console.log(`Read ${rows.length} rows; ${meaningful.length} rows with content data.`);
-    } else {
-      // Default check for Title/Problem (beta_user_issues, etc.)
-      meaningful = rows.filter(r => String(r['Title']||'').trim() !== '' || String(r['Problem']||'').trim() !== '');
-      console.log(`Read ${rows.length} rows; ${meaningful.length} rows with Title/Problem data.`);
+    const contentFields = CONTENT_FIELDS_BY_PROCESSOR[processorName] || [];
+    
+    if (contentFields.length === 0) {
+      console.warn(`[WARN] No content fields defined for processor: ${processorName}`);
     }
-    if (meaningful.length === 0) {
-      console.warn('No meaningful rows found - check header detection logic or the uploaded file.');
+
+    // 1. Normalize rows first using processor-aware normalization
+    const normalizedRows = rows.map(row => 
+      normalizeRowForProcessor(row, processorName)
+    );
+
+    // 2. Filter meaningful rows from normalized data
+    const meaningfulRows = normalizedRows.filter(nr =>
+      nr.content && nr.content.trim() !== ''
+    );
+
+    console.log(
+      `Read ${rows.length} rows; ${meaningfulRows.length} rows with content data.`
+    );
+
+    if (meaningfulRows.length === 0) {
+      console.warn(
+        'No meaningful rows found - check processor content field mapping.'
+      );
     }
 
     // Set headers to the canonical columns (using processor's expectedHeaders if available)
@@ -1313,7 +1471,12 @@ async function processExcel(req, res) {
     }
 
     // === Apply Column Widths (moved to processor for better organization) ===
-    newSheet['!cols'] = processor.getColumnWidths(finalHeaders);
+    const columnWidths = 
+      typeof processor.getColumnWidths === 'function'
+        ? processor.getColumnWidths(finalHeaders)
+        : finalHeaders.map(() => 25); // Default width of 25
+
+    newSheet['!cols'] = columnWidths;
 
     // === Apply Cell Styles (fonts, alignment, borders) ===
     const dataRows = schemaMergedRows.length;
@@ -2629,9 +2792,25 @@ app.get('/api/module-details', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log('\n🚀 Centralized Dashboard is running!');
-  console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
-  console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
-});
+// Start RAG service before accepting requests
+(async () => {
+  try {
+    await startRagService();
+    await waitForRagReady();
+    console.log('✅ RAG service is running and ready');
+    
+    // Start RAG health monitoring
+    startRagHealthMonitor();
+    console.log('✅ RAG health monitoring started');
+  } catch (err) {
+    console.error('❌ RAG service failed to start', err);
+    process.exit(1); // HARD FAIL — required for correctness
+  }
+
+  // Start server
+  app.listen(PORT, () => {
+    console.log('\n🚀 Centralized Dashboard is running!');
+    console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
+    console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
+  });
+})();
