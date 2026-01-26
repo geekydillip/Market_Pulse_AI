@@ -176,13 +176,14 @@ class RAGService:
         
         return embedding
     
-    def add_documents(self, documents: List[Dict[str, Any]]):
+    def add_documents(self, documents: List[Dict[str, Any]], default_source: str = "Unknown"):
         """
         Add documents with structured classification metadata to the RAG service.
         Expected keys: content, module, sub_module, issue_type, sub_issue_type
         
         Args:
             documents: List of document dictionaries with structured classification fields
+            default_source: Default source to use when source is not provided (default: "Unknown")
         """
         logger.info(f"Adding {len(documents)} structured documents to RAG service")
         
@@ -200,7 +201,7 @@ class RAGService:
                     "sub_module": doc.get("sub_module", ""),
                     "issue_type": doc.get("issue_type", ""),
                     "sub_issue_type": doc.get("sub_issue_type", ""),
-                    "source": doc.get("source", "Unknown")
+                    "source": doc.get("source", default_source)
                 }
                 
                 embedding = self.encode_text(content)

@@ -228,6 +228,7 @@ def map_to_structured_classification(row_data: Dict[str, Any]) -> Dict[str, str]
 def extract_text_from_excel(file_path: str) -> list:
     """
     Extract text content from an Excel file with structured classification.
+    Separates user content from labels to improve vector search accuracy.
     
     Args:
         file_path: Path to the Excel file
@@ -240,29 +241,57 @@ def extract_text_from_excel(file_path: str) -> list:
         xls = pd.ExcelFile(file_path)
         chunks = []
         
+        # Define columns that contain user content vs metadata/labels
+        # These are typically the columns that contain the actual user complaint/issue
+        user_content_columns = [
+            'content', 'issue', 'problem', 'description', 'summary', 'details',
+            'complaint', 'feedback', 'comment', 'text', 'message'
+        ]
+        
+        # Define columns that contain metadata/labels (should not be vectorized)
+        metadata_columns = [
+            'module', 'sub_module', 'issue_type', 'sub_issue_type', 'category',
+            'priority', 'severity', 'status', 'assignee', 'date', 'id', 'source'
+        ]
+        
         for sheet_name in xls.sheet_names:
             # Read the sheet
             df = pd.read_excel(xls, sheet_name=sheet_name)
             
             # Process each row as a separate document
             for index, row in df.iterrows():
-                # Convert row to text
-                row_text = ""
+                # Extract user content (actual complaint text)
+                user_content = ""
                 for col_name, value in row.items():
-                    if pd.notna(value):  # Only include non-null values
-                        row_text += f"{col_name}: {value}\n"
+                    if pd.notna(value) and col_name.lower() in [col.lower() for col in user_content_columns]:
+                        user_content += f"{value}\n"
                 
-                if row_text.strip():  # Only include non-empty rows
-                    # Map to structured classification
-                    classification = map_to_structured_classification(row.to_dict())
+                # If no specific content columns found, use the first non-metadata column
+                if not user_content.strip():
+                    for col_name, value in row.items():
+                        if pd.notna(value) and col_name.lower() not in [col.lower() for col in metadata_columns]:
+                            user_content += f"{value}\n"
+                            break
+                
+                # Extract metadata for structured classification
+                metadata_dict = {}
+                for col_name, value in row.items():
+                    if pd.notna(value) and col_name.lower() in [col.lower() for col in metadata_columns]:
+                        metadata_dict[col_name] = str(value)
+                
+                # Only include rows with actual user content
+                if user_content.strip():
+                    # Map to structured classification using metadata
+                    classification = map_to_structured_classification(metadata_dict)
                     
-                    # Create structured document
+                    # Create structured document with separated content and labels
                     structured_doc = {
-                        "content": row_text.strip(),
+                        "content": user_content.strip(),  # Only the actual user complaint
                         "source": file_path,
                         "sheet": sheet_name,
                         "row": index + 1,
-                        **classification  # Add structured classification fields
+                        **classification,  # Add structured classification fields
+                        "raw_metadata": metadata_dict  # Store original metadata for reference
                     }
                     chunks.append(structured_doc)
         

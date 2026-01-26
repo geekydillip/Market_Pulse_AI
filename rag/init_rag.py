@@ -20,10 +20,18 @@ def install_dependencies():
     logger.info("Installing RAG service dependencies...")
     
     try:
-        # Install requirements
-        subprocess.check_call([
-            sys.executable, "-m", "pip", "install", "-r", "requirements.txt"
-        ], cwd="rag")
+        # Install requirements from the rag directory
+        requirements_path = os.path.join("rag", "requirements.txt")
+        if os.path.exists(requirements_path):
+            subprocess.check_call([
+                sys.executable, "-m", "pip", "install", "-r", requirements_path
+            ])
+        else:
+            # Install dependencies directly if requirements.txt doesn't exist
+            subprocess.check_call([
+                sys.executable, "-m", "pip", "install", 
+                "flask", "sentence-transformers", "faiss-cpu", "numpy", "pandas"
+            ])
         logger.info("Dependencies installed successfully")
         return True
     except subprocess.CalledProcessError as e:
@@ -35,10 +43,10 @@ def start_rag_service():
     logger.info("Starting RAG service...")
     
     try:
-        # Start the service in the background
+        # Start the service in the background using server.py
         process = subprocess.Popen([
-            sys.executable, "app.py"
-        ], cwd="rag/service", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            sys.executable, "server.py"
+        ], cwd="rag", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
         logger.info(f"RAG service started with PID {process.pid}")
         return process

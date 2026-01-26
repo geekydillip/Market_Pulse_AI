@@ -1,50 +1,18 @@
 [
   {
-    "content": "Green line issue appearing on display from 1 week.",
-    "module": "Display",
-    "sub_module": "Green Line",
-    "issue_type": "Functional",
-    "sub_issue_type": "UI Issue",
-    "source": "test_data.xlsx"
-  },
-  {
-    "content": "Camera app crashes when switching to front video recording.",
-    "module": "Camera",
-    "sub_module": "Video Recording",
-    "issue_type": "Crash",
-    "sub_issue_type": "App Crash",
-    "source": "test_data.xlsx"
-  },
-  {
-    "content": "Battery drains quickly when using GPS navigation.",
-    "module": "Battery",
-    "sub_module": "Drain",
-    "issue_type": "Performance",
-    "sub_issue_type": "Slow/Lag",
-    "source": "test_data.xlsx"
-  },
-  {
-    "content": "Samsung Galaxy S21 camera autofocus issues in low light",
-    "module": "Camera",
-    "sub_module": "Autofocus",
-    "issue_type": "Functional",
-    "sub_issue_type": "Feature Not Working",
-    "source": "test_data.xlsx"
-  },
-  {
-    "content": "Battery drains rapidly when using camera app",
-    "module": "Battery",
-    "sub_module": "Drain",
-    "issue_type": "Performance",
-    "sub_issue_type": "Slow/Lag",
-    "source": "test_data.xlsx"
-  },
-  {
     "content": "Camera app crashes when taking photos",
     "module": "Camera",
     "sub_module": "General",
     "issue_type": "Crash",
     "sub_issue_type": "App Crash",
-    "source": "test_data.xlsx"
+    "source": "TestProcessor"
+  },
+  {
+    "content": "Battery drains quickly when using GPS",
+    "module": "Battery",
+    "sub_module": "Drain",
+    "issue_type": "Performance",
+    "sub_issue_type": "Slow/Lag",
+    "source": "TestProcessor"
   }
 ]
