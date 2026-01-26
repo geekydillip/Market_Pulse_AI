@@ -1,0 +1,8 @@
+# RAG Module Requirements
+flask==2.3.3
+sentence-transformers==2.2.2
+faiss-cpu>=1.12.0
+numpy==1.24.3
+pandas==2.0.3
+openpyxl==3.1.2
+requests==2.31.0

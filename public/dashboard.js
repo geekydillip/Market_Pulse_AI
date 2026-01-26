@@ -748,16 +748,24 @@ async function copyToClipboard(text) {
 
 // Enhanced Charts with Professional Styling
 function renderCharts(severityDistribution, moduleDistribution) {
-  // Use raw rows data to build custom charts
-  const rows = currentDashboardData.rows || [];
+  // Use KPI data to build charts with open counts only
+  const kpis = currentDashboardData.kpis || {};
 
-  // Build severity donut data (removes Critical)
-  const severityPayload = buildSeverityDonutData(rows);
-  const sevLabels = severityPayload.labels;
-  const sevCounts = severityPayload.data;
+  // Build severity donut data from KPI open counts
+  const totalHighOpen = Object.values(kpis).reduce((sum, source) => sum + (source.High_open || 0), 0);
+  const totalMediumOpen = Object.values(kpis).reduce((sum, source) => sum + (source.Medium_open || 0), 0);
+  const totalLowOpen = Object.values(kpis).reduce((sum, source) => sum + (source.Low_open || 0), 0);
 
-  // Build top 10 modules data (removes Others, keeps top 10)
-  const modulesPayload = buildTopModulesData(rows, 10);
+  const sevLabels = ['High', 'Medium', 'Low'];
+  const sevCounts = [totalHighOpen, totalMediumOpen, totalLowOpen];
+
+  // Filter rows to only include open issues for module chart
+  const openRows = currentDashboardData.rows.filter(row =>
+    (row['Progr.Stat.'] || row['Progress Status'] || '').toLowerCase() === 'open'
+  );
+
+  // Build top 10 modules data from open issues only (removes Others, keeps top 10)
+  const modulesPayload = buildTopModulesData(openRows, 10);
   const modLabels = modulesPayload.labels;
   const modCounts = modulesPayload.data;
 

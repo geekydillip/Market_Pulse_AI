@@ -1,0 +1,17 @@
+[
+  {
+    "content": "Samsung Galaxy S21 camera issues often relate to the autofocus system failing in low light conditions.",
+    "source": "tech_support_guide.pdf",
+    "category": "camera"
+  },
+  {
+    "content": "Battery drain issues in Samsung devices can be caused by third-party apps running in the background.",
+    "source": "battery_optimization_guide.pdf",
+    "category": "battery"
+  },
+  {
+    "content": "Display flickering problems may indicate a loose connection between the screen and motherboard.",
+    "source": "hardware_repair_manual.pdf",
+    "category": "display"
+  }
+]

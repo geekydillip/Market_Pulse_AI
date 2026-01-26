@@ -602,6 +602,61 @@ MIT License - feel free to use and modify as needed.
 - **Qwen AI** for the excellent language model
 - **Express.js** for the robust backend framework
 
+## 🔍 RAG Integration
+
+This project includes a Retrieval-Augmented Generation (RAG) system that enhances AI processing with contextual information from historical data. The RAG system is fully offline and integrates seamlessly with existing processors.
+
+### Key Features
+
+- **Offline Operation**: All components work fully offline with no external API dependencies
+- **FAISS Vector Storage**: Efficient similarity search using Facebook AI Similarity Search
+- **Sentence Transformers**: Local embedding generation with pre-trained models
+- **Minimal Integration Impact**: Existing processors require minimal changes to benefit from RAG
+- **Performance Optimized**: Caching and efficient chunking strategies for optimal performance
+
+### Architecture
+
+```
+rag/
+├── client.py              # Client library for interacting with RAG service
+├── utils.py               # Utility functions for chunking and caching
+├── init_rag.py           # Initialization script for the RAG service
+├── requirements.txt       # Python dependencies
+├── service/              # Flask-based RAG service
+│   ├── app.py            # Main service application
+│   └── faiss_index.pkl   # Persistent FAISS vector index
+└── examples/             # Example scripts demonstrating usage
+    ├── ingest_sample_data.py      # Sample data ingestion script
+    └── integrate_with_processor.py # Integration example with processors
+```
+
+### Usage
+
+1. **Start the RAG Service**:
+   ```bash
+   cd rag
+   python init_rag.py
+   ```
+
+2. **Ingest Documents**:
+   ```python
+   from rag.client import create_rag_client
+   
+   client = create_rag_client()
+   client.ingest_documents(["Document content 1", "Document content 2"])
+   ```
+
+3. **Retrieve Context**:
+   ```python
+   context = client.retrieve_context("Query about Samsung Galaxy issues")
+   ```
+
+4. **Integrate with Processors**:
+   ```javascript
+   // In your processor, enhance prompts with RAG context
+   const enhancedPrompt = await ragClient.enhancePrompt(originalPrompt);
+   ```
+
 ---
 
 **Note**: This application requires Ollama to be running locally. Make sure to start Ollama before using the web interface.

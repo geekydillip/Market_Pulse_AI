@@ -1,5 +1,64 @@
+const fs = require('fs');
+const path = require('path');
 const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/samsungMembers_voc');
+const { cleanExcelStyling } = require('./_helpers');
+const { buildRagPrompt } = require('../rag/prompts/ragPromptWrapper');
+const { callOllamaCached } = require('../server');
+
+/**
+ * Deep clean objects to remove Excel styling artifacts recursively
+ * @param {any} obj - Object to clean
+ * @returns {any} Cleaned object
+ */
+function cleanObjectRecursively(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return cleanExcelStyling(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanObjectRecursively(item));
+  }
+
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip Excel styling keys and metadata keys
+    if (key === 's' || key === 'w' || key.startsWith('!') || key === 't' || key === 'r') {
+      continue;
+    }
+    cleaned[key] = cleanObjectRecursively(value);
+  }
+  return cleaned;
+}
+
+// Fix Path Resolution (MANDATORY) - relative to file location, not process.cwd()
+const DISCOVERY_DIR = path.join(__dirname, '..', 'Embed_data', 'samsung_members_voc');
+const DISCOVERY_FILE = path.join(DISCOVERY_DIR, 'discovery_data.json');
+
+// Step 2: Ensure Folder Exists (MANDATORY)
+if (!fs.existsSync(DISCOVERY_DIR)) {
+  fs.mkdirSync(DISCOVERY_DIR, { recursive: true });
+  console.log(`[DISCOVERY DIR] Created directory: ${DISCOVERY_DIR}`);
+}
+
+// Step 3: FORCE Persistence in Discovery Mode (CRITICAL)
+function saveDiscoveryRecord(record) {
+  let existing = [];
+
+  if (fs.existsSync(DISCOVERY_FILE)) {
+    existing = JSON.parse(fs.readFileSync(DISCOVERY_FILE, 'utf-8'));
+  }
+
+  existing.push(record);
+
+  fs.writeFileSync(
+    DISCOVERY_FILE,
+    JSON.stringify(existing, null, 2),
+    'utf-8'
+  );
+
+  console.log(`[DISCOVERY SAVE] Saved record to: ${DISCOVERY_FILE}, total records: ${existing.length}`);
+}
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -137,158 +196,91 @@ function normalizeRows(rows) {
   return normalizeHeaders(rows);
 }
 
-module.exports = {
-  id: 'samsungMembersVoc',
-  expectedHeaders: ['No', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
+/**
+ * Samsung Members VOC Processor
+ * Main processing function that handles both regular and discovery modes
+ * @param {Array} rows - Input data rows
+ * @param {Object} context - Processing context with mode and other options
+ * @returns {Promise<Array>} Processed rows with AI insights
+ */
+async function samsungMembersVocProcessor(rows, context = {}) {
+  const { mode = 'regular', prompt: customPrompt } = context;
 
-  validateHeaders(rawHeaders) {
-    // Check if required fields are present
-    const required = ['content'];
-    return required.some(header =>
-      rawHeaders.includes(header) ||
-      rawHeaders.some(h => h.toLowerCase().trim() === header.toLowerCase().trim())
-    );
-  },
+  // Use appropriate prompt based on mode
+  const prompt = customPrompt || promptTemplate;
 
-  transform(rows) {
-    // Apply normalization using the local normalizeHeaders function
-    let transformedRows = normalizeHeaders(rows);
+  // Apply normalization using the local normalizeHeaders function
+  let transformedRows = normalizeHeaders(rows);
 
-    // Clean content field of Excel artifacts
-    transformedRows = transformedRows.map(row => {
-      const cleanedRow = { ...row };
-      if (cleanedRow.content) {
-        cleanedRow.content = cleanedRow.content
-          .replace(/_x000d_/g, '') // Remove Excel line break artifacts
-          .replace(/\n+/g, ' ') // Replace multiple newlines with space
-          .trim();
-      }
-      return cleanedRow;
-    });
+  // Clean content field of Excel artifacts
+  transformedRows = transformedRows.map(row => {
+    const cleanedRow = { ...row };
+    if (cleanedRow.content) {
+      cleanedRow.content = cleanedRow.content
+        .replace(/_x000d_/g, '') // Remove Excel line break artifacts
+        .replace(/\n+/g, ' ') // Replace multiple newlines with space
+        .trim();
+    }
+    return cleanedRow;
+  });
 
-    return transformedRows;
-  },
+  // Build RAG-enhanced prompts for each row
+  const processedRows = [];
+  for (const row of transformedRows) {
+    try {
+      // Use RAG-enhanced prompt with context injection
+      const ragPrompt = await buildRagPrompt({
+        basePrompt: prompt,
+        rowData: row,
+        processor: 'samsungMembersVoc'
+      });
 
-  buildPrompt(rows) {
-    // Send only content field to AI for analysis
-    const aiInputRows = rows.map(row => ({
-      content: row.content || ''
-    }));
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
-  },
+      // Call AI service with RAG-enhanced prompt
+      const result = await callOllamaCached(ragPrompt, 'qwen3:4b-instruct', {
+        timeoutMs: false,
+        stream: false,
+        sessionId: context.sessionId || 'default'
+      });
 
-  formatResponse(aiResult, originalRows) {
-    let aiRows;
-
-    // Handle different response formats: object, JSON string, or raw text
-    if (typeof aiResult === 'object' && aiResult !== null) {
-      aiRows = aiResult;
-    } else if (typeof aiResult === 'string') {
-      const text = aiResult.trim();
-
-      // First try to parse as complete JSON
+      // Parse the result and extract structured data
+      let parsedResult;
       try {
-        aiRows = JSON.parse(text);
-      } catch (e) {
-        // If that fails, try to extract JSON array from text
-        const firstBracket = text.indexOf('[');
-        const lastBracket = text.lastIndexOf(']');
-        if (firstBracket !== -1 && lastBracket > firstBracket) {
-          const jsonStr = text.substring(firstBracket, lastBracket + 1);
-          try {
-            aiRows = JSON.parse(jsonStr);
-          } catch (e2) {
-            // If JSON parsing fails, return array with error info
-            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
-          }
-        } else {
-          // Last resort: return array with error info
-          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
-        }
+        parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
+      } catch (parseError) {
+        console.warn('Failed to parse AI result, using fallback structure');
+        parsedResult = {
+          'Module': '',
+          'Sub-Module': '',
+          'Issue Type': '',
+          'Sub-Issue Type': '',
+          'AI Insight': ''
+        };
       }
-    } else {
-      // Fallback for unexpected types - return array
-      return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
+
+      // Merge original row with AI results
+      processedRows.push({
+        ...row,
+        ...parsedResult,
+        'RAG_Context_Used': 'Context injection applied'
+      });
+    } catch (error) {
+      console.error(`RAG processing failed for row: ${error.message}`);
+      processedRows.push({
+        ...row,
+        'Module': '',
+        'Sub-Module': '',
+        'Issue Type': '',
+        'Sub-Issue Type': '',
+        'AI Insight': '',
+        'RAG_Error': error.message
+      });
     }
+  }
 
-    // Handle different response formats: unwrap objects containing arrays
-    if (!Array.isArray(aiRows) && typeof aiRows === 'object') {
-      // Check for common wrapper keys that contain the actual array
-      const possibleKeys = ['data', 'result', 'response', 'output', 'items', 'records'];
-      for (const key of possibleKeys) {
-        if (aiRows[key] && Array.isArray(aiRows[key])) {
-          aiRows = aiRows[key];
-          break;
-        }
-      }
+  return processedRows;
+}
 
-      // If still not an array, check if it's a single result object and wrap it
-      if (!Array.isArray(aiRows)) {
-        // Check if this object has the expected fields for a single result
-        const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
-        const hasExpectedFields = expectedFields.some(field => aiRows.hasOwnProperty(field));
+// Add expected headers for the processor
+samsungMembersVocProcessor.expectedHeaders = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
 
-        if (hasExpectedFields) {
-          // Wrap single object in array
-          aiRows = [aiRows];
-        } else {
-          return [{ error: `AI response is not an array and doesn't contain expected fields: ${typeof aiRows} - ${Object.keys(aiRows).slice(0, 5).join(', ')}...` }];
-        }
-      }
-    }
-
-    // Ensure aiRows is an array
-    if (!Array.isArray(aiRows)) {
-      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
-    }
-
-    // Validate that AI response contains expected fields per new prompt format
-    const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
-
-    // Merge AI results with original core identifiers (preserving original Excel fields + AI fields)
-    const mergedRows = aiRows.map((aiRow, index) => {
-      const original = originalRows[index] || {};
-
-      // Validate AI row has expected fields
-      const isValidAiRow = expectedFields.every(field => aiRow.hasOwnProperty(field));
-      if (!isValidAiRow) {
-        console.warn(`AI row ${index} missing expected fields. Available:`, Object.keys(aiRow));
-      }
-
-      return {
-        'No': original['No'] || original['S/N'] || '',  // Preserve original No column data
-        'Model No.': original['Model No.'] || '',
-        'OS': original['OS'] || '',
-        'CSC': original['CSC'] || '',
-        'Category': original['Category'] || '',
-        'Application Name': original['Application Name'] || '',
-        'Application Type': original['Application Type'] || '',
-        'content': original['content'] || '',  // Reuse from input (already cleaned)
-        'Main Type': original['Main Type'] || '',
-        'Sub Type': original['Sub Type'] || '',
-        'Module': aiRow['Module'] || '',
-        'Sub-Module': aiRow['Sub-Module'] || '',
-        'Issue Type': aiRow['Issue Type'] || '',
-        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'AI Insight': aiRow['AI Insight'] || ''
-      };
-    });
-
-    return mergedRows;
-  },
-
-  // Returns column width configurations for Excel export
-  getColumnWidths(finalHeaders) {
-    return finalHeaders.map((h, idx) => {
-      if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
-      if (h === 'Application Name') return { wch: 25 };
-      if (['No', 'Model No.', 'OS', 'CSC'].includes(h)) return { wch: 15 };
-      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type'].includes(h)) return { wch: 15 };
-      if (h === 'error') return { wch: 15 };
-      return { wch: 20 };
-    });
-  },
-
-  // Excel reading function used by server.js
-  readAndNormalizeExcel: readAndNormalizeExcel
-};
+module.exports = samsungMembersVocProcessor;
