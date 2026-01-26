@@ -1,0 +1,107 @@
+[
+  {
+    "id": "thermal_001",
+    "query": "Phone heating during calls",
+    "expected_modules": ["Thermal", "Performance", "Battery"],
+    "category": "thermal_performance",
+    "description": "Classic thermal issue during voice calls"
+  },
+  {
+    "id": "network_001", 
+    "query": "5G disconnects after airplane mode",
+    "expected_modules": ["Network", "Connectivity"],
+    "category": "network_connectivity",
+    "description": "Network connectivity issue after mode switching"
+  },
+  {
+    "id": "camera_001",
+    "query": "Camera app crashes on video recording",
+    "expected_modules": ["Camera", "Multimedia"],
+    "category": "camera_multimedia", 
+    "description": "Camera functionality failure during recording"
+  },
+  {
+    "id": "battery_001",
+    "query": "Battery drains quickly in standby",
+    "expected_modules": ["Battery", "Power Management"],
+    "category": "battery_power",
+    "description": "Power management issue in idle state"
+  },
+  {
+    "id": "voip_001",
+    "query": "WiFi calling not working after update",
+    "expected_modules": ["Network", "VoIP", "Telephony"],
+    "category": "network_telephony",
+    "description": "VoIP service failure after software update"
+  },
+  {
+    "id": "display_001",
+    "query": "Screen flickering in low light",
+    "expected_modules": ["Display", "Graphics"],
+    "category": "display_graphics",
+    "description": "Display quality issue in specific lighting"
+  },
+  {
+    "id": "bluetooth_001",
+    "query": "Bluetooth audio stutters during playback",
+    "expected_modules": ["Bluetooth", "Audio", "Multimedia"],
+    "category": "bluetooth_audio",
+    "description": "Wireless audio quality degradation"
+  },
+  {
+    "id": "gps_001",
+    "query": "GPS accuracy poor in urban areas",
+    "expected_modules": ["Location", "GPS", "Navigation"],
+    "category": "location_gps",
+    "description": "Location service accuracy issue"
+  },
+  {
+    "id": "storage_001",
+    "query": "App installation fails with insufficient storage",
+    "expected_modules": ["Storage", "System", "Package Manager"],
+    "category": "storage_system",
+    "description": "System storage management issue"
+  },
+  {
+    "id": "touch_001",
+    "query": "Touch screen unresponsive after water exposure",
+    "expected_modules": ["Touch", "Display", "Hardware"],
+    "category": "touch_hardware",
+    "description": "Hardware input failure after environmental exposure"
+  },
+  {
+    "id": "nfc_001",
+    "query": "Samsung Pay not working in stores",
+    "expected_modules": ["NFC", "Payment", "Security"],
+    "category": "nfc_payment",
+    "description": "Contactless payment service failure"
+  },
+  {
+    "id": "video_call_001",
+    "query": "Video calls have poor quality on LTE",
+    "expected_modules": ["Network", "Camera", "VoIP"],
+    "category": "network_video",
+    "description": "Video communication quality issue"
+  },
+  {
+    "id": "performance_001",
+    "query": "Device becomes slow after installing new apps",
+    "expected_modules": ["Performance", "System", "Storage"],
+    "category": "performance_system",
+    "description": "System performance degradation"
+  },
+  {
+    "id": "audio_001",
+    "query": "Speaker sound is distorted during calls",
+    "expected_modules": ["Audio", "Telephony", "Hardware"],
+    "category": "audio_hardware",
+    "description": "Audio hardware quality issue"
+  },
+  {
+    "id": "security_001",
+    "query": "Fingerprint sensor not recognizing prints",
+    "expected_modules": ["Security", "Hardware", "Touch"],
+    "category": "security_hardware",
+    "description": "Biometric authentication failure"
+  }
+]

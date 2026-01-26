@@ -1,607 +1,355 @@
 # Market Pulse AI
 
-A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis platform with interactive dashboards. Features local AI processing using Ollama, supports multiple file formats (Excel, JSON, CSV), and provides specialized processing for different issue types including Beta User Issues, Samsung Members PLM/VOC, and PLM Issues. Includes advanced analytics, real-time progress tracking, and professional dashboard interfaces - all processing happens locally for maximum privacy and security.
+Professional web interface for AI-powered data processing and Voice of Customer (VOC) analysis using Ollama.
 
-## 🌟 Key Highlights
-
-- **🔒 Privacy-First**: All AI processing stays on your local machine
-- **📊 Advanced Analytics**: Python-powered data aggregation with caching
-- **🎨 Professional UI**: Modern responsive dashboard with neumorphic design
-- **⚡ Real-Time Processing**: Live progress updates with Server-Sent Events
-- **🔧 Modular Architecture**: Extensible processing pipeline for different data types
-- **📈 Interactive Visualizations**: Multiple chart types with ECharts integration
-- **🚀 Automated Setup**: One-command installation and startup scripts
+## 📋 Table of Contents
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Installation](#-installation)
+- [Dependencies](#-dependencies)
+- [Project Structure](#-project-structure)
+- [Usage](#-usage)
+- [API Endpoints](#-api-endpoints)
+- [Processing Types](#-processing-types)
+- [Analytics](#-analytics)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## 🚀 Features
 
-- **Professional UI**: Modern neumorphic design with responsive light theme and intuitive navigation
-- **File Upload**: Drag-and-drop support for Excel (.xls, .xlsx), JSON (.json), and CSV (.csv) files with preview and validation
-- **Multi-Format Processing**: Upload, process, and download Excel files; output JSON for further analysis
-- **Real-Time Progress**: Server-Sent Events (SSE) for live progress updates during AI processing
-- **Specialized Processing Types**:
-  - **Beta User Issues**: Voice of Customer analysis for beta tester feedback
-  - **Samsung Members PLM**: Samsung Member feedback analysis for PLM data
-  - **Samsung Members VOC**: Samsung Member feedback analysis for VOC data
-  - **PLM Issues**: Product Lifecycle Management issue processing
-  - **Clean**: Generic data cleaning without AI processing
-- **Processing Options**:
-  - **VOC Analysis**: Specialized for Voice of Customer data (module identification, severity classification, problem summarization)
-  - **Generic Data Cleaning**: Basic data cleansing (trimming, date normalization, number conversion)
-- **Interactive Dashboards**: Multiple dashboard interfaces with advanced analytics and visualizations
-  - **Main Dashboard** (`main.html`): Central analytics hub with 5 interactive charts and 6 navigation buttons
-  - **Specialized Dashboards**: Dedicated views for Beta User Issues, Samsung Members PLM, Samsung Members VOC, and PLM Issues
-  - **Source-wise Analytics**: New charts showing top models and modules by data source
-  - **Real-time Data**: Live KPI updates from processed data with caching system
-- **Advanced Backend Features**:
-  - Concurrent processing with configurable limits (default 4)
-  - AI response caching for efficiency
-  - Chunked processing for large files (adaptive sizing based on file size)
-  - Keep-alive HTTP connections for Ollama
-  - Automatic file cleanup and validation
-- **Visualization Dashboard**: Aggregate metrics from processed files with pagination, search, and CSV export
-- **Results Management**: Automatic download of processed files and detailed processing logs
-- **Connection Monitoring**: Real-time Ollama connectivity status
-- **Automation Scripts**: Python utilities for automated Ollama and server startup/shutdown
+- **Multi-format Data Processing**: Supports Excel (.xlsx/.xls), JSON, and CSV files
+- **AI-Powered Analysis**: Uses Ollama models (qwen3:4b-instruct) for intelligent data categorization
+- **Real-time Progress Tracking**: SSE-based progress updates during processing
+- **Interactive Dashboards**: Multiple dashboard views for different data types
+- **Embedding-based Similarity**: Vector embeddings for duplicate detection and data reuse
+- **Centralized Analytics**: Python-powered analytics with caching
+- **Session Management**: Concurrent processing with cancellation support
+- **File Upload Security**: Comprehensive validation and sanitization
 
-## 📋 Prerequisites
+## 🏗️ Architecture
 
-- **Node.js** (v14 or higher)
-- **Ollama** with qwen3:4b-instruct model installed
-- **Web Browser** (Chrome, Firefox, Edge, etc.)
+The application consists of several key components:
 
-## 🛠️ Installation
+- **Backend**: Node.js/Express server with REST API
+- **Frontend**: Next.js (React) dashboard interface
+- **AI Integration**: Ollama API for LLM processing
+- **Database**: SQLite3 for embeddings storage
+- **Analytics**: Python scripts for data aggregation
+- **File Processing**: Chunked processing with concurrency limits
 
-1. **Clone or download this repository**
-2. **Navigate to the project directory**
-3. **Install backend dependencies**:
+## 📦 Installation
+
+### Prerequisites
+- Node.js >= 14.0.0
+- npm >= 6.0.0
+- Python 3.x (for analytics)
+- Ollama (running locally)
+
+### Setup Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/geekydillip/Market_Pulse_AI.git
+   cd Market_Pulse_AI
+   ```
+
+2. **Install backend dependencies**
    ```bash
    npm install
    ```
-4. **Install frontend dependencies** (optional, for Next.js dashboard):
+
+3. **Install Python dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Install frontend dependencies**
    ```bash
    cd frontend
    npm install
    cd ..
    ```
 
-## 🚀 Usage
-
-### Option 1: Manual Setup (Node.js)
-
-1. **Start Ollama** with preferred model (qwen3:4b-instruct):
+5. **Start Ollama service**
    ```bash
-   ollama run qwen3:4b-instruct
+   # Make sure Ollama is running with qwen3:4b-instruct model
+   ollama serve
+   ollama pull qwen3:4b-instruct
    ```
 
-2. **Start the web application**:
+6. **Start the application**
    ```bash
+   # Backend server
    npm start
+
+   # Frontend (in separate terminal)
+   cd frontend && npm run dev
    ```
 
-3. **Open your browser** and go to: `http://localhost:3001`
+7. **Access the application**
+   - Main interface: http://localhost:3001
+   - Frontend dashboard: http://localhost:3000
 
-### Accessing Dashboards
+## 📋 Dependencies
 
-After processing data with specialized processing types, access dedicated dashboards:
+### Python Dependencies
 
-- **Beta User Issues Dashboard**: `http://localhost:3001/beta_user_issues_dashboard.html`
-- **Samsung Members PLM Dashboard**: `http://localhost:3001/samsung_members_plm_dashboard.html`
-
-Each dashboard provides:
-- **KPI Metrics**: Total cases, severity breakdown, module distribution
-- **Interactive Charts**: Severity distribution (donut chart), top modules (bar chart)
-- **Detailed Tables**: Module-level analysis with pagination and search
-- **Modal Drill-Down**: Individual case details with sorting and export
-
-
-
-### Processing Data
-
-1. **Navigate to Upload Tab**: Select files with drag-and-drop or browse (.xls, .xlsx, .json, .csv)
-2. **Choose Processing Type**:
-   - Beta User Issues for beta tester feedback analysis
-   - Samsung Members PLM for Samsung member PLM data
-   - Samsung Members VOC for Samsung member VOC data
-   - PLM Issues for Product Lifecycle Management
-   - Clean for deterministic data cleansing without AI
-3. **Select AI Model**: Choose from available Ollama models (defaults to qwen3:4b-instruct)
-4. **Process File**: Click "Process with AI" and monitor real-time progress
-5. **Download Results**: Automatically download processed files and processing logs
-
-### Data Visualization Table
-
-1. **Switch to Data Visualize Tab**: Access client-side table visualization from processed Excel files
-2. **Auto-Load Summary**: Scans /downloads folder for all Excel files and aggregates by model/grade/module/top issue titles/count
-3. **Table Features**:
-   - **S/N Column**: Sequential numbering based on filtered results (1, 2, 3...)
-   - **Pagination**: Choose page size (10, 25, 50 items), navigate with Prev/Next buttons
-   - **Search Filtering**: Search across model, grade, module, and top issue titles (debounced, 300ms)
-   - **Client-side CSV Export**: Download filtered results as CSV with S/N numbering
-4. **Modal Drill-Down**: Click Count buttons to see detailed individual issue rows for that grouping
-5. **Keyboard Shortcuts**: Press "/" to focus search input field
-
-#### Table Columns (Fixed Layout, Specified Widths)
-- **S/N**: 64px (sequential number in filtered results)
-- **Model**: 140px (model identifier)
-- **Module**: 160px (main affected component)
-- **Top Issue Titles**: flex (truncated with ellipsis if long, title tooltip)
-- **Count**: 80px (number of issues in group, clickable for modal)
-
-## 🔌 API Endpoints
-
-### `/api/visualize` - Data Visualization Summary
-
-**Method**: `GET`
-
-**Description**: Aggregates summary data from all processed Excel files in the `/downloads` folder, grouped by model/grade/module. Returns aggregated counts with top issue titles.
-
-**Response Schema**:
-```json
-{
-  "success": boolean,
-  "filesScanned": number,
-  "summary": [
-    {
-      "model": string,
-      "grade": string,
-      "module": string,
-      "voc": string,
-      "count": number
-    }
-  ]
-}
+#### Core Runtime (requirements.txt)
+```
+pandas>=2.0.0
+requests>=2.28.0
+openpyxl>=3.1.0
 ```
 
-### `/api/dashboard` - Individual Dashboard Data
-
-**Method**: `GET`
-
-**Parameters**:
-- `model`: string (optional) - Filter by specific model, or omit for all models
-
-**Description**: Returns aggregated dashboard data including totals, severity/module distributions, and sample rows from processed files.
-
-**Response Schema**:
-```json
-{
-  "success": boolean,
-  "model": string,
-  "totals": {
-    "totalCases": number,
-    "high": number,
-    "medium": number,
-    "low": number
-  },
-  "severityDistribution": [
-    {
-      "severity": string,
-      "count": number
-    }
-  ],
-  "moduleDistribution": [
-    {
-      "module": string,
-      "count": number
-    }
-  ],
-  "rows": [
-    {
-      "caseId": string,
-      "title": string,
-      "problem": string,
-      "modelFromFile": string,
-      "module": string,
-      "severity": string,
-      "loadedDate": string
-    }
-  ]
-}
+#### Development (requirements-dev.txt)
+```
+pytest>=7.0.0
+black>=22.0.0
+flake8>=5.0.0
+mypy>=1.0.0
+jupyter>=1.0.0
+sphinx>=5.0.0
 ```
 
-### `/api/models` - Available Models
-
-**Method**: `GET`
-
-**Description**: Returns list of unique model identifiers found in processed Excel files.
-
-**Response Schema**:
-```json
-{
-  "success": true,
-  "models": ["A366E", "SMS921BE", ...]
-}
+#### Production (requirements-prod.txt)
+```
+-r requirements.txt
+# Production-specific packages
 ```
 
-### `/api/health` - Health Check
+### Node.js Dependencies
 
-**Method**: `GET`
-
-**Description**: Checks if the server is running and if Ollama is connected.
-
-**Response Schema**:
+#### Backend Dependencies (backend-dependencies.json)
 ```json
 {
-  "status": "ok",
-  "ollama": "connected" | "disconnected"
-}
-```
-
-### `/api/ollama-models` - Available Ollama Models
-
-**Method**: `GET`
-
-**Description**: Returns list of available AI models in local Ollama installation.
-
-**Response Schema**:
-```json
-{
-  "success": boolean,
-  "models": ["qwen3:4b-instruct", ...]
-}
-```
-
-### `/api/process` - File Upload and Processing
-
-**Method**: `POST` (multipart/form-data)
-
-**Parameters**:
-- `file`: File (required) - Excel or JSON file to process
-- `processingType`: string (required) - 'voc' or 'clean'
-- `model`: string (required) - Ollama model to use
-- `sessionId`: string (optional) - Session ID for progress tracking
-
-**Description**: Uploads and processes files using AI, returns processed data and download links.
-
-### `/api/progress/:sessionId` - Progress Stream
-
-**Method**: `GET`
-
-**Description**: Server-Sent Events stream for real-time processing progress updates.
-
-### `/api/module-details` - Detailed Module Issues
-
-**Method**: `GET`
-
-**Parameters**:
-- `model`: string (required) - Model identifier
-- `grade`: string (required) - Product grade
-- `module`: string (required) - Module name
-- `voc`: string (required) - VOC/titles
-
-**Description**: Returns detailed individual issue rows matching the specific model/grade/module grouping.
-
-**Response Schema**:
-```json
-{
-  "success": boolean,
-  "details": [
-    {
-      "caseCode": string,
-      "model": string,
-      "grade": string,
-      "title": string,
-      "problem": string,
-      "severity": string,
-      "severity_reason": string,
-      "sub_module": string
-    }
-  ]
-}
-```
-
-### `/api/visualize-raw-details` - Raw Details for Visualization
-
-**Method**: `GET`
-
-**Description**: Returns all individual issue rows from processed Excel files for detailed analysis.
-
-### `/api/visualize/export` - CSV Export
-
-**Method**: `GET`
-
-**Description**: Exports current visualization data as CSV file.
-
-### How to Use Table Features
-
-#### Pagination
-- Select page size from dropdown (10, 25, 50 items per page)
-- Use Prev/Next buttons to navigate pages
-- Page numbers update automatically as you filter/search
-
-#### Search Filtering
-- Type in search box to filter across all columns simultaneously
-- Search fields: model, grade, module, top issue titles
-- Debounced search (300ms delay) prevents excessive filtering
-- Keyboard shortcut: Press "/" anywhere to focus search input
-
-#### View Toggle
-- **Compact View** (default): Summary table only
-- **Detailed View**: Adds expandable JSON rows below summary rows
-- Toggle affects all currently visible rows
-
-#### CSV Export
-- Filters current search results
-- Includes S/N column (1, 2, 3... based on current filter/sort)
-- Columns: S/N, Model, Grade, Module, Top Issue Titles, Count
-- Quotes escaped properly for CSV format
-- Downloads as `visualize_summary_TIMESTAMP.csv`
-
-#### Modal Drill-Down
-- Click any Count number to open detailed view
-- Shows individual issue rows for that grouping
-- Includes CS V download option for detailed data
-
-### Sample Summary Records
-
-Here are 3-5 sample records from typical processed data:
-
-```json
-[
-  {
-    "model": "A366E",
-    "grade": "SWA_16_DD",
-    "module": "Camera",
-    "voc": "Camera not focusing properly, blurry images in low light conditions",
-    "count": 15
-  },
-  {
-    "model": "SMS921BE",
-    "grade": "SWA_16_DD_(OS+Beta)B+OS+Beta",
-    "module": "Network",
-    "voc": "WiFi connection drops frequently, cannot maintain stable connection",
-    "count": 8
-  },
-  {
-    "model": "A366E",
-    "grade": "SWA_16_DD",
-    "module": "Battery",
-    "voc": "Battery drains very fast, less than 2 hours usage time",
-    "count": 22
-  },
-  {
-    "model": "SMS921BE",
-    "grade": "SWA_16_DD_(OS+Beta)B+OS+Beta",
-    "module": "Lock Screen",
-    "voc": "Lock screen unresponsive, takes long time to unlock device",
-    "count": 6
+  "dependencies": {
+    "cors": "^2.8.5",
+    "echarts": "^6.0.0",
+    "echarts-for-react": "^3.0.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.22.1",
+    "multer": "^2.0.2",
+    "sqlite3": "^5.1.7",
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0"
   }
-]
+}
 ```
 
-The aggregate count represents the number of individual issue reports grouped by model/grade/module, with the most common issue titles combined into the `voc` field.
+#### Frontend Dependencies (frontend-dependencies.json)
+```json
+{
+  "dependencies": {
+    "next": "14.0.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "echarts": "^5.4.3",
+    "echarts-for-react": "^3.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0"
+  }
+}
+```
 
 ## 📁 Project Structure
 
 ```
-Market Pulse AI/
-├── server.js                          # Main Express backend server
-├── run_server.py                     # Python automation script for server startup
-├── terminate_servers.py               # Python script for stopping running servers
-├── json_to_excel_converter.py         # Python utility for JSON to Excel conversion
-├── excel_download_handler.py          # Python utility for Excel downloads
-├── fetch_api.js                       # API fetching utility
-├── list_models.js                     # Utility script for model management
-├── requirements.txt                   # Python dependencies
-├── package.json                       # Node.js dependencies and scripts
-├── package-lock.json                  # Dependency lock file
-├── README.md                          # This comprehensive documentation
-├── .gitignore                         # Git ignore patterns
-├── .eslintrc.js                       # ESLint configuration for code quality
-├── frontend/                          # Next.js frontend application (separate)
-│   ├── src/
-│   │   ├── app/                       # Next.js app router
-│   │   │   ├── layout.jsx             # App layout component
-│   │   │   └── page.jsx               # Main page component
-│   │   ├── components/                # React components
-│   │   │   ├── charts/                # Chart components
-│   │   │   │   ├── SeveritySplit.jsx  # Severity split chart
-│   │   │   │   ├── SourceStackedBar.jsx # Source stacked bar chart
-│   │   │   │   └── TopModelsBar.jsx   # Top models bar chart
-│   │   │   ├── common/                # Common components
-│   │   │   │   └── Card.jsx           # Card component
-│   │   │   ├── filters/               # Filter components
-│   │   │   │   └── DashboardFilters.jsx # Dashboard filters
-│   │   │   ├── kpi/                   # KPI components
-│   │   │   │   └── KPICard.jsx        # KPI card component
-│   │   │   └── table/                 # Table components
-│   │   │       └── TopIssuesTable.jsx # Top issues table
-│   │   ├── hooks/                     # Custom React hooks
-│   │   │   ├── useDashboardData.js    # Dashboard data hook
-│   │   │   └── useTheme.js            # Theme hook
-│   │   ├── styles/                    # Styling files
-│   │   │   └── globals.css            # Global styles
-│   │   └── utils/                     # Utility functions
-│   │       ├── formatters.js          # Data formatters
-│   │       └── severity.js            # Severity utilities
-│   ├── package.json                   # Frontend dependencies
-│   ├── package-lock.json              # Frontend dependency lock file
-│   ├── next.config.js                 # Next.js configuration
-│   ├── tailwind.config.js             # Tailwind CSS configuration
-│   ├── postcss.config.js              # PostCSS configuration
-│   └── tsconfig.json                  # TypeScript configuration
-├── processors/                        # Modular processing pipeline
-│   ├── _helpers.js                    # Shared utility functions
-│   ├── betaIssues.js                  # Beta User Issues processor
-│   ├── plmIssues.js                   # PLM Issues processor
-│   ├── samsungMembersPlm.js           # Samsung Members PLM processor
-│   └── samsungMembersVoc.js           # Samsung Members VOC processor
-├── prompts/                           # AI prompt templates
-│   ├── betaIssuesPrompt.js            # Beta User Issues prompt
-│   ├── plmIssuesPrompt.js             # PLM Issues prompt
-│   ├── samsungMembersPlmPrompt.js     # Samsung Members PLM prompt
-│   └── samsungMembers_voc.js          # Samsung Members VOC prompt
-├── public/                            # Static frontend files
-│   ├── main.html                      # Main dashboard with advanced analytics
-│   ├── index.html                     # Legacy upload interface
-│   ├── aiprocessor.html               # AI processor interface
-│   ├── dashboard.js                   # Dashboard logic and utilities
-│   ├── script.js                      # Upload interface logic
-│   ├── styles.css                     # Neumorphic design styles
-│   ├── BetaIssues_Dashboard.html      # Beta Issues specialized dashboard
-│   ├── BetaIssues_detailsData.html    # Beta Issues detailed data
-│   ├── SMPLM_Dashboard.html           # Samsung PLM dashboard
-│   ├── SMPLM_detailsData.html         # Samsung PLM detailed data
-│   ├── SMVOC_Dashboard.html           # Samsung VOC dashboard
-│   └── SMVOC_detailsData.html         # Samsung VOC detailed data
-├── server/                            # Backend analytics and processing
-│   └── analytics/                     # Python analytics engine
-│       ├── central_aggregator.py      # Central data aggregation
-│       ├── generate_central_cache.py  # Cache generation script
-│       └── pandas_aggregator.py       # Pandas-based analytics
-├── downloads/                         # Processed file outputs and analytics
-│   ├── __dashboard_cache__/           # Centralized dashboard cache
-│   │   └── central_dashboard.json     # Pre-aggregated dashboard data
-│   ├── beta_user_issues/              # Beta Issues processed data
-│   │   ├── analytics.json             # Aggregated analytics
-│   │   └── *.xlsx                     # Processed Excel files
-│   ├── plm_issues/                    # PLM Issues processed data
-│   │   ├── analytics.json             # Aggregated analytics
-│   │   └── *.xlsx                     # Processed Excel files
-│   ├── samsung_members_plm/           # Samsung PLM processed data
-│   │   ├── analytics.json             # Aggregated analytics
-│   │   └── *.xlsx                     # Processed Excel files
-│   └── samsung_members_voc/           # Samsung VOC processed data
-│       ├── analytics.json             # Aggregated analytics
-│       └── *.xlsx                     # Processed Excel files
-├── uploads/                           # Temporary file storage (auto-cleaned)
-└── __pycache__/                       # Python cache files
+Market_Pulse_AI/
+├── 📄 README.md
+├── 📄 package.json
+├── 📄 requirements.txt
+├── 📄 server.js                    # Main Express server
+├── 📄 cache_manager.js             # Processing cache management
+├── 📄 excel_download_handler.py    # Excel export handler
+├── 📄 json_to_excel_converter.py   # JSON to Excel conversion
+├── 📄 run_server.py               # Python server runner
+├── 📄 terminate_servers.py         # Server termination script
+├── 📁 frontend/                    # Next.js frontend
+│   ├── 📄 package.json
+│   ├── 📄 next.config.js
+│   ├── 📄 postcss.config.js
+│   ├── 📄 tailwind.config.js
+│   ├── 📄 tsconfig.json
+│   └── 📁 src/
+│       ├── 📁 app/
+│       │   ├── 📄 layout.jsx
+│       │   └── 📄 page.jsx
+│       ├── 📁 components/
+│       │   ├── 📁 charts/
+│       │   │   ├── 📄 SeveritySplit.jsx
+│       │   │   ├── 📄 SourceStackedBar.jsx
+│       │   │   └── 📄 TopModelsBar.jsx
+│       │   ├── 📁 common/
+│       │   │   └── 📄 Card.jsx
+│       │   ├── 📁 filters/
+│       │   │   └── 📄 DashboardFilters.jsx
+│       │   ├── 📁 kpi/
+│       │   │   └── 📄 KPICard.jsx
+│       │   └── 📁 table/
+│       │       └── 📄 TopIssuesTable.jsx
+│       ├── 📁 hooks/
+│       │   ├── 📄 useDashboardData.js
+│       │   └── 📄 useTheme.js
+│       ├── 📁 styles/
+│       │   └── 📄 globals.css
+│       ├── 📁 utils/
+│       │   ├── 📄 formatters.js
+│       │   └── 📄 severity.js
+│       └── 📁 public/
+├── 📁 processors/                  # Data processing modules
+│   ├── 📄 _helpers.js
+│   ├── 📄 betaIssues.js
+│   ├── 📄 plmIssues.js
+│   └── 📄 samsungMembersPlm.js
+│   └── 📄 samsungMembersVoc.js
+├── 📁 prompts/                     # AI processing prompts
+│   ├── 📄 betaIssuesPrompt_discovery.js
+│   ├── 📄 betaIssuesPrompt.js
+│   ├── 📄 plmIssuesPrompt_discovery.js
+│   ├── 📄 plmIssuesPrompt.js
+│   ├── 📄 samsungMembers_voc_discovery.js
+│   ├── 📄 samsungMembers_voc.js
+│   ├── 📄 samsungMembersPlmPrompt_discovery.js
+│   └── 📄 samsungMembersPlmPrompt.js
+├── 📁 public/                      # Static web assets
+│   ├── 📄 aiprocessor.html
+│   ├── 📄 BetaIssues_Dashboard.html
+│   ├── 📄 BetaIssues_detailsData.html
+│   ├── 📄 dashboard.js
+│   ├── 📄 main.html
+│   ├── 📄 script.js
+│   ├── 📄 SMPLM_Dashboard.html
+│   ├── 📄 SMPLM_detailsData.html
+│   ├── 📄 SMVOC_Dashboard.html
+│   ├── 📄 SMVOC_detailsData.html
+│   └── 📄 styles.css
+├── 📁 server/                      # Backend server modules
+│   ├── 📁 analytics/
+│   │   ├── 📄 central_aggregator.py
+│   │   ├── 📄 generate_central_cache.py
+│   │   └── 📄 pandas_aggregator.py
+│   ├── 📁 embeddings/
+│   │   ├── 📄 embedding_service.js
+│   │   ├── 📄 similarity_config.js
+│   │   └── 📄 vector_store.js
+│   ├── 📄 embeddings_store.js
+│   └── 📁 embeddings.db
+├── 📁 uploads/                     # Temporary upload storage
+├── 📁 downloads/                   # Processed file storage
+├── 📁 Embed_data/                  # Discovery mode data storage
+├── 📁 -p/                         # Python cache
+└── 📄 .gitignore
 ```
 
-## 🔧 Technical Implementation
+## 🎯 Usage
 
-### Backend (server.js)
-- **Framework**: Node.js + Express.js with comprehensive middleware setup
-- **Dependencies**: cors (^2.8.5), express (^4.22.1), multer (^2.0.2), xlsx (^0.18.5), xlsx-js-style (^1.2.0), exceljs (^4.4.0)
-- **AI Integration**: Direct HTTP calls to Ollama API (localhost:11434) with robust error handling
-- **Caching Layer**: In-memory Map-based caching for identical AI prompts to improve performance
-- **Concurrency Control**: Task limiting with configurable concurrency (default 4) to prevent resource exhaustion
-- **Connection Management**: HTTP keep-alive agent for persistent Ollama connections
-- **File Processing**: Chunked processing for large Excel/JSON files, automatic cleanup of uploaded files
-- **Progress Updates**: Server-Sent Events (SSE) for real-time progress reporting to frontend
-- **Logging**: Detailed JSON logs with processing times, errors, and chunk statistics
+### Basic Workflow
 
-### Frontend (Vanilla JavaScript + Next.js)
-- **UI Framework**: Pure HTML5 + CSS3 with modern gradients and shadows, Next.js React components
-- **Charts**: ECharts integration for interactive bar charts, donut charts, and data visualizations
-- **Real-time Features**: SSE event listeners for live progress updates, connection health checks
-- **File Handling**: Drag-and-drop with preview, file type validation, size limits (200MB)
-- **State Management**: Dynamic model selection from Ollama API, progress tracking per session
-- **Accessibility**: Keyboard shortcuts (Ctrl+Enter to process, "/" for search focus)
+1. **Upload Data**: Upload Excel, JSON, or CSV files containing customer feedback
+2. **Select Processing Type**: Choose from beta_user_issues, samsung_members_plm, plm_issues, or samsung_members_voc
+3. **Configure Processing**: Select AI model and processing mode (regular/discovery)
+4. **Monitor Progress**: Real-time progress updates via SSE
+5. **View Results**: Access processed data and analytics dashboards
+6. **Download Output**: Export processed files in Excel format
 
-### Data Processing Options
-- **VOC Analysis**: Specialized prompts for customer feedback data cleaning and analysis (module identification, severity classification, problem summarization)
-- **Generic Cleaning**: Deterministic rules for data normalization (trim whitespace, date ISO format normalization, numeric string conversion)
+### Processing Modes
 
-### Security & Performance
-- **Local Processing**: All AI inference stays on user machine - no data transmission
-- **File Validation**: Strict type checking, size limits, automatic cleanup
-- **Error Boundaries**: Graceful error handling with retries for AI calls
-- **Resource Management**: Connection pooling, timeout management, memory-efficient processing
+- **Regular Mode**: Standard AI processing for categorization and analysis
+- **Discovery Mode**: Advanced processing with embedding-based similarity and data accumulation
 
-## 🎯 Data Processing Types
+## 🔌 API Endpoints
 
-### VOC (Voice of Customer) Analysis
-Specialized processing for customer feedback data from support tickets or product reviews. The AI performs:
-- **Text Cleaning**: Removes IDs, usernames, timestamps, tags (anything inside [ ]), maintains English-only content
-- **Module Identification**: Categorizes issues by product module (Lock Screen, Camera, Battery, Network, etc.)
-- **Sub-Module Classification**: Further subdivides modules (e.g., Heating → Heating)
-- **Problem Summarization**: Combines Title + Problem fields into clear, concise English sentences
-- **Severity Assessment**: Classifies impact as High, Medium, or Low with detailed reasoning
-- **Output Structure**: Preserves original columns plus added analysis fields in structured JSON
+### Core Processing
+- `POST /api/process` - Upload and process files
+- `GET /api/progress/:sessionId` - Monitor processing progress
+- `POST /api/cancel/:sessionId` - Cancel processing session
+- `POST /api/pause/:sessionId` - Pause processing
+- `POST /api/resume/:sessionId` - Resume processing
 
-### Samsung Members PLM Processing
-Advanced processing specifically designed for Samsung Members Product Lifecycle Management data:
-- **Metadata Cleaning**: Removes bracketed metadata blocks and Samsung Members internal notices
-- **Technical Log Filtering**: Automatically detects and removes CP silent logs, timestamps, and technical patterns
-- **Cause & Countermeasure Processing**: Intelligent cleaning of R&D comments with CP log detection
-- **Enhanced Problem Summarization**: Combines Title + Problem with Samsung-specific context
-- **Resolve Type Mapping**: Processes Small/Medium resolve option classifications
-- **PLM-Specific Analytics**: Module/Sub-Module categorization for product development insights
+### Analytics & Data
+- `GET /api/dashboard` - Get dashboard data
+- `GET /api/analytics/:module` - Get analytics for specific module
+- `GET /api/models` - Get available models
+- `GET /api/visualize` - Get visualization data
+- `GET /api/module-details` - Get detailed module data
 
-### Generic Data Cleaning
-Deterministic automated cleaning without AI:
-- **Whitespace Normalization**: Trims leading/trailing spaces, preserves empty cells as empty strings
-- **Date Standardization**: Converts dates to ISO YYYY-MM-DD format (e.g., "2024-01-15")
-- **Numeric Conversion**: Converts number-like strings to actual numbers (e.g., "123" → 123)
-- **Data Type Preservation**: Maintains original data types, null handling for missing values
+### Central Dashboard
+- `GET /api/central/kpis` - Central KPIs
+- `GET /api/central/top-modules` - Top modules
+- `GET /api/central/series-distribution` - Series distribution
+- `GET /api/central/top-models` - Top models
+- `GET /api/central/high-issues` - High priority issues
+- `GET /api/central/model-module-matrix` - Model-module matrix
 
-## 🔒 Privacy & Security
+### Utilities
+- `GET /api/health` - Health check
+- `GET /api/ollama-models` - Available Ollama models
+- `POST /api/download-excel` - Export Excel files
 
-- **Local Processing**: All AI processing happens on your local machine
-- **No Data Transmission**: Files and text never leave your computer
-- **Temporary Storage**: Uploaded files are automatically cleaned up after processing
-- **File Validation**: Strict file type and size restrictions
+## 🔄 Processing Types
 
-## 🐛 Troubleshooting
+### 1. Beta User Issues (`beta_user_issues`)
+Processes customer feedback from beta testing programs. Extracts issues, categorizes by module, and assigns severity levels.
 
-### "Failed to connect to Ollama"
-- Ensure Ollama is running: `ollama serve`
-- Check if Ollama is accessible on localhost:11434
+### 2. Samsung Members PLM (`samsung_members_plm`)
+Analyzes PLM (Product Lifecycle Management) data from Samsung Members app feedback.
 
-### "File upload failed"
-- Check file size (max 200MB)
-- Verify file type (.txt, .md, .json, .csv, .log, .xls, .xlsx)
-- Ensure proper permissions
+### 3. PLM Issues (`plm_issues`)
+General PLM issue processing for product development feedback.
 
-### Server won't start
-- Install dependencies: `npm install`
-- Check Node.js version: `node --version`
-- Verify port 3001 is available
+### 4. Samsung Members VOC (`samsung_members_voc`)
+Voice of Customer analysis for Samsung Members app user feedback, focusing on content analysis.
 
-## 📈 Recent Updates
+## 📊 Analytics
 
-- **v1.6.0** - (January 2026) Project Structure Refinement & Enhanced Dashboard Features
-  - **NewChangedStructure**: Major project restructuring for improved maintainability
-  - **Enhanced Dashboard UI**: Updated card labels, improved styling, and better user experience
-  - **Model and Module Analytics**: Added comprehensive model-wise and module-wise PLM summary tables
-  - **Beta User Issue Integration**: Updated dashboards with new beta user issue files and processing
-  - **File Management**: Improved file cleanup and organization in downloads directories
-- **v1.5.0** - (December 2025) Advanced Main Dashboard & Source-wise Analytics
-  - **New Main Dashboard** (`main.html`): Complete redesign with 5 interactive charts and 6 navigation buttons
-  - **Source-wise Analytics**: Added "Source wise Top Model" and "Source wise Top Modules" charts
-  - **Enhanced Navigation**: 6 color-coded buttons for Beta Issues, Samsung PLM/VOC, QINGS, Quality Index, and Blogger Issues
-  - **Chart Improvements**: Removed Y-axis scales and horizontal grid lines for cleaner appearance
-  - **Chart Reordering**: Optimized layout with Source Distribution → Top Models → Issues Severity Split
-  - **Responsive Design**: Improved layout for different screen sizes
-- **v1.4.0** - (December 2025) Samsung Members PLM Dashboard & Enhanced Processing
-  - Added dedicated Samsung Members PLM dashboard with specialized analytics
-  - Enhanced Samsung Members PLM processor with advanced data cleaning functions
-  - Improved progress tracking with estimated time display
-  - Dashboard UI enhancements including sidebar show/hide functionality
-  - "Process with AI" button improvements for better user experience
-- **v1.3.0** - (November 2025) Complete project restructure with modular processing architecture
-  - Added dedicated `processors/` and `prompts/` directories for different issue types
-  - Enhanced chunked processing for large files with adaptive sizing
-  - Implemented AI response caching for improved performance
-  - Added comprehensive dashboards for each processing type
-- **v1.2.1** - Prefer qwen3:4b-instruct model for Excel processing
-- **v1.2.0** - Added real-time progress tracking with Server-Sent Events (SSE)
-  - Enhanced visualization dashboard with pagination, search, and CSV export
-  - Added concurrent processing limits (default 4) to prevent resource exhaustion
-  - Improved Excel output with proper column widths and styling
-- **v1.1.0** - Initial release with core AI processing functionality
-  - Basic VOC analysis, custom prompts, and data cleaning
-  - File upload/progress interface with drag-and-drop support
-  - Integration with Ollama API for local AI processing
+The system includes comprehensive analytics powered by Python:
+
+- **Central Aggregator**: Combines data from all processing types
+- **Pandas Aggregator**: Detailed statistical analysis per module
+- **Dashboard Cache**: Pre-computed analytics for performance
+- **Visualization**: Charts and graphs for data insights
+
+Analytics include:
+- Severity distribution
+- Module-wise breakdown
+- Model-wise statistics
+- Top issues identification
+- Trend analysis
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
 
 ## 📄 License
 
-MIT License - feel free to use and modify as needed.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 👨‍💻 Author
 
-- **Ollama** for providing local AI capabilities
-- **Qwen AI** for the excellent language model
-- **Express.js** for the robust backend framework
+**GeekyDillip**
+- GitHub: [@geekydillip](https://github.com/geekydillip)
+- Repository: [Market_Pulse_AI](https://github.com/geekydillip/Market_Pulse_AI)
+
+## 🆘 Support
+
+For issues and questions:
+- Create an issue on GitHub
+- Check the documentation
+- Ensure Ollama is running with the required models
 
 ---
 
-**Note**: This application requires Ollama to be running locally. Make sure to start Ollama before using the web interface.
+*Built with ❤️ for AI-powered data analysis*

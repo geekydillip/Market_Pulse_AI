@@ -78,14 +78,14 @@ def generate_analytics_and_cache():
     Generate all analytics.json files and central cache before starting server.
     This ensures dashboard has fresh data on startup.
     """
-    print("🔄 Generating analytics and cache data...")
+    print("Generating analytics and cache data...")
 
     try:
         # Generate analytics for all modules
         modules = ['beta_user_issues', 'plm_issues', 'samsung_members_plm', 'samsung_members_voc']
 
         for module in modules:
-            print(f"📊 Generating analytics for {module}...")
+            print(f"Generating analytics for {module}...")
             try:
                 result = subprocess.run([
                     sys.executable, 'server/analytics/pandas_aggregator.py',
@@ -93,30 +93,30 @@ def generate_analytics_and_cache():
                 ], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
 
                 if result.returncode == 0:
-                    print(f"✅ Analytics generated for {module}")
+                    print(f"Analytics generated for {module}")
                 else:
-                    print(f"⚠️ Analytics generation failed for {module}: {result.stderr}")
+                    print(f"Analytics generation failed for {module}: {result.stderr}")
             except Exception as e:
-                print(f"❌ Error generating analytics for {module}: {e}")
+                print(f"Error generating analytics for {module}: {e}")
 
         # Generate central cache
-        print("🔄 Generating central dashboard cache...")
+        print("Generating central dashboard cache...")
         try:
             result = subprocess.run([
                 sys.executable, 'server/analytics/generate_central_cache.py'
             ], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
 
             if result.returncode == 0:
-                print("✅ Central cache generated successfully")
+                print("Central cache generated successfully")
             else:
-                print(f"⚠️ Central cache generation failed: {result.stderr}")
+                print(f"Central cache generation failed: {result.stderr}")
         except Exception as e:
-            print(f"❌ Error generating central cache: {e}")
+            print(f"Error generating central cache: {e}")
 
-        print("🎉 Analytics and cache generation completed")
+        print("Analytics and cache generation completed")
 
     except Exception as e:
-        print(f"❌ Error in analytics/cache generation: {e}")
+        print(f"Error in analytics/cache generation: {e}")
 
 def run_server():
     """

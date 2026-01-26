@@ -17,9 +17,9 @@ export default function SourceStackedBar({ data }) {
   // Build series data and calculate totals for sorting
   const severityData = data || {};
   const sourceTotals = baseSources.map(source => {
-    const high = severityData[sourceMap[source]]?.High || 0;
-    const medium = severityData[sourceMap[source]]?.Medium || 0;
-    const low = severityData[sourceMap[source]]?.Low || 0;
+    const high = severityData[sourceMap[source]]?.High_open || 0;
+    const medium = severityData[sourceMap[source]]?.Medium_open || 0;
+    const low = severityData[sourceMap[source]]?.Low_open || 0;
     return { source, total: high + medium + low };
   });
 
@@ -27,9 +27,9 @@ export default function SourceStackedBar({ data }) {
   sourceTotals.sort((a, b) => b.total - a.total);
   const sources = sourceTotals.map(item => item.source);
 
-  const highData = sources.map(source => severityData[sourceMap[source]]?.High || 0);
-  const mediumData = sources.map(source => severityData[sourceMap[source]]?.Medium || 0);
-  const lowData = sources.map(source => severityData[sourceMap[source]]?.Low || 0);
+  const highData = sources.map(source => severityData[sourceMap[source]]?.High_open || 0);
+  const mediumData = sources.map(source => severityData[sourceMap[source]]?.Medium_open || 0);
+  const lowData = sources.map(source => severityData[sourceMap[source]]?.Low_open || 0);
 
   const option = {
     tooltip: {
