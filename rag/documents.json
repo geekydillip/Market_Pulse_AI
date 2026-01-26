@@ -14,5 +14,13 @@
     "issue_type": "Performance",
     "sub_issue_type": "Slow/Lag",
     "source": "TestProcessor"
+  },
+  {
+    "content": "Camera app crashes when taking photos",
+    "module": "Camera",
+    "sub_module": "General",
+    "issue_type": "Crash",
+    "sub_issue_type": "App Crash",
+    "source": "BetaIssuesProcessor"
   }
 ]

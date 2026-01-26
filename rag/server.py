@@ -12,6 +12,9 @@ import sys
 # Add the current directory to Python path to allow imports from rag module
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Also add the parent directory to find the rag module
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from rag.service import create_rag_service
 
 # Configure logging
@@ -74,28 +77,40 @@ def retrieve():
 @app.route('/add_documents', methods=['POST'])
 def add_documents():
     """
-    Add documents to the RAG service.
-    
+    Add documents to the RAG service with structured classification support.
+
     Request Body:
-        documents (list): List of document dictionaries with 'content' field
-        
+        documents (list): List of document dictionaries with structured classification fields
+        source (str, optional): Source identifier for document attribution
+
     Returns:
-        Success message
+        Success message with document count
     """
     try:
         # Parse request data
         data = request.get_json()
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
-            
+
         documents = data.get('documents')
         if not documents:
             return jsonify({"error": "Missing 'documents' parameter"}), 400
-            
-        # Add documents
-        rag_service.add_documents(documents)
-        
-        return jsonify({"message": f"Successfully added {len(documents)} documents"})
+
+        # Get source parameter for document attribution
+        source = data.get('source', 'Unknown')
+
+        # Add documents with source attribution
+        rag_service.add_documents(documents, default_source=source)
+
+        # Get updated document count
+        health = rag_service.health_check()
+        document_count = health["documents_count"]
+
+        return jsonify({
+            "message": f"Successfully added {len(documents)} documents",
+            "source": source,
+            "total_documents": document_count
+        })
     except Exception as e:
         logger.error(f"Add documents failed: {e}")
         return jsonify({"error": str(e)}), 500
