@@ -5,112 +5,85 @@ This script processes existing Excel files and adds their content to the RAG ser
 """
 
 import pandas as pd
-import os
-import sys
 import logging
 from pathlib import Path
-
-# Add the parent directory to Python path to allow imports from rag module
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, parent_dir)
-
 from rag.service import create_rag_service
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def extract_text_from_excel(file_path: str) -> list:
-    """
-    Extract text content from an Excel file.
-    
-    Args:
-        file_path: Path to the Excel file
-        
-    Returns:
-        List of text chunks extracted from the Excel file
-    """
+# Define common column names used across different processors
+COLUMN_MAPPING = {
+    "content": ["Content", "Issue Description", "Raw Text", "Problem", "Feedback"],
+    "module": ["Module", "Product Area", "Category", "Application Name"],
+    "sub_module": ["Sub-Module", "Component", "Functional Area", "Feature"],
+    "issue_type": ["Issue Type", "Classification", "Category Type"],
+    "sub_issue_type": ["Sub-Issue Type", "Detailed Issue", "Symptom"]
+}
+
+def map_columns(df_columns):
+    """Maps spreadsheet columns to structured vision fields."""
+    mapping = {}
+    for target, aliases in COLUMN_MAPPING.items():
+        # Find the first matching column name from the spreadsheet
+        match = next((col for col in df_columns if col in aliases), None)
+        mapping[target] = match
+    return mapping
+
+def extract_structured_data(file_path: str) -> list:
+    """Extracts content for vectorization and labels for metadata."""
     try:
-        # Read all sheets from the Excel file
         xls = pd.ExcelFile(file_path)
-        chunks = []
-        
+        structured_chunks = []
+
         for sheet_name in xls.sheet_names:
-            # Read the sheet
             df = pd.read_excel(xls, sheet_name=sheet_name)
-            
-            # Process each row as a separate document
+            col_map = map_columns(df.columns)
+
+            # Skip sheets that don't have at least a content column
+            if not col_map["content"]:
+                continue
+
             for index, row in df.iterrows():
-                # Convert row to text
-                row_text = ""
-                for col_name, value in row.items():
-                    if pd.notna(value):  # Only include non-null values
-                        row_text += f"{col_name}: {value}\n"
-                
-                if row_text.strip():  # Only include non-empty rows
-                    chunks.append({
-                        "content": row_text.strip(),
-                        "source": file_path,
-                        "sheet": sheet_name,
-                        "row": index + 1
-                    })
-        
-        logger.info(f"Extracted {len(chunks)} text chunks from {file_path}")
-        return chunks
+                # 1. Extract the raw text for vectorization (NO labels included)
+                raw_content = str(row.get(col_map["content"], "")).strip()
+
+                if not raw_content or raw_content.lower() == "nan":
+                    continue
+
+                # 2. Extract classification labels as separate metadata fields
+                doc = {
+                    "content": raw_content, # Only this will be vectorized in service.py
+                    "module": str(row.get(col_map["module"], "Other")),
+                    "sub_module": str(row.get(col_map["sub_module"], "")),
+                    "issue_type": str(row.get(col_map["issue_type"], "")),
+                    "sub_issue_type": str(row.get(col_map["sub_issue_type"], "")),
+                    "source": Path(file_path).stem, # Identifies the processor source
+                    "row": index + 1
+                }
+                structured_chunks.append(doc)
+
+        return structured_chunks
     except Exception as e:
         logger.error(f"Error processing {file_path}: {e}")
         return []
 
 def initialize_rag_with_excel_data(data_directory: str = "./downloads"):
-    """
-    Initialize RAG service with data from Excel files.
-    
-    Args:
-        data_directory: Directory containing Excel files to process
-    """
-    # Create RAG service instance
+    """Initializes RAG with clean, structured data."""
     rag_service = create_rag_service()
-    
-    # Check current document count
-    health = rag_service.health_check()
-    initial_count = health["documents_count"]
-    logger.info(f"Initial document count: {initial_count}")
-    
-    # Find all Excel files in the data directory
-    excel_files = []
     data_path = Path(data_directory)
-    
-    if not data_path.exists():
-        logger.warning(f"Data directory {data_directory} does not exist")
-        return
-    
-    # Recursively find all .xlsx files
-    for file_path in data_path.rglob("*.xlsx"):
-        # Skip processed files to avoid duplication
-        if "_Processed.xlsx" not in file_path.name:
-            excel_files.append(file_path)
-    
-    logger.info(f"Found {len(excel_files)} Excel files to process")
-    
-    # Process each Excel file
-    all_documents = []
-    for file_path in excel_files:
-        logger.info(f"Processing {file_path}")
-        documents = extract_text_from_excel(str(file_path))
-        all_documents.extend(documents)
-    
-    # Add documents to RAG service
-    if all_documents:
-        logger.info(f"Adding {len(all_documents)} documents to RAG service")
-        rag_service.add_documents(all_documents)
-    else:
-        logger.info("No documents to add")
-    
-    # Check final document count
-    health = rag_service.health_check()
-    final_count = health["documents_count"]
-    logger.info(f"Final document count: {final_count}")
-    logger.info(f"Added {final_count - initial_count} new documents")
+
+    # 1. Find relevant files
+    excel_files = [f for f in data_path.rglob("*.xlsx") if "_Processed" not in f.name]
+
+    all_docs = []
+    for file in excel_files:
+        logger.info(f"Ingesting structured data from: {file.name}")
+        all_docs.extend(extract_structured_data(str(file)))
+
+    # 2. Batch add to service
+    if all_docs:
+        rag_service.add_documents(all_docs)
+        logger.info(f"RAG vision initialized with {len(all_docs)} structured examples.")
 
 def clear_existing_index(index_path: str = "./rag/index.faiss", docs_path: str = "./rag/documents.json"):
     """
