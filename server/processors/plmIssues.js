@@ -192,5 +192,6 @@ async function plmIssuesProcessor(rows, context = {}) {
 
 // Add expected headers for the processor
 plmIssuesProcessor.expectedHeaders = ['Case Code','Model No.','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem'];
+plmIssuesProcessor.readAndNormalizeExcel = readAndNormalizeExcel;
 
 module.exports = plmIssuesProcessor;

@@ -336,7 +336,7 @@ function moveQueueItem(itemId, direction) {
 }
 
 function clearQueue() {
-    // Only clear non-processing items
+    // Clear ALL items including failed ones (but keep processing items)
     fileQueue = fileQueue.filter(item => item.status === 'processing');
     updateQueueUI();
     updateFileCount();
@@ -1410,7 +1410,7 @@ function setupQueueButtonListeners() {
 
   // Clear All button
   document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('clear-all-btn')) {
+    if (e.target.id === 'clearQueueBtn' || e.target.closest('#clearQueueBtn')) {
       handleClearAll();
     }
   });

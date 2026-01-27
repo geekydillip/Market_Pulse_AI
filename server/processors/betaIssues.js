@@ -224,5 +224,6 @@ async function betaIssuesProcessor(rows, context = {}) {
 
 // Add expected headers for the processor
 betaIssuesProcessor.expectedHeaders = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)'];
+betaIssuesProcessor.readAndNormalizeExcel = readAndNormalizeExcel;
 
 module.exports = betaIssuesProcessor;

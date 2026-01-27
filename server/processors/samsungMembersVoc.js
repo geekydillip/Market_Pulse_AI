@@ -245,5 +245,6 @@ async function samsungMembersVocProcessor(rows, context = {}) {
 
 // Add expected headers for the processor
 samsungMembersVocProcessor.expectedHeaders = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
+samsungMembersVocProcessor.readAndNormalizeExcel = readAndNormalizeExcel;
 
 module.exports = samsungMembersVocProcessor;

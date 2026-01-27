@@ -177,7 +177,7 @@
   </div>
 
   <!-- Processing Queue -->
-  <div id="processingQueue" class="mt-6 hidden">
+  <div id="processingQueue" class="mt-6">
     <!-- Queue Status Card -->
     <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded-lg min-h-[3rem] mb-4">
       <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -218,9 +218,6 @@
     <div id="queueGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       <!-- File cards will be added here -->
     </div>
-
-
-
   </div>
 </section>
 
@@ -805,17 +802,12 @@ function removeFromQueue(id) {
   fileQueue = fileQueue.filter(item => item.id !== id);
   saveQueueToStorage();
   updateQueueDisplay();
-
-  if (fileQueue.length === 0) {
-    document.getElementById('processingQueue').classList.add('hidden');
-  }
 }
 
 function clearQueue() {
   fileQueue = [];
   clearQueueFromStorage();
   updateQueueDisplay();
-  document.getElementById('processingQueue').classList.add('hidden');
 }
 
 // Ollama integration

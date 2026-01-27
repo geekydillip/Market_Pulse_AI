@@ -358,5 +358,6 @@ async function samsungMembersPlmProcessor(rows, context = {}) {
 
 // Add expected headers for the processor
 samsungMembersPlmProcessor.expectedHeaders = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Feature','Problem','Resolve Option(Medium)','Resolve Option(Small)','Cause','Counter Measure'];
+samsungMembersPlmProcessor.readAndNormalizeExcel = readAndNormalizeExcel;
 
 module.exports = samsungMembersPlmProcessor;
