@@ -575,7 +575,7 @@ async function processJSON(req, res, processingMode = 'regular') {
     const numberOfChunks = batches.length;
 
     // Update cache with actual chunk count
-    cacheManager.updateSessionProgress(processingType, sessionId, {
+    cacheManager.updateProgress(processingType, sessionId, {
       totalChunks: numberOfChunks,
       status: 'active'
     });

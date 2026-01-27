@@ -715,7 +715,7 @@ function createFileCard(item) {
       downloadBtn.className = 'px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors';
       downloadBtn.href = processedFile.url;
       downloadBtn.download = processedFile.filename;
-      downloadBtn.textContent = 'Download Processed File';
+      downloadBtn.textContent = 'Download';
       actions.appendChild(downloadBtn);
     }
   } else if (item.status === 'failed') {
