@@ -67,12 +67,6 @@
   // Set initial theme
   updateTheme();
 
-  // Toggle learning source visibility
-  function toggleLearningSource() {
-    const mode = document.getElementById('processingMode').value;
-    const container = document.getElementById('learningSourceContainer');
-    container.classList.toggle('hidden', mode !== 'learning');
-  }
 </script>
 </head>
 
@@ -91,32 +85,6 @@
     </a>
   </div>
 
-  <!-- Processing Mode Selection -->
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
-    <div class="flex flex-col gap-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Mode</label>
-        <select id="processingMode" class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" onchange="toggleLearningSource()">
-          <option value="regular">Regular Mode (Standard)</option>
-          <option value="discovery">Discovery Mode (Explore Patterns)</option>
-          <option value="learning">Learning Mode (Update Database)</option>
-        </select>
-      </div>
-
-      <div id="learningSourceContainer" class="hidden p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <label class="block text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Learning Source</label>
-        <select id="learningSource" name="learningSource" class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
-          <option value="samsung_members_voc">Samsung Members VOC</option>
-          <option value="samsung_members_plm">Samsung Members PLM</option>
-          <option value="beta_user_issues">Beta User Issues</option>
-          <option value="plm_issues">PLM Issues</option>
-        </select>
-        <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
-          <strong>Note:</strong> Select the source type for learning. This data will be saved to improve future processing accuracy.
-        </p>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- KPI -->

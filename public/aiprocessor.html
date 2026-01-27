@@ -137,25 +137,28 @@
       </div>
     </div>
 
-    <!-- Processing Mode Selector -->
-    <div class="flex items-center gap-3">
-      <div class="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-lg shadow-sm border border-slate-300 dark:border-slate-500">
-        <i class="fa-solid fa-cogs text-blue-600 dark:text-blue-400 text-sm"></i>
-        <label for="processingMode" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</label>
-      </div>
-      <div class="relative">
-        <select id="processingMode" class="appearance-none px-4 py-2 pr-8 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer min-w-[140px]">
-          <option value="regular">Regular</option>
-          <option value="discovery">Discovery</option>
-        </select>
-        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none text-xs"></i>
-      </div>
-    </div>
-
     <a href="main.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
       <i class="fa-solid fa-arrow-left mr-2"></i>
       Dashboard
     </a>
+  </div>
+</div>
+
+<!-- LEARNING SOURCE SELECTION (Hidden by default) -->
+<div id="learningSourceContainer" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
+  <div class="flex flex-col gap-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Learning Source</label>
+      <select id="learningSource" name="learningSource" class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        <option value="samsung_members_voc">Samsung Members VOC</option>
+        <option value="samsung_members_plm">Samsung Members PLM</option>
+        <option value="beta_user_issues">Beta User Issues</option>
+        <option value="plm_issues">PLM Issues</option>
+      </select>
+      <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
+        <strong>Note:</strong> Select the source type for learning. This data will be saved to improve future processing accuracy.
+      </p>
+    </div>
   </div>
 </div>
 
@@ -225,6 +228,21 @@
 <div class="mb-6 text-center">
   <div id="selectionStatus" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
     <span id="selectionText">✗ No Processing Type Selected</span>
+    <!-- Processing Mode Selector -->
+    <div class="flex items-center gap-3 ml-4">
+      <div class="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-lg shadow-sm border border-slate-300 dark:border-slate-500">
+        <i class="fa-solid fa-cogs text-blue-600 dark:text-blue-400 text-sm"></i>
+        <label for="processingMode" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</label>
+      </div>
+      <div class="relative">
+        <select id="processingMode" class="appearance-none px-4 py-2 pr-8 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer min-w-[140px]">
+          <option value="regular">Regular Mode (Standard processing)</option>
+          <option value="discovery">Discovery Mode (Explore new patterns)</option>
+          <option value="learning">Learning Mode (Update Database)</option>
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none text-xs"></i>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -437,6 +455,16 @@ function setupEventListeners() {
 function handleModeChange(event) {
   selectedProcessingMode = event.target.value;
   console.log('Processing mode changed to:', selectedProcessingMode);
+  
+  // Toggle learning source visibility based on mode
+  toggleLearningSource();
+}
+
+// Toggle learning source visibility
+function toggleLearningSource() {
+  const mode = document.getElementById('processingMode').value;
+  const container = document.getElementById('learningSourceContainer');
+  container.classList.toggle('hidden', mode !== 'learning');
 }
 
 // Processing type selection
@@ -951,6 +979,13 @@ async function processFile(queueItem, processingType, model) {
       formData.append('model', model);
       formData.append('mode', selectedProcessingMode);
       formData.append('sessionId', currentSessionId);
+      
+      // Add learning source if in Learning Mode
+      if (selectedProcessingMode === 'learning') {
+        const learningSourceSelect = document.getElementById('learningSource');
+        const learningSource = learningSourceSelect ? learningSourceSelect.value : processingType;
+        formData.append('learningSource', learningSource);
+      }
 
       const response = await fetch('/api/process', {
         method: 'POST',
