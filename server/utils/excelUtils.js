@@ -161,17 +161,20 @@ function applyExcelStyling(worksheet, headers, dataRows) {
  * @returns {string} Path to the generated Excel file
  */
 function generateExcelFile(processedRows, headers, outputPath) {
-  // Convert back to Excel
+  // 1. Create a new workbook
   const newWb = xlsx.utils.book_new();
+  
+  // 2. Convert your data array to a worksheet
   const newSheet = xlsx.utils.json_to_sheet(processedRows);
 
-  // Apply column widths
+  // 3. APPLY STYLING AND WIDTHS
   newSheet['!cols'] = getColumnWidths(headers);
-
-  // Apply cell styling
   applyExcelStyling(newSheet, headers, processedRows.length);
 
-  // Write to file
+  // --- CRITICAL MISSING STEP: Append the sheet to the workbook ---
+  xlsx.utils.book_append_sheet(newWb, newSheet, 'Processed Results');
+
+  // 4. Write to buffer and then to file
   const buf = xlsx.write(newWb, { bookType: 'xlsx', type: 'buffer' });
   fs.writeFileSync(outputPath, buf);
 

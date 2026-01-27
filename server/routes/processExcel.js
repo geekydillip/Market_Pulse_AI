@@ -294,8 +294,8 @@ async function processChunk({
     );
   }
 
-  // Call the processor with the chunk
-  const result = await processor(chunk, {
+  // --- FIX: Pass 'chunk.rows' instead of 'chunk' ---
+  const result = await processor(chunk.rows, {
     prompt,
     context
   });
