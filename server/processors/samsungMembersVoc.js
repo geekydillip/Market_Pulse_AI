@@ -3,6 +3,7 @@ const path = require('path');
 const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/samsungMembers_voc');
 const { cleanExcelStyling } = require('./_helpers');
+const ollamaClient = require('../ollamaClient');
 
 /**
  * Deep clean objects to remove Excel styling artifacts recursively
@@ -102,7 +103,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
+  const canonicalCols = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','Issue Type','Sub-Issue Type','AI Insight'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -195,6 +196,80 @@ function normalizeRows(rows) {
 }
 
 /**
+ * Parse AI response and extract structured data
+ * @param {string} response - AI response text
+ * @param {number} rowCount - Number of rows to expect
+ * @returns {Array} Parsed results for each row
+ */
+function parseAIResponse(response, rowCount) {
+  try {
+    // Try to parse as JSON first
+    const parsed = JSON.parse(response);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch (e) {
+    // If not JSON, try to parse as structured text
+    const lines = response.split('\n').filter(line => line.trim());
+    const results = [];
+    let currentRow = null;
+    let currentResult = {};
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      
+      // Check if line starts with a row number
+      const rowMatch = trimmed.match(/^(\d+):\s*(.*)/);
+      if (rowMatch) {
+        if (currentRow !== null && currentResult) {
+          results.push(currentResult);
+        }
+        currentRow = parseInt(rowMatch[1]);
+        currentResult = {};
+      }
+      
+      // Extract Module
+      const moduleMatch = trimmed.match(/Module:\s*(.+)/i);
+      if (moduleMatch) {
+        currentResult.Module = moduleMatch[1].trim();
+      }
+      
+      // Extract Sub-Module
+      const subModuleMatch = trimmed.match(/Sub-Module:\s*(.+)/i);
+      if (subModuleMatch) {
+        currentResult['Sub-Module'] = subModuleMatch[1].trim();
+      }
+      
+      // Extract Issue Type
+      const issueTypeMatch = trimmed.match(/Issue Type:\s*(.+)/i);
+      if (issueTypeMatch) {
+        currentResult['Issue Type'] = issueTypeMatch[1].trim();
+      }
+      
+      // Extract Sub-Issue Type
+      const subIssueTypeMatch = trimmed.match(/Sub-Issue Type:\s*(.+)/i);
+      if (subIssueTypeMatch) {
+        currentResult['Sub-Issue Type'] = subIssueTypeMatch[1].trim();
+      }
+      
+      // Extract AI Insight
+      const aiInsightMatch = trimmed.match(/AI Insight:\s*(.+)/i);
+      if (aiInsightMatch) {
+        currentResult['AI Insight'] = aiInsightMatch[1].trim();
+      }
+    }
+    
+    if (currentResult && Object.keys(currentResult).length > 0) {
+      results.push(currentResult);
+    }
+    
+    return results;
+  }
+  
+  return [];
+}
+
+/**
  * Samsung Members VOC Processor
  * Main processing function that handles both regular and discovery modes
  * @param {Array} rows - Input data rows
@@ -202,7 +277,7 @@ function normalizeRows(rows) {
  * @returns {Promise<Array>} Processed rows with AI insights
  */
 async function samsungMembersVocProcessor(rows, context = {}) {
-  const { mode = 'regular', prompt: customPrompt } = context;
+  const { mode = 'regular', prompt: customPrompt, model = 'qwen3:4b-instruct' } = context;
 
   // Use appropriate prompt based on mode
   const prompt = customPrompt || promptTemplate;
@@ -231,20 +306,57 @@ async function samsungMembersVocProcessor(rows, context = {}) {
   });
   const aiPrompt = prompt.replace('{INPUTDATA_JSON}', JSON.stringify(numberedInput, null, 2));
 
-  // For now, return the transformed rows with placeholder AI fields
-  // In a real implementation, this would call the AI service
-  return transformedRows.map(row => ({
-    ...row,
-    'Module': '',
-    'Sub-Module': '',
-    'Issue Type': '',
-    'Sub-Issue Type': '',
-    'AI Insight': ''
-  }));
+  try {
+    // Call Ollama AI service
+    console.log(`[SamsungMembersVoc] Processing ${transformedRows.length} rows with AI...`);
+    const aiResponse = await ollamaClient.callOllama(aiPrompt, model);
+    
+    // Parse the AI response
+    const parsedResults = parseAIResponse(aiResponse, transformedRows.length);
+    
+    // Merge AI results with original data
+    const finalRows = transformedRows.map((row, index) => {
+      const aiResult = parsedResults[index] || {};
+      return {
+        ...row,
+        'No': index + 1, // Add serial number
+        'Module': aiResult.Module || '',
+        'Sub-Module': aiResult['Sub-Module'] || '',
+        'Issue Type': aiResult['Issue Type'] || '',
+        'Sub-Issue Type': aiResult['Sub-Issue Type'] || '',
+        'AI Insight': aiResult['AI Insight'] || ''
+      };
+    });
+
+    // Save discovery data if in discovery mode
+    if (mode === 'discovery') {
+      saveDiscoveryRecord({
+        input: numberedInput,
+        prompt: aiPrompt,
+        response: aiResponse,
+        results: parsedResults,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    return finalRows;
+  } catch (error) {
+    console.error('[SamsungMembersVoc] AI processing failed:', error);
+    
+    // Return rows with error information if AI fails
+    return transformedRows.map(row => ({
+      ...row,
+      'Module': 'ERROR: AI processing failed',
+      'Sub-Module': '',
+      'Issue Type': '',
+      'Sub-Issue Type': '',
+      'AI Insight': `Error: ${error.message}`
+    }));
+  }
 }
 
 // Add expected headers for the processor
-samsungMembersVocProcessor.expectedHeaders = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
+samsungMembersVocProcessor.expectedHeaders = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','Issue Type','Sub-Issue Type','AI Insight'];
 samsungMembersVocProcessor.readAndNormalizeExcel = readAndNormalizeExcel;
 
 module.exports = samsungMembersVocProcessor;

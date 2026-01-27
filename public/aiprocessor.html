@@ -706,7 +706,7 @@ function createFileCard(item) {
     actions.appendChild(stopBtn);
   } else if (item.status === 'completed' && item.downloads) {
     item.downloads.forEach(download => {
-      if (!download.filename.toLowerCase().endsWith('.json')) {
+      if (true) { // Removed the restriction so both Excel and JSON logs appear
         const downloadBtn = document.createElement('a');
         downloadBtn.className = 'px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors';
         downloadBtn.href = download.url;
