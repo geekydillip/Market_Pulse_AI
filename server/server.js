@@ -263,64 +263,6 @@ async function runTasksWithLimit(tasks, limit = 4) {
 }
 
 
-    // Route: Upload and process file (Excel or JSON only)
-    app.post('/api/process', upload.single('file'), validateFileUpload, async (req, res) => {
-  try {
-    console.log('[API PROCESS] Processing request received');
-    // Sanitize input parameters to prevent injection
-    const processingType = sanitizeInput(req.body.processingType || 'beta_user_issues');
-
-    // request-level override (optional)
-    const requestedMode = req.body.mode || req.query.mode;
-
-    // final effective mode
-    const PROCESSING_MODE_CANONICAL =
-      requestedMode === 'discovery'
-        ? 'discovery'
-        : requestedMode === 'regular'
-          ? 'regular'
-          : SERVER_PROCESSING_MODE;
-
-    console.log(`[MODE NORMALIZED] Requested: ${requestedMode ?? 'none'} → Server: ${SERVER_PROCESSING_MODE} → Effective: ${PROCESSING_MODE_CANONICAL}`);
-
-    const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
-
-    console.log(`[API PROCESS] Processing type: ${processingType}, mode: ${PROCESSING_MODE_CANONICAL}, model: ${model}`);
-
-    // Validate processing type
-    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues']; // Supported processing types
-    if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type.' });
-    }
-
-    // Validate processing mode
-    const validProcessingModes = ['regular', 'discovery'];
-    if (!validProcessingModes.includes(PROCESSING_MODE_CANONICAL)) {
-      return res.status(400).json({ error: 'Invalid processing mode. Must be "regular" or "discovery".' });
-    }
-
-    const ext = path.extname(req.file.originalname).toLowerCase();
-
-    if (ext === '.xlsx' || ext === '.xls') {
-      // Excel files - process with chunking
-      return processExcel(req, res, PROCESSING_MODE_CANONICAL);
-    } else if (ext === '.json') {
-      // JSON files - parse and process like Excel rows
-      return processJSON(req, res, PROCESSING_MODE_CANONICAL);
-    } else if (ext === '.csv') {
-      // CSV files - parse and process like JSON rows
-      return processCSV(req, res, PROCESSING_MODE_CANONICAL);
-    } else {
-      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls), JSON (.json), and CSV (.csv) files are supported' });
-    }
-
-  } catch (error) {
-    console.error('Error processing file:', error);
-    res.status(500).json({
-      error: error.message || 'Failed to process file'
-    });
-  }
-});
 
 // Generic cleaning function
 function applyGenericCleaning(value) {

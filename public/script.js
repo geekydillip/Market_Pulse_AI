@@ -647,120 +647,114 @@ async function handleProcess() {
 }
 
 async function processStructuredFile(file, processingType, model, sessionId) {
-    return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Set global session tracking
+      currentSessionId = sessionId;
+
+      // Add processing class to enable shining animation
+      processBtn.classList.add('processing');
+
+      // Show stop button
+      stopBtn.style.display = 'inline-block';
+
+      const processStartTime = Date.now();
+      let timerInterval;
+      let eventSource;
+
+      // Connect to SSE for real-time progress updates
+      eventSource = new EventSource(`/api/progress/${sessionId}`);
+      currentEventSource = eventSource;
+
+      eventSource.onmessage = (event) => {
         try {
-            // Set global session tracking
-            currentSessionId = sessionId;
-
-            // Add processing class to enable shining animation
-            processBtn.classList.add('processing');
-
-            // Show stop button
-            stopBtn.style.display = 'inline-block';
-
-            const processStartTime = Date.now();
-            let timerInterval;
-            let eventSource;
-
-            // Connect to SSE for real-time progress updates
-            eventSource = new EventSource(`/api/progress/${sessionId}`);
-            currentEventSource = eventSource;
-
-            eventSource.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'progress') {
-                        // Cache metadata for better ETA calculations
-                        if (data.totalChunks && Number.isFinite(data.totalChunks)) {
-                            processingMetrics.totalChunks = parseInt(data.totalChunks, 10);
-                        }
-                        if (data.chunksCompleted && Number.isFinite(data.chunksCompleted)) {
-                            processingMetrics.chunksCompleted = parseInt(data.chunksCompleted, 10);
-                        }
-
-                        updateProgress(data.percent, data.message);
-                        if (DEBUG) console.log(`Progress: ${data.percent}% - ${data.message}`);
-                    }
-                } catch (e) {
-                    console.error('Error parsing SSE data:', e);
-                }
-            };
-
-            eventSource.onerror = (error) => {
-                console.error('SSE error:', error);
-            };
-
-            // Start live timer
-            currentTimerInterval = setInterval(() => {
-                const elapsedMs = Date.now() - processStartTime;
-                const elapsedSec = Math.floor(elapsedMs / 1000);
-                const message = `Processing... (${elapsedSec}s)`;
-                // Update timer display, but allow current progress message to show if it's detailed
-                if (!progressText.textContent.includes('Processing Data') &&
-                    !progressText.textContent.includes('Finalizing output') &&
-                    !progressText.textContent.includes('Processing complete')) {
-                    progressText.textContent = message;
-                }
-            }, 1000);
-
-            // Send processing request
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('processingType', processingType);
-            formData.append('processingMode', 'discovery');  // Enable discovery mode with embeddings
-
-            formData.append('model', model);
-            formData.append('sessionId', sessionId);
-
-            const response = await fetch('/api/process', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                eventSource.close();
-                reject(new Error('Processing failed'));
-                return;
+          const data = JSON.parse(event.data);
+          if (data.type === 'progress') {
+            // Cache metadata for better ETA calculations
+            if (data.totalChunks && Number.isFinite(data.totalChunks)) {
+              processingMetrics.totalChunks = parseInt(data.totalChunks, 10);
+            }
+            if (data.chunksCompleted && Number.isFinite(data.chunksCompleted)) {
+              processingMetrics.chunksCompleted = parseInt(data.chunksCompleted, 10);
             }
 
-            // Wait for response and handle download
-            const result = await response.json();
-
-            if (result.success && result.downloads && result.downloads.length > 0) {
-                clearInterval(currentTimerInterval);
-                eventSource.close();
-                updateProgress(100, 'Processing complete');
-                // Download the first file (processed Excel/JSON)
-                downloadFile(result.downloads[0].url, result.downloads[0].filename);
-
-                // Record processing end time
-                processingEndTime = new Date();
-
-                // Show processing summary
-                showProcessingSummary(result.total_processing_time_ms, result.downloads, processingStartTime, processingEndTime);
-            } else {
-                clearInterval(currentTimerInterval);
-                eventSource.close();
-                reject(new Error(result.error || 'Processing failed'));
-            }
-
-            resolve();
-        } catch (error) {
-            if (timerInterval) clearInterval(timerInterval);
-            if (eventSource) eventSource.close();
-            reject(error);
-        } finally {
-            // Remove processing class to stop shining animation
-            processBtn.classList.remove('processing');
-
-            // Hide stop button when processing completes
-            stopBtn.style.display = 'none';
-
-            // Clear session tracking
-            currentSessionId = null;
-            currentEventSource = null;
+            updateProgress(data.percent, data.message);
+            if (DEBUG) console.log(`Progress: ${data.percent}% - ${data.message}`);
+          }
+        } catch (e) {
+          console.error('Error parsing SSE data:', e);
         }
-    });
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE error:', error);
+      };
+
+      // Start live timer
+      currentTimerInterval = setInterval(() => {
+        const elapsedMs = Date.now() - processStartTime;
+        const elapsedSec = Math.floor(elapsedMs / 1000);
+        const message = `Processing... (${elapsedSec}s)`;
+        // Update timer display, but allow current progress message to show if it's detailed
+        if (!progressText.textContent.includes('Processing Data') &&
+            !progressText.textContent.includes('Finalizing output') &&
+            !progressText.textContent.includes('Processing complete')) {
+          progressText.textContent = message;
+        }
+      }, 1000);
+
+      // Send processing request
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('processingType', processingType);
+      formData.append('processingMode', 'discovery');  // Enable discovery mode with embeddings
+
+      formData.append('model', model);
+      formData.append('sessionId', sessionId);
+
+      const response = await fetch('/api/process', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        eventSource.close();
+        reject(new Error('Processing failed'));
+        return;
+      }
+
+      // Wait for response and handle download
+      const result = await response.json();
+
+      if (result.success && result.downloads && result.downloads.length > 0) {
+        clearInterval(currentTimerInterval);
+        eventSource.close();
+        updateProgress(100, 'Processing complete');
+        
+        // Return the full result object instead of downloading immediately
+        resolve(result);
+      } else {
+        clearInterval(currentTimerInterval);
+        eventSource.close();
+        reject(new Error(result.error || 'Processing failed'));
+      }
+
+    } catch (error) {
+      if (timerInterval) clearInterval(timerInterval);
+      if (eventSource) eventSource.close();
+      reject(error);
+    } finally {
+      // Remove processing class to stop shining animation
+      processBtn.classList.remove('processing');
+
+      // Hide stop button when processing completes
+      stopBtn.style.display = 'none';
+
+      // Clear session tracking
+      currentSessionId = null;
+      currentEventSource = null;
+    }
+  });
 }
 
 function updateProgress(percent, text, timerInterval) {
@@ -1305,7 +1299,12 @@ async function handleProcessQueue() {
                 // Handle Excel/JSON processing with chunked progress
                 progressContainer.style.display = 'block';
                 updateProgress(0, `Processing ${item.file.name}...`);
-                await processStructuredFile(item.file, processingType, selectedModel, sessionId);
+                const result = await processStructuredFile(item.file, processingType, selectedModel, sessionId);
+                
+                // Store downloads in the queue item for the download button
+                if (result && result.downloads) {
+                    item.downloads = result.downloads;
+                }
             } else {
                 // Process other files - show loading overlay
                 showLoading(selectedModel);
@@ -1426,10 +1425,11 @@ function handleDownload(button) {
 
   // FIX: If we have real download links from the server, use them
   if (item && item.downloads && item.downloads.length > 0) {
-    const download = item.downloads[0]; // Usually the Excel file
+    // Automatically pick the Excel file if available, otherwise the first link
+    const excelDownload = item.downloads.find(d => d.filename.endsWith('.xlsx')) || item.downloads[0];
     const a = document.createElement('a');
-    a.href = download.url;
-    a.download = download.filename;
+    a.href = excelDownload.url;
+    a.download = excelDownload.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

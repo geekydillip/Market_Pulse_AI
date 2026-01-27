@@ -293,7 +293,7 @@ if __name__ == "__main__":
     save_json = '--save-json' in sys.argv
 
     # Get project root directory (works regardless of execution context)
-    script_dir = Path(__file__).parent.parent.parent  # server/analytics -> server -> project_root
+    script_dir = Path(__file__).parent.parent  # server/analytics -> server
     folder_path = script_dir / 'downloads' / module
 
     try:

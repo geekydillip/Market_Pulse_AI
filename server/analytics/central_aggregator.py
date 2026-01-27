@@ -717,7 +717,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # Default behavior - return all data including matrix, summary, and filtered models
-    base_path = "./downloads"
+    base_path = "../downloads"
     try:
         data = load_all_excels(base_path)
         kpis, status_kpis = compute_central_kpis(data)

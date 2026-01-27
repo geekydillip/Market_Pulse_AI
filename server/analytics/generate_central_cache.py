@@ -48,7 +48,7 @@ def aggregate_analytics_data():
     print(f"Loaded {len(model_name_map)} model name mappings for analytics aggregation", file=sys.stderr)
     
     # Get project root directory (works regardless of execution context)
-    script_dir = Path(__file__).parent.parent.parent  # server/analytics -> server -> project_root
+    script_dir = Path(__file__).parent.parent  # server/analytics -> server
     downloads_dir = script_dir / 'downloads'
 
     analytics_files = [
@@ -167,7 +167,7 @@ def run_aggregator_directly():
         # Import and run the aggregator functions directly
         import central_aggregator as ca
 
-        base_path = "./downloads"
+        base_path = "../downloads"
         data = ca.load_all_excels(base_path)
         kpis, status_kpis = ca.compute_central_kpis(data)
         top_modules = ca.compute_top_modules(data)
