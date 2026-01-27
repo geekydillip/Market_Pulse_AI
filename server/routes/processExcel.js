@@ -245,9 +245,9 @@ function setupProcessRoute(app, upload) {
         return res.status(400).json({ error: 'Invalid processing type.' });
       }
 
-      const validProcessingModes = ['regular', 'discovery'];
+      const validProcessingModes = ['regular', 'discovery', 'learning'];
       if (!validProcessingModes.includes(effectiveMode)) {
-        return res.status(400).json({ error: 'Invalid processing mode. Must be "regular" or "discovery".' });
+        return res.status(400).json({ error: 'Invalid processing mode. Must be "regular", "discovery", or "learning".' });
       }
 
       const ext = path.extname(req.file.originalname).toLowerCase();
@@ -316,6 +316,79 @@ const PROCESSOR_SOURCES = {
   'samsung_members_voc': 'Samsung Members VOC'
 };
 
+// Learning Mode handler - saves data to VectorStore for future processing
+async function handleLearningMode(rows, learningSource, model, sessionId) {
+  console.log(`Learning Mode Activated: Saving ${rows.length} rows to VectorStore from source: ${learningSource}`);
+  
+  let savedCount = 0;
+  let errorCount = 0;
+
+  // Process each row and save to database
+  for (const row of rows) {
+    try {
+      // Determine the text to embed based on learning source
+      let textToEmbed = '';
+      let metadata = {
+        source: PROCESSOR_SOURCES[learningSource] || learningSource,
+        isLearned: true,
+        sessionId: sessionId,
+        timestamp: new Date().toISOString()
+      };
+
+      if (learningSource === 'samsung_members_voc') {
+        // For VOC data, use content field
+        textToEmbed = row.content || row.Content || row.text || '';
+        metadata.Module = row.Module || 'Uncategorized';
+        metadata['Sub-Module'] = row['Sub-Module'] || 'None';
+        metadata['Issue Type'] = row['Issue Type'] || 'General';
+      } else {
+        // For structured data (beta_user_issues, plm_issues, etc.)
+        textToEmbed = row.Title || row.title || row.Problem || row.problem || row.Description || row.description || '';
+        metadata.Module = row.Module || row.module || 'Uncategorized';
+        metadata['Sub-Module'] = row['Sub-Module'] || row['sub-module'] || 'None';
+        metadata['Issue Type'] = row['Issue Type'] || row['issue_type'] || 'General';
+      }
+
+      // Skip empty text
+      if (!textToEmbed || textToEmbed.trim().length === 0) {
+        continue;
+      }
+
+      // Get embedding from embedding service
+      const embedding = await embeddingService.getEmbeddings(textToEmbed);
+      
+      // Save to VectorStore with proper metadata
+      await vectorStore.storeEmbedding(
+        textToEmbed, 
+        embedding, 
+        'row', // embedding type
+        metadata.source, // source
+        metadata // additional metadata
+      );
+
+      savedCount++;
+      
+      // Progress update every 10 rows
+      if (savedCount % 10 === 0) {
+        console.log(`Learning Mode: Saved ${savedCount} rows so far...`);
+      }
+
+    } catch (error) {
+      console.error(`Error saving row to VectorStore:`, error.message);
+      errorCount++;
+    }
+  }
+
+  console.log(`Learning Mode completed: ${savedCount} rows saved, ${errorCount} errors`);
+  
+  return {
+    success: true,
+    savedCount: savedCount,
+    errorCount: errorCount,
+    message: `Successfully learned ${savedCount} rows into the database from source: ${learningSource}.`
+  };
+}
+
 // Excel processing with chunking
 async function processExcel(req, res, processingMode = 'regular') {
   try {
@@ -344,6 +417,9 @@ async function processExcel(req, res, processingMode = 'regular') {
     const processingType = req.body.processingType || 'clean';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
+    
+    // For Learning Mode, use the learning source if provided, otherwise use processingType
+    const learningSource = req.body.learningSource || processingType;
 
     // Initialize session tracking for cancellation
     activeSessions.set(sessionId, {
@@ -404,6 +480,41 @@ async function processExcel(req, res, processingMode = 'regular') {
 
     // Set headers to the canonical columns (using processor's expectedHeaders if available)
     const headers = (processor && processor.expectedHeaders) || ['Case Code','Model No.','S/W Ver.','Title','Problem'];
+
+    // Handle Learning Mode - save data to VectorStore before processing
+    if (processingMode === 'learning') {
+      console.log(`[LEARNING MODE] Processing ${rows.length} rows in Learning Mode...`);
+      
+      // Send learning mode progress
+      sendProgress(sessionId, {
+        type: 'progress',
+        percent: 0,
+        message: 'Learning Mode: Saving data to database...',
+        chunksCompleted: 0,
+        totalChunks: 1
+      });
+
+      // Save data to VectorStore
+      const learningResult = await handleLearningMode(rows, learningSource, model, sessionId);
+      
+      // Send completion progress
+      sendProgress(sessionId, {
+        type: 'progress',
+        percent: 100,
+        message: `Learning Mode completed: ${learningResult.savedCount} rows saved`,
+        chunksCompleted: 1,
+        totalChunks: 1
+      });
+
+      // Return learning mode response
+      return res.json({
+        success: true,
+        mode: 'learning',
+        learningResult: learningResult,
+        message: `Learning Mode completed successfully. ${learningResult.savedCount} rows saved to database for future processing.`,
+        total_processing_time_ms: Date.now() - tStart
+      });
+    }
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
@@ -545,6 +656,9 @@ async function processJSON(req, res, processingMode = 'regular') {
     const processingType = req.body.processingType || 'beta_user_issues';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
+    
+    // For Learning Mode, use the learning source if provided, otherwise use processingType
+    const learningSource = req.body.learningSource || processingType;
 
     // Initialize session tracking for cancellation
     activeSessions.set(sessionId, {
@@ -565,6 +679,41 @@ async function processJSON(req, res, processingMode = 'regular') {
 
     if (!cacheInitialized) {
       console.warn('Failed to initialize processing cache, continuing without cache');
+    }
+
+    // Handle Learning Mode - save data to VectorStore before processing
+    if (processingMode === 'learning') {
+      console.log(`[LEARNING MODE] Processing ${rows.length} rows in Learning Mode...`);
+      
+      // Send learning mode progress
+      sendProgress(sessionId, {
+        type: 'progress',
+        percent: 0,
+        message: 'Learning Mode: Saving data to database...',
+        chunksCompleted: 0,
+        totalChunks: 1
+      });
+
+      // Save data to VectorStore
+      const learningResult = await handleLearningMode(rows, learningSource, model, sessionId);
+      
+      // Send completion progress
+      sendProgress(sessionId, {
+        type: 'progress',
+        percent: 100,
+        message: `Learning Mode completed: ${learningResult.savedCount} rows saved`,
+        chunksCompleted: 1,
+        totalChunks: 1
+      });
+
+      // Return learning mode response
+      return res.json({
+        success: true,
+        mode: 'learning',
+        learningResult: learningResult,
+        message: `Learning Mode completed successfully. ${learningResult.savedCount} rows saved to database for future processing.`,
+        total_processing_time_ms: Date.now() - tStart
+      });
     }
 
     // Unified chunked processing (works for all types: clean, voc, custom)
@@ -840,6 +989,9 @@ async function processCSV(req, res, processingMode = 'regular') {
     const processingType = req.body.processingType || 'beta_user_issues';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
+    
+    // For Learning Mode, use the learning source if provided, otherwise use processingType
+    const learningSource = req.body.learningSource || processingType;
 
     // Initialize session tracking for cancellation
     activeSessions.set(sessionId, {
@@ -860,6 +1012,41 @@ async function processCSV(req, res, processingMode = 'regular') {
 
     if (!cacheInitialized) {
       console.warn('Failed to initialize processing cache, continuing without cache');
+    }
+
+    // Handle Learning Mode - save data to VectorStore before processing
+    if (processingMode === 'learning') {
+      console.log(`[LEARNING MODE] Processing ${rows.length} rows in Learning Mode...`);
+      
+      // Send learning mode progress
+      sendProgress(sessionId, {
+        type: 'progress',
+        percent: 0,
+        message: 'Learning Mode: Saving data to database...',
+        chunksCompleted: 0,
+        totalChunks: 1
+      });
+
+      // Save data to VectorStore
+      const learningResult = await handleLearningMode(rows, learningSource, model, sessionId);
+      
+      // Send completion progress
+      sendProgress(sessionId, {
+        type: 'progress',
+        percent: 100,
+        message: `Learning Mode completed: ${learningResult.savedCount} rows saved`,
+        chunksCompleted: 1,
+        totalChunks: 1
+      });
+
+      // Return learning mode response
+      return res.json({
+        success: true,
+        mode: 'learning',
+        learningResult: learningResult,
+        message: `Learning Mode completed successfully. ${learningResult.savedCount} rows saved to database for future processing.`,
+        total_processing_time_ms: Date.now() - tStart
+      });
     }
 
     // Unified chunked processing (works for all types: clean, voc, custom)
