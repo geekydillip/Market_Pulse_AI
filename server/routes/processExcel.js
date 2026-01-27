@@ -635,6 +635,7 @@ async function processJSON(req, res, processingMode = 'regular') {
     const modelRaw = (req.body.model || '').toString();
     const sanitizedModel = modelRaw.replace(/[^a-zA-Z0-9]/g, '_');
     const processedJSONFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.json`;
+    const processedExcelFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.xlsx`; // New filename
     const logFilename = `${fileNameBase}_log.json`;
 
     // Read and parse JSON file
@@ -910,9 +911,19 @@ async function processJSON(req, res, processingMode = 'regular') {
     if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
 
     const processedPath = path.join(dlDir, processedJSONFilename);
+    const processedExcelPath = path.join(dlDir, processedExcelFilename); // New path
     const logPath = path.join(dlDir, logFilename);
 
+    // Write JSON
     fs.writeFileSync(processedPath, JSON.stringify(finalRows, null, 2));
+
+    // NEW: Write Excel using existing utility
+    try {
+      generateExcelFile(finalRows, finalHeaders, processedExcelPath);
+    } catch (excelError) {
+      console.error('Failed to generate Excel file:', excelError);
+      // Continue with JSON file - don't fail the entire request
+    }
     fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
 
     // 3. Global Renumbering Safeguard
@@ -928,6 +939,7 @@ async function processJSON(req, res, processingMode = 'regular') {
       total_processing_time_ms: Date.now() - tStart,
       processedRows: finalRows,
       downloads: [
+        { url: `/downloads/${processingType}/${processedExcelFilename}`, filename: processedExcelFilename }, // Excel is now first
         { url: `/downloads/${processingType}/${processedJSONFilename}`, filename: processedJSONFilename },
         { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }
       ]

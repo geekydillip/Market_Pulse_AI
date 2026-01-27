@@ -628,7 +628,8 @@ async function handleProcess() {
             if (result.success) {
                 // Record processing end time and show summary
                 processingEndTime = new Date();
-                showProcessingSummary(result.total_processing_time_ms, [], processingStartTime, processingEndTime);
+                showProcessingSummary(result.total_processing_time_ms, result.downloads, processingStartTime, processingEndTime);
+                
                 // For non-structured files, download as text
                 downloadText(result.result, `processed-${Date.now()}.txt`);
             } else {
@@ -1417,40 +1418,29 @@ function setupQueueButtonListeners() {
 }
 
 function handleDownload(button) {
-  // Find the card this button belongs to
   const card = button.closest('.file-card');
   const filename = card.querySelector('.filename').textContent;
+  
+  // Find the item in our state queue
+  const item = fileQueue.find(q => q.file.name === filename);
 
-  // Create sample processed data based on file type
-  let content = '';
-  let mimeType = 'text/plain';
+  // FIX: If we have real download links from the server, use them
+  if (item && item.downloads && item.downloads.length > 0) {
+    const download = item.downloads[0]; // Usually the Excel file
+    const a = document.createElement('a');
+    a.href = download.url;
+    a.download = download.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-  if (filename.endsWith('.xlsx')) {
-    content = 'Sample processed Excel data\nRow 1, Column A, Column B\nRow 2, Data 1, Data 2\nRow 3, Data 3, Data 4';
-    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-  } else if (filename.endsWith('.csv')) {
-    content = 'id,name,value\n1,Sample Data,100\n2,Another Row,200\n3,Final Row,300';
-    mimeType = 'text/csv';
-  } else {
-    content = 'Sample processed text data\nThis is the result of AI processing\nContaining analyzed information and insights';
+    button.textContent = '✅ Downloaded';
+    setTimeout(() => { button.innerHTML = '⬇️ Download'; }, 2000);
+    return;
   }
 
-  // Create and trigger download
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `processed_${filename}`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  // Visual feedback
-  button.textContent = '✅ Downloaded';
-  setTimeout(() => {
-    button.innerHTML = '⬇️ Download';
-  }, 2000);
+  // Fallback if no real data exists (original sample logic)
+  alert("Processing data not found for this file.");
 }
 
 function handleRemove(button) {
