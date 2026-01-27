@@ -373,7 +373,20 @@ async function processExcel(req, res, processingMode = 'regular') {
 
     // Use processor's readAndNormalizeExcel if available, else fallback to betaIssues
     const excelUtils = require('../utils/excelUtils');
-    let rows = excelUtils.readAndNormalizeExcel(uploadedPath, processingType) || [];
+    let rows = excelUtils.readAndNormalizeExcel(uploadedPath, processingType);
+
+    // STRICT VALIDATION: If rows is null, the type didn't match or processor failed
+    if (!rows || rows.length === 0) {
+      console.error(`[FAIL] File upload rejected: Structure does not match ${processingType}`);
+      
+      // Clean up the uploaded file immediately
+      try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
+      
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Excel file type doesn\'t match with the processor.' 
+      });
+    }
 
     // Sanity check: verify we have meaningful rows with relevant data based on processor type
     let meaningful;

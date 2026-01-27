@@ -14,7 +14,8 @@ function estimateTokens(text) {
  * @param {string} processingType - Type of processing (affects which fields to include)
  * @returns {number} Estimated token count
  */
-function estimateBatchTokens(rows, processingType = 'beta_user_issues') {
+function estimateBatchTokens(rows, processingType) {
+  if (!processingType) throw new Error("Processing type is required for token estimation.");
   if (!Array.isArray(rows) || rows.length === 0) return 0;
 
   let totalTokens = 0;
@@ -79,7 +80,8 @@ Process the following numbered rows:
  * @param {number} maxTokens - Maximum tokens per batch (default: 6000 for safety margin)
  * @returns {Array} Array of batches, each batch is an array of rows
  */
-function createOptimalBatches(rows, processingType = 'beta_user_issues', maxTokens = 6000) {
+function createOptimalBatches(rows, processingType, maxTokens = 6000) {
+  if (!processingType) throw new Error("Processing type is required for batching.");
   if (!Array.isArray(rows) || rows.length === 0) return [];
 
   const batches = [];

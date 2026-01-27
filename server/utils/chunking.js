@@ -4,21 +4,15 @@
  */
 
 const { createOptimalBatches } = require('../processors/_helpers');
+const { getProcessor } = require('../processors'); // Import the registry to resolve functions
 
 /**
  * Create chunked processing tasks
- * @param {Array} rows - Array of rows to process
- * @param {string} processingType - Type of processing
- * @param {string} model - AI model to use
- * @param {string} sessionId - Processing session ID
- * @param {string} processingMode - Processing mode (regular/discovery)
- * @param {Function} processChunkFunction - Function to process individual chunks
- * @param {number} chunkSize - Size of each chunk
- * @returns {Array} Array of processing tasks
  */
 function createChunkedProcessingTasks(rows, processingType, model, sessionId, processingMode, processChunkFunction, chunkSize = 20) {
   // Create optimal batches using token-bounded chunking
   const batches = createOptimalBatches(rows, processingType);
+  const processorFunc = getProcessor(processingType); // Resolve the string to a function
   const numberOfChunks = batches.length;
 
   const tasks = [];
@@ -37,14 +31,31 @@ function createChunkedProcessingTasks(rows, processingType, model, sessionId, pr
     currentOffset += batchRows.length; // Update offset for next batch
 
     tasks.push(async () => {
-      const result = await processChunkFunction({
-        chunk,
-        processor: processingType, // This is the bug - passing string instead of function
-        prompt: null, // Will be resolved in processChunk
-        context: { model, sessionId, processingMode },
-        analytics: null
-      });
-      return result;
+      try {
+        // Pass the actual processor function, not the type string
+        const processedRows = await processChunkFunction({
+          chunk,
+          processor: processorFunc, 
+          prompt: null, 
+          context: { model, sessionId, processingMode },
+          analytics: null
+        });
+
+        // Return the wrapper object that processChunkResults expects
+        return {
+          chunkId: batchIndex,
+          status: 'ok',
+          processedRows,
+          chunk
+        };
+      } catch (error) {
+        return {
+          chunkId: batchIndex,
+          status: 'error',
+          processedRows: chunk.rows.map(row => ({ ...row, error: error.message })),
+          chunk
+        };
+      }
     });
   });
 
@@ -53,9 +64,6 @@ function createChunkedProcessingTasks(rows, processingType, model, sessionId, pr
 
 /**
  * Process chunked tasks with concurrency limit
- * @param {Array} tasks - Array of processing tasks
- * @param {number} limit - Concurrency limit
- * @returns {Array} Array of chunk results
  */
 async function runTasksWithLimit(tasks, limit = 4) {
   const results = [];
@@ -76,10 +84,6 @@ async function runTasksWithLimit(tasks, limit = 4) {
 
 /**
  * Process results from chunked processing
- * @param {Array} chunkResults - Array of chunk results
- * @param {Array} headers - Original headers
- * @param {string} processingMode - Processing mode
- * @returns {Object} Processed results including rows, added columns, and failed rows
  */
 function processChunkResults(chunkResults, headers, processingMode) {
   const allProcessedRows = [];
@@ -89,9 +93,13 @@ function processChunkResults(chunkResults, headers, processingMode) {
   chunkResults.forEach(result => {
     if (!result) return;
 
+    // Successfully map results using the wrapper object
     if (result.status === 'ok' && Array.isArray(result.processedRows)) {
       result.processedRows.forEach((row, idx) => {
-        const originalIdx = (result.chunkId * 20) + idx; // Using fixed chunk size for simplicity
+        // Use actual indices from metadata instead of hardcoded 20
+        const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : (result.chunkId * 20);
+        const originalIdx = batchStartIdx + idx;
+        
         allProcessedRows[originalIdx] = row;
         Object.keys(row || {}).forEach(col => {
           if (!headers.includes(col)) addedColumns.add(col);
@@ -100,7 +108,9 @@ function processChunkResults(chunkResults, headers, processingMode) {
     } else if (Array.isArray(result.processedRows)) {
       // For failed chunks, still include rows with error
       result.processedRows.forEach((row, idx) => {
-        const originalIdx = (result.chunkId * 20) + idx;
+        const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : (result.chunkId * 20);
+        const originalIdx = batchStartIdx + idx;
+        
         allProcessedRows[originalIdx] = row;
         if (row && row.error) {
           failedRows.push({
@@ -114,7 +124,7 @@ function processChunkResults(chunkResults, headers, processingMode) {
     }
   });
 
-  // Filter out null entries if any
+  // Filter out null entries
   const finalRows = allProcessedRows.filter(row => row != null);
 
   // Add classification_mode column for discovery mode
@@ -134,12 +144,6 @@ function processChunkResults(chunkResults, headers, processingMode) {
 
 /**
  * Generate processing log
- * @param {number} startTime - Processing start time
- * @param {number} numberOfInputRows - Number of input rows
- * @param {number} numberOfChunks - Number of chunks processed
- * @param {Array} chunkResults - Array of chunk results
- * @param {string} processingType - Processing type
- * @returns {Object} Processing log object
  */
 function generateProcessingLog(startTime, numberOfInputRows, numberOfChunks, chunkResults, processingType) {
   const elapsedMs = Date.now() - startTime;
@@ -165,7 +169,7 @@ function generateProcessingLog(startTime, numberOfInputRows, numberOfChunks, chu
     total_processing_time_seconds: elapsedSec.toFixed(3),
     number_of_input_rows: numberOfInputRows,
     number_of_batches: numberOfChunks,
-    number_of_output_rows: numberOfInputRows, // Will be updated with actual count
+    number_of_output_rows: numberOfInputRows,
     failed_row_details: failedRows,
     batch_processing_time: (chunkResults || []).map(cr => ({ batch_id: cr && cr.chunkId, time_ms: cr && cr.processingTime }))
   };

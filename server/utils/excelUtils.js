@@ -11,27 +11,31 @@ const xlsx = require('xlsx-js-style');
  * Read and normalize Excel file using processor-specific logic
  * @param {string} filePath - Path to the Excel file
  * @param {string} processingType - Type of processing (e.g., 'beta_user_issues')
- * @returns {Array} Array of normalized rows
+ * @returns {Array|null} Array of normalized rows or null if mismatch/error
  */
 function readAndNormalizeExcel(filePath, processingType) {
   try {
-    // Load the appropriate processor based on processing type
-    const processorMap = {
-      'beta_user_issues': 'betaIssues',
-      'samsung_members_plm': 'samsungMembersPlm',
-      'plm_issues': 'plmIssues',
-      'samsung_members_voc': 'samsungMembersVoc'
-    };
+    const { getProcessor } = require('../processors');
 
-    const processorName = processorMap[processingType] || 'betaIssues';
-    const processor = require(`../processors/${processorName}`);
+    // FAILURE POINT 1: Processor not registered or invalid
+    const processor = getProcessor(processingType);
+    if (!processor || typeof processor.readAndNormalizeExcel !== 'function') {
+      console.error(`[STRICT CHECK] No valid reader found for type: ${processingType}`);
+      return null; // Return null to trigger failure in the route
+    }
 
-    // Use processor's readAndNormalizeExcel if available, else fallback to betaIssues
-    const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('../processors/betaIssues').readAndNormalizeExcel;
-    return readAndNormalizeExcel(filePath) || [];
+    const rows = processor.readAndNormalizeExcel(filePath);
+
+    // FAILURE POINT 2: Data Mismatch (No rows found or headers didn't match keywords)
+    if (!rows || rows.length === 0) {
+      console.warn(`[STRICT CHECK] Processor '${processingType}' could not find matching data in file.`);
+      return null;
+    }
+
+    return rows;
   } catch (error) {
-    console.error('Error reading and normalizing Excel file:', error);
-    return [];
+    console.error('Error in strict Excel normalization:', error);
+    return null;
   }
 }
 
