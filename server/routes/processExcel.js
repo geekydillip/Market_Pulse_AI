@@ -489,7 +489,7 @@ async function processExcel(req, res, processingMode = 'regular') {
   }
 }
 
-async function processJSON(req, res) {
+async function processJSON(req, res, processingMode = 'regular') {
   try {
     const uploadedPath = req.file.path;
     const originalName = req.file.originalname;
@@ -777,7 +777,7 @@ async function processJSON(req, res) {
   }
 }
 
-async function processCSV(req, res) {
+async function processCSV(req, res, processingMode = 'regular') {
   try {
     const uploadedPath = req.file.path;
     const originalName = req.file.originalname;

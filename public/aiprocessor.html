@@ -705,16 +705,19 @@ function createFileCard(item) {
     stopBtn.onclick = () => stopProcessingForFile(item.id);
     actions.appendChild(stopBtn);
   } else if (item.status === 'completed' && item.downloads) {
-    item.downloads.forEach(download => {
-      if (true) { // Removed the restriction so both Excel and JSON logs appear
-        const downloadBtn = document.createElement('a');
-        downloadBtn.className = 'px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors';
-        downloadBtn.href = download.url;
-        downloadBtn.download = download.filename;
-        downloadBtn.textContent = 'Download';
-        actions.appendChild(downloadBtn);
-      }
-    });
+    // Only show download button for the processed file (not the log file)
+    const processedFile = item.downloads.find(download => 
+      download.filename && download.filename.toLowerCase().includes('_processed.')
+    );
+    
+    if (processedFile) {
+      const downloadBtn = document.createElement('a');
+      downloadBtn.className = 'px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors';
+      downloadBtn.href = processedFile.url;
+      downloadBtn.download = processedFile.filename;
+      downloadBtn.textContent = 'Download Processed File';
+      actions.appendChild(downloadBtn);
+    }
   } else if (item.status === 'failed') {
     // Add retry button for failed files
     const retryBtn = document.createElement('button');
