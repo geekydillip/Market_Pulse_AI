@@ -513,12 +513,22 @@ async function processJSON(req, res) {
     const fileContent = fs.readFileSync(uploadedPath, 'utf-8');
     let rows;
     try {
-      rows = JSON.parse(fileContent);
-      if (!Array.isArray(rows)) {
-        // clean up uploaded file
-        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-        return res.status(400).json({ error: 'JSON file must contain an array of objects' });
+      const parsedData = JSON.parse(fileContent);
+      
+      // 1. Robust Wrapper Extraction
+      const wrapperKeys = ['VOCs(Jan~Nov)', 'VOCs', 'data', 'rows', 'items'];
+      if (Array.isArray(parsedData)) {
+        rows = parsedData;
+      } else {
+        const foundKey = wrapperKeys.find(key => Array.isArray(parsedData[key]));
+        rows = foundKey ? parsedData[foundKey] : Object.values(parsedData).find(val => Array.isArray(val));
       }
+
+      if (!rows) {
+        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+        return res.status(400).json({ error: 'No valid data array found in JSON.' });
+      }
+      
       if (rows.length === 0 || typeof rows[0] !== 'object') {
         if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
         return res.status(400).json({ error: 'JSON file must contain an array of non-empty objects' });
@@ -531,7 +541,7 @@ async function processJSON(req, res) {
     const tStart = Date.now();
     const headers = Object.keys(rows[0] || {});
 
-    // Use Beta user issues processing type for JSON (since only structured data should be in JSON)
+    // Use the requested processing type for JSON (same as Excel)
     const processingType = req.body.processingType || 'beta_user_issues';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
@@ -545,12 +555,30 @@ async function processJSON(req, res) {
       processingType: processingType
     });
 
+    // Initialize processing cache
+    const cacheInitialized = cacheManager.initializeSession(processingType, sessionId, {
+      totalChunks: 0, // Will be set after batching
+      fileName: originalName,
+      model,
+      processingMode
+    });
+
+    if (!cacheInitialized) {
+      console.warn('Failed to initialize processing cache, continuing without cache');
+    }
+
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
 
     // Create optimal batches using token-bounded chunking (5-20 rows per batch)
     const batches = createOptimalBatches(rows, processingType);
     const numberOfChunks = batches.length;
+
+    // Update cache with actual chunk count
+    cacheManager.updateSessionProgress(processingType, sessionId, {
+      totalChunks: numberOfChunks,
+      status: 'active'
+    });
 
     console.log(`[BATCHING] Created ${numberOfChunks} optimal batches from ${numberOfInputRows} rows`);
 
@@ -583,28 +611,50 @@ async function processJSON(req, res) {
           return { chunkId: batchIndex, status: 'cancelled', processedRows: [] };
         }
 
-        const result = await processChunk(chunk, processingType, model, batchIndex, sessionId, processingMode);
+        try {
+          // Fix: Use the correct function signature and resolve processor function
+          const processorFunc = getProcessor(processingType);
+          if (!processorFunc) {
+            throw new Error(`Processor '${processingType}' not found`);
+          }
 
-        // Check for cancellation after processing
-        if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled after processing batch ${batchIndex}`);
-          return result; // Still return the result but mark as potentially cancelled
+          const result = await processChunk({
+            chunk,
+            processor: processorFunc,
+            prompt: null,
+            context: { model, sessionId, processingMode },
+            analytics: null
+          });
+
+          // Check for cancellation after processing
+          if (session && session.cancelled) {
+            console.log(`Session ${sessionId} cancelled after processing batch ${batchIndex}`);
+            return result; // Still return the result but mark as potentially cancelled
+          }
+
+          // Increment counter and send monotonically increasing progress
+          completedChunks++;
+          const percent = Math.round((completedChunks / numberOfChunks) * 100);
+          const message = percent < 90
+            ? `Processing Data… ${percent}% complete`
+            : `Finalizing output… ${percent}% complete`;
+          sendProgress(sessionId, {
+            type: 'progress',
+            percent,
+            message,
+            chunksCompleted: completedChunks,
+            totalChunks: numberOfChunks
+          });
+          return result;
+        } catch (error) {
+          console.error(`Error processing batch ${batchIndex}:`, error);
+          return {
+            chunkId: batchIndex,
+            status: 'error',
+            processedRows: chunk.rows.map(row => ({ ...row, error: error.message })),
+            chunk
+          };
         }
-
-        // Increment counter and send monotonically increasing progress
-        completedChunks++;
-        const percent = Math.round((completedChunks / numberOfChunks) * 100);
-        const message = percent < 90
-          ? `Processing Data… ${percent}% complete`
-          : `Finalizing output… ${percent}% complete`;
-        sendProgress(sessionId, {
-          type: 'progress',
-          percent,
-          message,
-          chunksCompleted: completedChunks,
-          totalChunks: numberOfChunks
-        });
-        return result;
       });
     });
 
@@ -619,16 +669,20 @@ async function processJSON(req, res) {
       if (!result) return;
       if (result.status === 'ok' && Array.isArray(result.processedRows)) {
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
+          // Fix: Use batch-based indexing instead of chunkSize multiplication
+          const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           allProcessedRows[originalIdx] = row;
           Object.keys(row || {}).forEach(col => {
             if (!headers.includes(col)) addedColumns.add(col);
           });
         });
       } else if (Array.isArray(result.processedRows)) {
-        // include failed chunk rows (they may contain error fields)
+        // For failed chunks, still include rows with error
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
+          // Fix: Use batch-based indexing instead of chunkSize multiplication
+          const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           allProcessedRows[originalIdx] = row;
           if (row && row.error) addedColumns.add('error');
         });
@@ -638,12 +692,27 @@ async function processJSON(req, res) {
     // Filter out null entries if any (though shouldn't have)
     const finalRows = allProcessedRows.filter(row => row != null);
 
+    // Create final headers: original + any added columns
+    const finalHeaders = [...headers];
+    addedColumns.forEach(col => {
+      if (!finalHeaders.includes(col)) finalHeaders.push(col);
+    });
+
+    // Add classification_mode column for discovery mode (governance fix)
+    if (processingMode === 'discovery' && !finalHeaders.includes('classification_mode')) {
+      finalHeaders.push('classification_mode');
+      finalRows.forEach(row => {
+        row['classification_mode'] = 'discovery';
+      });
+    }
+
     // Generate log (defensive)
     const failedRows = [];
     (chunkResults || []).forEach(cr => {
       (cr.processedRows || []).forEach((row, idx) => {
         if (row && row.error) {
-          const originalIdx = (cr.chunkId * chunkSize) + idx;
+          const batchStartIdx = cr.chunk ? cr.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           failedRows.push({
             row_index: originalIdx,
             chunk_id: cr.chunkId,
@@ -679,6 +748,11 @@ async function processJSON(req, res) {
 
     fs.writeFileSync(processedPath, JSON.stringify(finalRows, null, 2));
     fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
+
+    // 3. Global Renumbering Safeguard
+    const processor = getProcessor(processingType);
+    const snHeader = processor.expectedHeaders ? processor.expectedHeaders[0] : 'No';
+    finalRows.forEach((row, index) => { row[snHeader] = index + 1; });
 
     // Clean up uploaded file
     try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}

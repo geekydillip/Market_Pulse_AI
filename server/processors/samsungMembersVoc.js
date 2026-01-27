@@ -317,14 +317,17 @@ async function samsungMembersVocProcessor(rows, context = {}) {
     // Merge AI results with original data
     const finalRows = transformedRows.map((row, index) => {
       const aiResult = parsedResults[index] || {};
+      // Check if the AI returned a valid object for this row
+      const isAiFail = !parsedResults[index] || Object.keys(aiResult).length === 0;
+
       return {
         ...row,
-        'No': index + 1, // Add serial number
-        'Module': aiResult.Module || '',
+        'No': (context.startIndex || 0) + index + 1, // Fix: Global renumbering
+        'Module': isAiFail ? 'AI Analysis Failed' : (aiResult.Module || ''),
         'Sub-Module': aiResult['Sub-Module'] || '',
         'Issue Type': aiResult['Issue Type'] || '',
         'Sub-Issue Type': aiResult['Sub-Issue Type'] || '',
-        'AI Insight': aiResult['AI Insight'] || ''
+        'AI Insight': isAiFail ? 'Error: Model failed to provide insight' : (aiResult['AI Insight'] || '')
       };
     });
 

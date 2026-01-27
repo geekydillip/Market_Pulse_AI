@@ -37,7 +37,12 @@ function createChunkedProcessingTasks(rows, processingType, model, sessionId, pr
           chunk,
           processor: processorFunc, 
           prompt: null, 
-          context: { model, sessionId, processingMode },
+          context: { 
+            model, 
+            sessionId, 
+            processingMode, 
+            startIndex: batchStartIdx // Pass this to the processor
+          },
           analytics: null
         });
 

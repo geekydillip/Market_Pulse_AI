@@ -343,8 +343,9 @@ async function samsungMembersPlmProcessor(rows, context = {}) {
 
   // For now, return the transformed rows with placeholder AI fields
   // In a real implementation, this would call the AI service
-  return transformedRows.map(row => ({
+  return transformedRows.map((row, index) => ({
     ...row,
+    'No': (context.startIndex || 0) + index + 1, // Fix: Global renumbering
     'Module': '',
     'Sub-Module': '',
     'Issue Type': '',
