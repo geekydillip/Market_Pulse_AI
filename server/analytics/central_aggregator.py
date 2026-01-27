@@ -51,7 +51,8 @@ def load_all_excels(base_path: str) -> dict:
     Apply model name transformation for OS Beta entries.
     Returns dict: {folder_name: [df1, df2, ...]}
     """
-    base = Path(base_path)
+    # Convert relative path to absolute path to ensure correct resolution
+    base = Path(base_path).resolve()
     if not base.exists():
         raise FileNotFoundError(f"Base path {base_path} does not exist")
 

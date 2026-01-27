@@ -157,7 +157,7 @@ app.get('/main.html', (req, res) => {
 
 // serve frontend static files (adjust folder if your frontend is in 'public')
 app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use('/downloads', express.static('downloads'));
+app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
 
 // Configure multer for file uploads with security
 const storage = multer.diskStorage({

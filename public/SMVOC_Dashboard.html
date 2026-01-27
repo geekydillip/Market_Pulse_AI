@@ -270,24 +270,31 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load all dashboard data from central_dashboard.json and analytics.json
 async function loadDashboardData() {
   try {
-    // Fetch data from central_dashboard.json
-    const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
-    const jsonData = await response.json();
-
-    // Fetch analytics data
+    // 1. Fetch direct analytics data (analytics.json)
     const analyticsResponse = await fetch('/api/analytics/samsung_members_voc');
     const analyticsData = await analyticsResponse.json();
-
-    // Extract Samsung Members VOC specific data
-    dashboardData.kpis = jsonData.kpis['Samsung Members VOC'];
-    dashboardData.topModels = jsonData.samsung_members_voc_top_models;
-    dashboardData.topModules = jsonData.samsung_members_voc_top_modules;
     dashboardData.analytics = analyticsData;
 
-    // Use corrected counts from central dashboard (fixed aggregation) instead of local analytics.json
-    dashboardData.kpis.resolved_issues = dashboardData.kpis.resolved || 0;
-    dashboardData.kpis.open_issues = dashboardData.kpis.open || 0;
-    dashboardData.kpis.close_issues = dashboardData.kpis.close || 0;
+    // 2. Try to fetch central cache for KPIs, but don't let it crash the charts
+    let jsonData = { kpis: {} };
+    try {
+      const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
+      if (response.ok) jsonData = await response.json();
+    } catch (e) {
+      console.warn('Central cache not found, using direct analytics data');
+    }
+
+    // 3. FIX: Map chart data directly from analyticsData if central cache is missing
+    dashboardData.kpis = (jsonData.kpis && jsonData.kpis['Samsung Members VOC']) || analyticsData.kpis;
+    
+    // Use 'top_models' and 'categories' keys from analytics.json
+    dashboardData.topModels = analyticsData.top_models || []; 
+    dashboardData.topModules = analyticsData.categories || []; 
+
+    // 4. Update corrected counts
+    dashboardData.kpis.resolved_issues = dashboardData.kpis.resolved || analyticsData.kpis.resolved_issues || 0;
+    dashboardData.kpis.open_issues = dashboardData.kpis.open || analyticsData.kpis.open_issues || 0;
+    dashboardData.kpis.close_issues = dashboardData.kpis.close || analyticsData.kpis.close_issues || 0;
 
     // Update all UI elements
     updateKPIs();

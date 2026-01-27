@@ -1096,8 +1096,8 @@ function aggregateByModule(rows) {
     moduleData.rows.push(row);
     moduleData.models.add(modelNo); // Add model to the set
 
-    // Count title frequencies
-    const title = (row.title || '').toLowerCase().trim();
+    // Count title frequencies - handle case sensitivity
+    const title = (row.title || row.Title || '').toLowerCase().trim();
     if (title) {
       moduleData.titleCount.set(title, (moduleData.titleCount.get(title) || 0) + 1);
     }
@@ -1183,7 +1183,7 @@ function renderTable() {
       <th>S/W Ver.</th>
       <th>Issue Title</th>
       <th>Sub-Module</th>
-      <th>Summarized Problem</th>
+      <th>AI Insight</th>
       <th>Severity</th>
     `;
     thead.innerHTML = '';
@@ -1214,9 +1214,9 @@ function renderTable() {
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Case Code'] || row.caseCode || 'N/A')}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(extractModelFromRow(row))}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['S/W Ver.'] || row.sWVer || 'N/A')}</td>
-        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.title || row.Title || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.title || row.Title || row.content || 'N/A')}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Sub-Module'] || row.subModule || 'N/A')}</td>
-        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Summarized Problem'] || row.summarizedProblem || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['AI Insight'] || row['AI Insight'] || row.summarizedProblem || 'N/A')}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.Severity || row.severity || 'N/A')}</td>
       `;
 
@@ -1686,7 +1686,7 @@ function handleModalExport() {
           'S/W Ver.': cells[2]?.textContent?.trim() || '',
           'Title': cells[3]?.textContent?.trim() || '',
           'Sub-Module': cells[4]?.textContent?.trim() || '',
-          'Summarized Problem': cells[5]?.textContent?.trim() || '',
+          'AI Insight': cells[5]?.textContent?.trim() || '',
           'Severity': cells[6]?.textContent?.trim() || ''
         };
 
@@ -1811,8 +1811,8 @@ function showModuleDetails(module, moduleData) {
 
         const severityPill = `<span class="pill ${pillClass}">${pillText}</span>`;
 
-        // Handle empty summarized problem
-        const summarizedProblem = row.summarizedProblem || '';
+        // Handle empty AI Insight - prioritize AI Insight
+        const summarizedProblem = row['AI Insight'] || row['AI Insight'] || row.summarizedProblem || '';
         const summarizedDisplay = summarizedProblem.trim() ?
           escapeHtml(summarizedProblem) :
           '<span style="color:#9ca3af; font-style:italic;">Pending analysis...</span>';
@@ -1859,7 +1859,7 @@ function showModuleDetails(module, moduleData) {
     <th>S/W Ver.</th>
     <th>Title</th>
     <th>Sub-Module</th>
-    <th>Summarized Problem</th>
+    <th>AI Insight</th>
     <th class="sortable">Severity</th>
   `;
 

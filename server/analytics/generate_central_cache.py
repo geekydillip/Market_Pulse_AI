@@ -99,7 +99,7 @@ def get_per_source_data():
     Returns dict with per-source data.
     """
     # Get project root directory (works regardless of execution context)
-    script_dir = Path(__file__).parent.parent.parent  # server/analytics -> server -> project_root
+    script_dir = Path(__file__).parent.parent  # server/analytics -> server
     downloads_dir = script_dir / 'downloads'
 
     analytics_files = [
@@ -290,8 +290,9 @@ def generate_central_cache():
         **core_data  # Include all core data
     }
 
-    # Ensure cache directory exists
-    cache_dir = Path("./downloads/__dashboard_cache__")
+    # Ensure cache directory exists - use absolute path within server directory
+    script_dir = Path(__file__).parent.parent  # server/analytics -> server
+    cache_dir = script_dir / 'downloads' / '__dashboard_cache__'
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     # Write cache file
@@ -313,7 +314,9 @@ def validate_cache_freshness():
     Uses hash-based validation for robust cache invalidation.
     Returns True if cache is fresh, False if it needs regeneration.
     """
-    cache_file = Path("./downloads/__dashboard_cache__/central_dashboard.json")
+    # Use absolute path within server directory
+    script_dir = Path(__file__).parent.parent  # server/analytics -> server
+    cache_file = script_dir / 'downloads' / '__dashboard_cache__' / 'central_dashboard.json'
     if not cache_file.exists():
         print("Cache file missing", file=sys.stderr)
         return False
