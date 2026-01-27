@@ -80,12 +80,12 @@ class VectorStore {
   /**
    * Store an embedding with enforced type validation and discovery mode metadata
    */
-  async storeEmbedding(text, embedding, type = 'text', source = 'unknown', metadata = null) {
+  async storeEmbedding(text, embedding, type = 'row', source = 'unknown', metadata = null) { // Updated default to 'row'
     if (!this.initialized) {
       throw new Error('VectorStore not initialized. Call init() first.');
     }
 
-    // Fix 2: Enforce embedding type validation
+    // Fix 2: Enforce embedding type validation against defined constants
     const ALLOWED_TYPES = ['row', 'module', 'sub_module', 'issue_type', 'sub_issue_type'];
     if (!ALLOWED_TYPES.includes(type)) {
       throw new Error(`Invalid embedding type: ${type}. Allowed: ${ALLOWED_TYPES.join(', ')}`);
@@ -95,12 +95,12 @@ class VectorStore {
       const hash = this.generateHash(text);
       const embeddingJson = JSON.stringify(embedding);
 
-      // Fix 1: Add explicit discovery mode metadata
+      // Fix 1: Allow metadata to override the default 'discovery' mode
       const enhancedMetadata = {
-        mode: 'discovery', // Explicit discovery mode flag
+        mode: 'discovery', // Default flag
         processor: source,
         prompt_version: 'v1',
-        ...metadata // Preserve any additional metadata
+        ...(metadata || {}) // Spreading metadata here allows it to override 'mode'
       };
       const metadataJson = JSON.stringify(enhancedMetadata);
 

@@ -316,76 +316,93 @@ const PROCESSOR_SOURCES = {
   'samsung_members_voc': 'Samsung Members VOC'
 };
 
-// Learning Mode handler - saves data to VectorStore for future processing
+// Learning Mode handler - Updated with Concurrency and Robust Mapping
 async function handleLearningMode(rows, learningSource, model, sessionId) {
   console.log(`Learning Mode Activated: Saving ${rows.length} rows to VectorStore from source: ${learningSource}`);
   
   let savedCount = 0;
   let errorCount = 0;
+  let skippedCount = 0;
 
-  // Process each row and save to database
-  for (const row of rows) {
+  // Fix: Use task array to enable concurrent processing
+  const tasks = rows.map((row, index) => async () => {
     try {
-      // Determine the text to embed based on learning source
+      // Fix: Robust Key Mapping for different header names
+      const contentKeys = ['content', 'Content', 'text', 'Text', 'Feedback', 'feedback', 'Comment', 'comment', 'Description', 'description'];
+      const titleKeys = ['Title', 'title', 'Problem', 'problem', 'Subject', 'subject', 'Issue', 'issue'];
+      
       let textToEmbed = '';
+      
+      // 1. Try common content keys first
+      for (const key of contentKeys) {
+        if (row[key] && String(row[key]).trim()) {
+          textToEmbed = String(row[key]).trim();
+          break;
+        }
+      }
+      
+      // 2. Fallback to title/problem keys if content is missing
+      if (!textToEmbed) {
+        for (const key of titleKeys) {
+          if (row[key] && String(row[key]).trim()) {
+            textToEmbed = String(row[key]).trim();
+            break;
+          }
+        }
+      }
+
+      // 3. Last resort: Use any string column longer than 10 characters
+      if (!textToEmbed) {
+        const fallback = Object.values(row).find(v => typeof v === 'string' && v.trim().length > 10);
+        if (fallback) textToEmbed = fallback.trim();
+      }
+
+      if (!textToEmbed) {
+        skippedCount++;
+        return; // Skip this row
+      }
+
+      // Fix: Explicitly tag as 'learning' mode in metadata
       let metadata = {
         source: PROCESSOR_SOURCES[learningSource] || learningSource,
         isLearned: true,
+        mode: 'learning', // Overrides the default 'discovery' in VectorStore
         sessionId: sessionId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        Module: row.Module || row.module || 'Uncategorized',
+        'Sub-Module': row['Sub-Module'] || row['sub-module'] || 'None',
+        'Issue Type': row['Issue Type'] || row['issue_type'] || 'General'
       };
 
-      if (learningSource === 'samsung_members_voc') {
-        // For VOC data, use content field
-        textToEmbed = row.content || row.Content || row.text || '';
-        metadata.Module = row.Module || 'Uncategorized';
-        metadata['Sub-Module'] = row['Sub-Module'] || 'None';
-        metadata['Issue Type'] = row['Issue Type'] || 'General';
-      } else {
-        // For structured data (beta_user_issues, plm_issues, etc.)
-        textToEmbed = row.Title || row.title || row.Problem || row.problem || row.Description || row.description || '';
-        metadata.Module = row.Module || row.module || 'Uncategorized';
-        metadata['Sub-Module'] = row['Sub-Module'] || row['sub-module'] || 'None';
-        metadata['Issue Type'] = row['Issue Type'] || row['issue_type'] || 'General';
-      }
-
-      // Skip empty text
-      if (!textToEmbed || textToEmbed.trim().length === 0) {
-        continue;
-      }
-
-      // Get embedding from embedding service
       const embedding = await embeddingService.getEmbeddings(textToEmbed);
-      
-      // Save to VectorStore with proper metadata
-      await vectorStore.storeEmbedding(
-        textToEmbed, 
-        embedding, 
-        'row', // embedding type
-        metadata.source, // source
-        metadata // additional metadata
-      );
-
+      await vectorStore.storeEmbedding(textToEmbed, embedding, 'row', metadata.source, metadata);
       savedCount++;
       
-      // Progress update every 10 rows
+      // Periodic progress updates via SSE
       if (savedCount % 10 === 0) {
-        console.log(`Learning Mode: Saved ${savedCount} rows so far...`);
+        sendProgress(sessionId, {
+          type: 'progress',
+          percent: Math.round((savedCount / rows.length) * 100),
+          message: `Learning Mode: Stored ${savedCount} rows...`
+        });
       }
-
     } catch (error) {
       console.error(`Error saving row to VectorStore:`, error.message);
       errorCount++;
     }
-  }
+  });
 
-  console.log(`Learning Mode completed: ${savedCount} rows saved, ${errorCount} errors`);
+  // Execute concurrently with a limit of 4
+  await runTasksWithLimit(tasks, 4);
+
+  console.log(`Learning Mode completed: ${savedCount} rows saved, ${skippedCount} skipped, ${errorCount} errors`);
   
   return {
     success: true,
     savedCount: savedCount,
     errorCount: errorCount,
-    message: `Successfully learned ${savedCount} rows into the database from source: ${learningSource}.`
+    skippedCount: skippedCount,
+    message: `Successfully learned ${savedCount} rows into the database. ${skippedCount} rows skipped due to missing content.`
   };
 }
 
