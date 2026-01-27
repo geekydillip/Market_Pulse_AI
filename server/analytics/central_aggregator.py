@@ -59,7 +59,8 @@ def load_all_excels(base_path: str) -> dict:
     data = {}
     for folder in base.iterdir():
         if folder.is_dir():
-            excels = list(folder.glob("*.xlsx"))
+            # FIX: Support both .xlsx and .xls
+            excels = list(folder.glob("*.xlsx")) + list(folder.glob("*.xls"))
             if excels:
                 dfs = []
                 for excel in excels:
@@ -115,9 +116,15 @@ def compute_central_kpis(data: dict) -> dict:
             # Apply severity filter to exclude Critical
             combined = filter_allowed_severity(combined)
 
-            # Normalize status names - handle variants
-            if "Progr.Stat." in combined.columns:
-                combined["Progr.Stat."] = combined["Progr.Stat."].astype(str).apply(lambda x:
+            # FIX: Handle Status column variants
+            status_col = None
+            for col in ["Progr.Stat.", "Progress Status", "Status"]:
+                if col in combined.columns:
+                    status_col = col
+                    break
+            
+            if status_col:
+                combined["Progr.Stat."] = combined[status_col].astype(str).apply(lambda x:
                     "Resolve" if x.startswith("Resolve") else
                     "Close" if x.startswith("Close") else
                     "Open" if x.startswith("Open") else x

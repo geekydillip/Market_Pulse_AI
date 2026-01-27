@@ -166,8 +166,10 @@ def run_aggregator_directly():
     try:
         # Import and run the aggregator functions directly
         import central_aggregator as ca
-
-        base_path = "../downloads"
+        
+        # FIX: Use absolute path relative to the script location
+        script_dir = Path(__file__).parent.parent
+        base_path = script_dir / 'downloads'
         data = ca.load_all_excels(base_path)
         kpis, status_kpis = ca.compute_central_kpis(data)
         top_modules = ca.compute_top_modules(data)

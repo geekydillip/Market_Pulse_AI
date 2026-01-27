@@ -1097,7 +1097,7 @@ function aggregateByModule(rows) {
     moduleData.models.add(modelNo); // Add model to the set
 
     // Count title frequencies - handle case sensitivity
-    const title = (row.title || row.Title || '').toLowerCase().trim();
+    const title = (row.title || row.Title || row['Title'] || row.content || '').toLowerCase().trim();
     if (title) {
       moduleData.titleCount.set(title, (moduleData.titleCount.get(title) || 0) + 1);
     }
@@ -1214,7 +1214,7 @@ function renderTable() {
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Case Code'] || row.caseCode || 'N/A')}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(extractModelFromRow(row))}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['S/W Ver.'] || row.sWVer || 'N/A')}</td>
-        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.title || row.Title || row.content || 'N/A')}</td>
+        <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.title || row.Title || row['Title'] || row.content || 'N/A')}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['Sub-Module'] || row.subModule || 'N/A')}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row['AI Insight'] || row['AI Insight'] || row.summarizedProblem || 'N/A')}</td>
         <td class="px-4 py-3 text-gray-900 dark:text-white">${escapeHtml(row.Severity || row.severity || 'N/A')}</td>
@@ -1827,7 +1827,7 @@ function showModuleDetails(module, moduleData) {
           </td>
           <td class="text-wrap-break">${escapeHtml(row.modelFromFile || row.model || 'N/A')}</td>
           <td class="text-wrap-break">${escapeHtml(row.sWVer || row['S/W Ver.'] || 'N/A')}</td>
-          <td class="text-wrap-normal">${escapeHtml(row.title || row.issueTitle || 'N/A')}</td>
+          <td class="text-wrap-normal">${escapeHtml(row.title || row.Title || row['Title'] || row.content || 'N/A')}</td>
           <td>${escapeHtml(row.subModule || 'N/A')}</td>
           <td class="text-wrap-normal">${summarizedDisplay}</td>
           <td>${severityPill}</td>

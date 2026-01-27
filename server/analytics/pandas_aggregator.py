@@ -211,7 +211,9 @@ def compute_kpis(df: pd.DataFrame) -> dict:
     unique_models = df.get('Model No.', pd.Series()).nunique() if 'Model No.' in df.columns else 0
     category_distribution = df.get('Module', pd.Series()).value_counts().to_dict() if 'Module' in df.columns else {}
     severity_distribution = df.get('Severity', pd.Series()).value_counts().to_dict() if 'Severity' in df.columns else {}
-    status_distribution = df.get('Progr.Stat.', pd.Series()).value_counts().to_dict() if 'Progr.Stat.' in df.columns else {}
+    # FIX: Find the correct status column
+    status_col = next((c for c in ["Progr.Stat.", "Progress Status", "Status"] if c in df.columns), "Progr.Stat.")
+    status_distribution = df.get(status_col, pd.Series()).value_counts().to_dict()
 
     # Compute open severity distribution - High, Medium, Low issues with Prog.Stat. = Open only
     open_severity_distribution = {'High': 0, 'Medium': 0, 'Low': 0}

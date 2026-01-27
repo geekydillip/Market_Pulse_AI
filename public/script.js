@@ -642,7 +642,18 @@ async function handleProcess() {
         alert('Error: ' + error.message + '\n\nMake sure Ollama is running with the selected model.');
     } finally {
         hideLoading();
-        progressContainer.style.display = 'none';
+        // Ensure progress container is hidden when processing completes
+        if (progressContainer) {
+            progressContainer.style.display = 'none';
+        }
+        // Reset progress bar to 0%
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+        // Clear progress text
+        if (progressText) {
+            progressText.textContent = '';
+        }
     }
 }
 
@@ -703,14 +714,16 @@ async function processStructuredFile(file, processingType, model, sessionId) {
         }
       }, 1000);
 
-      // Send processing request
+      // Send processing request with intermediate progress updates
       const formData = new FormData();
       formData.append('file', file);
       formData.append('processingType', processingType);
       formData.append('processingMode', 'discovery');  // Enable discovery mode with embeddings
-
       formData.append('model', model);
       formData.append('sessionId', sessionId);
+
+      // Update progress to show upload is starting
+      updateProgress(10, "Uploading file...");
 
       const response = await fetch('/api/process', {
         method: 'POST',
@@ -723,13 +736,16 @@ async function processStructuredFile(file, processingType, model, sessionId) {
         return;
       }
 
+      // Update progress to show AI is analyzing data
+      updateProgress(30, "AI is analyzing data... (This may take a minute)");
+
       // Wait for response and handle download
       const result = await response.json();
 
       if (result.success && result.downloads && result.downloads.length > 0) {
         clearInterval(currentTimerInterval);
         eventSource.close();
-        updateProgress(100, 'Processing complete');
+        updateProgress(100, "Completed!");
         
         // Return the full result object instead of downloading immediately
         resolve(result);
@@ -759,6 +775,12 @@ async function processStructuredFile(file, processingType, model, sessionId) {
 
 function updateProgress(percent, text, timerInterval) {
     if (DEBUG) console.log('Updating progress to ' + percent + '%', 'type:', typeof percent, 'element exists:', !!progressFill);
+    
+    // Ensure progress container is visible
+    if (progressContainer) {
+        progressContainer.style.display = 'block';
+    }
+    
     if (progressFill) progressFill.style.width = percent + '%';
     if (DEBUG) console.log('Set width to:', progressFill ? progressFill.style.width : 'N/A');
     if (timerInterval) {
@@ -1351,16 +1373,27 @@ async function handleProcessQueue() {
             console.error(`Error processing ${item.file.name}:`, error);
             item.status = 'failed';
             // Continue with next file
-        }
+        } finally {
+            // Reset next item status
+            if (nextItem) {
+                nextItem.status = 'queued';
+            }
 
-        // Reset next item status
-        if (nextItem) {
-            nextItem.status = 'queued';
+            updateQueueUI();
+            hideLoading();
+            // Ensure progress container is hidden when processing completes
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+            }
+            // Reset progress bar to 0%
+            if (progressFill) {
+                progressFill.style.width = '0%';
+            }
+            // Clear progress text
+            if (progressText) {
+                progressText.textContent = '';
+            }
         }
-
-        updateQueueUI();
-        hideLoading();
-        progressContainer.style.display = 'none';
     }
 
     // Batch completed
