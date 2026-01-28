@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>UT Portal VOC - Overview</title>
+<title>UT Portal - Overview</title>
 
 <!-- Font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
 
 <!-- HEADER -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">UT Portal VOC - Overview</h1>
+  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">UT Portal - Overview</h1>
 
   <div class="flex gap-2">
     <a href="main.html"
@@ -275,13 +275,13 @@ async function loadDashboardData() {
     const jsonData = await response.json();
 
     // Fetch analytics data
-    const analyticsResponse = await fetch('/api/analytics/samsung_members_voc');
+    const analyticsResponse = await fetch('/api/analytics/ut_portal');
     const analyticsData = await analyticsResponse.json();
 
-    // Extract Samsung Members VOC specific data
-    dashboardData.kpis = jsonData.kpis['Samsung Members VOC'];
-    dashboardData.topModels = jsonData.samsung_members_voc_top_models;
-    dashboardData.topModules = jsonData.samsung_members_voc_top_modules;
+    // Extract UT Portal specific data
+    dashboardData.kpis = jsonData.kpis['UT Portal'];
+    dashboardData.topModels = jsonData.ut_portal_top_models;
+    dashboardData.topModules = jsonData.ut_portal_top_modules;
     dashboardData.analytics = analyticsData;
 
     // Use corrected counts from central dashboard (fixed aggregation) instead of local analytics.json

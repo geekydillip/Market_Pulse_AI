@@ -902,7 +902,7 @@ async function processCSV(req, res) {
     }
 
     // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4);
+    const chunkResults = await runTasksWithLimit(tasks, 1);
 
     // Process results
     const allProcessedRows = [];

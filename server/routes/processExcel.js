@@ -402,8 +402,8 @@ async function handleLearningMode(rows, learningSource, model, sessionId) {
     }
   });
 
-  // Execute concurrently with a limit of 4
-  await runTasksWithLimit(tasks, 4);
+    // Execute concurrently with a limit of 1
+    await runTasksWithLimit(tasks, 1);
 
   console.log(`Learning Mode completed: ${savedCount} rows saved, ${skippedCount} skipped, ${errorCount} errors`);
   
@@ -650,8 +650,8 @@ async function processExcel(req, res, processingMode = 'regular') {
       });
     });
 
-    // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4) || [];
+    // Run with concurrency limit (1)
+    const chunkResults = await runTasksWithLimit(tasks, 1) || [];
 
     // Process results
     const { finalRows, addedColumns, failedRows } = processChunkResults(chunkResults, headers, processingMode);
@@ -922,8 +922,8 @@ async function processJSON(req, res, processingMode = 'regular') {
       });
     });
 
-    // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4);
+    // Run with concurrency limit (1)
+    const chunkResults = await runTasksWithLimit(tasks, 1);
 
     // Process results
     const allProcessedRows = [];
@@ -1265,8 +1265,8 @@ async function processCSV(req, res, processingMode = 'regular') {
       });
     });
 
-    // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4) || [];
+    // Run with concurrency limit (1)
+    const chunkResults = await runTasksWithLimit(tasks, 1) || [];
 
     // Process results
     const allProcessedRows = [];
