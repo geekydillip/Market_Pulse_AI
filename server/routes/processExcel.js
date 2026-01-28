@@ -49,7 +49,8 @@ const processorMap = {
   'beta_user_issues': 'betaIssues',
   'samsung_members_plm': 'samsungMembersPlm',
   'plm_issues': 'plmIssues',
-  'samsung_members_voc': 'samsungMembersVoc'
+  'samsung_members_voc': 'samsungMembersVoc',
+  'ut_portal': 'utPortal'
 };
 
 // Cache for identical prompts
