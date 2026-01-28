@@ -92,7 +92,7 @@
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total PLM Issues</p>
         <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
       </div>
       <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
@@ -143,11 +143,6 @@
 
 <!-- NAVIGATION BUTTONS -->
 <div class="flex flex-wrap gap-4 mb-6 justify-center">
-  <a href="BetaIssues_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-blue-600 hover:from-slate-800 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-    <i class="fa-solid fa-mobile-screen mr-2"></i>
-    BETA ISSUES
-  </a>
-  
   <a href="UTPortal_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-indigo-600 hover:from-slate-800 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-briefcase mr-2"></i>
     UT PORTAL
@@ -155,7 +150,12 @@
 
   <a href="SMPLM_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-list-check mr-2"></i>
-    S M PLM
+    PLM
+  </a>
+
+  <a href="BetaIssues_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-blue-600 hover:from-slate-800 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+    <i class="fa-solid fa-mobile-screen mr-2"></i>
+    BETA UT
   </a>
 
   <a href="SMVOC_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
@@ -170,7 +170,7 @@
 
   <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
     <i class="fa-solid fa-trophy mr-2"></i>
-    QUALITY INDEX
+    BIG DATA
   </button>
 
   <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
@@ -182,22 +182,22 @@
 <!-- CHARTS ROW -->
 <section class="grid grid-cols-12 gap-4">
 
-<!-- Source Wise Severity - 100% Stacked Horizontal Bar -->
-<div class="col-span-4">
+<!-- SEVERITY SPLIT - Donut Chart -->
+<div class="col-span-3">
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Source Wise Severity</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Wise Issue Count</h3>
         <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-chart-simple text-blue-600 dark:text-blue-400"></i>
+          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
         </div>
       </div>
-  </div>
+    </div>
 
-  <!-- Chart Container -->
+    <!-- Chart Container -->
     <div class="p-4 flex items-center justify-bottom">
-      <div id="source-distribution-chart" class="h-[180px] w-full"></div>
+      <div id="severity-split-chart" class="h-[180px] w-full"></div>
     </div>
   </div>
 </div>
@@ -208,7 +208,7 @@
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top Models</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Models</h3>
         <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
           <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
         </div>
@@ -234,22 +234,22 @@
   </div>
 </div>
 
-<!-- SEVERITY SPLIT - Donut Chart -->
-<div class="col-span-3">
+<!-- TOP MODULES - Professional Design -->
+<div class="col-span-4">
   <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[320px]">
     <!-- Header with subtle accent -->
     <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Wise Issue Count</h3>
-        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Modules</h3>
+        <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-cubes text-green-600 dark:text-green-400"></i>
         </div>
       </div>
     </div>
 
     <!-- Chart Container -->
-    <div class="p-4 flex items-center justify-bottom">
-      <div id="severity-split-chart" class="h-[180px] w-full"></div>
+    <div class="p-4">
+      <div id="top-modules-chart" class="h-[180px] w-full"></div>
     </div>
   </div>
 </div>
@@ -420,9 +420,9 @@ async function loadDashboardData() {
 
     // Update all UI elements
     updateKPIs();
-    updateSourceDistribution();
     updateSeveritySplit();
     updateTopModelsChart();
+    updateTopModulesChart();
     createModelSummaryTable();
 
   } catch (error) {
@@ -450,218 +450,6 @@ function updateKPIs() {
   if (openIssuesEl) openIssuesEl.textContent = totalOpen.toLocaleString();
   if (resolvedIssuesEl) resolvedIssuesEl.textContent = totalResolved.toLocaleString();
   if (closeIssuesEl) closeIssuesEl.textContent = totalClose.toLocaleString();
-}
-
-// Update source distribution chart - 100% Stacked Horizontal Bar
-function updateSourceDistribution() {
-  const chartDom = document.getElementById('source-distribution-chart');
-  if (!chartDom) {
-    return;
-  }
-
-  console.log("HTML Dashboard - Updating source distribution");
-  console.log("KPIs data:", dashboardData.kpis);
-
-  const chart = echarts.init(chartDom);
-  const colors = getChartColors();
-
-  // Use actual severity data from KPIs instead of classifying by count
-  const severityData = dashboardData.kpis || {};
-  console.log("Severity data from KPIs:", severityData);
-
-  // Map display names to KPI keys
-  const displayToKPI = {
-    'Beta Users': 'Beta User Issues',
-    'S.M. PLM': 'Samsung Members PLM',
-    'S.M. VOC': 'Samsung Members VOC'
-  };
-
-  const sources = ['Beta Users', 'S.M. PLM', 'S.M. VOC'];
-
-  // Extract severity counts directly from KPIs (using open issues only)
-  const highData = sources.map(source => {
-    const kpiKey = displayToKPI[source];
-    const value = severityData[kpiKey]?.High_open || 0;
-    console.log(`High for ${source} (${kpiKey}):`, value);
-    return value;
-  });
-
-  const mediumData = sources.map(source => {
-    const kpiKey = displayToKPI[source];
-    const value = severityData[kpiKey]?.Medium_open || 0;
-    console.log(`Medium for ${source} (${kpiKey}):`, value);
-    return value;
-  });
-
-  const lowData = sources.map(source => {
-    const kpiKey = displayToKPI[source];
-    const value = severityData[kpiKey]?.Low_open || 0;
-    console.log(`Low for ${source} (${kpiKey}):`, value);
-    return value;
-  });
-
-  console.log("Final data arrays - High:", highData, "Medium:", mediumData, "Low:", lowData);
-
-  // Create mapping from display names to data keys
-  const displayNameToKey = {
-    'Beta Users': 'Beta',
-    'S.M. PLM': 'PLM',
-    'S.M. VOC': 'VOC'
-  };
-
-  const option = {
-    textStyle: {
-      color: colors.textPrimary
-    },
-    tooltip: {
-      trigger: 'axis',
-      formatter: function(params) {
-        let result = '';
-        params.forEach(param => {
-          const source = param.name;
-          const severity = param.seriesName;
-          const value = param.value;
-          result += `${source}<br/>${severity}: ${value}<br/>`;
-        });
-        return result;
-      }
-    },
-    legend: {
-      data: ['High', 'Medium', 'Low'],
-      bottom: 10,
-      orient: 'horizontal',
-      textStyle: {
-        color: colors.textPrimary
-      }
-    },
-    grid: {
-      left: '20%',
-      right: '0%',
-      top: '10%',
-      bottom: '20%',
-      borderColor: colors.gridLines
-    },
-    xAxis: {
-      type: 'value',
-      axisLabel: {
-        show: false,
-        fontSize: 10,
-        color: colors.textPrimary
-      },
-      splitLine: {
-        show: false
-      }
-    },
-    yAxis: {
-      type: 'category',
-      data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'], // Match the order of sources array
-      axisLabel: {
-        fontSize: 12,
-        interval: 0,
-        color: colors.textPrimary
-      }
-    },
-    series: [
-      {
-        name: 'High',
-        type: 'bar',
-        stack: 'total',
-        barWidth: '50%', // Thicker bars for cylindrical effect
-        data: highData,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#ef4444' },
-            { offset: 0.5, color: '#dc2626' },
-            { offset: 1, color: '#b91c1c' }
-          ]),
-          borderRadius: [12, 0, 0, 12],
-          shadowBlur: 8,
-          shadowColor: 'rgba(239, 68, 68, 0.3)'
-        },
-        emphasis: {
-          focus: 'series',
-          itemStyle: {
-            shadowBlur: 12,
-            shadowColor: 'rgba(239, 68, 68, 0.5)'
-          }
-        },
-        label: {
-          show: true,
-          position: 'inside',
-          formatter: '{c}',
-          fontSize: 12,
-          color: colors.textPrimary
-        }
-      },
-      {
-        name: 'Medium',
-        type: 'bar',
-        stack: 'total',
-        barWidth: '70%',
-        data: mediumData,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#fbbf24' },
-            { offset: 0.5, color: '#f59e0b' },
-            { offset: 1, color: '#d97706' }
-          ]),
-          borderRadius: [0, 0, 0, 0],
-          shadowBlur: 8,
-          shadowColor: 'rgba(245, 158, 11, 0.3)',
-          opacity: 0.75
-        },
-        emphasis: {
-          focus: 'series',
-          itemStyle: {
-            opacity: 1,
-            shadowBlur: 12,
-            shadowColor: 'rgba(245, 158, 11, 0.5)'
-          }
-        },
-        label: {
-          show: true,
-          position: 'inside',
-          formatter: '{c}',
-          fontSize: 12,
-          color: colors.textPrimary
-        }
-      },
-      {
-        name: 'Low',
-        type: 'bar',
-        stack: 'total',
-        barWidth: '70%',
-        data: lowData,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#9ca3af' },
-            { offset: 0.5, color: '#6b7280' },
-            { offset: 1, color: '#4b5563' }
-          ]),
-          borderRadius: [4, 4, 0, 0],
-          shadowBlur: 8,
-          shadowColor: 'rgba(107, 114, 128, 0.3)'
-        },
-        emphasis: {
-          focus: 'series',
-          itemStyle: {
-            shadowBlur: 12,
-            shadowColor: 'rgba(107, 114, 128, 0.5)'
-          }
-        },
-        label: {
-          show: true,
-          position: 'inside',
-          formatter: '{c}',
-          fontSize: 12,
-          color: colors.textPrimary
-        }
-      }
-    ]
-  };
-
-  chart.setOption(option);
-  window.addEventListener('resize', () => chart.resize());
 }
 
 // Update severity split chart - Donut Chart
@@ -952,8 +740,8 @@ function updateTopModelsChart(filter = 'ALL') {
       }
     },
     grid: {
-      left: '21%',
-      right: '0%',
+      left: '25%',
+      right: '5%',
       top: '8%',
       bottom: '8%',
       borderColor: colors.gridLines
@@ -1027,6 +815,84 @@ function updateTopModelsChart(filter = 'ALL') {
         }
       }
       // Reference line removed - unexplained and added cognitive load
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update top modules chart - Horizontal Bar Chart
+function updateTopModulesChart() {
+  const chartDom = document.getElementById('top-modules-chart');
+  if (!chartDom || !dashboardData.topModules) return;
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Take top 10 modules
+  const topModules = dashboardData.topModules.slice(0, 10).reverse();
+  const moduleNames = topModules.map(module => {
+    return module.label.length > 15 ? module.label.substring(0, 15) + '...' : module.label;
+  });
+  const issueCounts = topModules.map(module => module.count);
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const moduleIndex = params[0].dataIndex;
+        const fullName = topModules[moduleIndex].label;
+        const count = params[0].value;
+        return `${fullName}<br/>Issues: ${count}`;
+      }
+    },
+    grid: {
+      left: '28%',
+      right: '5%',
+      top: '8%',
+      bottom: '8%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'value',
+      show: false
+    },
+    yAxis: {
+      type: 'category',
+      data: moduleNames,
+      axisLabel: {
+        interval: 0,
+        rotate: 0,
+        fontSize: 10,
+        color: colors.textPrimary
+      }
+    },
+    series: [
+      {
+        name: 'Issues',
+        type: 'bar',
+        barWidth: '60%',
+        data: issueCounts,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#10b981' },
+            { offset: 0.5, color: '#059669' },
+            { offset: 1, color: '#047857' }
+          ]),
+          borderRadius: [4, 4, 4, 4]
+        },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{c}',
+          fontSize: 11,
+          color: colors.textPrimary
+        }
+      }
     ]
   };
 

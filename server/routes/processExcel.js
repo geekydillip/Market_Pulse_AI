@@ -282,13 +282,11 @@ const { readAndNormalizeExcel, generateExcelFile } = require('../utils/excelUtil
 const { createChunkedProcessingTasks, runTasksWithLimit, processChunkResults, generateProcessingLog } = require('../utils/chunking');
 const { getProcessor, hasProcessor } = require('../processors');
 
-// Define processChunk function - the missing piece that handles individual chunk processing
+// Define processChunk function - handles individual chunk processing
 async function processChunk({
   chunk,
   processor,
-  prompt,
-  context,
-  analytics
+  context
 }) {
   // Validate that processor is actually a function
   if (typeof processor !== 'function') {
@@ -297,15 +295,43 @@ async function processChunk({
     );
   }
 
-  // --- FIX: Pass 'chunk.rows' instead of 'chunk' ---
-  const result = await processor(chunk.rows, {
-    prompt,
-    context
-  });
+  // Validate context object structure
+  if (!context || typeof context !== 'object') {
+    throw new TypeError(
+      `context must be an object, got ${typeof context}`
+    );
+  }
+
+  // Ensure mode is properly set in context
+  const mode = context.mode || 'regular';
+  if (!['regular', 'discovery', 'learning'].includes(mode)) {
+    console.warn(`[processChunk] Invalid mode '${mode}' provided, defaulting to 'regular'`);
+    context.mode = 'regular';
+  } else {
+    context.mode = mode;
+  }
+
+  // Ensure model is properly set in context
+  const model = context.model || 'qwen3:4b-instruct';
+  context.model = model;
+
+  // Ensure sessionId is properly set in context
+  const sessionId = context.sessionId || 'default';
+  context.sessionId = sessionId;
+
+  // Ensure startIndex is properly set in context
+  const startIndex = context.startIndex || 0;
+  context.startIndex = startIndex;
+
+  console.log(`[processChunk] Processing chunk ${chunk.chunk_id} with mode: ${context.mode}, model: ${context.model}, sessionId: ${context.sessionId}`);
+
+  // Call the processor with chunk.rows and the context object
+  // The context should contain all necessary parameters including prompt
+  const result = await processor(chunk.rows, context);
 
   // Update analytics if returned
-  if (analytics && Array.isArray(result)) {
-    analytics.processedRows += result.length;
+  if (context.analytics && Array.isArray(result)) {
+    context.analytics.processedRows += result.length;
   }
 
   return result;
@@ -606,9 +632,7 @@ async function processExcel(req, res, processingMode = 'regular') {
           const result = await processChunk({
             chunk,
             processor,
-            prompt: null,
-            context: { model, sessionId, processingMode, startIndex: batchStartIdx },
-            analytics: null
+            context: { model, sessionId, processingMode, startIndex: batchStartIdx }
           });
 
           // Check for cancellation after processing
@@ -885,9 +909,7 @@ async function processJSON(req, res, processingMode = 'regular') {
           const result = await processChunk({
             chunk,
             processor: processorFunc,
-            prompt: null,
-            context: { model, sessionId, processingMode },
-            analytics: null
+            context: { model, sessionId, processingMode }
           });
 
           // Check for cancellation after processing
@@ -1221,9 +1243,7 @@ async function processCSV(req, res, processingMode = 'regular') {
           const result = await processChunk({
             chunk,
             processor: getProcessor(processingType),
-            prompt: null,
-            context: { model, sessionId, processingMode, startIndex: batchStartIdx },
-            analytics: null
+            context: { model, sessionId, processingMode, startIndex: batchStartIdx }
           });
 
           // Check for cancellation after processing
@@ -1401,5 +1421,7 @@ module.exports = {
   setupProgressRoute,
   setupSessionRoutes,
   setupProcessRoute,
-  sendProgress
+  sendProgress,
+  processChunk, // Export processChunk function for testing
+  handleLearningMode // Export learning mode handler for testing
 };

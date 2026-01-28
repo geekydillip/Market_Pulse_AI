@@ -196,77 +196,142 @@ function normalizeRows(rows) {
 }
 
 /**
- * Parse AI response and extract structured data
+ * Parse AI response and extract structured data with robust error handling
  * @param {string} response - AI response text
  * @param {number} rowCount - Number of rows to expect
  * @returns {Array} Parsed results for each row
  */
 function parseAIResponse(response, rowCount) {
+  console.log(`[SamsungMembersVoc] Starting AI response parsing for ${rowCount} rows...`);
+  console.log(`[SamsungMembersVoc] Response length: ${response.length} characters`);
+  
   try {
-    // Try to parse as JSON first
-    const parsed = JSON.parse(response);
-    if (Array.isArray(parsed)) {
-      return parsed;
+    // Enhanced JSON parsing with bracket slicing to handle markdown blocks
+    let jsonCandidate = response.trim();
+    const firstBracket = jsonCandidate.indexOf('[');
+    const lastBracket = jsonCandidate.lastIndexOf(']');
+    
+    if (firstBracket !== -1 && lastBracket > firstBracket) {
+      jsonCandidate = jsonCandidate.substring(firstBracket, lastBracket + 1);
+      console.log(`[SamsungMembersVoc] Extracted JSON candidate: ${jsonCandidate.substring(0, 100)}...`);
+      
+      try {
+        const parsed = JSON.parse(jsonCandidate);
+        if (Array.isArray(parsed)) {
+          console.log(`[SamsungMembersVoc] Successfully parsed ${parsed.length} items from JSON`);
+          return parsed;
+        }
+      } catch (jsonError) {
+        console.log(`[SamsungMembersVoc] JSON parsing failed: ${jsonError.message}`);
+      }
     }
-  } catch (e) {
-    // If not JSON, try to parse as structured text
+    
+    // Fallback to text parsing with flexible patterns
+    console.log(`[SamsungMembersVoc] Falling back to text parsing...`);
     const lines = response.split('\n').filter(line => line.trim());
     const results = [];
     let currentRow = null;
     let currentResult = {};
+    let currentField = null;
+    let fieldBuffer = '';
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const trimmed = line.trim();
       
+      // Skip empty lines
+      if (!trimmed) continue;
+      
+      // Clean bullet points and list markers
+      const cleanedLine = trimmed.replace(/^[\s*\-+\d.]+\s*/, '').trim();
+      
       // Check if line starts with a row number
-      const rowMatch = trimmed.match(/^(\d+):\s*(.*)/);
+      const rowMatch = cleanedLine.match(/^(\d+):\s*(.*)/);
       if (rowMatch) {
         if (currentRow !== null && currentResult) {
           results.push(currentResult);
         }
         currentRow = parseInt(rowMatch[1]);
         currentResult = {};
+        currentField = null;
+        fieldBuffer = '';
+        
+        // Process the rest of the line after the row number
+        const restOfLine = rowMatch[2].trim();
+        if (restOfLine) {
+          // Try to extract field from the same line
+          const fieldMatch = restOfLine.match(/^(Module|Sub-Module|Issue Type|Sub-Issue Type|AI Insight)\s*[:\-=]\s*(.+)/i);
+          if (fieldMatch) {
+            currentField = fieldMatch[1].trim();
+            fieldBuffer = fieldMatch[2].trim();
+          }
+        }
+        continue;
       }
       
-      // Extract Module
-      const moduleMatch = trimmed.match(/Module:\s*(.+)/i);
-      if (moduleMatch) {
-        currentResult.Module = moduleMatch[1].trim();
+      // Flexible field extraction with multiple separator support
+      const fieldMatch = cleanedLine.match(/^(Module|Sub-Module|Issue Type|Sub-Issue Type|AI Insight)\s*[:\-=]\s*(.+)/i);
+      if (fieldMatch) {
+        // Save previous field if exists
+        if (currentField && fieldBuffer) {
+          currentResult[currentField] = fieldBuffer.trim();
+        }
+        
+        // Start new field
+        currentField = fieldMatch[1].trim();
+        fieldBuffer = fieldMatch[2].trim();
+        continue;
       }
       
-      // Extract Sub-Module
-      const subModuleMatch = trimmed.match(/Sub-Module:\s*(.+)/i);
-      if (subModuleMatch) {
-        currentResult['Sub-Module'] = subModuleMatch[1].trim();
+      // Handle continuation lines (multi-line field values)
+      if (currentField && cleanedLine.length > 0) {
+        // Check if this line looks like a new field (starts with a field name)
+        const potentialNewField = cleanedLine.match(/^(Module|Sub-Module|Issue Type|Sub-Issue Type|AI Insight)\s*[:\-=]/i);
+        
+        if (!potentialNewField) {
+          // This is a continuation of the current field
+          fieldBuffer += ' ' + cleanedLine;
+        } else {
+          // This is a new field, save the current one
+          if (currentField && fieldBuffer) {
+            currentResult[currentField] = fieldBuffer.trim();
+          }
+          currentField = potentialNewField[1].trim();
+          fieldBuffer = cleanedLine.replace(potentialNewField[0], '').trim();
+        }
       }
-      
-      // Extract Issue Type
-      const issueTypeMatch = trimmed.match(/Issue Type:\s*(.+)/i);
-      if (issueTypeMatch) {
-        currentResult['Issue Type'] = issueTypeMatch[1].trim();
-      }
-      
-      // Extract Sub-Issue Type
-      const subIssueTypeMatch = trimmed.match(/Sub-Issue Type:\s*(.+)/i);
-      if (subIssueTypeMatch) {
-        currentResult['Sub-Issue Type'] = subIssueTypeMatch[1].trim();
-      }
-      
-      // Extract AI Insight
-      const aiInsightMatch = trimmed.match(/AI Insight:\s*(.+)/i);
-      if (aiInsightMatch) {
-        currentResult['AI Insight'] = aiInsightMatch[1].trim();
-      }
+    }
+    
+    // Save the last field and result
+    if (currentField && fieldBuffer) {
+      currentResult[currentField] = fieldBuffer.trim();
     }
     
     if (currentResult && Object.keys(currentResult).length > 0) {
       results.push(currentResult);
     }
     
-    return results;
+    console.log(`[SamsungMembersVoc] Text parsing completed, extracted ${results.length} results`);
+    
+    // Validation and cleanup
+    const validatedResults = results.map(result => {
+      const cleaned = {};
+      for (const [key, value] of Object.entries(result)) {
+        if (value && typeof value === 'string' && value.trim()) {
+          cleaned[key] = value.trim();
+        }
+      }
+      return cleaned;
+    });
+    
+    console.log(`[SamsungMembersVoc] Final validation: ${validatedResults.length} valid results`);
+    return validatedResults;
+    
+  } catch (error) {
+    console.error(`[SamsungMembersVoc] Critical parsing error: ${error.message}`);
+    console.error(`[SamsungMembersVoc] Response preview: ${response.substring(0, 200)}...`);
+    return [];
   }
-  
-  return [];
 }
 
 /**
@@ -358,8 +423,85 @@ async function samsungMembersVocProcessor(rows, context = {}) {
   }
 }
 
+/**
+ * Flexible header validation function for samsungMembersVoc processor
+ * Handles header variations and provides clear error messages
+ * @param {Array} headers - Array of header names from the uploaded file
+ * @returns {boolean} True if headers are valid, false otherwise
+ */
+function validate(headers) {
+  console.log('[SamsungMembersVoc] Validating headers:', headers);
+  
+  // Define required headers with their acceptable variations
+  const requiredHeaders = {
+    'No': ['no', 'number', 'id', 'index'],
+    'Model No.': ['model no', 'model_no', 'modelno', 'model number', 'modelnumber', 'model'],
+    'OS': ['os', 'operating system', 'operating_system'],
+    'CSC': ['csc', 'country sales code', 'country_sales_code', 'region'],
+    'Category': ['category', 'type', 'classification'],
+    'Application Name': ['application name', 'application_name', 'app name', 'app_name', 'app'],
+    'Application Type': ['application type', 'application_type', 'app type', 'app_type'],
+    'content': ['content', 'feedback', 'comment', 'description', 'text']
+  };
+
+  // Track which required headers we found
+  const foundHeaders = {};
+  const missingHeaders = [];
+  
+  // Normalize input headers for comparison
+  const normalizedHeaders = headers.map(h => String(h || '').toLowerCase().trim());
+
+  // Check each required header
+  for (const [canonicalName, variations] of Object.entries(requiredHeaders)) {
+    let headerFound = false;
+    
+    // Check exact match first
+    if (normalizedHeaders.includes(canonicalName.toLowerCase())) {
+      headerFound = true;
+      foundHeaders[canonicalName] = canonicalName;
+    } else {
+      // Check variations
+      for (const variation of variations) {
+        if (normalizedHeaders.includes(variation)) {
+          headerFound = true;
+          foundHeaders[canonicalName] = variation;
+          break;
+        }
+      }
+    }
+    
+    if (!headerFound) {
+      missingHeaders.push(canonicalName);
+    }
+  }
+
+  // Log validation results
+  console.log('[SamsungMembersVoc] Header validation results:');
+  console.log('  Found headers:', foundHeaders);
+  console.log('  Missing headers:', missingHeaders);
+
+  // If we have at least the core required headers, consider it valid
+  const coreHeaders = ['No', 'Model No.', 'content'];
+  const coreMissing = coreHeaders.filter(header => missingHeaders.includes(header));
+  
+  if (coreMissing.length > 0) {
+    console.error(`[SamsungMembersVoc] Missing core headers: ${coreMissing.join(', ')}`);
+    return false;
+  }
+
+  // For non-core headers, log warnings but don't fail validation
+  const nonCoreMissing = missingHeaders.filter(header => !coreHeaders.includes(header));
+  if (nonCoreMissing.length > 0) {
+    console.warn(`[SamsungMembersVoc] Missing non-core headers (will use defaults): ${nonCoreMissing.join(', ')}`);
+  }
+
+  console.log('[SamsungMembersVoc] Header validation passed');
+  return true;
+}
+
 // Add expected headers for the processor
 samsungMembersVocProcessor.expectedHeaders = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','Issue Type','Sub-Issue Type','AI Insight'];
 samsungMembersVocProcessor.readAndNormalizeExcel = readAndNormalizeExcel;
+samsungMembersVocProcessor.validate = validate;
 
 module.exports = samsungMembersVocProcessor;

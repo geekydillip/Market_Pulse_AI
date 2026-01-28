@@ -32,26 +32,91 @@ function cleanObjectRecursively(obj) {
 
 /**
  * Shared header normalization utility - eliminates code duplication
+ * Enhanced with fuzzy matching and edge case handling
  */
 function normalizeHeaders(rows) {
-  // Map header name variants to canonical names
+  // Map header name variants to canonical names with enhanced matching
   const headerMap = {
-    // Model variants
+    // Model variants - enhanced with fuzzy matching
     'model no.': 'Model No.',
-    // Case Code
+    'model_no': 'Model No.',
+    'modelno': 'Model No.',
+    'model number': 'Model No.',
+    'modelnumber': 'Model No.',
+    'model': 'Model No.',
+    'dev. mdl. name/item name': 'Model No.',
+    'dev_mdl_name_item_name': 'Model No.',
+    'dev mdl name/item name': 'Model No.',
+    
+    // Case Code variants
     'case code': 'Case Code',
+    'case_code': 'Case Code',
+    'casecode': 'Case Code',
+    'case id': 'Case Code',
+    'caseid': 'Case Code',
+    'case number': 'Case Code',
+    'casenumber': 'Case Code',
+    
     // S/W Ver variants
     's/w ver.': 'S/W Ver.',
-    // Title, Problem, Module, Sub-Module
+    'sw ver': 'S/W Ver.',
+    'swver': 'S/W Ver.',
+    'software version': 'S/W Ver.',
+    'software_version': 'S/W Ver.',
+    'version': 'S/W Ver.',
+    
+    // Title variants
     'title': 'Title',
-    'progr.stat.': 'Progr.Stat.',
-    'progress status': 'Progr.Stat.',
+    'subject': 'Title',
+    'issue title': 'Title',
+    'issue_title': 'Title',
+    'summary': 'Title',
+    
+    // Problem variants
     'problem': 'Problem',
+    'description': 'Problem',
+    'issue description': 'Problem',
+    'issue_description': 'Problem',
+    'details': 'Problem',
+    'problem description': 'Problem',
+    'problem_description': 'Problem',
+    
+    // Progr.Stat variants
+    'progr.stat.': 'Progr.Stat.',
+    'progstat': 'Progr.Stat.',
+    'progress status': 'Progr.Stat.',
+    'progress_status': 'Progr.Stat.',
+    'progress': 'Progr.Stat.',
+    'status': 'Progr.Stat.',
+    
+    // Resolve Option variants
     'resolve option(medium)': 'Resolve Option(Medium)',
-    'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'issue type': 'Issue Type',
-    'sub-issue type': 'Sub-Issue Type'
+    'resolve_option(medium)': 'Resolve Option(Medium)',
+    'medium resolve': 'Resolve Option(Medium)',
+    'medium_resolve': 'Resolve Option(Medium)',
+    'resolve option(small)': 'Resolve Option(Small)',
+    'resolve_option(small)': 'Resolve Option(Small)',
+    'small resolve': 'Resolve Option(Small)',
+    'small_resolve': 'Resolve Option(Small)',
+    
+    // Feature variants
+    'feature': 'Feature',
+    'module': 'Feature',
+    'component': 'Feature',
+    'product': 'Feature',
+    
+    // Cause variants
+    'cause': 'Cause',
+    'root cause': 'Cause',
+    'rootcause': 'Cause',
+    'reason': 'Cause',
+    
+    // Counter Measure variants
+    'counter measure': 'Counter Measure',
+    'counter_measure': 'Counter Measure',
+    'solution': 'Counter Measure',
+    'fix': 'Counter Measure',
+    'workaround': 'Counter Measure'
   };
 
   // canonical columns you expect in the downstream processing
@@ -63,18 +128,35 @@ function normalizeHeaders(rows) {
     const keyMap = {}; // rawKey -> canonical
     Object.keys(orig).forEach(rawKey => {
       const norm = String(rawKey || '').trim().toLowerCase();
-      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
-      if (mapped) keyMap[rawKey] = mapped;
-      else {
+      const normNoSpaces = norm.replace(/\s+|\./g, '');
+      
+      // Try exact match first
+      let mapped = headerMap[norm] || headerMap[normNoSpaces];
+      
+      // If no exact match, try fuzzy matching
+      if (!mapped) {
+        // Check for partial matches (e.g., "Problem Description" -> "Problem")
+        for (const [key, value] of Object.entries(headerMap)) {
+          if (norm.includes(key) || normNoSpaces.includes(key.replace(/\s+|\./g, ''))) {
+            mapped = value;
+            break;
+          }
+        }
+      }
+      
+      if (mapped) {
+        keyMap[rawKey] = mapped;
+      } else {
         // try exact match to canonical
         for (const c of canonicalCols) {
-          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
+          if (norm === String(c).toLowerCase() || normNoSpaces === String(c).toLowerCase().replace(/\s+|\./g, '')) {
             keyMap[rawKey] = c;
             break;
           }
         }
       }
     });
+    
     // Fill canonical fields
     for (const tgt of canonicalCols) {
       // find a source raw key that maps to this tgt
@@ -86,7 +168,40 @@ function normalizeHeaders(rows) {
         }
       }
       // also if tgt exists exactly as a raw header name, use it
-      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
+      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) {
+        found = orig[tgt];
+      }
+    // Final fallback: check for partial matches in raw keys with enhanced fuzzy matching
+      if (found === null) {
+        const tgtNorm = tgt.toLowerCase().replace(/\s+|\./g, '');
+        for (const rawKey of Object.keys(orig)) {
+          const rawKeyNorm = String(rawKey || '').toLowerCase().replace(/\s+|\./g, '');
+          
+          // Enhanced fuzzy matching for common variations
+          if (rawKeyNorm.includes(tgtNorm) || tgtNorm.includes(rawKeyNorm)) {
+            found = orig[rawKey];
+            break;
+          }
+          
+          // Special case: "Problem Description" -> "Problem"
+          if (tgtNorm === 'problem' && rawKeyNorm.includes('problem') && rawKeyNorm.includes('description')) {
+            found = orig[rawKey];
+            break;
+          }
+          
+          // Special case: "Model Number" -> "Model No."
+          if (tgtNorm === 'modelno' && rawKeyNorm.includes('model') && rawKeyNorm.includes('number')) {
+            found = orig[rawKey];
+            break;
+          }
+          
+          // Special case: "Progress Status" -> "Progr.Stat."
+          if (tgtNorm === 'progstat' && rawKeyNorm.includes('progress') && rawKeyNorm.includes('status')) {
+            found = orig[rawKey];
+            break;
+          }
+        }
+      }
       out[tgt] = (found !== undefined && found !== null) ? found : '';
     }
     return out;
@@ -283,95 +398,180 @@ function normalizeRows(rows) {
 }
 
 /**
- * Parse AI response and extract structured data
+ * Clean markdown bullets and list prefixes from lines
+ * @param {string} line - Line to clean
+ * @returns {string} Cleaned line
+ */
+function cleanLine(line) {
+  return line.replace(/^[\s*\-+\d.]+\s*/, '').trim();
+}
+
+/**
+ * Map multiple label variations to canonical keys
+ */
+const labelMap = {
+  'Module': [/Module/i, /Feature/i, /Component/i, /Product/i],
+  'Sub-Module': [/Sub-Module/i, /Sub-Feature/i, /Component/i],
+  'Issue Type': [/Issue Type/i, /Issue Category/i, /Type/i],
+  'Sub-Issue Type': [/Sub-Issue Type/i, /Sub-Type/i, /Subcategory/i],
+  'Summarized Problem': [/Summarized Problem/i, /Problem Summary/i, /Summary/i],
+  'Severity': [/Severity/i, /Impact/i, /Priority/i, /Urgency/i],
+  'Severity Reason': [/Severity Reason/i, /Impact Reason/i, /Priority Reason/i, /Why/i],
+  'R&D Comment': [/R&D Comment/i, /R&D Remarks/i, /Comment/i, /Notes/i]
+};
+
+/**
+ * Enhanced regex patterns with flexible separators
+ */
+const labelPatterns = {
+  'Module': /Module\s*[:\-=]\s*(.+)/i,
+  'Sub-Module': /Sub-Module\s*[:\-=]\s*(.+)/i,
+  'Issue Type': /Issue Type\s*[:\-=]\s*(.+)/i,
+  'Sub-Issue Type': /Sub-Issue Type\s*[:\-=]\s*(.+)/i,
+  'Summarized Problem': /Summarized Problem\s*[:\-=]\s*(.+)/i,
+  'Severity': /Severity\s*[:\-=]\s*(.+)/i,
+  'Severity Reason': /Severity Reason\s*[:\-=]\s*(.+)/i,
+  'R&D Comment': /R&D Comment\s*[:\-=]\s*(.+)/i
+};
+
+/**
+ * Check if a line matches any known label pattern
+ * @param {string} line - Line to check
+ * @returns {Object|null} Match result with key and value
+ */
+function checkLabelMatch(line) {
+  for (const [key, pattern] of Object.entries(labelPatterns)) {
+    const match = line.match(pattern);
+    if (match) {
+      return {
+        key: key,
+        value: match[1].trim()
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Parse AI response and extract structured data with robust fallback strategies
  * @param {string} response - AI response text
  * @param {number} rowCount - Number of rows to expect
  * @returns {Array} Parsed results for each row
  */
 function parseAIResponse(response, rowCount) {
+  console.log(`[parseAIResponse] Starting parsing for ${rowCount} rows`);
+  console.log(`[parseAIResponse] Response length: ${response.length} characters`);
+  
+  // Stage 1: Enhanced JSON Parsing with bracket slicing
   try {
-    // Try to parse as JSON first
-    const parsed = JSON.parse(response);
-    if (Array.isArray(parsed)) {
-      return parsed;
+    let jsonCandidate = response.trim();
+    const firstBracket = jsonCandidate.indexOf('[');
+    const lastBracket = jsonCandidate.lastIndexOf(']');
+    
+    if (firstBracket !== -1 && lastBracket > firstBracket) {
+      jsonCandidate = jsonCandidate.substring(firstBracket, lastBracket + 1);
+      console.log(`[parseAIResponse] Extracted JSON candidate: ${jsonCandidate.substring(0, 100)}...`);
+      
+      try {
+        const parsed = JSON.parse(jsonCandidate);
+        if (Array.isArray(parsed)) {
+          console.log(`[parseAIResponse] JSON parsing successful, extracted ${parsed.length} items`);
+          return parsed;
+        }
+      } catch (jsonError) {
+        console.log(`[parseAIResponse] JSON parsing failed: ${jsonError.message}`);
+      }
     }
   } catch (e) {
-    // If not JSON, try to parse as structured text
-    const lines = response.split('\n').filter(line => line.trim());
-    const results = [];
-    let currentRow = null;
-    let currentResult = {};
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      
-      // Check if line starts with a row number
-      const rowMatch = trimmed.match(/^(\d+):\s*(.*)/);
-      if (rowMatch) {
-        if (currentRow !== null && currentResult) {
-          results.push(currentResult);
-        }
-        currentRow = parseInt(rowMatch[1]);
-        currentResult = {};
-      }
-      
-      // Extract Module
-      const moduleMatch = trimmed.match(/Module:\s*(.+)/i);
-      if (moduleMatch) {
-        currentResult.Module = moduleMatch[1].trim();
-      }
-      
-      // Extract Sub-Module
-      const subModuleMatch = trimmed.match(/Sub-Module:\s*(.+)/i);
-      if (subModuleMatch) {
-        currentResult['Sub-Module'] = subModuleMatch[1].trim();
-      }
-      
-      // Extract Issue Type
-      const issueTypeMatch = trimmed.match(/Issue Type:\s*(.+)/i);
-      if (issueTypeMatch) {
-        currentResult['Issue Type'] = issueTypeMatch[1].trim();
-      }
-      
-      // Extract Sub-Issue Type
-      const subIssueTypeMatch = trimmed.match(/Sub-Issue Type:\s*(.+)/i);
-      if (subIssueTypeMatch) {
-        currentResult['Sub-Issue Type'] = subIssueTypeMatch[1].trim();
-      }
-      
-      // Extract Summarized Problem
-      const summarizedProblemMatch = trimmed.match(/Summarized Problem:\s*(.+)/i);
-      if (summarizedProblemMatch) {
-        currentResult['Summarized Problem'] = summarizedProblemMatch[1].trim();
-      }
-      
-      // Extract Severity
-      const severityMatch = trimmed.match(/Severity:\s*(.+)/i);
-      if (severityMatch) {
-        currentResult.Severity = severityMatch[1].trim();
-      }
-      
-      // Extract Severity Reason
-      const severityReasonMatch = trimmed.match(/Severity Reason:\s*(.+)/i);
-      if (severityReasonMatch) {
-        currentResult['Severity Reason'] = severityReasonMatch[1].trim();
-      }
-      
-      // Extract R&D Comment
-      const rdCommentMatch = trimmed.match(/R&D Comment:\s*(.+)/i);
-      if (rdCommentMatch) {
-        currentResult['R&D Comment'] = rdCommentMatch[1].trim();
-      }
-    }
-    
-    if (currentResult && Object.keys(currentResult).length > 0) {
-      results.push(currentResult);
-    }
-    
-    return results;
+    console.log(`[parseAIResponse] Stage 1 JSON parsing failed: ${e.message}`);
   }
   
-  return [];
+  // Stage 2: Flexible text parsing with state-based multi-line support
+  console.log(`[parseAIResponse] Falling back to text parsing...`);
+  
+  const lines = response.split('\n').filter(line => line.trim());
+  const results = [];
+  let currentRow = null;
+  let currentResult = {};
+  let currentKey = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Skip empty lines
+    if (!trimmed) continue;
+    
+    // Check if line starts with a row number
+    const rowMatch = trimmed.match(/^(\d+):\s*(.*)/);
+    if (rowMatch) {
+      if (currentRow !== null && currentResult && Object.keys(currentResult).length > 0) {
+        results.push(currentResult);
+        console.log(`[parseAIResponse] Completed row ${currentRow}:`, Object.keys(currentResult));
+      }
+      currentRow = parseInt(rowMatch[1]);
+      currentResult = {};
+      currentKey = null;
+      
+      // Process the rest of the line after the row number
+      const restOfLine = rowMatch[2].trim();
+      if (restOfLine) {
+        const match = checkLabelMatch(restOfLine);
+        if (match) {
+          currentResult[match.key] = match.value;
+          currentKey = match.key;
+        }
+      }
+      continue;
+    }
+    
+    // Clean markdown bullets and list prefixes
+    const cleanedLine = cleanLine(trimmed);
+    if (!cleanedLine) continue;
+    
+    // Check for new label
+    const match = checkLabelMatch(cleanedLine);
+    if (match) {
+      currentKey = match.key;
+      currentResult[match.key] = match.value;
+      continue;
+    }
+    
+    // Stage 3: Multi-line value capture - if no new key found but we have a current key, append to it
+    if (currentKey && currentResult[currentKey]) {
+      // Only append if this looks like continuation text (not a new section header)
+      if (!/^(Module|Sub-Module|Issue Type|Sub-Issue Type|Summarized Problem|Severity|Severity Reason|R&D Comment)\s*[:\-=]/i.test(cleanedLine)) {
+        currentResult[currentKey] += ' ' + cleanedLine;
+      }
+    }
+  }
+  
+  // Add the last result if it exists
+  if (currentResult && Object.keys(currentResult).length > 0) {
+    results.push(currentResult);
+    console.log(`[parseAIResponse] Completed final row ${currentRow}:`, Object.keys(currentResult));
+  }
+  
+  console.log(`[parseAIResponse] Text parsing completed, extracted ${results.length} items`);
+  
+  // Stage 4: Validation and cleanup
+  if (results.length === 0) {
+    console.log(`[parseAIResponse] No results extracted, returning empty array`);
+    return [];
+  }
+  
+  // Ensure all results have the expected structure
+  const expectedKeys = Object.keys(labelPatterns);
+  const validatedResults = results.map(result => {
+    const validated = {};
+    expectedKeys.forEach(key => {
+      validated[key] = result[key] || '';
+    });
+    return validated;
+  });
+  
+  console.log(`[parseAIResponse] Parsing completed successfully with ${validatedResults.length} validated results`);
+  return validatedResults;
 }
 
 /**
@@ -479,8 +679,88 @@ async function samsungMembersPlmProcessor(rows, context = {}) {
   }
 }
 
+/**
+ * Flexible header validation function for samsungMembersPlm processor
+ * Handles header variations and provides clear error messages
+ * @param {Array} headers - Array of header names from the uploaded file
+ * @returns {boolean} True if headers are valid, false otherwise
+ */
+function validate(headers) {
+  console.log('[SamsungMembersPlm] Validating headers:', headers);
+  
+  // Define required headers with their acceptable variations
+  const requiredHeaders = {
+    'Case Code': ['case code', 'case_code', 'casecode', 'case id', 'caseid'],
+    'Model No.': ['model no', 'model_no', 'modelno', 'model number', 'modelnumber', 'model'],
+    'Progr.Stat.': ['progr.stat', 'progstat', 'progress status', 'progress_status', 'progress', 'status'],
+    'S/W Ver.': ['s/w ver', 'sw ver', 'swver', 'software version', 'software_version', 'version'],
+    'Title': ['title', 'subject', 'issue title', 'issue_title'],
+    'Problem': ['problem', 'description', 'issue description', 'issue_description', 'details'],
+    'Feature': ['feature', 'module', 'component', 'product'],
+    'Resolve Option(Medium)': ['resolve option(medium)', 'resolve_option(medium)', 'medium resolve', 'medium_resolve'],
+    'Resolve Option(Small)': ['resolve option(small)', 'resolve_option(small)', 'small resolve', 'small_resolve'],
+    'Cause': ['cause', 'root cause', 'rootcause', 'reason'],
+    'Counter Measure': ['counter measure', 'counter_measure', 'solution', 'fix', 'workaround']
+  };
+
+  // Track which required headers we found
+  const foundHeaders = {};
+  const missingHeaders = [];
+  
+  // Normalize input headers for comparison
+  const normalizedHeaders = headers.map(h => String(h || '').toLowerCase().trim());
+
+  // Check each required header
+  for (const [canonicalName, variations] of Object.entries(requiredHeaders)) {
+    let headerFound = false;
+    
+    // Check exact match first
+    if (normalizedHeaders.includes(canonicalName.toLowerCase())) {
+      headerFound = true;
+      foundHeaders[canonicalName] = canonicalName;
+    } else {
+      // Check variations
+      for (const variation of variations) {
+        if (normalizedHeaders.includes(variation)) {
+          headerFound = true;
+          foundHeaders[canonicalName] = variation;
+          break;
+        }
+      }
+    }
+    
+    if (!headerFound) {
+      missingHeaders.push(canonicalName);
+    }
+  }
+
+  // Log validation results
+  console.log('[SamsungMembersPlm] Header validation results:');
+  console.log('  Found headers:', foundHeaders);
+  console.log('  Missing headers:', missingHeaders);
+
+  // If we have at least the core required headers, consider it valid
+  const coreHeaders = ['Case Code', 'Model No.', 'Title', 'Problem'];
+  const coreMissing = coreHeaders.filter(header => missingHeaders.includes(header));
+  
+  if (coreMissing.length > 0) {
+    console.error(`[SamsungMembersPlm] Missing core headers: ${coreMissing.join(', ')}`);
+    return false;
+  }
+
+  // For non-core headers, log warnings but don't fail validation
+  const nonCoreMissing = missingHeaders.filter(header => !coreHeaders.includes(header));
+  if (nonCoreMissing.length > 0) {
+    console.warn(`[SamsungMembersPlm] Missing non-core headers (will use defaults): ${nonCoreMissing.join(', ')}`);
+  }
+
+  console.log('[SamsungMembersPlm] Header validation passed');
+  return true;
+}
+
 // Add expected headers for the processor
 samsungMembersPlmProcessor.expectedHeaders = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Feature','Problem','Resolve Option(Medium)','Resolve Option(Small)','Cause','Counter Measure'];
 samsungMembersPlmProcessor.readAndNormalizeExcel = readAndNormalizeExcel;
+samsungMembersPlmProcessor.validate = validate;
 
 module.exports = samsungMembersPlmProcessor;

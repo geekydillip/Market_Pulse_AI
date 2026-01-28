@@ -10,8 +10,8 @@ For each numbered row, perform the following:
    Example: "Now bar not working on Lock Screen" → Module: Lock Screen, Sub-Module: Now Bar.
 5. Summarized Problem → One clean sentence describing the real issue.
 6. Severity Rules:
-   - High: device unusable / crash / freeze / data loss / lag / hang / major function not working.
-   - Medium: partial malfunction or intermittent failure.
+   - High: device unusable / crash / freeze / data loss / lag / hang / touch. Make sure it should be a Very Basic feature of the Phone.
+   - Medium: partial malfunction or intermittent failure, Function blocking issues.
    - Low: cosmetic issue or minor UI issue.
 7. Severity Reason → One sentence explaining WHY the above severity was selected.
 8. R&D Comment → Combine Cause + Countermeasure into one short sentence.
