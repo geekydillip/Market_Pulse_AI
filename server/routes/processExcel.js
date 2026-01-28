@@ -240,7 +240,7 @@ function setupProcessRoute(app, upload) {
       const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
       console.log(`[API PROCESS] Processing type: ${processingType}, mode: ${effectiveMode}, model: ${model}`);
 
-      const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues'];
+      const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues', 'ut_portal'];
       if (!validProcessingTypes.includes(processingType)) {
         return res.status(400).json({ error: 'Invalid processing type.' });
       }
@@ -313,7 +313,8 @@ const PROCESSOR_SOURCES = {
   'beta_user_issues': 'Beta Issues',
   'plm_issues': 'PLM Issues',
   'samsung_members_plm': 'Samsung Members PLM',
-  'samsung_members_voc': 'Samsung Members VOC'
+  'samsung_members_voc': 'Samsung Members VOC',
+  'ut_portal': 'UT Portal'
 };
 
 // Learning Mode handler - Updated with Concurrency and Robust Mapping
@@ -374,7 +375,7 @@ async function handleLearningMode(rows, learningSource, model, sessionId) {
         'Issue Type': row['Issue Type'] || row['issue_type'] || 'General'
       };
 
-      const embedding = await embeddingService.getEmbeddings(textToEmbed);
+      const embedding = await embeddingService.embedText(textToEmbed);
       await vectorStore.storeEmbedding(textToEmbed, embedding, 'row', metadata.source, metadata);
       savedCount++;
       
