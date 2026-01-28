@@ -564,11 +564,8 @@ async function processExcel(req, res, processingMode = 'regular') {
     const numberOfInputRows = rows.length;
 
     // Create optimal batches using token-bounded chunking (5-20 rows per batch)
-    const tasks = createChunkedProcessingTasks(rows, processingType, model, sessionId, processingMode, processChunk);
-
-    console.log(`[BATCHING] Created ${tasks.length} optimal batches from ${numberOfInputRows} rows`);
-
-    // Initialize monotonically increasing completion counter
+    const batches = createOptimalBatches(rows, processingType);
+    const numberOfChunks = batches.length;
     let completedChunks = 0;
 
     // Send initial progress (0%)
@@ -577,7 +574,80 @@ async function processExcel(req, res, processingMode = 'regular') {
       percent: 0,
       message: 'Preparing data...',
       chunksCompleted: 0,
-      totalChunks: tasks.length
+      totalChunks: numberOfChunks
+    });
+
+    const tasks = [];
+    let currentOffset = 0;
+
+    // Manually build tasks to include SSE progress reporting and cancellation checks
+    batches.forEach((batchRows, batchIndex) => {
+      const batchStartIdx = currentOffset;
+      const batchEndIdx = currentOffset + batchRows.length - 1;
+      const chunk = { 
+        file_name: originalName, 
+        chunk_id: batchIndex, 
+        row_indices: [batchStartIdx, batchEndIdx], 
+        headers: inputHeaders, 
+        rows: batchRows 
+      };
+      currentOffset += batchRows.length;
+
+      tasks.push(async () => {
+        // Check for cancellation before processing
+        const session = activeSessions.get(sessionId);
+        if (session && session.cancelled) {
+          console.log(`Session ${sessionId} cancelled, skipping batch ${batchIndex}`);
+          return { chunkId: batchIndex, status: 'cancelled', processedRows: [] };
+        }
+
+        try {
+          // Process the individual chunk
+          const result = await processChunk({
+            chunk,
+            processor,
+            prompt: null,
+            context: { model, sessionId, processingMode, startIndex: batchStartIdx },
+            analytics: null
+          });
+
+          // Check for cancellation after processing
+          if (session && session.cancelled) {
+            console.log(`Session ${sessionId} cancelled after processing batch ${batchIndex}`);
+            return result; // Still return the result but mark as potentially cancelled
+          }
+
+          // Increment progress and send SSE update
+          completedChunks++;
+          const percent = Math.round((completedChunks / numberOfChunks) * 100);
+          
+          // Use the 'chunk X/Y' format to enable the most accurate ETA in script.js
+          const message = `Processed chunk ${completedChunks}/${numberOfChunks}`;
+          
+          sendProgress(sessionId, {
+            type: 'progress',
+            percent,
+            message,
+            chunksCompleted: completedChunks,
+            totalChunks: numberOfChunks
+          });
+
+          return {
+            chunkId: batchIndex,
+            status: 'ok',
+            processedRows: result,
+            chunk
+          };
+        } catch (error) {
+          console.error(`Error processing batch ${batchIndex}:`, error);
+          return {
+            chunkId: batchIndex,
+            status: 'error',
+            processedRows: chunk.rows.map(row => ({ ...row, error: error.message })),
+            chunk
+          };
+        }
+      });
     });
 
     // Run with concurrency limit (4)
@@ -1107,43 +1177,13 @@ async function processCSV(req, res, processingMode = 'regular') {
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
-    const ROWSCOUNT = rows.length || 0;
 
-    // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 20;
-    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
-
-    // Check for existing cache to resume processing
-    const existingCache = cacheManager.getResumeData(processingType, sessionId);
-    let resumeFromChunk = 0;
+    // Create optimal batches using token-bounded chunking (5-20 rows per batch)
+    const batches = createOptimalBatches(rows, processingType);
+    const numberOfChunks = batches.length;
     let completedChunks = 0;
 
-    if (existingCache && existingCache.sessionState.status === 'paused') {
-      // Resume from paused state
-      resumeFromChunk = existingCache.nextChunkId;
-      completedChunks = resumeFromChunk;
-      console.log(`[CACHE RESUME] Resuming from chunk ${resumeFromChunk}, ${existingCache.completedChunks.length} chunks already completed`);
-
-      // Send resume progress update
-      sendProgress(sessionId, {
-        type: 'progress',
-        percent: Math.round((completedChunks / numberOfChunks) * 100),
-        message: `Resuming processing from chunk ${resumeFromChunk}...`,
-        chunksCompleted: completedChunks,
-        totalChunks: numberOfChunks,
-        resumed: true
-      });
-    } else if (existingCache && existingCache.sessionState.status === 'active') {
-      // Check if this is a fresh start or continuation
-      resumeFromChunk = existingCache.nextChunkId;
-      completedChunks = resumeFromChunk;
-      console.log(`[CACHE RESUME] Continuing active session from chunk ${resumeFromChunk}`);
-    } else {
-      // Fresh processing session
-      console.log(`[CACHE RESUME] Starting fresh processing session`);
-    }
-
-    // Send initial progress for CSV
+    // Send initial progress (0%)
     sendProgress(sessionId, {
       type: 'progress',
       percent: 0,
@@ -1152,48 +1192,81 @@ async function processCSV(req, res, processingMode = 'regular') {
       totalChunks: numberOfChunks
     });
 
-    // Build chunk tasks
     const tasks = [];
-    for (let i = 0; i < numberOfChunks; i++) {
-      const startIdx = i * chunkSize;
-      const endIdx = Math.min(startIdx + chunkSize, rows.length);
-      const chunkRows = rows.slice(startIdx, endIdx);
-      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
+    let currentOffset = 0;
+
+    // Manually build tasks to include SSE progress reporting and cancellation checks
+    batches.forEach((batchRows, batchIndex) => {
+      const batchStartIdx = currentOffset;
+      const batchEndIdx = currentOffset + batchRows.length - 1;
+      const chunk = { 
+        file_name: originalName, 
+        chunk_id: batchIndex, 
+        row_indices: [batchStartIdx, batchEndIdx], 
+        headers, 
+        rows: batchRows 
+      };
+      currentOffset += batchRows.length;
+
       tasks.push(async () => {
         // Check for cancellation before processing
         const session = activeSessions.get(sessionId);
         if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
-          return { chunkId: i, status: 'cancelled', processedRows: [] };
+          console.log(`Session ${sessionId} cancelled, skipping batch ${batchIndex}`);
+          return { chunkId: batchIndex, status: 'cancelled', processedRows: [] };
         }
 
-        const result = await processChunk(chunk, processingType, model, i, sessionId, processingMode);
+        try {
+          // Process the individual chunk
+          const result = await processChunk({
+            chunk,
+            processor: getProcessor(processingType),
+            prompt: null,
+            context: { model, sessionId, processingMode, startIndex: batchStartIdx },
+            analytics: null
+          });
 
-        // Check for cancellation after processing
-        if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
-          return result; // Still return the result but mark as potentially cancelled
+          // Check for cancellation after processing
+          if (session && session.cancelled) {
+            console.log(`Session ${sessionId} cancelled after processing batch ${batchIndex}`);
+            return result; // Still return the result but mark as potentially cancelled
+          }
+
+          // Increment progress and send SSE update
+          completedChunks++;
+          const percent = Math.round((completedChunks / numberOfChunks) * 100);
+          
+          // Use the 'chunk X/Y' format to enable the most accurate ETA in script.js
+          const message = `Processed chunk ${completedChunks}/${numberOfChunks}`;
+          
+          sendProgress(sessionId, {
+            type: 'progress',
+            percent,
+            message,
+            chunksCompleted: completedChunks,
+            totalChunks: numberOfChunks
+          });
+
+          return {
+            chunkId: batchIndex,
+            status: 'ok',
+            processedRows: result,
+            chunk
+          };
+        } catch (error) {
+          console.error(`Error processing batch ${batchIndex}:`, error);
+          return {
+            chunkId: batchIndex,
+            status: 'error',
+            processedRows: chunk.rows.map(row => ({ ...row, error: error.message })),
+            chunk
+          };
         }
-
-        // Increment counter and send monotonically increasing progress
-        completedChunks++;
-        const percent = Math.round((completedChunks / numberOfChunks) * 100);
-        const message = percent < 90
-          ? `Processing Data… ${percent}% completed`
-          : `Finalizing output… ${percent}% completed`;
-        sendProgress(sessionId, {
-          type: 'progress',
-          percent,
-          message,
-          chunksCompleted: completedChunks,
-          totalChunks: numberOfChunks
-        });
-        return result;
       });
-    }
+    });
 
     // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4);
+    const chunkResults = await runTasksWithLimit(tasks, 4) || [];
 
     // Process results
     const allProcessedRows = [];
@@ -1203,7 +1276,9 @@ async function processCSV(req, res, processingMode = 'regular') {
       if (!result) return;
       if (result.status === 'ok' && Array.isArray(result.processedRows)) {
         result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
+          // Use batch-based indexing instead of chunkSize multiplication
+          const batchStartIdx = result.chunk ? result.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           allProcessedRows[originalIdx] = row;
           Object.keys(row || {}).forEach(col => {
             if (!headers.includes(col)) addedColumns.add(col);
@@ -1259,7 +1334,9 @@ async function processCSV(req, res, processingMode = 'regular') {
     (chunkResults || []).forEach(cr => {
       (cr.processedRows || []).forEach((row, idx) => {
         if (row && row.error) {
-          const originalIdx = (cr.chunkId * chunkSize) + idx;
+          // Calculate original index using batch start index from row_indices
+          const batchStartIdx = cr.chunk ? cr.chunk.row_indices[0] : 0;
+          const originalIdx = batchStartIdx + idx;
           failedRows.push({
             row_index: originalIdx,
             chunk_id: cr.chunkId,
