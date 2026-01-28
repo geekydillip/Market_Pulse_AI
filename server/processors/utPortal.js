@@ -4,6 +4,99 @@ const discoveryPromptTemplate = require('../prompts/utPortalPrompt_discovery');
 const ollamaClient = require('../ollamaClient');
 const { cleanExcelStyling } = require('./_helpers');
 
+// Required headers for UT Portal processing
+const REQUIRED_HEADERS = [
+  'Issue ID',
+  'Title', 
+  'Feature/App',
+  'TG',
+  'Problem' // Note: Your CSV snippet shows "Problem " (with a space) or "Problem"
+];
+
+/**
+ * Flexible validation to handle newlines and trailing spaces in Excel headers
+ */
+function validate(headers) {
+  const normalizedHeaders = headers.map(h => h.trim().replace(/\n/g, ' '));
+  
+  // Check if every required header exists in the file
+  const missing = REQUIRED_HEADERS.filter(req => 
+    !normalizedHeaders.some(h => h.toLowerCase().includes(req.toLowerCase()))
+  );
+
+  if (missing.length > 0) {
+    console.error('[UTPortal] Missing headers:', missing);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Normalizes row data so the AI can read it regardless of exact header spelling
+ */
+function transform(rows) {
+  return rows.map(row => {
+    const keys = Object.keys(row);
+    const findValue = (possibleNames) => {
+      const key = keys.find(k => possibleNames.includes(k.trim().replace(/\n/g, ' ')));
+      return key ? row[key] : '';
+    };
+
+    return {
+      'Issue ID': findValue(['Issue ID']),
+      'Title': findValue(['Title']),
+      'Feature/App': findValue(['Feature/App']),
+      '3rd Party App': findValue(['3rd Party App']),
+      'TG': findValue(['TG']),
+      'Issue Type': findValue(['Issue Type']),
+      'Problem': findValue(['Problem', 'Problem ']),
+      'Steps to reproduce': findValue(['Steps to reproduce'])
+    };
+  });
+}
+
+/**
+ * Robust Excel Reader for UT Portal
+ * This function is required by excelUtils.js for proper header detection and normalization
+ */
+function readAndNormalizeExcel(uploadedPath) {
+  const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+
+  // Read sheet as 2D array to find header row robustly
+  const sheetRows = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+  // Find header row index by searching for keywords
+  let headerRowIndex = 0;
+  const expectedHeaderKeywords = ['issue id', 'plm code', 'title', 'problem']; 
+  for (let r = 0; r < sheetRows.length; r++) {
+    const row = sheetRows[r];
+    if (!Array.isArray(row)) continue;
+    const rowText = row.map(c => String(c || '').toLowerCase()).join(' | ');
+    if (expectedHeaderKeywords.some(k => rowText.includes(k))) {
+      headerRowIndex = r;
+      break;
+    }
+  }
+
+  // Extract raw headers and data rows
+  const rawHeaders = (sheetRows[headerRowIndex] || []).map(h => String(h || '').trim());
+  const dataRows = sheetRows.slice(headerRowIndex + 1);
+
+  // Convert to array of objects
+  let rows = dataRows.map(r => {
+    const obj = {};
+    for (let ci = 0; ci < rawHeaders.length; ci++) {
+      const key = rawHeaders[ci] || `col_${ci}`;
+      obj[key] = r[ci] !== undefined && r[ci] !== null ? r[ci] : '';
+    }
+    return obj;
+  });
+
+  return normalizeHeaders(rows);
+}
+
 /**
  * Normalizes UT-specific headers to canonical names for processing
  */
@@ -305,5 +398,6 @@ utPortalProcessor.getColumnWidths = function(headers) {
 };
 
 utPortalProcessor.normalizeHeaders = normalizeHeaders;
+utPortalProcessor.readAndNormalizeExcel = readAndNormalizeExcel; // Export the function for excelUtils.js
 
 module.exports = utPortalProcessor;

@@ -234,7 +234,9 @@ function setupProcessRoute(app, upload) {
           ? 'discovery'
           : requestedMode === 'regular'
             ? 'regular'
-            : PROCESSING_MODE_CANONICAL;
+            : requestedMode === 'learning'
+              ? 'learning'
+              : PROCESSING_MODE_CANONICAL;
 
       console.log(`[MODE NORMALIZED] Requested: ${requestedMode ?? 'none'} → Effective: ${effectiveMode}`);
 
@@ -476,7 +478,7 @@ async function processExcel(req, res, processingMode = 'regular') {
     const excelUtils = require('../utils/excelUtils');
     let rows = excelUtils.readAndNormalizeExcel(uploadedPath, processingType);
 
-    // STRICT VALIDATION: If rows is null, the type didn't match or processor failed
+    // VALIDATION: Check if rows is null or empty
     if (!rows || rows.length === 0) {
       console.error(`[FAIL] File upload rejected: Structure does not match ${processingType}`);
       
@@ -487,6 +489,23 @@ async function processExcel(req, res, processingMode = 'regular') {
         success: false, 
         error: 'Excel file type doesn\'t match with the processor.' 
       });
+    }
+
+    // Get headers from the first row for validation
+    const inputHeaders = Object.keys(rows[0] || {});
+
+    // Use processor's validation function if available (for flexible header validation)
+    if (processor && typeof processor.validate === 'function') {
+      console.log(`[VALIDATION] Using processor-specific validation for ${processingType}`);
+      if (!processor.validate(inputHeaders)) {
+        console.error(`[FAIL] File upload rejected: Structure does not match ${processingType}`);
+        try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
+        return res.status(400).json({ 
+          success: false, 
+          error: `File upload rejected: Structure does not match ${processingType}` 
+        });
+      }
+      console.log(`[VALIDATION] Processor validation passed for ${processingType}`);
     }
 
     // Sanity check: verify we have meaningful rows with relevant data based on processor type
