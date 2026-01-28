@@ -225,7 +225,8 @@ const processorMap = {
   'beta_user_issues': 'betaIssues',
   'samsung_members_plm': 'samsungMembersPlm',
   'plm_issues': 'plmIssues',
-  'samsung_members_voc': 'samsungMembersVoc'
+  'samsung_members_voc': 'samsungMembersVoc',
+  'ut_portal': 'utPortal'
 };
 
 // Mapping of processing types to human-readable source labels for embeddings
@@ -233,7 +234,8 @@ const PROCESSOR_SOURCES = {
   'beta_user_issues': 'Beta Issues',
   'plm_issues': 'PLM Issues',
   'samsung_members_plm': 'Samsung Members PLM',
-  'samsung_members_voc': 'Samsung Members VOC'
+  'samsung_members_voc': 'Samsung Members VOC',
+  'ut_portal': 'User Trial Portal Issues'
 };
 
 // Cache for identical prompts
@@ -1733,21 +1735,67 @@ async function processExcel(req, res, processingMode = 'regular') {
         };
       }
 
+      // Apply Test Coverage column data cell styling (green background)
+      if (row > 0) { // Data rows only
+        const header = finalHeaders[col];
+        if (testCoverageHeaders.includes(header)) {
+          if (header === 'Test Coverage Availability (Yes/No)') {
+            // Main Test Coverage column - Light green background
+            cellStyle.fill = { patternType: "solid", fgColor: { rgb: "F0FFF0" } }; // Honeydew
+            cellStyle.font = { ...cellStyle.font, color: { rgb: "006400" } }; // Dark green text
+          } else {
+            // TC Addition/Modification columns - Light green background
+            cellStyle.fill = { patternType: "solid", fgColor: { rgb: "E8F5E8" } }; // Light green
+            cellStyle.font = { ...cellStyle.font, color: { rgb: "006400" } }; // Dark green text
+            // Right-align numeric counts
+            cellStyle.alignment.horizontal = "right";
+          }
+        }
+        // All other columns (including AI columns) use default formatting:
+        // - White background (no fill specified)
+        // - Black/dark text (default font color)
+        // - Appropriate alignment (center for specific columns, left for others)
+      }
+
       // Assign style back
       if (newSheet[cellKey]) newSheet[cellKey].s = cellStyle;
     });
 
     // === Apply Header Styling ===
     const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment', '3rd Party/Native', 'Module/Apps', 'AI Insight', 'Members'];
+    const testCoverageHeaders = [
+      'Test Coverage Availability (Yes/No)',
+      'TC Addition **For Test coverage No (Count of TC Add)',
+      'TC Modification **For Test coverage No (Count of TC Modify)'
+    ];
+    
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;
-      const isSpecialHeader = specialHeaders.includes(header);
-      newSheet[cellAddress].s = {
-        fill: { patternType: "solid", fgColor: { rgb: isSpecialHeader ? "1E90FF" : "000080" } },
+      
+      let headerStyle = {
         font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
         alignment: { horizontal: "center", vertical: "center", wrapText: true }
       };
+      
+      // Test Coverage columns - High contrast green styling
+      if (testCoverageHeaders.includes(header)) {
+        if (header === 'Test Coverage Availability (Yes/No)') {
+          // Main Test Coverage column - Sea Green
+          headerStyle.fill = { patternType: "solid", fgColor: { rgb: "2E8B57" } }; // Sea Green
+        } else {
+          // TC Addition/Modification columns - Lime Green
+          headerStyle.fill = { patternType: "solid", fgColor: { rgb: "32CD32" } }; // Lime Green
+        }
+      } else if (specialHeaders.includes(header)) {
+        // Other special headers - Blue
+        headerStyle.fill = { patternType: "solid", fgColor: { rgb: "1E90FF" } };
+      } else {
+        // Regular headers - Dark Blue
+        headerStyle.fill = { patternType: "solid", fgColor: { rgb: "000080" } };
+      }
+      
+      newSheet[cellAddress].s = headerStyle;
     });
 
     const buf = xlsx.write(newWb, { bookType: 'xlsx', type: 'buffer' });

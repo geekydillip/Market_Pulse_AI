@@ -8,6 +8,7 @@ const betaIssues = require('./betaIssues');
 const samsungMembersPlm = require('./samsungMembersPlm');
 const plmIssues = require('./plmIssues');
 const samsungMembersVoc = require('./samsungMembersVoc');
+const utPortal = require('./utPortal');
 
 /**
  * Processor registry mapping
@@ -17,7 +18,8 @@ const processors = {
   beta_user_issues: betaIssues,
   samsung_members_plm: samsungMembersPlm,
   plm_issues: plmIssues,
-  samsung_members_voc: samsungMembersVoc
+  samsung_members_voc: samsungMembersVoc,
+  ut_portal: utPortal
 };
 
 /**
