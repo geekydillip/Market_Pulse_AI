@@ -370,7 +370,13 @@ async function handleLearningMode(rows, learningSource, model, sessionId) {
         mode: 'learning', // Overrides the default 'discovery' in VectorStore
         sessionId: sessionId,
         timestamp: new Date().toISOString(),
-        Module: row.Module || row.module || 'Uncategorized',
+        // ADD THESE CUSTOM COLUMNS for UT Portal:
+        'Feature/App': row['Feature/App'] || 'N/A',
+        '3rd Party App': row['3rd Party App'] || 'N/A',
+        'TG': row['TG'] || 'N/A',
+        'Issue Type': row['Issue Type'] || 'Other',
+        // Compatibility fallbacks:
+        Module: row.Module || row.module || row['Feature/App'] || 'Uncategorized',
         'Sub-Module': row['Sub-Module'] || row['sub-module'] || 'None',
         'Issue Type': row['Issue Type'] || row['issue_type'] || 'General'
       };
