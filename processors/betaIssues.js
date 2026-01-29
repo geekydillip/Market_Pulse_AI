@@ -7,20 +7,25 @@ const promptTemplate = require('../prompts/betaIssuesPrompt');
 function normalizeHeaders(rows) {
   // Map header name variants to canonical names
   const headerMap = {
+
     // Model variants
     'model no.': 'Model No.',
     'Dev. Mdl. Name/Item Name': 'Model No.',
     'dev. mdl. name/item name': 'Model No.',
+    'target model': 'Model No.', // ADD THIS LINE
     // Case Code
     'case code': 'Case Code',
+    'plm code': 'Case Code', // ADD THIS LINE
     // S/W Ver variants
     's/w ver.': 'S/W Ver.',
+    'version occurred': 'S/W Ver.', // ADD THIS LINE
     // Title, Problem, Module, Sub-Module
     'title': 'Title',
     'progr.stat.': 'Progr.Stat.',
     'progress status': 'Progr.Stat.',
     'problem': 'Problem',
-    'resolve option(medium)': 'Resolve Option(Medium)',
+    'Resolve': 'Resolve',
+    'plm status': 'Resolve', // ADD THIS LINE
     'module': 'Module',
     'sub-module': 'Sub-Module',
     'issue type': 'Issue Type',
@@ -28,7 +33,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)'];
+  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -78,7 +83,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve Option(Medium)','Issue Type','Sub-Issue Type']; // lowercase checks
+  const expectedHeaderKeywords = ['case code', 'plm code','plm status', 'target model', 'version occurred','Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -133,7 +138,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'betaIssues',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve Option(Medium)', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -209,12 +214,12 @@ module.exports = {
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
-        'Resolve Option(Medium)': original['Resolve Option(Medium)'] || '',
+        'Resolve': original['Resolve'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Summarized Problem': aiRow['Summarized Problem'] || '',
+        'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
@@ -226,8 +231,8 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.' || h === 'Resolve Option(Medium)') return { wch: 20 };
+      if (['Title','Problem','Ai Summary','Severity Reason'].includes(h)) return { wch: 41 };
+      if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
       if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
