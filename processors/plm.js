@@ -1,70 +1,6 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/plmIssuesPrompt');
-
-/**
- * Shared header normalization utility - eliminates code duplication
- */
-function normalizeHeaders(rows) {
-  // Map header name variants to canonical names
-  const headerMap = {
-    // Model variants
-    'Dev. Mdl. Name/Item Name': 'Model No.',
-    'dev. mdl. name/item name': 'Model No.',
-    // Case Code
-    'case code': 'Case Code',
-    // S/W Ver variants
-    's/w ver.': 'S/W Ver.',
-    // Title, Problem, Module, Sub-Module
-    'title': 'Title',
-    'progr.stat.': 'Progr.Stat.',
-    'progress status': 'Progr.Stat.',
-    'problem': 'Problem',
-    'module': 'Module',
-    'sub-module': 'Sub-Module',
-    'priority': 'Priority',
-    'occurr. freq.': 'Occurr. Freq.',
-  };
-
-  // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem'];
-
-  const normalizedRows = rows.map(orig => {
-    const out = {};
-    // Build a reverse map of original header -> canonical (if possible)
-    const keyMap = {}; // rawKey -> canonical
-    Object.keys(orig).forEach(rawKey => {
-      const norm = String(rawKey || '').trim().toLowerCase();
-      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
-      if (mapped) keyMap[rawKey] = mapped;
-      else {
-        // try exact match to canonical
-        for (const c of canonicalCols) {
-          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
-            keyMap[rawKey] = c;
-            break;
-          }
-        }
-      }
-    });
-    // Fill canonical fields
-    for (const tgt of canonicalCols) {
-      // find a source raw key that maps to this tgt
-      let found = null;
-      for (const rawKey of Object.keys(orig)) {
-        if (keyMap[rawKey] === tgt) {
-          found = orig[rawKey];
-          break;
-        }
-      }
-      // also if tgt exists exactly as a raw header name, use it
-      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
-      out[tgt] = (found !== undefined && found !== null) ? found : '';
-    }
-    return out;
-  });
-
-  return normalizedRows;
-}
+const promptTemplate = require('../prompts/betaIssuesPrompt');
+const { normalizePLMHeaders, deriveModelNameFromSwVer } = require('./_header_utils');
 
 function readAndNormalizeExcel(uploadedPath) {
   const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
@@ -76,7 +12,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem']; // lowercase checks
+  const expectedHeaderKeywords = ['case code', 'plm code','plm status', 'target model', 'version occurred','Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -110,7 +46,18 @@ function readAndNormalizeExcel(uploadedPath) {
   });
 
   // Use shared normalization function
-  return normalizeHeaders(rows);
+  return normalizePLMHeaders(rows);
+}
+
+/**
+ * Derive model name from S/W Ver. for OS Beta entries
+ * Example: "S911BXXU8ZYHB" -> "SM-S911B"
+ */
+function deriveModelNameFromSwVer(swVer) {
+  if (!swVer || typeof swVer !== 'string' || swVer.length < 5) {
+    return '';
+  }
+  return 'SM-' + swVer.substring(0, 5);
 }
 
 // normalizeRows - now just calls the shared function
@@ -119,8 +66,8 @@ function normalizeRows(rows) {
 }
 
 module.exports = {
-  id: 'plmIssuesPrompt',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.','S/W Ver.', 'Title', 'Problem', 'Priority', 'Occurr. Freq.', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason'],
+  id: 'betaIssues',
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -140,10 +87,7 @@ module.exports = {
     // Send only content fields to AI for analysis
     const aiInputRows = rows.map(row => ({
       Title: row.Title || '',
-      Problem: (row.Problem || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
-      'Dev. Mdl. Name/Item Name': row['Model No.'] || '',
-      Priority: row.Priority || '',
-      'Occurr. Freq.': row['Occurr. Freq.'] || ''
+      Problem: row.Problem || ''
     }));
     return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
   },
@@ -187,43 +131,24 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
-    // Sanitize NaN values in AI response
-    function sanitizeNaN(obj) {
-      if (obj === null || typeof obj !== 'object') {
-        if (typeof obj === 'number' && isNaN(obj)) {
-          return '';
-        }
-        return obj;
-      }
-      if (Array.isArray(obj)) {
-        return obj.map(sanitizeNaN);
-      }
-      const sanitized = {};
-      for (const key in obj) {
-        sanitized[key] = sanitizeNaN(obj[key]);
-      }
-      return sanitized;
-    }
-
-    aiRows = sanitizeNaN(aiRows);
-
     // Merge AI results with original core identifiers
     const mergedRows = aiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
       return {
         'Case Code': original['Case Code'] || '',
-        'Model No.': original['Model No.'] || '',
+        'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
+          ? deriveModelNameFromSwVer(original['S/W Ver.'])
+          : (original['Model No.'] || ''),
         'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
-        'Problem': (aiRow['Problem'] || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),  // From AI (cleaned)
-        'Priority': original['Priority'] || '',
-        'Occurr. Freq.': original['Occurr. Freq.'] || '',
+        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Resolve': original['Resolve'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Summarized Problem': aiRow['Summarized Problem'] || '',
+        'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
@@ -235,10 +160,10 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['Title','Problem','Summarized Problem','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.') return { wch: 20 };
-      if (h === 'S/W Ver.' || h === 'Occurr. Freq.'|| h === 'Priority') return { wch: 15 };
-      if (h === 'Module' || h === 'Sub-Module' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
+      if (['Title','Problem','Ai Summary','Severity Reason'].includes(h)) return { wch: 41 };
+      if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
+      if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
+      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
     });

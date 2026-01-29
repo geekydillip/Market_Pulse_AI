@@ -134,10 +134,8 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Mapping of frontend processingType to processor filenames
 const processorMap = {
-  'beta_user_issues': 'betaIssues',
-  'samsung_members_plm': 'samsungMembersPlm',
-  'plm_issues': 'plmIssues',
-  'samsung_members_voc': 'samsungMembersVoc'
+  'plm': 'betaIssues',
+  'voc': 'samsungMembersVoc'
 };
 
 // Cache for identical prompts

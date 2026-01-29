@@ -41,19 +41,6 @@
     },
   }
 
-  // Add custom styles for active filter buttons
-  const style = document.createElement('style');
-  style.textContent = `
-    .active-filter {
-      background-color: #0ea5e9 !important;
-      color: white !important;
-    }
-    .dark .active-filter {
-      background-color: #0284c7 !important;
-      color: white !important;
-    }
-  `;
-  document.head.appendChild(style);
 
   // System theme detection
   function updateTheme() {
@@ -208,17 +195,6 @@
       </div>
     </div>
 
-    <!-- Filter Buttons -->
-    <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-700">
-      <div class="flex gap-2 justify-center flex-wrap">
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors active-filter" data-filter="ALL">ALL</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="PLM">PLM</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="VOC">VOC</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QINGS">QINGS</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QI">QI</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="Bloggers">Bloggers</button>
-      </div>
-    </div>
 
     <!-- Chart Container -->
     <div class="p-4">
@@ -338,50 +314,10 @@ let dashboardData = {
   topModules: []
 };
 
-// Current active filter for top models chart
-let currentTopModelsFilter = 'ALL';
-
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', function() {
   loadDashboardData();
-
-  // Add filter button event listeners
-  setupFilterButtons();
 });
-
-// Setup filter button event listeners
-function setupFilterButtons() {
-  const filterButtons = document.querySelectorAll('[data-filter]');
-
-  filterButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const filter = this.getAttribute('data-filter');
-
-      // Update active button state
-      updateActiveFilterButton(filter);
-
-      // Update chart with new filter
-      updateTopModelsChart(filter);
-
-      // Store current filter
-      currentTopModelsFilter = filter;
-    });
-  });
-}
-
-// Update active filter button styling
-function updateActiveFilterButton(activeFilter) {
-  const filterButtons = document.querySelectorAll('[data-filter]');
-
-  filterButtons.forEach(button => {
-    const filter = button.getAttribute('data-filter');
-    if (filter === activeFilter) {
-      button.classList.add('active-filter');
-    } else {
-      button.classList.remove('active-filter');
-    }
-  });
-}
 
 // Add accessibility attributes to table headers
 document.addEventListener('DOMContentLoaded', function() {
@@ -830,7 +766,7 @@ function updateSeveritySplit() {
 }
 
 // Update top models chart - Lollipop Bar Chart
-function updateTopModelsChart(filter = 'ALL') {
+function updateTopModelsChart() {
   const chartDom = document.getElementById('top-models-chart');
   if (!chartDom) {
     return;
@@ -839,48 +775,14 @@ function updateTopModelsChart(filter = 'ALL') {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Filter models based on selected filter
-  let filteredModels = [];
-
-  if (filter === 'ALL') {
-    // Show all models from topModels
-    filteredModels = dashboardData.topModels || [];
-  } else {
-    // Filter based on source from sourceModelSummary
-    const sourceMap = {
-      'PLM': 'PLM',
-      'VOC': 'VOC',
-      'QINGS': 'QINGS',
-      'QI': 'QI',
-      'Bloggers': 'Bloggers'
-    };
-
-    const targetSource = sourceMap[filter];
-    if (targetSource && dashboardData.sourceModelSummary) {
-      // Group models by name and sum their issue counts for the specific source
-      const modelMap = {};
-
-      dashboardData.sourceModelSummary
-        .filter(item => item.source === targetSource)
-        .forEach(item => {
-          if (!modelMap[item.model]) {
-            modelMap[item.model] = { label: item.model, value: 0 };
-          }
-          modelMap[item.model].value += item.issue_count;
-        });
-
-      filteredModels = Object.values(modelMap).sort((a, b) => b.value - a.value);
-    } else {
-      // Fallback to all models if filter not found
-      filteredModels = dashboardData.topModels || [];
-    }
-  }
+  // Always show all models from topModels (no filtering)
+  const filteredModels = dashboardData.topModels || [];
 
   if (filteredModels.length === 0) {
     // Show empty chart if no data - clear all chart elements
     const option = {
       title: {
-        text: 'No data available for selected filter',
+        text: 'No data available',
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -924,7 +826,6 @@ function updateTopModelsChart(filter = 'ALL') {
   const totalIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => {
     return sum + (kpi?.High || 0) + (kpi?.Medium || 0) + (kpi?.Low || 0);
   }, 0);
-  const avgIssuesPerModel = Math.round(totalIssues / dashboardData.totalUniqueModels);
 
   const option = {
     title: {
