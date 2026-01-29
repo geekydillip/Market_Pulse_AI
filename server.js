@@ -137,7 +137,8 @@ const processorMap = {
   'beta_user_issues': 'betaIssues',
   'samsung_members_plm': 'samsungMembersPlm',
   'plm_issues': 'plmIssues',
-  'samsung_members_voc': 'samsungMembersVoc'
+  'samsung_members_voc': 'samsungMembersVoc',
+  'ut_portal': 'utPortal'
 };
 
 // Cache for identical prompts
@@ -358,7 +359,7 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues']; // Supported processing types
+    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues', 'ut_portal']; // Supported processing types
     if (!validProcessingTypes.includes(processingType)) {
       return res.status(400).json({ error: 'Invalid processing type.' });
     }
