@@ -1,180 +1,97 @@
-const xlsx = require('xlsx');
+const helpers = require('./_helpers');
 const promptTemplate = require('../prompts/utPortalPrompt');
 
+const HEADER_MAP = {
+  // Key fields for AI processing
+  'title': 'Title',
+  'problem': 'Problem',
+  'steps to reproduce': 'Steps to reproduce',
+  
+  // Identifying columns to preserve
+  'issue id': 'Issue ID',
+  'plm code': 'PLM code',
+  'target model': 'Target model',
+  'version occurred': 'Version occurred',
+  'plm status': 'PLM Status',
+  'plm importance': 'PLM importance',
+  'plm resolve option1': 'PLM resolve option1',
+  'plm resolve option2': 'PLM resolve option2',
+  'registered date': 'Registered date',
+  'project name': 'Project name',
+  'region': 'Region',
+  'area': 'Area',
+  'frequency': 'Frequency',
+  'problem detector': 'Problem detector',
+  'single id': 'Single ID',
+  'duplicate processing classfication': 'Duplicate processing classfication',
+  'ut issue id (main)': 'UT Issue ID (Main)',
+  'duplicate count': 'Duplicate count',
+  'ai process result': 'AI Process Result',
+  'expected behavior': 'Expected behavior',
+  'progress status': 'Progress status',
+  'process result1': 'Process result1',
+  'process result2': 'Process result2',
+  'source': 'Source',
+  'block': 'Block',
+  'feature': 'Feature',
+  'appearance classification1': 'Appearance Classification1',
+  'appearance classification2': 'Appearance Classification2',
+  'function classification': 'Function Classification',
+  'plm project name(issue linkage)': 'PLM Project Name(Issue linkage)',
+  'characteristics type': 'Characteristics Type',
+  'points': 'Points',
+  'additional points': 'Additional points',
+  'manager comment': 'Manager comment',
+  'reason for processing result': 'Reason for processing result',
+  'internal memo1': 'Internal memo1',
+  'internal memo2': 'Internal memo2',
+  'user scenario(ai)': 'User scenario(AI)',
+  'log download link': 'Log Download Link',
+  'battery historian link': 'Battery Historian link',
+  'log inbody link': 'Log Inbody link',
+  'results registered date': 'Results registered date',
+  'results registrant': 'Results registrant',
+  'issue hash tag': 'ISSUE HASH TAG',
+  'keyword': 'KEYWORD',
+  'plm tg manager': 'PLM TG Manager',
+  'plm tg manager knox id': 'PLM TG Manager Knox ID',
+  'processing classification': 'Processing classification',
+  'detection classification': 'Detection classification',
+  'issue hub type': 'Issue Hub Type',
+  'major classification': 'Major classification',
+  'delete reason': 'Delete Reason',
+  'cause': 'Cause',
+  'countermeasure': 'Countermeasure'
+};
+
+const CANONICAL_COLS = [
+  'Issue ID', 'PLM code', 'Target model', 'Version occurred', 'Title', 'PLM Status', 
+  'PLM importance', 'PLM resolve option1', 'PLM resolve option2', 'Registered date',
+  'Project name', 'Region', 'Area', 'Frequency', 'Problem detector', 'Single ID', 
+  'Steps to reproduce', 'Problem', 'Duplicate processing classfication', 'UT Issue ID (Main)',
+  'Duplicate count', 'AI Process Result', 'Expected behavior', 'Progress status', 
+  'Process result1', 'Process result2', 'Source', 'Block', 'Feature', 
+  'Appearance Classification1', 'Appearance Classification2', 'Function Classification',
+  'PLM Project Name(Issue linkage)', 'Characteristics Type', 'Points', 'Additional points',
+  'Manager comment', 'Reason for processing result', 'Internal memo1', 'Internal memo2',
+  'User scenario(AI)', 'Log Download Link', 'Battery Historian link', 'Log Inbody link',
+  'Results registered date', 'Results registrant', 'ISSUE HASH TAG', 'KEYWORD',
+  'PLM TG Manager', 'PLM TG Manager Knox ID', 'Processing classification', 
+  'Detection classification', 'Issue Hub Type', 'Major classification', 'Delete Reason',
+  'Cause', 'Countermeasure'
+];
+
 /**
- * Shared header normalization utility - eliminates code duplication
+ * Calculate Target Group based on Feature/App and Issue Type
  */
-function normalizeHeaders(rows) {
-  // Map header name variants to canonical names
-  const headerMap = {
-    // Key fields for AI processing
-    'title': 'Title',
-    'problem': 'Problem',
-    'steps to reproduce': 'Steps to reproduce',
-    
-    // Identifying columns to preserve
-    'issue id': 'Issue ID',
-    'plm code': 'PLM code',
-    'target model': 'Target model',
-    'version occurred': 'Version occurred',
-    'plm status': 'PLM Status',
-    'plm importance': 'PLM importance',
-    'plm resolve option1': 'PLM resolve option1',
-    'plm resolve option2': 'PLM resolve option2',
-    'registered date': 'Registered date',
-    'project name': 'Project name',
-    'region': 'Region',
-    'area': 'Area',
-    'frequency': 'Frequency',
-    'problem detector': 'Problem detector',
-    'single id': 'Single ID',
-    'duplicate processing classfication': 'Duplicate processing classfication',
-    'ut issue id (main)': 'UT Issue ID (Main)',
-    'duplicate count': 'Duplicate count',
-    'ai process result': 'AI Process Result',
-    'expected behavior': 'Expected behavior',
-    'progress status': 'Progress status',
-    'process result1': 'Process result1',
-    'process result2': 'Process result2',
-    'source': 'Source',
-    'block': 'Block',
-    'feature': 'Feature',
-    'appearance classification1': 'Appearance Classification1',
-    'appearance classification2': 'Appearance Classification2',
-    'function classification': 'Function Classification',
-    'plm project name(issue linkage)': 'PLM Project Name(Issue linkage)',
-    'characteristics type': 'Characteristics Type',
-    'points': 'Points',
-    'additional points': 'Additional points',
-    'manager comment': 'Manager comment',
-    'reason for processing result': 'Reason for processing result',
-    'internal memo1': 'Internal memo1',
-    'internal memo2': 'Internal memo2',
-    'user scenario(ai)': 'User scenario(AI)',
-    'log download link': 'Log Download Link',
-    'battery historian link': 'Battery Historian link',
-    'log inbody link': 'Log Inbody link',
-    'results registered date': 'Results registered date',
-    'results registrant': 'Results registrant',
-    'issue hash tag': 'ISSUE HASH TAG',
-    'keyword': 'KEYWORD',
-    'plm tg manager': 'PLM TG Manager',
-    'plm tg manager knox id': 'PLM TG Manager Knox ID',
-    'processing classification': 'Processing classification',
-    'detection classification': 'Detection classification',
-    'issue hub type': 'Issue Hub Type',
-    'major classification': 'Major classification',
-    'delete reason': 'Delete Reason',
-    'cause': 'Cause',
-    'countermeasure': 'Countermeasure'
-  };
-
-  // canonical columns you expect in the downstream processing
-  const canonicalCols = [
-    'Issue ID', 'PLM code', 'Target model', 'Version occurred', 'Title', 'PLM Status', 
-    'PLM importance', 'PLM resolve option1', 'PLM resolve option2', 'Registered date',
-    'Project name', 'Region', 'Area', 'Frequency', 'Problem detector', 'Single ID', 
-    'Steps to reproduce', 'Problem', 'Duplicate processing classfication', 'UT Issue ID (Main)',
-    'Duplicate count', 'AI Process Result', 'Expected behavior', 'Progress status', 
-    'Process result1', 'Process result2', 'Source', 'Block', 'Feature', 
-    'Appearance Classification1', 'Appearance Classification2', 'Function Classification',
-    'PLM Project Name(Issue linkage)', 'Characteristics Type', 'Points', 'Additional points',
-    'Manager comment', 'Reason for processing result', 'Internal memo1', 'Internal memo2',
-    'User scenario(AI)', 'Log Download Link', 'Battery Historian link', 'Log Inbody link',
-    'Results registered date', 'Results registrant', 'ISSUE HASH TAG', 'KEYWORD',
-    'PLM TG Manager', 'PLM TG Manager Knox ID', 'Processing classification', 
-    'Detection classification', 'Issue Hub Type', 'Major classification', 'Delete Reason',
-    'Cause', 'Countermeasure'
-  ];
-
-  const normalizedRows = rows.map(orig => {
-    const out = {};
-    // Build a reverse map of original header -> canonical (if possible)
-    const keyMap = {}; // rawKey -> canonical
-    Object.keys(orig).forEach(rawKey => {
-      const norm = String(rawKey || '').trim().toLowerCase();
-      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
-      if (mapped) keyMap[rawKey] = mapped;
-      else {
-        // try exact match to canonical
-        for (const c of canonicalCols) {
-          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
-            keyMap[rawKey] = c;
-            break;
-          }
-        }
-      }
-    });
-    // Fill canonical fields
-    for (const tgt of canonicalCols) {
-      // find a source raw key that maps to this tgt
-      let found = null;
-      for (const rawKey of Object.keys(orig)) {
-        if (keyMap[rawKey] === tgt) {
-          found = orig[rawKey];
-          break;
-        }
-      }
-      // also if tgt exists exactly as a raw header name, use it
-      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
-      out[tgt] = (found !== undefined && found !== null) ? found : '';
-    }
-    return out;
-  });
-
-  return normalizedRows;
-}
-
-function readAndNormalizeExcel(uploadedPath) {
-  const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-
-  // Read sheet as 2D array so we can find header row robustly
-  const sheetRows = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-
-  // Find a header row: first row that contains at least one expected key or at least one non-empty cell
-  let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Issue ID', 'Title', 'Problem', 'PLM code', 'Target model']; // lowercase checks
-  for (let r = 0; r < sheetRows.length; r++) {
-    const row = sheetRows[r];
-    if (!Array.isArray(row)) continue;
-    const rowText = row.map(c => String(c || '').toLowerCase()).join(' | ');
-    // if the row contains any expected header keyword, choose it as header
-    if (expectedHeaderKeywords.some(k => rowText.includes(k))) {
-      headerRowIndex = r;
-      break;
-    }
-    // fallback: first non-empty row becomes header
-    if (row.some(cell => String(cell).trim() !== '')) {
-      headerRowIndex = r;
-      break;
-    }
-  }
-
-  // Build raw headers and trim
-  const rawHeaders = (sheetRows[headerRowIndex] || []).map(h => String(h || '').trim());
-
-  // Build data rows starting after headerRowIndex
-  const dataRows = sheetRows.slice(headerRowIndex + 1);
-
-  // Convert dataRows to array of objects keyed by rawHeaders
-  let rows = dataRows.map(r => {
-    const obj = {};
-    for (let ci = 0; ci < rawHeaders.length; ci++) {
-      const key = rawHeaders[ci] || `col_${ci}`;
-      obj[key] = r[ci] !== undefined && r[ci] !== null ? r[ci] : '';
-    }
-    return obj;
-  });
-
-  // Use shared normalization function
-  return normalizeHeaders(rows);
-}
-
-// normalizeRows - now just calls the shared function
-function normalizeRows(rows) {
-  return normalizeHeaders(rows);
+function getTG(feature, issueType) {
+  const f = (feature || '').toLowerCase();
+  if (f.includes('youtube') || f.includes('chrome') || f.includes('gms')) return "Application Part";
+  if (f.includes('bixby') || f.includes('interpreter')) return "Voice Intelligence Part";
+  if (f.includes('keyboard') || f.includes('system ui') || f.includes('settings')) return "Framework 1 Part";
+  if (f.includes('audio') || f.includes('cp crash')) return "Audio CP Part";
+  if (f.includes('secure folder') || f.includes('b2b')) return "B2B Part";
+  return "General";
 }
 
 module.exports = {
@@ -191,8 +108,8 @@ module.exports = {
   },
 
   transform(rows) {
-    // Apply normalization using the local normalizeHeaders function
-    return normalizeHeaders(rows);
+    // Apply normalization using the shared helpers function
+    return helpers.normalizeHeaders(rows, HEADER_MAP, CANONICAL_COLS);
   },
 
   buildPrompt(rows) {
@@ -218,20 +135,58 @@ module.exports = {
       try {
         aiRows = JSON.parse(text);
       } catch (e) {
-        // If that fails, try to extract JSON array from text
-        const firstBracket = text.indexOf('[');
-        const lastBracket = text.lastIndexOf(']');
-        if (firstBracket !== -1 && lastBracket > firstBracket) {
-          const jsonStr = text.substring(firstBracket, lastBracket + 1);
+        // Enhanced JSON extraction: look for JSON patterns in text
+        const jsonPatterns = [
+          // Pattern 1: Find JSON array between brackets
+          /\[([\s\S]*?)\]/,
+          // Pattern 2: Find JSON objects
+          /\{[\s\S]*?\}/,
+          // Pattern 3: Find multiple JSON objects
+          /(\{[\s\S]*?\})/g
+        ];
+
+        let extractedJson = null;
+        
+        // Try pattern 1: JSON array
+        const arrayMatch = jsonPatterns[0].exec(text);
+        if (arrayMatch) {
           try {
-            aiRows = JSON.parse(jsonStr);
+            extractedJson = JSON.parse(arrayMatch[0]);
           } catch (e2) {
-            // If JSON parsing fails, return array with error info
-            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
+            // Continue to next pattern
           }
+        }
+
+        // Try pattern 2: Single JSON object
+        if (!extractedJson) {
+          const objectMatch = jsonPatterns[1].exec(text);
+          if (objectMatch) {
+            try {
+              const parsed = JSON.parse(objectMatch[0]);
+              extractedJson = Array.isArray(parsed) ? parsed : [parsed];
+            } catch (e2) {
+              // Continue to next pattern
+            }
+          }
+        }
+
+        // Try pattern 3: Multiple JSON objects
+        if (!extractedJson) {
+          const objectMatches = text.match(jsonPatterns[2]);
+          if (objectMatches && objectMatches.length > 0) {
+            try {
+              extractedJson = objectMatches.map(match => JSON.parse(match));
+            } catch (e2) {
+              // Continue to fallback
+            }
+          }
+        }
+
+        if (extractedJson) {
+          aiRows = extractedJson;
         } else {
           // Last resort: return array with error info
-          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
+          return [{ error: `Failed to extract JSON from AI response: ${text.substring(0, 200)}...` }];
         }
       }
     } else {
@@ -267,6 +222,9 @@ module.exports = {
     // Merge AI results with original core identifiers
     const mergedRows = aiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
+      const feature = aiRow['Feature/App'] || '';
+      const issueType = aiRow['Issue Type'] || '';
+      
       return {
         'Issue ID': original['Issue ID'] || '',
         'PLM code': original['PLM code'] || '',
@@ -326,11 +284,11 @@ module.exports = {
         'Cause': original['Cause'] || '',
         'Countermeasure': original['Countermeasure'] || '',
         
-        // New AI-generated columns
-        'Feature/App': aiRow['Feature/App'] || '',
-        '3rd Party App': aiRow['3rd Party App'] || '',
-        'TG': aiRow['TG'] || '',
-        'Issue Type': aiRow['Issue Type'] || ''
+        // New AI-generated columns with TG calculation
+        'Feature/App': feature,
+        '3rd Party App': aiRow['3rd Party App'] || 'N/A',
+        'Issue Type': issueType || 'Other',
+        'TG': getTG(feature, issueType) // Calculate TG in code, not from AI
       };
     });
 
@@ -350,5 +308,5 @@ module.exports = {
   },
 
   // Excel reading function used by server.js
-  readAndNormalizeExcel: readAndNormalizeExcel
+  readAndNormalizeExcel: (path) => helpers.readAndNormalizeExcel(path, ['Issue ID', 'Title'], HEADER_MAP, CANONICAL_COLS)
 };
