@@ -8,9 +8,8 @@ const { cleanExcelStyling } = require('./_helpers');
 const REQUIRED_HEADERS = [
   'Issue ID',
   'Title', 
-  'Feature/App',
-  'TG',
-  'Problem' // Note: Your CSV snippet shows "Problem " (with a space) or "Problem"
+  'Problem',
+  'Steps to reproduce'
 ];
 
 /**
@@ -40,14 +39,12 @@ function validate(headers) {
 function validateEnhanced(headers) {
   console.log('[UtPortal] Validating headers:', headers);
   
-  // Define required headers with their acceptable variations
+  // Define only the headers needed as INPUT for the AI
   const requiredHeaders = {
-    'No': ['no', 'number', 'id', 'index'],
-    'Feature/App': ['feature/app', 'feature_app', 'feature', 'app', 'application'],
-    '3rd Party App': ['3rd party app', '3rd_party_app', 'third party app', 'third_party_app', 'external app', 'external_app'],
-    'TG': ['tg', 'target group', 'target_group', 'user group', 'user_group'],
-    'Issue Type': ['issue type', 'issue_type', 'type', 'category'],
-    'content': ['content', 'feedback', 'comment', 'description', 'text', 'details']
+    'Issue ID': ['issue id', 'no', 'number', 'id', 'plm code'],
+    'Title': ['title', 'subject', 'headline'],
+    'Problem': ['problem', 'problem ', 'content', 'description', 'feedback'],
+    'Steps to reproduce': ['steps to reproduce', 'reproduction steps', 'steps']
   };
 
   // Track which required headers we found
@@ -86,19 +83,13 @@ function validateEnhanced(headers) {
   console.log('  Found headers:', foundHeaders);
   console.log('  Missing headers:', missingHeaders);
 
-  // If we have at least the core required headers, consider it valid
-  const coreHeaders = ['No', 'Feature/App', 'content'];
+  // Define core headers that MUST be present for the AI to work
+  const coreHeaders = ['Issue ID', 'Title', 'Problem'];
   const coreMissing = coreHeaders.filter(header => missingHeaders.includes(header));
   
   if (coreMissing.length > 0) {
     console.error(`[UtPortal] Missing core headers: ${coreMissing.join(', ')}`);
     return false;
-  }
-
-  // For non-core headers, log warnings but don't fail validation
-  const nonCoreMissing = missingHeaders.filter(header => !coreHeaders.includes(header));
-  if (nonCoreMissing.length > 0) {
-    console.warn(`[UtPortal] Missing non-core headers (will use defaults): ${nonCoreMissing.join(', ')}`);
   }
 
   console.log('[UtPortal] Header validation passed');
@@ -112,19 +103,15 @@ function transform(rows) {
   return rows.map(row => {
     const keys = Object.keys(row);
     const findValue = (possibleNames) => {
-      const key = keys.find(k => possibleNames.includes(k.trim().replace(/\n/g, ' ')));
+      const key = keys.find(k => possibleNames.includes(k.trim().toLowerCase()));
       return key ? row[key] : '';
     };
 
     return {
-      'Issue ID': findValue(['Issue ID']),
-      'Title': findValue(['Title']),
-      'Feature/App': findValue(['Feature/App']),
-      '3rd Party App': findValue(['3rd Party App']),
-      'TG': findValue(['TG']),
-      'Issue Type': findValue(['Issue Type']),
-      'Problem': findValue(['Problem', 'Problem ']),
-      'Steps to reproduce': findValue(['Steps to reproduce'])
+      'Issue ID': findValue(['issue id', 'plm code']),
+      'Title': findValue(['title']),
+      'Problem': findValue(['problem', 'problem ']),
+      'Steps to reproduce': findValue(['steps to reproduce'])
     };
   });
 }

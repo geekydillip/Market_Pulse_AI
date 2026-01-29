@@ -21,7 +21,7 @@ class OllamaClient {
   async callOllama(prompt, model = 'qwen3:4b-instruct', options = {}) {
     try {
       const port = options.port || this.port;
-      const timeoutMs = options.timeoutMs !== undefined ? options.timeoutMs : 5 * 60 * 1000; // 5 minutes
+      const timeoutMs = options.timeoutMs !== undefined ? options.timeoutMs : false; // Infinite timeout by default
       const useStream = options.stream === true;
 
       console.log(`[OllamaClient] Generating response with model: ${model}, port: ${port}, stream: ${useStream}`);

@@ -21,7 +21,7 @@ class Generator {
   async generate(prompt, model = this.defaultModel, options = {}) {
     try {
       const port = options.port || this.defaultPort;
-      const timeoutMs = options.timeoutMs !== undefined ? options.timeoutMs : 5 * 60 * 1000; // 5 minutes
+      const timeoutMs = options.timeoutMs !== undefined ? options.timeoutMs : false; // Infinite timeout by default
       const useStream = options.stream === true;
 
       console.log(`[Generator] Generating response with model: ${model}, port: ${port}, stream: ${useStream}`);

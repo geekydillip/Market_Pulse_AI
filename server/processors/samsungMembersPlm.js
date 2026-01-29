@@ -690,17 +690,10 @@ function validate(headers) {
   
   // Define required headers with their acceptable variations
   const requiredHeaders = {
-    'Case Code': ['case code', 'case_code', 'casecode', 'case id', 'caseid'],
-    'Model No.': ['model no', 'model_no', 'modelno', 'model number', 'modelnumber', 'model'],
-    'Progr.Stat.': ['progr.stat', 'progstat', 'progress status', 'progress_status', 'progress', 'status'],
-    'S/W Ver.': ['s/w ver', 'sw ver', 'swver', 'software version', 'software_version', 'version'],
-    'Title': ['title', 'subject', 'issue title', 'issue_title'],
-    'Problem': ['problem', 'description', 'issue description', 'issue_description', 'details'],
-    'Feature': ['feature', 'module', 'component', 'product'],
-    'Resolve Option(Medium)': ['resolve option(medium)', 'resolve_option(medium)', 'medium resolve', 'medium_resolve'],
-    'Resolve Option(Small)': ['resolve option(small)', 'resolve_option(small)', 'small resolve', 'small_resolve'],
-    'Cause': ['cause', 'root cause', 'rootcause', 'reason'],
-    'Counter Measure': ['counter measure', 'counter_measure', 'solution', 'fix', 'workaround']
+    'Case Code': ['case code', 'case_code', 'case id', 'plm code'],
+    'Model No.': ['model no', 'model_no', 'model', 'dev. mdl. name/item name'],
+    'Title': ['title', 'subject', 'issue title'],
+    'Problem': ['problem', 'description', 'issue description', 'details']
   };
 
   // Track which required headers we found
@@ -739,19 +732,13 @@ function validate(headers) {
   console.log('  Found headers:', foundHeaders);
   console.log('  Missing headers:', missingHeaders);
 
-  // If we have at least the core required headers, consider it valid
+  // Define core headers that MUST be present for the AI to work
   const coreHeaders = ['Case Code', 'Model No.', 'Title', 'Problem'];
   const coreMissing = coreHeaders.filter(header => missingHeaders.includes(header));
   
   if (coreMissing.length > 0) {
     console.error(`[SamsungMembersPlm] Missing core headers: ${coreMissing.join(', ')}`);
     return false;
-  }
-
-  // For non-core headers, log warnings but don't fail validation
-  const nonCoreMissing = missingHeaders.filter(header => !coreHeaders.includes(header));
-  if (nonCoreMissing.length > 0) {
-    console.warn(`[SamsungMembersPlm] Missing non-core headers (will use defaults): ${nonCoreMissing.join(', ')}`);
   }
 
   console.log('[SamsungMembersPlm] Header validation passed');

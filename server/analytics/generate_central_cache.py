@@ -173,7 +173,6 @@ def run_aggregator_directly():
         data = ca.load_all_excels(base_path)
         kpis, status_kpis = ca.compute_central_kpis(data)
         top_modules = ca.compute_top_modules(data)
-        series_distribution = ca.compute_series_distribution(data)
         top_models = ca.compute_top_models(data)
         high_issues = ca.compute_high_issues(data)
 
@@ -206,7 +205,6 @@ def run_aggregator_directly():
             "total_issues": total_issues,
             "high_issues_count": high_issues_count,
             "top_modules": top_modules,
-            "series_distribution": series_distribution,
             "top_models": top_models,
             "high_issues": high_issues,
             "model_module_matrix": model_module_matrix,
@@ -250,7 +248,6 @@ def generate_central_cache():
     total_issues = base_data.get("total_issues", 0)
     high_issues_count = base_data.get("high_issues_count", 0)
     top_modules = base_data.get("top_modules", [])
-    series_distribution = base_data.get("series_distribution", [])
     top_models = base_data.get("top_models", [])
     high_issues = base_data.get("high_issues", [])
     model_module_matrix = base_data.get("model_module_matrix", {"models": [], "modules": [], "matrix": []})
@@ -270,7 +267,6 @@ def generate_central_cache():
         "total_issues": total_issues,
         "high_issues_count": high_issues_count,
         "top_modules": top_modules,
-        "series_distribution": series_distribution,
         "top_models": top_models,
         "high_issues": high_issues,
         "model_module_matrix": model_module_matrix,
@@ -337,7 +333,6 @@ def validate_cache_freshness():
             "total_issues": current_data.get("total_issues", 0),
             "high_issues_count": current_data.get("high_issues_count", 0),
             "top_modules": current_data.get("top_modules", []),
-            "series_distribution": current_data.get("series_distribution", []),
             "top_models": current_data.get("top_models", []),
             "high_issues": current_data.get("high_issues", []),
             "model_module_matrix": current_data.get("model_module_matrix", {"models": [], "modules": [], "matrix": []}),

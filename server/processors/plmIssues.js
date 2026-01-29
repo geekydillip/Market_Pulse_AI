@@ -370,14 +370,10 @@ function validate(headers) {
   
   // Define required headers with their acceptable variations
   const requiredHeaders = {
-    'Case Code': ['case code', 'case_code', 'casecode', 'case id', 'caseid'],
-    'Model No.': ['model no', 'model_no', 'modelno', 'model number', 'modelnumber', 'model'],
-    'Progr.Stat.': ['progr.stat', 'progstat', 'progress status', 'progress_status', 'progress', 'status'],
-    'Title': ['title', 'subject', 'issue title', 'issue_title'],
-    'Priority': ['priority', 'severity', 'urgency', 'importance'],
-    'Occurr. Freq.': ['occurr. freq', 'occur freq', 'occurrence frequency', 'occurrence_frequency', 'frequency'],
-    'S/W Ver.': ['s/w ver', 'sw ver', 'swver', 'software version', 'software_version', 'version'],
-    'Problem': ['problem', 'description', 'issue description', 'issue_description', 'details']
+    'Case Code': ['case code', 'case_code', 'case id', 'plm code'],
+    'Model No.': ['model no', 'model_no', 'model', 'dev. mdl. name/item name'],
+    'Title': ['title', 'subject'],
+    'Problem': ['problem', 'description', 'details']
   };
 
   // Track which required headers we found
@@ -416,19 +412,13 @@ function validate(headers) {
   console.log('  Found headers:', foundHeaders);
   console.log('  Missing headers:', missingHeaders);
 
-  // If we have at least the core required headers, consider it valid
+  // Define core headers that MUST be present for the AI to work
   const coreHeaders = ['Case Code', 'Model No.', 'Title', 'Problem'];
   const coreMissing = coreHeaders.filter(header => missingHeaders.includes(header));
   
   if (coreMissing.length > 0) {
     console.error(`[PlmIssues] Missing core headers: ${coreMissing.join(', ')}`);
     return false;
-  }
-
-  // For non-core headers, log warnings but don't fail validation
-  const nonCoreMissing = missingHeaders.filter(header => !coreHeaders.includes(header));
-  if (nonCoreMissing.length > 0) {
-    console.warn(`[PlmIssues] Missing non-core headers (will use defaults): ${nonCoreMissing.join(', ')}`);
   }
 
   console.log('[PlmIssues] Header validation passed');

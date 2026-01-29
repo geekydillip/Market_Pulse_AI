@@ -215,15 +215,13 @@
       </div>
     </div>
 
-    <!-- Filter Buttons -->
+  <!-- Filter Buttons -->
     <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-700">
       <div class="flex gap-2 justify-center flex-wrap">
         <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors active-filter" data-filter="ALL">ALL</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="Beta UT">Beta UT</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="UT Portal">UT Portal</button>
         <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="PLM">PLM</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="VOC">VOC</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QINGS">QINGS</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="QI">QI</button>
-        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-filter="Bloggers">Bloggers</button>
       </div>
     </div>
 
@@ -247,6 +245,16 @@
       </div>
     </div>
 
+    <!-- Filter Buttons -->
+    <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors active-filter" data-module-filter="ALL">ALL</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-module-filter="Beta UT">Beta UT</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-module-filter="UT Portal">UT Portal</button>
+        <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md text-sm font-medium transition-colors" data-module-filter="SM PLM">PLM</button>
+      </div>
+    </div>
+
     <!-- Chart Container -->
     <div class="p-4">
       <div id="top-modules-chart" class="h-[180px] w-full"></div>
@@ -255,7 +263,6 @@
 </div>
 
 </section>
-
 
 
 <!-- MODEL SUMMARY TABLE -->
@@ -359,6 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Setup filter button event listeners
 function setupFilterButtons() {
   const filterButtons = document.querySelectorAll('[data-filter]');
+  const moduleFilterButtons = document.querySelectorAll('[data-module-filter]');
 
   filterButtons.forEach(button => {
     button.addEventListener('click', function() {
@@ -374,6 +382,18 @@ function setupFilterButtons() {
       currentTopModelsFilter = filter;
     });
   });
+
+  moduleFilterButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const filter = this.getAttribute('data-module-filter');
+
+      // Update active button state
+      updateActiveModuleFilterButton(filter);
+
+      // Update chart with new filter
+      updateTopModulesChart(filter);
+    });
+  });
 }
 
 // Update active filter button styling
@@ -382,6 +402,20 @@ function updateActiveFilterButton(activeFilter) {
 
   filterButtons.forEach(button => {
     const filter = button.getAttribute('data-filter');
+    if (filter === activeFilter) {
+      button.classList.add('active-filter');
+    } else {
+      button.classList.remove('active-filter');
+    }
+  });
+}
+
+// Update active module filter button styling
+function updateActiveModuleFilterButton(activeFilter) {
+  const moduleFilterButtons = document.querySelectorAll('[data-module-filter]');
+
+  moduleFilterButtons.forEach(button => {
+    const filter = button.getAttribute('data-module-filter');
     if (filter === activeFilter) {
       button.classList.add('active-filter');
     } else {
@@ -628,276 +662,366 @@ function updateSeveritySplit() {
 function updateTopModelsChart(filter = 'ALL') {
   const chartDom = document.getElementById('top-models-chart');
   if (!chartDom) {
+    console.error('Top models chart container not found');
     return;
   }
 
-  const chart = echarts.init(chartDom);
-  const colors = getChartColors();
+  try {
+    const chart = echarts.init(chartDom);
+    const colors = getChartColors();
 
-  // Filter models based on selected filter
-  let filteredModels = [];
+    // Filter models based on selected filter
+    let filteredModels = [];
 
-  if (filter === 'ALL') {
-    // Show all models from topModels
-    filteredModels = dashboardData.topModels || [];
-  } else {
-    // Filter based on source from sourceModelSummary
-    const sourceMap = {
-      'PLM': 'PLM',
-      'VOC': 'VOC',
-      'QINGS': 'QINGS',
-      'QI': 'QI',
-      'Bloggers': 'Bloggers'
-    };
-
-    const targetSource = sourceMap[filter];
-    if (targetSource && dashboardData.sourceModelSummary) {
-      // Group models by name and sum their issue counts for the specific source
-      const modelMap = {};
-
-      dashboardData.sourceModelSummary
-        .filter(item => item.source === targetSource)
-        .forEach(item => {
-          if (!modelMap[item.model]) {
-            modelMap[item.model] = { label: item.model, value: 0 };
-          }
-          modelMap[item.model].value += item.issue_count;
-        });
-
-      filteredModels = Object.values(modelMap).sort((a, b) => b.value - a.value);
-    } else {
-      // Fallback to all models if filter not found
+    if (filter === 'ALL') {
+      // Show all models from topModels (which already excludes VOC data)
       filteredModels = dashboardData.topModels || [];
-    }
-  }
+    } else {
+      // Filter based on source from sourceModelSummary
+      const sourceMap = {
+        'Beta UT': 'Beta',
+        'UT Portal': 'UT Portal',
+        'PLM': 'PLM'
+      };
 
-  if (filteredModels.length === 0) {
-    // Show empty chart if no data - clear all chart elements
+      const targetSource = sourceMap[filter];
+      if (targetSource && dashboardData.sourceModelSummary) {
+        // Group models by name and sum their issue counts for the specific source
+        // Exclude Samsung Members VOC data
+        const modelMap = {};
+
+        dashboardData.sourceModelSummary
+          .filter(item => item.source === targetSource && item.source !== 'VOC')
+          .forEach(item => {
+            if (!modelMap[item.model]) {
+              modelMap[item.model] = { label: item.model, value: 0 };
+            }
+            modelMap[item.model].value += item.issue_count;
+          });
+
+        filteredModels = Object.values(modelMap).sort((a, b) => b.value - a.value);
+      } else {
+        // Fallback to all models if filter not found, but exclude VOC
+        filteredModels = dashboardData.topModels || [];
+      }
+    }
+
+    if (filteredModels.length === 0) {
+      // Show empty chart if no data - clear all chart elements
+      const option = {
+        title: {
+          text: 'No data available for selected filter',
+          left: 'center',
+          top: 'middle',
+          textStyle: {
+            color: colors.textPrimary,
+            fontSize: 16,
+            fontWeight: 'bold'
+          }
+        },
+        grid: {
+          show: false
+        },
+        xAxis: {
+          show: false,
+          type: 'value'
+        },
+        yAxis: {
+          show: false,
+          type: 'category'
+        },
+        series: [],
+        tooltip: {
+          show: false
+        },
+        legend: {
+          show: false
+        }
+      };
+      chart.setOption(option, true); // Use notMerge to clear previous chart
+      return;
+    }
+
+    // Use top 10 models (reduced bar thickness allows more)
+    const topModels = filteredModels.slice(0, 10).reverse(); // Reverse for descending order (largest at top)
+    const modelNames = topModels.map(model => {
+      // Truncate model numbers for display but keep full name for tooltips
+      const modelNumber = model.label;
+      return modelNumber.length > 12 ? modelNumber.substring(0, 12) + '...' : modelNumber;
+    });
+    const issueCounts = topModels.map(model => model.value);
+
+    // Calculate total issues across all sources
+    const totalIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => {
+      return sum + (kpi?.High || 0) + (kpi?.Medium || 0) + (kpi?.Low || 0);
+    }, 0);
+
     const option = {
       title: {
-        text: 'No data available for selected filter',
-        left: 'center',
-        top: 'middle',
-        textStyle: {
-          color: colors.textPrimary,
-          fontSize: 16,
-          fontWeight: 'bold'
+        show: false
+      },
+      textStyle: {
+        color: colors.textPrimary
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          const modelIndex = params[0].dataIndex;
+          const modelNumber = topModels[modelIndex].label;
+          const count = params[0].value;
+          const percentage = ((count / totalIssues) * 100).toFixed(1);
+          return `${modelNumber}<br/>Issues: ${count}<br/>${percentage}% of total`;
         }
       },
       grid: {
-        show: false
+        left: '25%',
+        right: '5%',
+        top: '8%',
+        bottom: '8%',
+        borderColor: colors.gridLines
       },
       xAxis: {
+        type: 'value',
         show: false,
-        type: 'value'
+        max: Math.max(...issueCounts) * 1.1
       },
       yAxis: {
-        show: false,
-        type: 'category'
-      },
-      series: [],
-      tooltip: {
-        show: false
-      },
-      legend: {
-        show: false
-      }
-    };
-    chart.setOption(option, true); // Use notMerge to clear previous chart
-    return;
-  }
-
-  // Use top 10 models (reduced bar thickness allows more)
-  const top8Models = filteredModels.slice(0, 10).reverse(); // Reverse for descending order (largest at top)
-  const modelNames = top8Models.map(model => {
-    // Truncate model numbers for display but keep full name for tooltips
-    const modelNumber = model.label;
-    return modelNumber.length > 12 ? modelNumber.substring(0, 12) + '...' : modelNumber;
-  });
-  const issueCounts = top8Models.map(model => model.value);
-
-  // Calculate total issues across all sources
-  const totalIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => {
-    return sum + (kpi?.High || 0) + (kpi?.Medium || 0) + (kpi?.Low || 0);
-  }, 0);
-  const avgIssuesPerModel = Math.round(totalIssues / dashboardData.totalUniqueModels);
-
-  const option = {
-    title: {
-      show: false
-    },
-    textStyle: {
-      color: colors.textPrimary
-    },
-    tooltip: {
-      trigger: 'axis',
-      formatter: function(params) {
-        const modelIndex = params[0].dataIndex;
-        const modelNumber = top8Models[modelIndex].label;
-        const count = params[0].value;
-        const percentage = ((count / totalIssues) * 100).toFixed(1);
-        return `${modelNumber}<br/>Issues: ${count}<br/>${percentage}% of total`;
-      }
-    },
-    grid: {
-      left: '25%',
-      right: '5%',
-      top: '8%',
-      bottom: '8%',
-      borderColor: colors.gridLines
-    },
-    xAxis: {
-      type: 'value',
-      show: false,
-      max: Math.max(...issueCounts) * 1.1
-    },
-    yAxis: {
-      type: 'category',
-      show: true,
-      data: modelNames,
-      axisLabel: {
-        interval: 0,
-        rotate: 0,
-        fontSize: 11,
-        color: colors.textPrimary,
-        formatter: function(value) {
-          // Truncate long names for display, full names in tooltips
-          return value.length > 12 ? value.substring(0, 12) + '...' : value;
-        }
-      }
-    },
-    series: [
-      {
-        name: 'Issues',
-        type: 'bar',
-        barWidth: '60%', // Thicker for cylindrical effect
-        data: issueCounts,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#0ea5e9' },
-            { offset: 0.5, color: '#0284c7' },
-            { offset: 1, color: '#0369a1' }
-          ]),
-          borderRadius: [4, 4, 4, 4],
-          shadowBlur: 8,
-          shadowColor: 'rgba(6, 182, 212, 0.3)'
-        },
-        label: {
-          show: true,
-          position: 'right',
-          formatter: '{c}', // Show count only, no percentage
+        type: 'category',
+        show: true,
+        data: modelNames,
+        axisLabel: {
+          interval: 0,
+          rotate: 0,
           fontSize: 11,
-          fontWeight: 'bold',
-          color: colors.textPrimary
-        },
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 12,
-            shadowColor: 'rgba(6, 182, 212, 0.5)'
+          color: colors.textPrimary,
+          formatter: function(value) {
+            // Truncate long names for display, full names in tooltips
+            return value.length > 12 ? value.substring(0, 12) + '...' : value;
           }
         }
       },
-      {
-        name: 'Markers',
-        type: 'scatter',
-        data: issueCounts.map((value, index) => [value, index]),
-        symbolSize: 6,
-        itemStyle: {
-          color: '#0369a1',
-          borderWidth: 2,
-          borderColor: '#ffffff'
-        },
-        emphasis: {
+      series: [
+        {
+          name: 'Issues',
+          type: 'bar',
+          barWidth: '60%', // Thicker for cylindrical effect
+          data: issueCounts,
           itemStyle: {
-            borderWidth: 3,
-            shadowBlur: 5
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+              { offset: 0, color: '#0ea5e9' },
+              { offset: 0.5, color: '#0284c7' },
+              { offset: 1, color: '#0369a1' }
+            ]),
+            borderRadius: [4, 4, 4, 4],
+            shadowBlur: 8,
+            shadowColor: 'rgba(6, 182, 212, 0.3)'
+          },
+          label: {
+            show: true,
+            position: 'right',
+            formatter: '{c}', // Show count only, no percentage
+            fontSize: 11,
+            fontWeight: 'bold',
+            color: colors.textPrimary
+          },
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 12,
+              shadowColor: 'rgba(6, 182, 212, 0.5)'
+            }
+          }
+        },
+        {
+          name: 'Markers',
+          type: 'scatter',
+          data: issueCounts.map((value, index) => [value, index]),
+          symbolSize: 6,
+          itemStyle: {
+            color: '#0369a1',
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          },
+          emphasis: {
+            itemStyle: {
+              borderWidth: 3,
+              shadowBlur: 5
+            }
           }
         }
-      }
-      // Reference line removed - unexplained and added cognitive load
-    ]
-  };
+      ]
+    };
 
-  chart.setOption(option);
-  window.addEventListener('resize', () => chart.resize());
+    chart.setOption(option);
+    window.addEventListener('resize', () => chart.resize());
+  } catch (error) {
+    console.error('Error updating top models chart:', error);
+    // Show error message in chart container
+    chartDom.innerHTML = '<div class="flex items-center justify-center h-full text-red-500">Error loading chart data</div>';
+  }
 }
 
 // Update top modules chart - Horizontal Bar Chart
-function updateTopModulesChart() {
+function updateTopModulesChart(filter = 'ALL') {
   const chartDom = document.getElementById('top-modules-chart');
-  if (!chartDom || !dashboardData.topModules) return;
+  if (!chartDom) {
+    console.error('Top modules chart container not found');
+    return;
+  }
 
-  const chart = echarts.init(chartDom);
-  const colors = getChartColors();
+  try {
+    const chart = echarts.init(chartDom);
+    const colors = getChartColors();
 
-  // Take top 10 modules
-  const topModules = dashboardData.topModules.slice(0, 10).reverse();
-  const moduleNames = topModules.map(module => {
-    return module.label.length > 15 ? module.label.substring(0, 15) + '...' : module.label;
-  });
-  const issueCounts = topModules.map(module => module.count);
+    // Filter modules based on selected filter
+    let filteredModules = [];
 
-  const option = {
-    textStyle: {
-      color: colors.textPrimary
-    },
-    tooltip: {
-      trigger: 'axis',
-      formatter: function(params) {
-        const moduleIndex = params[0].dataIndex;
-        const fullName = topModules[moduleIndex].label;
-        const count = params[0].value;
-        return `${fullName}<br/>Issues: ${count}`;
+    if (filter === 'ALL') {
+      // Show all modules from pre-computed topModules
+      filteredModules = dashboardData.topModules || [];
+    } else {
+      // Filter based on source from sourceModelSummary
+      const sourceMap = {
+        'SM PLM': 'PLM',
+        'UT Portal': 'UT Portal',
+        'Beta UT': 'Beta'
+      };
+
+      const targetSource = sourceMap[filter];
+      if (targetSource && dashboardData.sourceModelSummary) {
+        // Group modules by name and sum their issue counts for the specific source
+        const moduleMap = {};
+
+        dashboardData.sourceModelSummary
+          .filter(item => item.source === targetSource)
+          .forEach(item => {
+            if (item.top_modules) {
+              item.top_modules.forEach(module => {
+                if (module && module.trim()) {
+                  if (!moduleMap[module]) {
+                    moduleMap[module] = { label: module, count: 0 };
+                  }
+                  moduleMap[module].count += 1; // Count each occurrence
+                }
+              });
+            }
+          });
+
+        filteredModules = Object.values(moduleMap).sort((a, b) => b.count - a.count);
+      } else {
+        // Fallback to pre-computed top modules if filter not found
+        filteredModules = dashboardData.topModules || [];
       }
-    },
-    grid: {
-      left: '28%',
-      right: '5%',
-      top: '8%',
-      bottom: '8%',
-      borderColor: colors.gridLines
-    },
-    xAxis: {
-      type: 'value',
-      show: false
-    },
-    yAxis: {
-      type: 'category',
-      data: moduleNames,
-      axisLabel: {
-        interval: 0,
-        rotate: 0,
-        fontSize: 10,
-        color: colors.textPrimary
-      }
-    },
-    series: [
-      {
-        name: 'Issues',
-        type: 'bar',
-        barWidth: '60%',
-        data: issueCounts,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#10b981' },
-            { offset: 0.5, color: '#059669' },
-            { offset: 1, color: '#047857' }
-          ]),
-          borderRadius: [4, 4, 4, 4]
+    }
+
+    if (filteredModules.length === 0) {
+      // Show empty chart if no data - clear all chart elements
+      const option = {
+        title: {
+          text: 'No data available for selected filter',
+          left: 'center',
+          top: 'middle',
+          textStyle: {
+            color: colors.textPrimary,
+            fontSize: 16,
+            fontWeight: 'bold'
+          }
         },
-        label: {
-          show: true,
-          position: 'right',
-          formatter: '{c}',
-          fontSize: 11,
+        grid: {
+          show: false
+        },
+        xAxis: {
+          show: false,
+          type: 'value'
+        },
+        yAxis: {
+          show: false,
+          type: 'category'
+        },
+        series: [],
+        tooltip: {
+          show: false
+        },
+        legend: {
+          show: false
+        }
+      };
+      chart.setOption(option, true); // Use notMerge to clear previous chart
+      return;
+    }
+
+    // Take top 10 modules
+    const topModules = filteredModules.slice(0, 10).reverse();
+    const moduleNames = topModules.map(module => {
+      return module.label.length > 15 ? module.label.substring(0, 15) + '...' : module.label;
+    });
+    const issueCounts = topModules.map(module => module.count);
+
+    const option = {
+      textStyle: {
+        color: colors.textPrimary
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          const moduleIndex = params[0].dataIndex;
+          const fullName = topModules[moduleIndex].label;
+          const count = params[0].value;
+          return `${fullName}<br/>Issues: ${count}`;
+        }
+      },
+      grid: {
+        left: '28%',
+        right: '5%',
+        top: '8%',
+        bottom: '8%',
+        borderColor: colors.gridLines
+      },
+      xAxis: {
+        type: 'value',
+        show: false
+      },
+      yAxis: {
+        type: 'category',
+        data: moduleNames,
+        axisLabel: {
+          interval: 0,
+          rotate: 0,
+          fontSize: 10,
           color: colors.textPrimary
         }
-      }
-    ]
-  };
+      },
+      series: [
+        {
+          name: 'Issues',
+          type: 'bar',
+          barWidth: '60%',
+          data: issueCounts,
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+              { offset: 0, color: '#10b981' },
+              { offset: 0.5, color: '#059669' },
+              { offset: 1, color: '#047857' }
+            ]),
+            borderRadius: [4, 4, 4, 4]
+          },
+          label: {
+            show: true,
+            position: 'right',
+            formatter: '{c}',
+            fontSize: 11,
+            color: colors.textPrimary
+          }
+        }
+      ]
+    };
 
-  chart.setOption(option);
-  window.addEventListener('resize', () => chart.resize());
+    chart.setOption(option);
+    window.addEventListener('resize', () => chart.resize());
+  } catch (error) {
+    console.error('Error updating top modules chart:', error);
+    // Show error message in chart container
+    chartDom.innerHTML = '<div class="flex items-center justify-center h-full text-red-500">Error loading chart data</div>';
+  }
 }
 
 

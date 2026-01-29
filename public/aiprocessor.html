@@ -123,6 +123,14 @@
       </div>
     </div>
 
+    <!-- Estimated Time Display -->
+    <div class="flex items-center">
+      <div class="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-lg shadow-sm border border-slate-300 dark:border-slate-500">
+        <i class="fa-solid fa-clock text-slate-600 dark:text-slate-300 text-sm"></i>
+        <span class="text-sm font-semibold text-slate-700 dark:text-slate-200" id="estimatedTime">Estimated time: Calculating...</span>
+      </div>
+    </div>
+
     <!-- AI Model Selector -->
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-lg shadow-sm border border-slate-300 dark:border-slate-500">
@@ -1052,6 +1060,35 @@ function updateProgress(percent, message, queueItem) {
   updateEstimatedTime(message, percent, queueItem);
 }
 
+// Function to parse chunk information from progress messages
+function parseChunkInfo(message) {
+    // Look for patterns like "Processed chunk 2/5" or "Processing chunk 3 of 10"
+    const chunkMatch = message.match(/Processed chunk (\d+)\/(\d+)/i) ||
+                      message.match(/Processing chunk (\d+) of (\d+)/i) ||
+                      message.match(/chunk (\d+)\/(\d+)/i) ||
+                      message.match(/(\d+)\/(\d+)/i); // NEW: Simple fraction pattern
+
+    if (chunkMatch) {
+        return {
+            completed: parseInt(chunkMatch[1]),
+            total: parseInt(chunkMatch[2])
+        };
+    }
+    
+    // NEW: Also try to extract percentage and convert to chunk info if we know total chunks
+    const percentMatch = message.match(/(\d+)%/);
+    if (percentMatch && processingMetrics.totalChunks > 0) {
+        const percent = parseInt(percentMatch[1]);
+        const completed = Math.round((percent / 100) * processingMetrics.totalChunks);
+        return {
+            completed: completed,
+            total: processingMetrics.totalChunks
+        };
+    }
+    
+    return null;
+}
+
 function updateEstimatedTime(message, percent, queueItem) {
   const estimatedTimeEl = document.getElementById('estimatedTime');
   const cardEstimatedTime = document.getElementById(`estimated-time-${queueItem.id}`);
@@ -1060,7 +1097,92 @@ function updateEstimatedTime(message, percent, queueItem) {
   const elapsed = Date.now() - processingStartTime;
 
   let timeText = 'Calculating...';
-  if (percent > 0 && percent < 100 && elapsed > 5000) { // Only show after 5 seconds of processing
+  
+  // Parse chunk information from progress message
+  const chunkInfo = parseChunkInfo(message);
+
+  if (chunkInfo) {
+    // Update counts from message
+    processingMetrics.chunksCompleted = chunkInfo.completed;
+    processingMetrics.totalChunks = chunkInfo.total;
+
+    const now = Date.now();
+    // push the completion timestamp
+    processingMetrics.chunkCompletionTimes.push(now);
+
+    // compute latest interval: difference between last two timestamps
+    const len = processingMetrics.chunkCompletionTimes.length;
+    if (len >= 2) {
+      const latestInterval = processingMetrics.chunkCompletionTimes[len - 1] - processingMetrics.chunkCompletionTimes[len - 2];
+
+      // update EWMA
+      if (processingMetrics.ewmaIntervalMs == null) {
+        processingMetrics.ewmaIntervalMs = latestInterval;
+      } else {
+        processingMetrics.ewmaIntervalMs = EST_ALPHA * latestInterval + (1 - EST_ALPHA) * processingMetrics.ewmaIntervalMs;
+      }
+    }
+
+    // derive safe percent as number
+    percent = (typeof percent === 'string') ? parseFloat(percent) : percent;
+    percent = Number.isFinite(percent) ? percent : 0;
+
+    // Now compute ETC using smoothed T1
+    const T1 = processingMetrics.ewmaIntervalMs; // ms
+    const M_remaining = Math.max(0, processingMetrics.totalChunks - processingMetrics.chunksCompleted);
+
+    // compute concurrency to use: cannot be greater than remaining chunks
+    const declaredK = 4; // Default concurrency
+    const effectiveK = Math.max(1, Math.min(declaredK, Math.max(1, M_remaining))); // at least 1
+    const k = effectiveK;
+
+    // If job finished, hide estimate
+    if (processingMetrics.chunksCompleted >= processingMetrics.totalChunks || (percent >= 100)) {
+      timeText = 'Processing complete!';
+    } else if (T1 != null && M_remaining > 0) {
+      // estimated remaining ms
+      let estimatedRemainingMs = (M_remaining / k) * T1;
+
+      const progressRatio = processingMetrics.chunksCompleted / processingMetrics.totalChunks;
+
+      // Conservative correction factor
+      let safetyFactor;
+
+      if (progressRatio < 0.15) {
+        safetyFactor = 2.2;   // very early → heavy underestimation risk
+      } else if (progressRatio < 0.30) {
+        safetyFactor = 1.8;
+      } else if (progressRatio < 0.50) {
+        safetyFactor = 1.4;
+      } else if (progressRatio < 0.70) {
+        safetyFactor = 1.2;
+      } else {
+        safetyFactor = 1.05;  // near completion → accurate
+      }
+
+      estimatedRemainingMs *= safetyFactor;
+
+      // compute completion timestamp
+      const completionTs = new Date(now + estimatedRemainingMs);
+
+      const formattedTime = completionTs.toLocaleTimeString('en-GB', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      // also show remaining duration (human friendly)
+      const totalSeconds = Math.round(estimatedRemainingMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const durationText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+      timeText = `~${durationText} remaining`;
+    }
+  } else if (percent > 0 && percent < 100 && elapsed > 0) {
+    // Percent-based fallback - removed 5-second threshold
     const estimatedTotal = (elapsed / percent) * 100;
     const estimatedRemaining = estimatedTotal - elapsed;
     if (estimatedRemaining > 0) {
@@ -1072,7 +1194,7 @@ function updateEstimatedTime(message, percent, queueItem) {
     } else {
       timeText = 'Almost done...';
     }
-  } else if (elapsed > 10000) { // Show processing time after 10 seconds
+  } else if (elapsed > 5000) { // Show processing time after 5 seconds (reduced from 10)
     const minutes = Math.floor(elapsed / 60000);
     const seconds = Math.floor((elapsed % 60000) / 1000);
     timeText = `${minutes}m ${seconds}s elapsed`;

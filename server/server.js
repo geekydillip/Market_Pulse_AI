@@ -655,7 +655,7 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId, pr
     const prompt = processor.buildPrompt ? processor.buildPrompt(processedRows, processingMode) : JSON.stringify(processedRows).slice(0, 1000);
 
     // Call AI (cached) - default to stream: false
-    const result = await callOllamaCached(prompt, model, { timeoutMs: false, stream: false, sessionId });
+    const result = await ollamaClient.callOllamaCached(prompt, model, { timeoutMs: false, stream: false, sessionId });
 
     // Format response based on processing mode
     try {
