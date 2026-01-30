@@ -196,7 +196,30 @@
   <div id="selectionStatus" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
     <span id="selectionText">✗ No Processing Type Selected</span>
   </div>
-</div>
+  </div>
+
+  <!-- PROGRESS SECTION -->
+  <div id="progressSection" class="hidden mb-6">
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Processing Progress</h3>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-slate-600 dark:text-slate-400" id="estimatedTime">Calculating...</span>
+          <button id="stopBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+            <i class="fa-solid fa-stop mr-2"></i>
+            Stop Processing
+          </button>
+        </div>
+      </div>
+      <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-4 mb-2">
+        <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-600 dark:text-slate-400">0%</span>
+        <span class="text-slate-600 dark:text-slate-400">100%</span>
+      </div>
+    </div>
+  </div>
 
   <!-- PROCESSING TYPE BUTTONS -->
 <div class="grid grid-cols-2 gap-6 mb-6">

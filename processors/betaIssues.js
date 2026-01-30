@@ -1,6 +1,68 @@
 const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/betaIssuesPrompt');
-const { normalizePLMHeaders, deriveModelNameFromSwVer } = require('./_header_utils');
+
+/**
+ * Shared header normalization utility - eliminates code duplication
+ */
+function normalizeHeaders(rows) {
+  // Map header name variants to canonical names
+  // Map header variants to canonical names for internal processing
+const HEADER_MAP = {
+  'case code': 'Case Code',
+  'plm code': 'Case Code',
+  'model no.': 'Model No.',
+  'target model': 'Model No.',
+  'dev. mdl. name/item name': 'Model No.',
+  's/w ver.': 'S/W Ver.',
+  'version occurred': 'S/W Ver.',
+  'title': 'Title',
+  'progr.stat.': 'Progr.Stat.',
+  'progress status': 'Progr.Stat.',
+  'problem': 'Problem',
+  'resolve option(medium)': 'Resolve',
+  'plm status': 'Resolve'
+};
+
+  // canonical columns you expect in the downstream processing
+  const CANONICAL_COLS = ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve'];
+
+  const normalizedRows = rows.map(orig => {
+    const out = {};
+  // Build a reverse map of original header -> canonical (if possible)
+  const keyMap = {}; // rawKey -> canonical
+  Object.keys(orig).forEach(rawKey => {
+    const norm = String(rawKey || '').trim().toLowerCase();
+    const mapped = HEADER_MAP[norm] || HEADER_MAP[norm.replace(/\s+|\./g, '')] || null;
+    if (mapped) keyMap[rawKey] = mapped;
+    else {
+      // try exact match to canonical
+      for (const c of CANONICAL_COLS) {
+        if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
+          keyMap[rawKey] = c;
+          break;
+        }
+      }
+    }
+  });
+    // Fill canonical fields
+    for (const tgt of CANONICAL_COLS) {
+      // find a source raw key that maps to this tgt
+      let found = null;
+      for (const rawKey of Object.keys(orig)) {
+        if (keyMap[rawKey] === tgt) {
+          found = orig[rawKey];
+          break;
+        }
+      }
+      // also if tgt exists exactly as a raw header name, use it
+      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
+      out[tgt] = (found !== undefined && found !== null) ? found : '';
+    }
+    return out;
+  });
+
+  return normalizedRows;
+}
 
 function readAndNormalizeExcel(uploadedPath) {
   const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
@@ -12,7 +74,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['case code', 'plm code','plm status', 'target model', 'version occurred','Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -46,7 +108,7 @@ function readAndNormalizeExcel(uploadedPath) {
   });
 
   // Use shared normalization function
-  return normalizePLMHeaders(rows);
+  return normalizeHeaders(rows);
 }
 
 /**
@@ -67,7 +129,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'betaIssues',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem','Resolve', 'Module', 'Sub-Module','Issue Type','Ai Summary','Severity','Sub-Issue Type','Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -141,16 +203,16 @@ module.exports = {
           : (original['Model No.'] || ''),
         'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
-        'Title': aiRow['Title'] || '',  // From AI (cleaned)
-        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Title': aiRow['Title'] || original.Title,
+        'Problem': aiRow['Problem'] || original.Problem,
         'Resolve': original['Resolve'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
-        'Issue Type': aiRow['Issue Type'] || '',
-        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
+        'Ai Summary': aiRow['Ai Summary'] || '',
         'Severity': aiRow['Severity'] || '',
-        'Severity Reason': aiRow['Severity Reason'] || ''
+        'Severity Reason': aiRow['Severity Reason'] || '',
+        'Issue Type': aiRow['Issue Type'] || '',
+        'Sub-Issue Type': aiRow['Sub-Issue Type'] || ''
       };
     });
 

@@ -1,6 +1,89 @@
 const xlsx = require('xlsx');
 const promptTemplate = require('../prompts/samsungMembers_voc');
-const { normalizeVOCHeaders } = require('./_header_utils');
+
+/**
+ * Shared header normalization utility - eliminates code duplication
+ */
+function normalizeHeaders(rows) {
+  // Map header name variants to canonical names
+  const headerMap = {
+    // No
+    'no': 'No',
+    // Model variants
+    'model no.': 'Model No.',
+    'model_no': 'Model No.',
+    // OS
+    'os': 'OS',
+    // CSC
+    'csc': 'CSC',
+    // Category
+    'category': 'Category',
+    // Application Name
+    'application name': 'Application Name',
+    'application_name': 'Application Name',
+    'app name': 'Application Name',
+    // Application Type
+    'application type': 'Application Type',
+    'application_type': 'Application Type',
+    'app type': 'Application Type',
+    // content
+    'content': 'content',
+    // Main Type
+    'main type': 'Main Type',
+    'main_type': 'Main Type',
+    // Sub Type
+    'sub type': 'Sub Type',
+    'sub_type': 'Sub Type',
+    // Module
+    'module/apps': 'Module',
+    'module': 'Module',
+    // Sub-Module
+    'sub-module': 'Sub-Module',
+    'sub module': 'Sub-Module',
+    // AI Insight
+    'AI Insight': 'AI Insight'
+  };
+
+  // canonical columns you expect in the downstream processing
+  const canonicalCols = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
+
+  const normalizedRows = rows.map(orig => {
+    const out = {};
+    // Build a reverse map of original header -> canonical (if possible)
+    const keyMap = {}; // rawKey -> canonical
+    Object.keys(orig).forEach(rawKey => {
+      const norm = String(rawKey || '').trim().toLowerCase();
+      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
+      if (mapped) keyMap[rawKey] = mapped;
+      else {
+        // try exact match to canonical
+        for (const c of canonicalCols) {
+          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
+            keyMap[rawKey] = c;
+            break;
+          }
+        }
+      }
+    });
+    // Fill canonical fields
+    for (const tgt of canonicalCols) {
+      // find a source raw key that maps to this tgt
+      let found = null;
+      for (const rawKey of Object.keys(orig)) {
+        if (keyMap[rawKey] === tgt) {
+          found = orig[rawKey];
+          break;
+        }
+      }
+      // also if tgt exists exactly as a raw header name, use it
+      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
+      out[tgt] = (found !== undefined && found !== null) ? found : '';
+    }
+    return out;
+  });
+
+  return normalizedRows;
+}
 
 function readAndNormalizeExcel(uploadedPath) {
   const workbook = xlsx.readFile(uploadedPath, { cellDates: true, raw: false });
@@ -46,7 +129,7 @@ function readAndNormalizeExcel(uploadedPath) {
   });
 
   // Use shared normalization function
-  return normalizeVOCHeaders(rows);
+  return normalizeHeaders(rows);
 }
 
 // normalizeRows - now just calls the shared function
