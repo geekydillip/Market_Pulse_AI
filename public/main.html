@@ -127,76 +127,65 @@
 </div>
 
 <!-- CATEGORY HEADERS -->
-<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-  <!-- PLM Header -->
-  <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-lg font-bold mb-1">PLM</h3>
-        <p class="text-emerald-100 text-sm opacity-90">Product Lifecycle Management</p>
+<section class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
+  
+  <div class="md:col-span-2 space-y-4">
+    <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-5 text-white transform transition-all duration-300 hover:scale-[1.06] hover:shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold mb-1">PLM</h3>
+          <p class="text-emerald-100 text-sm opacity-90">Product Lifecycle Management</p>
+        </div>
+        <div class="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-list-check text-2xl"></i>
+        </div>
       </div>
-      <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-        <i class="fa-solid fa-list-check text-2xl"></i>
-      </div>
+    </div>
+    
+    <div class="flex flex-wrap gap-3">
+      <a href="SMPLM_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+        <i class="fa-solid fa-list-check mr-2"></i>
+        GLOBAL VOC PLM
+      </a>
+      <a href="BetaIssues_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-teal-600 hover:from-slate-800 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+        <i class="fa-solid fa-mobile-screen mr-2"></i>
+        BETA UT
+      </a>
+      <a href="BetaIssues_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-lime-600 hover:from-slate-800 hover:to-lime-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+        <i class="fa-solid fa-trophy mr-2"></i>
+        UT PORTAL
+      </a>
     </div>
   </div>
 
-  <!-- VOC Header -->
-  <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-lg font-bold mb-1">VOC</h3>
-        <p class="text-purple-100 text-sm opacity-90">Voice of Customer</p>
+  <div class="md:col-span-1 space-y-4">
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transition-all duration-300 hover:scale-[1.06] hover:shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold">VOC</h3>
+        <i class="fa-solid fa-comments text-xl opacity-50"></i>
       </div>
-      <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-        <i class="fa-solid fa-comments text-2xl"></i>
-      </div>
+      <p class="text-purple-100 text-xs mt-1">Voice of Customer</p>
     </div>
+    <a href="SMVOC_Dashboard.html" class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+      <i class="fa-solid fa-comments mr-2"></i>
+      SAMSUNG MEMBERS VOC
+    </a>
   </div>
 
-  <!-- Data Analytics Header -->
-  <div class="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-lg font-bold mb-1">Data Analytics</h3>
-        <p class="text-cyan-100 text-sm opacity-90">Intelligence & Insights</p>
+  <div class="md:col-span-1 space-y-4">
+    <div class="bg-gradient-to-br from-slate-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transition-all duration-300 hover:scale-[1.06] hover:shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold">Analytics</h3>
+        <i class="fa-solid fa-chart-line text-xl opacity-50"></i>
       </div>
-      <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-        <i class="fa-solid fa-chart-line text-2xl"></i>
-      </div>
+      <p class="text-cyan-100 text-xs mt-1">Insights</p>
     </div>
+    <button class="w-full inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-orange-600 hover:from-slate-700 hover:to-orange-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+      <i class="fa-solid fa-question-circle mr-2"></i>
+      QINGS
+    </button>
   </div>
 </section>
-
-<!-- NAVIGATION BUTTONS -->
-<div class="flex flex-wrap gap-4 mb-6 justify-center">
-  <!-- PLM Category Buttons -->
-  <a href="BetaIssues_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-blue-600 hover:from-slate-800 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-    <i class="fa-solid fa-mobile-screen mr-2"></i>
-    BETA UT
-  </a>
-
-  <a href="SMPLM_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-    <i class="fa-solid fa-list-check mr-2"></i>
-    GLOBAL VOC PLM
-  </a>
-  
-  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-cyan-600 hover:from-slate-800 hover:to-cyan-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-    <i class="fa-solid fa-trophy mr-2"></i>
-    UT PORTAL
-  </button>
-
-  <!-- VOC Category Button -->
-  <a href="SMVOC_Dashboard.html" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-    <i class="fa-solid fa-comments mr-2"></i>
-    SAMSUNG MEMBERS VOC
-  </a>
-
-  <!-- Data Analytics Category Button -->
-  <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-orange-600 hover:from-slate-700 hover:to-orange-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-    <i class="fa-solid fa-question-circle mr-2"></i>
-    QINGS
-  </button>
 
 <!-- CHARTS ROW -->
 <section class="grid grid-cols-12 gap-4">
