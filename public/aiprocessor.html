@@ -199,15 +199,17 @@
 </div>
 
   <!-- PROCESSING TYPE BUTTONS -->
-<div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-emerald-500/25 border border-emerald-400/30 hover:border-emerald-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="plm">
-    <i class="fa-solid fa-list-check mr-2"></i>
-    PLM
+<div class="grid grid-cols-2 gap-6 mb-6">
+  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-emerald-500/30 rounded-xl overflow-hidden transition-all hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]" data-type="plm">
+    <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <i class="fa-solid fa-list-check text-2xl"></i>
+    <span class="font-bold text-white tracking-wide">PLM DATA</span>
   </button>
 
-  <button class="processing-btn inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:shadow-purple-500/25 border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 active:scale-95" data-type="voc">
-    <i class="fa-solid fa-comments mr-2"></i>
-    VOC
+  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-violet-500/30 rounded-xl overflow-hidden transition-all hover:border-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)]" data-type="voc">
+    <div class="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <i class="fa-solid fa-comments text-xl opacity-50"></i>
+    <span class="font-bold text-white tracking-wide">VOC DATA</span>
   </button>
 </div>
 
