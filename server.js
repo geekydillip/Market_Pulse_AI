@@ -148,7 +148,7 @@ let aiRequestTimes = [];
 /**
  * Simple concurrency limiter to run tasks with a limit
  */
-async function runTasksWithLimit(tasks, limit = 4) {
+async function runTasksWithLimit(tasks, limit = 1) {
   const results = [];
   const executing = new Set();
 
@@ -2317,10 +2317,10 @@ async function getVisualizationData() {
 
       for (const r of rows) {
         // Try common header names
-        const model = pickField(r, ['Model', 'model', 'Model No.', 'Model No', 'ModelNo', 'Model No']);
-        const swver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
-        const grade = pickField(r, ['Grade', 'Garde', 'grade']);
-        const module = pickField(r, ['Module', 'Module Name']);
+        const model = pickField(r, ['Model No.']);
+        const swver = pickField(r, ['S/W Ver.']);
+        const grade = pickField(r, ['Grade','grade']);
+        const module = pickField(r, ['Module']);
         const title = pickField(r, ['Title', 'title']);
 
         // Build key for aggregation (group by model+grade+module to avoid duplicates)

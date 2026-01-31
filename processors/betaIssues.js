@@ -19,7 +19,6 @@ const HEADER_MAP = {
   'title': 'Title',
   'problem': 'Problem',
   'progr.stat.': 'Progr.Stat.',
-  'progress status': 'Progr.Stat.',
   'plm status': 'Progr.Stat.',
   'resolve option(medium)': 'Resolve',
   'plm resolve option1': 'Resolve'
