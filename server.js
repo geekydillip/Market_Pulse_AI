@@ -1,4 +1,3 @@
-
 /*
   Minimal Express init. Ensure this block appears BEFORE any app.get/app.post calls.
 */
@@ -134,8 +133,8 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Mapping of frontend processingType to processor filenames
 const processorMap = {
-  'plm': 'betaIssues',
-  'voc': 'samsungMembersVoc'
+  'beta_user_issues': 'betaIssues',
+  'samsung_members_voc': 'samsungMembersVoc'
 };
 
 // Cache for identical prompts
@@ -148,7 +147,7 @@ let aiRequestTimes = [];
 /**
  * Simple concurrency limiter to run tasks with a limit
  */
-async function runTasksWithLimit(tasks, limit = 1) {
+async function runTasksWithLimit(tasks, limit = 4) {
   const results = [];
   const executing = new Set();
 
@@ -356,9 +355,9 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues']; // Supported processing types
+    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_voc']; // Supported processing types for Excel files
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type.' });
+      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "beta_user_issues" or "clean".' });
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();
@@ -2317,10 +2316,10 @@ async function getVisualizationData() {
 
       for (const r of rows) {
         // Try common header names
-        const model = pickField(r, ['Model No.']);
-        const swver = pickField(r, ['S/W Ver.']);
-        const grade = pickField(r, ['Grade','grade']);
-        const module = pickField(r, ['Module']);
+        const model = pickField(r, ['Model', 'model', 'Model No.', 'Model No', 'ModelNo', 'Model No']);
+        const swver = pickField(r, ['S/W Ver.', 'SW Ver', 'Software Version', 'S/W Version', 'S/W Ver']);
+        const grade = pickField(r, ['Grade', 'Garde', 'grade']);
+        const module = pickField(r, ['Module', 'Module Name']);
         const title = pickField(r, ['Title', 'title']);
 
         // Build key for aggregation (group by model+grade+module to avoid duplicates)

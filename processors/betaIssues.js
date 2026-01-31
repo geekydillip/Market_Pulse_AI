@@ -5,48 +5,111 @@ const promptTemplate = require('../prompts/betaIssuesPrompt');
  * Shared header normalization utility - eliminates code duplication
  */
 function normalizeHeaders(rows) {
-  // Map header name variants to canonical names
-  // Map header variants to canonical names for internal processing
-const HEADER_MAP = {
-  'case code': 'Case Code',
-  'plm code': 'Case Code',
-  'issue id': 'Case Code',
-  'model no.': 'Model No.',
-  'target model': 'Model No.',
-  'dev. mdl. name/item name': 'Model No.',
-  's/w ver.': 'S/W Ver.',
-  'version occurred': 'S/W Ver.',
-  'title': 'Title',
-  'problem': 'Problem',
-  'progr.stat.': 'Progr.Stat.',
-  'plm status': 'Progr.Stat.',
-  'resolve option(medium)': 'Resolve',
-  'plm resolve option1': 'Resolve'
-};
+    // Map header name variants to canonical names
+    const headerMap = {
+
+    // Model variants
+    'model no.': 'Model No.',
+    'Dev. Mdl. Name/Item Name': 'Model No.',
+    'dev. mdl. name/item name': 'Model No.',
+    'target model': 'Model No.',
+    'model': 'Model No.',
+    'model no': 'Model No.',
+    'modelno': 'Model No.',
+    
+    // Case Code variants
+    'case code': 'Case Code',
+    'plm code': 'Case Code',
+    'plm code': 'Case Code',
+    'casecode': 'Case Code',
+    'case': 'Case Code',
+    
+    // S/W Ver variants
+    's/w ver.': 'S/W Ver.',
+    'version occurred': 'S/W Ver.',
+    'sw ver': 'S/W Ver.',
+    'software version': 'S/W Ver.',
+    's/w version': 'S/W Ver.',
+    'sw version': 'S/W Ver.',
+    
+    // Title variants
+    'title': 'Title',
+    'seperate test title': 'Title',
+    'seperate_test_title': 'Title',
+    'test title': 'Title',
+    'test_title': 'Title',
+    
+    // Problem variants
+    'problem': 'Problem',
+    'problem type': 'Problem',
+    'problem_type': 'Problem',
+    'issue': 'Problem',
+    
+    // Progr.Stat. variants
+    'progr.stat.': 'Progr.Stat.',
+    'progress status': 'Progr.Stat.',
+    'progress_status': 'Progr.Stat.',
+    'status': 'Progr.Stat.',
+    
+    // Resolve variants
+    'Resolve': 'Resolve',
+    'plm status': 'Resolve',
+    'resolution': 'Resolve',
+    'resolution status': 'Resolve',
+    
+    // Additional columns from your Excel file to preserve
+    'reg. by id': 'Reg. by ID',
+    'registered date': 'Registered Date',
+    'problem type': 'Problem Type',
+    'priority': 'Priority',
+    'occurr. freq.': 'Occurr. Freq.',
+    'defect classification': 'Defect Classification',
+    'feature': 'Feature',
+    'test case id': 'Test Case ID',
+    's/w ver.(date)': 'S/W Ver.(Date)',
+    'reg. dept.': 'Reg. Dept.',
+    'os ver.': 'OS Ver.',
+    'manager id': 'Manager ID',
+    'manager dept.': 'Manager Dept.',
+    'resolve charge': 'Resolve Charge',
+    'resolve incharge id': 'Resolve incharge ID',
+    'resolve date': 'Resolve Date',
+    'resolution s/w ver.': 'Resolution S/W Ver.',
+    'resolve option(medium)': 'Resolve Option(Medium)',
+    'resolve option(small)': 'Resolve Option(Small)',
+    'cause': 'Cause',
+    'countermeasure': 'Countermeasure',
+    
+    // Module variants
+    'module': 'Module',
+    'sub-module': 'Sub-Module',
+    'issue type': 'Issue Type',
+    'sub-issue type': 'Sub-Issue Type'
+  };
 
   // canonical columns you expect in the downstream processing
-  const CANONICAL_COLS = ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve'];
+  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
-  // Build a reverse map of original header -> canonical (if possible)
-  const keyMap = {}; // rawKey -> canonical
-  Object.keys(orig).forEach(rawKey => {
-    const norm = String(rawKey || '').trim().toLowerCase();
-    const mapped = HEADER_MAP[norm] || HEADER_MAP[norm.replace(/\s+|\./g, '')] || null;
-    if (mapped) keyMap[rawKey] = mapped;
-    else {
-      // try exact match to canonical
-      for (const c of CANONICAL_COLS) {
-        if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
-          keyMap[rawKey] = c;
-          break;
+    // Build a reverse map of original header -> canonical (if possible)
+    const keyMap = {}; // rawKey -> canonical
+    Object.keys(orig).forEach(rawKey => {
+      const norm = String(rawKey || '').trim().toLowerCase();
+      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
+      if (mapped) keyMap[rawKey] = mapped;
+      else {
+        // try exact match to canonical
+        for (const c of canonicalCols) {
+          if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
+            keyMap[rawKey] = c;
+            break;
+          }
         }
       }
-    }
-  });
+    });
     // Fill canonical fields
-    for (const tgt of CANONICAL_COLS) {
+    for (const tgt of canonicalCols) {
       // find a source raw key that maps to this tgt
       let found = null;
       for (const rawKey of Object.keys(orig)) {
@@ -75,7 +138,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve','Issue ID','PLM code','PLM Status','PLM importance']; // lowercase checks
+  const expectedHeaderKeywords = ['case code', 'plm code','plm status', 'target model', 'version occurred','Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -130,7 +193,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'betaIssues',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem','Resolve', 'Module', 'Sub-Module','Issue Type','Ai Summary','Severity','Sub-Issue Type','Severity Reason'],
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -204,16 +267,16 @@ module.exports = {
           : (original['Model No.'] || ''),
         'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
-        'Title': aiRow['Title'] || original.Title,
-        'Problem': aiRow['Problem'] || original.Problem,
+        'Title': aiRow['Title'] || '',  // From AI (cleaned)
+        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
         'Resolve': original['Resolve'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
-        'Ai Summary': aiRow['Ai Summary'] || '',
-        'Severity': aiRow['Severity'] || '',
-        'Severity Reason': aiRow['Severity Reason'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
-        'Sub-Issue Type': aiRow['Sub-Issue Type'] || ''
+        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
+        'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
+        'Severity': aiRow['Severity'] || '',
+        'Severity Reason': aiRow['Severity Reason'] || ''
       };
     });
 
