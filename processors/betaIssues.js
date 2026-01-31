@@ -13,49 +13,34 @@ function normalizeHeaders(rows) {
     'Dev. Mdl. Name/Item Name': 'Model No.',
     'dev. mdl. name/item name': 'Model No.',
     'target model': 'Model No.',
-    'model': 'Model No.',
-    'model no': 'Model No.',
-    'modelno': 'Model No.',
     
     // Case Code variants
     'case code': 'Case Code',
     'plm code': 'Case Code',
     'plm code': 'Case Code',
-    'casecode': 'Case Code',
-    'case': 'Case Code',
     
     // S/W Ver variants
     's/w ver.': 'S/W Ver.',
     'version occurred': 'S/W Ver.',
-    'sw ver': 'S/W Ver.',
-    'software version': 'S/W Ver.',
-    's/w version': 'S/W Ver.',
-    'sw version': 'S/W Ver.',
     
     // Title variants
     'title': 'Title',
-    'seperate test title': 'Title',
-    'seperate_test_title': 'Title',
-    'test title': 'Title',
-    'test_title': 'Title',
     
     // Problem variants
     'problem': 'Problem',
-    'problem type': 'Problem',
-    'problem_type': 'Problem',
     'issue': 'Problem',
     
     // Progr.Stat. variants
     'progr.stat.': 'Progr.Stat.',
     'progress status': 'Progr.Stat.',
-    'progress_status': 'Progr.Stat.',
     'status': 'Progr.Stat.',
     
     // Resolve variants
     'Resolve': 'Resolve',
     'plm status': 'Resolve',
     'resolution': 'Resolve',
-    'resolution status': 'Resolve',
+    'Resolve Option(Medium)': 'Resolve',
+    'resolve option(medium)': 'Resolve',
     
     // Additional columns from your Excel file to preserve
     'reg. by id': 'Reg. by ID',
@@ -63,22 +48,7 @@ function normalizeHeaders(rows) {
     'problem type': 'Problem Type',
     'priority': 'Priority',
     'occurr. freq.': 'Occurr. Freq.',
-    'defect classification': 'Defect Classification',
     'feature': 'Feature',
-    'test case id': 'Test Case ID',
-    's/w ver.(date)': 'S/W Ver.(Date)',
-    'reg. dept.': 'Reg. Dept.',
-    'os ver.': 'OS Ver.',
-    'manager id': 'Manager ID',
-    'manager dept.': 'Manager Dept.',
-    'resolve charge': 'Resolve Charge',
-    'resolve incharge id': 'Resolve incharge ID',
-    'resolve date': 'Resolve Date',
-    'resolution s/w ver.': 'Resolution S/W Ver.',
-    'resolve option(medium)': 'Resolve Option(Medium)',
-    'resolve option(small)': 'Resolve Option(Small)',
-    'cause': 'Cause',
-    'countermeasure': 'Countermeasure',
     
     // Module variants
     'module': 'Module',
