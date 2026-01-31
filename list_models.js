@@ -6,7 +6,7 @@ const xlsx = require('xlsx');
 // Debug configuration
 const DEBUG = false;
 
-const downloads = path.join(__dirname, 'downloads','beta_user_issues'); // adjust if needed
+const downloads = path.join(__dirname, 'downloads','ut_portal'); // adjust if needed
 if (!fs.existsSync(downloads)) { console.error('path not found:', downloads); process.exit(1); }
 
 const files = fs.readdirSync(downloads).filter(f => /\.(xlsx|xls|csv)$/i.test(f));
@@ -17,7 +17,7 @@ files.forEach(fname => {
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
     rows.forEach(r => {
-      const candidates = ['Model No.','Model','modelFromFile','ModelNo','Model_No','model','model_no'];
+      const candidates = ['Model No.'];
       let raw = '';
       for (const c of candidates) { if (r[c] && String(r[c]).trim() !== '') { raw = r[c]; break; } }
       if (!raw) {

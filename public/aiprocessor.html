@@ -221,18 +221,30 @@
     </div>
   </div>
 
-  <!-- PROCESSING TYPE BUTTONS -->
+<!-- PROCESSING TYPE BUTTONS -->
 <div class="grid grid-cols-2 gap-6 mb-6">
-  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-emerald-500/30 rounded-xl overflow-hidden transition-all hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]" data-type="beta_user_issues">
+  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-emerald-500/30 rounded-xl overflow-hidden transition-all hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]" data-type="ut_portal">
     <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
     <i class="fa-solid fa-list-check text-2xl"></i>
-    <span class="font-bold text-white tracking-wide">BETA ISSUES</span>
+    <span class="font-bold text-white tracking-wide">UT PORTAL</span>
   </button>
 
   <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-violet-500/30 rounded-xl overflow-hidden transition-all hover:border-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)]" data-type="samsung_members_voc">
     <div class="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
     <i class="fa-solid fa-comments text-xl opacity-50"></i>
     <span class="font-bold text-white tracking-wide">SAMSUNG MEMBERS VOC</span>
+  </button>
+
+  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-blue-500/30 rounded-xl overflow-hidden transition-all hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]" data-type="global_voc_plm">
+    <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <i class="fa-solid fa-globe text-2xl"></i>
+    <span class="font-bold text-white tracking-wide">GLOBAL VOC PLM</span>
+  </button>
+
+  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-orange-500/30 rounded-xl overflow-hidden transition-all hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]" data-type="beta_ut">
+    <div class="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <i class="fa-solid fa-vial text-2xl"></i>
+    <span class="font-bold text-white tracking-wide">BETA UT</span>
   </button>
 </div>
 
@@ -437,7 +449,7 @@ function updateQueueStatus() {
   // Processing type
   if (selectedProcessingType) {
     const typeLabels = {
-      'beta_user_issues': 'Beta User Issues',
+      'ut_portal': 'UT Portal Issues',
       'samsung_members_plm': 'Samsung Members PLM',
       'samsung_members_voc': 'Samsung Members VOC',
       'qings': 'QINGS',

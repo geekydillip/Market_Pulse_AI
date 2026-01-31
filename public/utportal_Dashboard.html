@@ -275,13 +275,13 @@ async function loadDashboardData() {
     const jsonData = await response.json();
 
     // Fetch analytics data
-    const analyticsResponse = await fetch('/api/analytics/beta_ut');
+    const analyticsResponse = await fetch('/api/analytics/ut_portal');
     const analyticsData = await analyticsResponse.json();
 
-    // Extract Beta UT specific data
-    dashboardData.kpis = jsonData.kpis['Beta UT'];
-    dashboardData.topModels = jsonData.beta_ut_top_models;
-    dashboardData.topModules = jsonData.beta_ut_top_modules;
+    // Extract UT Portal specific data
+    dashboardData.kpis = jsonData.kpis['UT Portal'];
+    dashboardData.topModels = jsonData.ut_portal_top_models;
+    dashboardData.topModules = jsonData.ut_portal_top_modules;
     dashboardData.analytics = analyticsData;
 
     // Use corrected counts from central dashboard (fixed aggregation) instead of local analytics.json

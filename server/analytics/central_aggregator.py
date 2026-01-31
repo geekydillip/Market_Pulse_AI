@@ -103,8 +103,9 @@ def compute_central_kpis(data: dict) -> dict:
     """
     kpis = {}
     processor_map = {
-        'beta_user_issues': 'Beta User Issues',
-        'samsung_members_plm': 'Samsung Members PLM',
+        'ut_portal': 'UT Portal',
+        'global_voc_plm': 'Global VOC PLM',
+        'beta_ut': 'Beta UT',
         'samsung_members_voc': 'Samsung Members VOC'
     }
     total_status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
@@ -161,8 +162,8 @@ def compute_top_modules(data: dict) -> list:
     Aggregate top 10 modules from Beta User Issues, Samsung Members PLM, and Samsung Members VOC only.
     Filter out Critical severity issues as per requirements.
     """
-    # Only include data from these three sources
-    included_folders = {'beta_user_issues', 'samsung_members_plm', 'samsung_members_voc'}
+    # Only include data from these four sources
+    included_folders = {'ut_portal', 'global_voc_plm', 'beta_ut', 'samsung_members_voc'}
 
     all_modules = {}
     for folder, dfs in data.items():
@@ -227,8 +228,8 @@ def compute_series_distribution(data: dict) -> list:
         else:
             return 'Others'
 
-    # Only process Samsung Members PLM data
-    folder = 'samsung_members_plm'
+    # Only process Global VOC PLM data
+    folder = 'global_voc_plm'
     if folder not in data:
         return []
 
@@ -298,8 +299,9 @@ def compute_high_issues(data: dict) -> list:
     Apply severity filtering to exclude Critical issues as per requirements.
     """
     processor_map = {
-        'beta_user_issues': 'Beta',
-        'samsung_members_plm': 'PLM',
+        'ut_portal': 'UT',
+        'global_voc_plm': 'PLM',
+        'beta_ut': 'Beta',
         'samsung_members_voc': 'VOC'
     }
 
@@ -410,8 +412,9 @@ def compute_source_model_summary(data: dict) -> list:
     Filter out Critical severity issues as per requirements.
     """
     source_map = {
-        'beta_user_issues': 'Beta',
-        'samsung_members_plm': 'PLM',
+        'ut_portal': 'UT',
+        'global_voc_plm': 'PLM',
+        'beta_ut': 'Beta',
         'samsung_members_voc': 'VOC'
     }
 
@@ -523,7 +526,7 @@ if __name__ == "__main__":
             print(json.dumps(models))
         elif command == "top-models-plm":
             data = load_all_excels("./downloads")
-            models = compute_top_models_by_source(data, 'samsung_members_plm')
+            models = compute_top_models_by_source(data, 'global_voc_plm')
             print(json.dumps(models))
         elif command == "top-models-voc":
             data = load_all_excels("./downloads")
@@ -557,7 +560,7 @@ if __name__ == "__main__":
 
         # Get filtered top models for each source
         filtered_top_models = {}
-        for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
+        for folder_name in ['ut_portal', 'global_voc_plm', 'beta_ut', 'samsung_members_voc']:
             filtered_top_models[folder_name] = compute_top_models_by_source(data, folder_name)
 
         # Compute total issues and high issues counts

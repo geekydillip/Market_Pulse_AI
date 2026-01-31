@@ -1,5 +1,5 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/betaIssuesPrompt');
+const promptTemplate = require('../prompts/UTportalPrompt');
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -162,7 +162,7 @@ function normalizeRows(rows) {
 }
 
 module.exports = {
-  id: 'betaIssues',
+  id: 'UTportal',
   expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {

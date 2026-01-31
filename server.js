@@ -133,8 +133,10 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Mapping of frontend processingType to processor filenames
 const processorMap = {
-  'beta_user_issues': 'betaIssues',
-  'samsung_members_voc': 'samsungMembersVoc'
+  'ut_portal': 'UTportal',
+  'samsung_members_voc': 'samsungMembersVoc',
+  'global_voc_plm': 'globalvocplm',
+  'beta_ut': 'betaUT'
 };
 
 // Cache for identical prompts
@@ -208,8 +210,18 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
       }
 
       const payload = typeof prompt === 'string'
-        ? { model, prompt, stream: useStream }
-        : { model, prompt, stream: useStream };
+        ? { 
+            model, 
+            prompt, 
+            stream: useStream,
+            options: { temperature: 0.2 }
+          }
+        : { 
+            model, 
+            prompt, 
+            stream: useStream,
+            options: { temperature: 0.2 }
+          };
       const data = JSON.stringify(payload);
 
       console.log('[callOllama] port=%d model=%s byteLen=%d stream=%s session=%s',
@@ -351,13 +363,13 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
 app.post('/api/process', upload.single('file'), validateFileUpload, async (req, res) => {
   try {
     // Sanitize input parameters to prevent injection
-    const processingType = sanitizeInput(req.body.processingType || 'beta_user_issues');
+    const processingType = sanitizeInput(req.body.processingType || 'ut_portal');
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_voc']; // Supported processing types for Excel files
+    const validProcessingTypes = ['ut_portal', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut']; // Supported processing types for Excel files
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "beta_user_issues" or "clean".' });
+      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "ut_portal", "global_voc_plm", "beta_ut", "samsung_members_voc", or "clean".' });
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();
@@ -589,8 +601,8 @@ async function processCSV(req, res) {
     const tStart = Date.now();
     const headers = Object.keys(rows[0] || {});
 
-    // Use Beta user issues processing type for CSV (since only structured data should be in CSV)
-    const processingType = req.body.processingType || 'beta_user_issues';
+    // Use UT portal processing type for CSV (since only structured data should be in CSV)
+    const processingType = req.body.processingType || 'ut_portal';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
@@ -825,8 +837,8 @@ async function processJSON(req, res) {
     const tStart = Date.now();
     const headers = Object.keys(rows[0] || {});
 
-    // Use Beta user issues processing type for JSON (since only structured data should be in JSON)
-    const processingType = req.body.processingType || 'beta_user_issues';
+    // Use UT portal processing type for JSON (since only structured data should be in JSON)
+    const processingType = req.body.processingType || 'ut_portal';
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
@@ -1165,8 +1177,8 @@ async function processExcel(req, res) {
     const processorName = processorMap[processingType];
     const processor = require('./processors/' + processorName);
 
-    // Use processor's readAndNormalizeExcel if available, else fallback to betaIssues
-    const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/betaIssues').readAndNormalizeExcel;
+    // Use processor's readAndNormalizeExcel if available, else fallback to UTportal
+    const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/UTportal').readAndNormalizeExcel;
     let rows = readAndNormalizeExcel(uploadedPath) || [];
 
     // Sanity check: verify we have meaningful rows with relevant data based on processor type
@@ -1363,7 +1375,7 @@ async function processExcel(req, res) {
     });
 
     // === Apply Header Styling ===
-    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'Severity Reason','Ai Summary','3rd Party/Native', 'Module/Apps', 'Members'];
+    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'Severity Reason','Ai Summary','AI Insight'];
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;

@@ -82,7 +82,7 @@ def generate_analytics_and_cache():
 
     try:
         # Generate analytics for all modules
-        modules = ['beta_user_issues', 'plm_issues', 'samsung_members_plm', 'samsung_members_voc']
+        modules = ['ut_portal', 'global_voc_plm', 'beta_ut', 'samsung_members_voc']
 
         for module in modules:
             print(f"📊 Generating analytics for {module}...")

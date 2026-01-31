@@ -27,9 +27,9 @@ def aggregate_analytics_data():
     Returns tuple: (total_unique_models, total_unique_modules)
     """
     analytics_files = [
-        './downloads/beta_user_issues/analytics.json',
-        './downloads/plm_issues/analytics.json',
-        './downloads/samsung_members_plm/analytics.json',
+        './downloads/ut_portal/analytics.json',
+        './downloads/global_voc_plm/analytics.json',
+        './downloads/beta_ut/analytics.json',
         './downloads/samsung_members_voc/analytics.json'
     ]
 
@@ -71,9 +71,9 @@ def get_per_source_data():
     Returns dict with per-source data.
     """
     analytics_files = [
-        ('./downloads/beta_user_issues/analytics.json', 'beta_user_issues'),
-        ('./downloads/plm_issues/analytics.json', 'plm_issues'),
-        ('./downloads/samsung_members_plm/analytics.json', 'samsung_members_plm'),
+        ('./downloads/ut_portal/analytics.json', 'ut_portal'),
+        ('./downloads/global_voc_plm/analytics.json', 'global_voc_plm'),
+        ('./downloads/beta_ut/analytics.json', 'beta_ut'),
         ('./downloads/samsung_members_voc/analytics.json', 'samsung_members_voc')
     ]
 

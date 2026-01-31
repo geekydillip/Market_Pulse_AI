@@ -1,43 +1,64 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/samsungMembers_voc');
+const promptTemplate = require('../prompts/UTportalPrompt');
 
 /**
  * Shared header normalization utility - eliminates code duplication
  */
 function normalizeHeaders(rows) {
-  // Map header name variants to canonical names
-  const headerMap = {
-    // No
-    'no': 'No',
+    // Map header name variants to canonical names
+    const headerMap = {
+
     // Model variants
     'model no.': 'Model No.',
-    'model_no': 'Model No.',
-    // OS
-    'os': 'OS',
-    // CSC
-    'csc': 'CSC',
-    // Category
-    'category': 'Category',
-    // Application Name
-    'application name': 'Application Name',
-    'application_name': 'Application Name',
-    'app name': 'Application Name',
-    // Application Type
-    'application type': 'Application Type',
-    'application_type': 'Application Type',
-    'app type': 'Application Type',
-    // content
-    'content': 'content',
-    // Main Type
-    'main type': 'Main Type',
-    'main_type': 'Main Type',
-    // Sub Type
-    'sub type': 'Sub Type',
-    'sub_type': 'Sub Type',
+    'Dev. Mdl. Name/Item Name': 'Model No.',
+    'dev. mdl. name/item name': 'Model No.',
+    'target model': 'Model No.',
+    
+    // Case Code variants
+    'case code': 'Case Code',
+    'plm code': 'Case Code',
+    'plm code': 'Case Code',
+    
+    // S/W Ver variants
+    's/w ver.': 'S/W Ver.',
+    'version occurred': 'S/W Ver.',
+    
+    // Title variants
+    'title': 'Title',
+    
+    // Problem variants
+    'problem': 'Problem',
+    'issue': 'Problem',
+    
+    // Progr.Stat. variants
+    'progr.stat.': 'Progr.Stat.',
+    'progress status': 'Progr.Stat.',
+    'status': 'Progr.Stat.',
+    
+    // Resolve variants
+    'Resolve': 'Resolve',
+    'plm status': 'Resolve',
+    'resolution': 'Resolve',
+    'Resolve Option(Medium)': 'Resolve',
+    'resolve option(medium)': 'Resolve',
+    
+    // Additional columns from your Excel file to preserve
+    'reg. by id': 'Reg. by ID',
+    'registered date': 'Registered Date',
+    'problem type': 'Problem Type',
+    'priority': 'Priority',
+    'occurr. freq.': 'Occurr. Freq.',
+    'feature': 'Feature',
+    
+    // Module variants
+    'module': 'Module',
+    'sub-module': 'Sub-Module',
+    'issue type': 'Issue Type',
+    'sub-issue type': 'Sub-Issue Type'
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
+  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -87,7 +108,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['model_no','os','csc','category','application_name','content','main_type','sub_type','3rd party/native','model no.','application name','main type','sub type']; // input headers (lowercase checks)
+  const expectedHeaderKeywords = ['case code', 'plm code','plm status', 'target model', 'version occurred','Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -124,18 +145,29 @@ function readAndNormalizeExcel(uploadedPath) {
   return normalizeHeaders(rows);
 }
 
+/**
+ * Derive model name from S/W Ver. for OS Beta entries
+ * Example: "S911BXXU8ZYHB" -> "SM-S911B"
+ */
+function deriveModelNameFromSwVer(swVer) {
+  if (!swVer || typeof swVer !== 'string' || swVer.length < 5) {
+    return '';
+  }
+  return 'SM-' + swVer.substring(0, 5);
+}
+
 // normalizeRows - now just calls the shared function
 function normalizeRows(rows) {
   return normalizeHeaders(rows);
 }
 
 module.exports = {
-  id: 'samsungMembersVoc',
-  expectedHeaders: ['No', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
+  id: 'UTportal',
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
-    const required = ['content'];
+    const required = ['Title', 'Problem'];
     return required.some(header =>
       rawHeaders.includes(header) ||
       rawHeaders.some(h => h.toLowerCase().trim() === header.toLowerCase().trim())
@@ -144,27 +176,14 @@ module.exports = {
 
   transform(rows) {
     // Apply normalization using the local normalizeHeaders function
-    let transformedRows = normalizeHeaders(rows);
-
-    // Clean content field of Excel artifacts
-    transformedRows = transformedRows.map(row => {
-      const cleanedRow = { ...row };
-      if (cleanedRow.content) {
-        cleanedRow.content = cleanedRow.content
-          .replace(/_x000d_/g, '') // Remove Excel line break artifacts
-          .replace(/\n+/g, ' ') // Replace multiple newlines with space
-          .trim();
-      }
-      return cleanedRow;
-    });
-
-    return transformedRows;
+    return normalizeHeaders(rows);
   },
 
   buildPrompt(rows) {
-    // Send only content field to AI for analysis
+    // Send only content fields to AI for analysis
     const aiInputRows = rows.map(row => ({
-      content: row.content || ''
+      Title: row.Title || '',
+      Problem: row.Problem || ''
     }));
     return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
   },
@@ -203,66 +222,31 @@ module.exports = {
       return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
     }
 
-    // Handle different response formats: unwrap objects containing arrays
-    if (!Array.isArray(aiRows) && typeof aiRows === 'object') {
-      // Check for common wrapper keys that contain the actual array
-      const possibleKeys = ['data', 'result', 'response', 'output', 'items', 'records'];
-      for (const key of possibleKeys) {
-        if (aiRows[key] && Array.isArray(aiRows[key])) {
-          aiRows = aiRows[key];
-          break;
-        }
-      }
-
-      // If still not an array, check if it's a single result object and wrap it
-      if (!Array.isArray(aiRows)) {
-        // Check if this object has the expected fields for a single result
-        const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
-        const hasExpectedFields = expectedFields.some(field => aiRows.hasOwnProperty(field));
-
-        if (hasExpectedFields) {
-          // Wrap single object in array
-          aiRows = [aiRows];
-        } else {
-          return [{ error: `AI response is not an array and doesn't contain expected fields: ${typeof aiRows} - ${Object.keys(aiRows).slice(0, 5).join(', ')}...` }];
-        }
-      }
-    }
-
     // Ensure aiRows is an array
     if (!Array.isArray(aiRows)) {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
-    // Validate that AI response contains expected fields per new prompt format
-    const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
-
-    // Merge AI results with original core identifiers (preserving original Excel fields + AI fields)
+    // Merge AI results with original core identifiers
     const mergedRows = aiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
-
-      // Validate AI row has expected fields
-      const isValidAiRow = expectedFields.every(field => aiRow.hasOwnProperty(field));
-      if (!isValidAiRow) {
-        console.warn(`AI row ${index} missing expected fields. Available:`, Object.keys(aiRow));
-      }
-
       return {
-        'No': original['No'] || original['S/N'] || '',  // Preserve original No column data
-        'Model No.': original['Model No.'] || '',
-        'OS': original['OS'] || '',
-        'CSC': original['CSC'] || '',
-        'Category': original['Category'] || '',
-        'Application Name': original['Application Name'] || '',
-        'Application Type': original['Application Type'] || '',
-        'content': original['content'] || '',  // Reuse from input (already cleaned)
-        'Main Type': original['Main Type'] || '',
-        'Sub Type': original['Sub Type'] || '',
+        'Case Code': original['Case Code'] || '',
+        'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
+          ? deriveModelNameFromSwVer(original['S/W Ver.'])
+          : (original['Model No.'] || ''),
+        'Progr.Stat.': original['Progr.Stat.'] || '',
+        'S/W Ver.': original['S/W Ver.'] || '',
+        'Title': aiRow['Title'] || '',  // From AI (cleaned)
+        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Resolve': original['Resolve'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'AI Insight': aiRow['AI Insight'] || ''
+        'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
+        'Severity': aiRow['Severity'] || '',
+        'Severity Reason': aiRow['Severity Reason'] || ''
       };
     });
 
@@ -272,10 +256,10 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
-      if (h === 'Application Name') return { wch: 25 };
-      if (['No', 'Model No.', 'OS', 'CSC'].includes(h)) return { wch: 15 };
-      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type'].includes(h)) return { wch: 15 };
+      if (['Title','Problem','Ai Summary','Severity Reason'].includes(h)) return { wch: 41 };
+      if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
+      if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
+      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
     });

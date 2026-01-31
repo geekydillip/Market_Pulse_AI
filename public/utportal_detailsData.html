@@ -468,7 +468,7 @@
 
         async function loadData() {
             try {
-            const response = await fetch('/api/dashboard?category=beta_ut');
+            const response = await fetch('/api/dashboard?category=ut_portal');
                 const data = await response.json();
 
                 if (data.success === false) {
