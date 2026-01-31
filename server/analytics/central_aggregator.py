@@ -38,11 +38,18 @@ def derive_model_name_from_sw_ver(sw_ver):
 def transform_model_names(df):
     """
     Transform Model No. column for OS Beta entries using S/W Ver.
+    Also remove [Regular Folder] prefix from model names.
     """
-    if 'Model No.' in df.columns and 'S/W Ver.' in df.columns:
+    if 'Model No.' in df.columns:
         # Apply transformation where Model No. starts with "[OS Beta]"
-        mask = df['Model No.'].astype(str).str.startswith('[OS Beta]')
-        df.loc[mask, 'Model No.'] = df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+        if 'S/W Ver.' in df.columns:
+            mask_os_beta = df['Model No.'].astype(str).str.startswith('[OS Beta]')
+            df.loc[mask_os_beta, 'Model No.'] = df.loc[mask_os_beta, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+        
+        # Remove [Regular Folder] prefix from model names
+        mask_regular_folder = df['Model No.'].astype(str).str.startswith('[Regular Folder]')
+        if mask_regular_folder.any():
+            df.loc[mask_regular_folder, 'Model No.'] = df.loc[mask_regular_folder, 'Model No.'].str.replace(r'^\[Regular Folder\]', '', regex=True)
     return df
 
 def load_all_excels(base_path: str) -> dict:
@@ -105,8 +112,7 @@ def compute_central_kpis(data: dict) -> dict:
     processor_map = {
         'ut_portal': 'UT Portal',
         'global_voc_plm': 'Global VOC PLM',
-        'beta_ut': 'Beta UT',
-        'samsung_members_voc': 'Samsung Members VOC'
+        'beta_ut': 'Beta UT'
     }
     total_status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
     for folder, dfs in data.items():
@@ -162,8 +168,8 @@ def compute_top_modules(data: dict) -> list:
     Aggregate top 10 modules from Beta User Issues, Samsung Members PLM, and Samsung Members VOC only.
     Filter out Critical severity issues as per requirements.
     """
-    # Only include data from these four sources
-    included_folders = {'ut_portal', 'global_voc_plm', 'beta_ut', 'samsung_members_voc'}
+    # Only include data from these sources (excluding Samsung Members VOC)
+    included_folders = {'ut_portal', 'global_voc_plm', 'beta_ut'}
 
     all_modules = {}
     for folder, dfs in data.items():
@@ -301,8 +307,7 @@ def compute_high_issues(data: dict) -> list:
     processor_map = {
         'ut_portal': 'UT',
         'global_voc_plm': 'PLM',
-        'beta_ut': 'Beta',
-        'samsung_members_voc': 'VOC'
+        'beta_ut': 'Beta'
     }
 
     # First, find the module with maximum High severity issue count
@@ -412,10 +417,9 @@ def compute_source_model_summary(data: dict) -> list:
     Filter out Critical severity issues as per requirements.
     """
     source_map = {
-        'ut_portal': 'UT',
-        'global_voc_plm': 'PLM',
-        'beta_ut': 'Beta',
-        'samsung_members_voc': 'VOC'
+        'ut_portal': 'UT Portal',
+        'global_voc_plm': 'Global VOC PLM',
+        'beta_ut': 'Beta UT'
     }
 
     summary = []
@@ -558,9 +562,9 @@ if __name__ == "__main__":
         model_module_matrix = compute_model_module_matrix(data)
         source_model_summary = compute_source_model_summary(data)
 
-        # Get filtered top models for each source
+        # Get filtered top models for each source (excluding Samsung Members VOC)
         filtered_top_models = {}
-        for folder_name in ['ut_portal', 'global_voc_plm', 'beta_ut', 'samsung_members_voc']:
+        for folder_name in ['ut_portal', 'global_voc_plm', 'beta_ut']:
             filtered_top_models[folder_name] = compute_top_models_by_source(data, folder_name)
 
         # Compute total issues and high issues counts

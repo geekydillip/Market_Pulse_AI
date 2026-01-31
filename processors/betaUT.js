@@ -156,6 +156,23 @@ function deriveModelNameFromSwVer(swVer) {
   return 'SM-' + swVer.substring(0, 5);
 }
 
+/**
+ * Remove [Regular Folder] prefix from model names
+ * Example: "[Regular Folder]M3_SM-S948U" -> "M3_SM-S948U"
+ */
+function removeRegularFolderPrefix(modelName) {
+  if (!modelName || typeof modelName !== 'string') {
+    return modelName || '';
+  }
+  
+  // Remove [Regular Folder] prefix if present
+  if (modelName.startsWith('[Regular Folder]')) {
+    return modelName.substring('[Regular Folder]'.length);
+  }
+  
+  return modelName;
+}
+
 // normalizeRows - now just calls the shared function
 function normalizeRows(rows) {
   return normalizeHeaders(rows);
@@ -234,7 +251,7 @@ module.exports = {
         'Case Code': original['Case Code'] || '',
         'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
           ? deriveModelNameFromSwVer(original['S/W Ver.'])
-          : (original['Model No.'] || ''),
+          : removeRegularFolderPrefix(original['Model No.'] || ''),
         'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)

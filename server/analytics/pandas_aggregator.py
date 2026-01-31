@@ -29,11 +29,18 @@ def derive_model_name_from_sw_ver(sw_ver):
 def transform_model_names(df):
     """
     Transform Model No. column for OS Beta entries using S/W Ver.
+    Also remove [Regular Folder] prefix from model names.
     """
-    if 'Model No.' in df.columns and 'S/W Ver.' in df.columns:
+    if 'Model No.' in df.columns:
         # Apply transformation where Model No. starts with "[OS Beta]"
-        mask = df['Model No.'].astype(str).str.startswith('[OS Beta]')
-        df.loc[mask, 'Model No.'] = df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+        if 'S/W Ver.' in df.columns:
+            mask_os_beta = df['Model No.'].astype(str).str.startswith('[OS Beta]')
+            df.loc[mask_os_beta, 'Model No.'] = df.loc[mask_os_beta, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+        
+        # Remove [Regular Folder] prefix from model names
+        mask_regular_folder = df['Model No.'].astype(str).str.startswith('[Regular Folder]')
+        if mask_regular_folder.any():
+            df.loc[mask_regular_folder, 'Model No.'] = df.loc[mask_regular_folder, 'Model No.'].str.replace(r'^\[Regular Folder\]', '', regex=True)
     return df
 
 def load_all_excels(folder_path: str) -> pd.DataFrame:
