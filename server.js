@@ -607,7 +607,7 @@ async function processCSV(req, res) {
     const ROWSCOUNT = rows.length || 0;
 
     // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 5;
+    const chunkSize = 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     // Initialize monotonically increasing completion counter
@@ -843,7 +843,7 @@ async function processJSON(req, res) {
     const ROWSCOUNT = rows.length || 0;
 
     // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 5;
+    const chunkSize = 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     // Initialize monotonically increasing completion counter
@@ -1191,7 +1191,7 @@ async function processExcel(req, res) {
     const ROWSCOUNT = rows.length || 0;
 
     // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 5;
+    const chunkSize = 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     // Initialize monotonically increasing completion counter
