@@ -356,7 +356,7 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues', 'plm', 'voc']; // Supported processing types
+    const validProcessingTypes = ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues']; // Supported processing types
     if (!validProcessingTypes.includes(processingType)) {
       return res.status(400).json({ error: 'Invalid processing type.' });
     }
