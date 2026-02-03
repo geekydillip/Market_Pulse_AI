@@ -1,5 +1,5 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/UTportalPrompt');
+const promptTemplate = require('../prompts/globalvocplm');
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -10,9 +10,6 @@ function normalizeHeaders(rows) {
 
     // Model variants
     'model no.': 'Model No.',
-    'Dev. Mdl. Name/Item Name': 'Model No.',
-    'dev. mdl. name/item name': 'Model No.',
-    'target model': 'Model No.',
     
     // Case Code variants
     'case code': 'Case Code',
@@ -35,12 +32,6 @@ function normalizeHeaders(rows) {
     'progress status': 'Progr.Stat.',
     'status': 'Progr.Stat.',
     
-    // Resolve variants
-    'Resolve': 'Resolve',
-    'plm status': 'Resolve',
-    'resolution': 'Resolve',
-    'Resolve Option(Medium)': 'Resolve',
-    'resolve option(medium)': 'Resolve',
     
     // Additional columns from your Excel file to preserve
     'reg. by id': 'Reg. by ID',
@@ -58,7 +49,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve'];
+  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -108,7 +99,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['case code', 'plm code','plm status', 'target model', 'version occurred','Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -163,7 +154,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'UTportal',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority','Occurr. Freq.','Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -186,6 +177,56 @@ module.exports = {
       Problem: row.Problem || ''
     }));
     return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+  },
+
+  /**
+   * Normalize frequency values to lowercase for consistent comparison
+   */
+  normalizeFrequency(freq) {
+    if (!freq) return "";
+    return freq.toString().trim().toLowerCase();
+  },
+
+  /**
+   * Apply priority-based severity rules to override AI-determined severity
+   * Rules:
+   * - Priority A + Frequency Always → High
+   * - Priority B + Frequency Often/Always → Medium  
+   * - Priority C → Low (regardless of frequency)
+   * 
+   * This function blends AI-generated natural language with business rules
+   * to create user-friendly severity reasons.
+   */
+  applyPriorityRules(aiRow, originalRow) {
+    const row = { ...aiRow }; // Create a copy to avoid mutating original
+    const priority = (originalRow['Priority'] || '').toString().trim();
+    const frequency = this.normalizeFrequency(originalRow['Occurr. Freq.']);
+    
+    // Only apply rules if we have both priority and frequency data
+    if (priority && frequency) {
+      let newSeverity = null;
+      let finalReason = row['Severity Reason'] || '';
+
+      // Apply priority rules with natural language blending
+      if (priority === 'A' && frequency === 'Always') {
+        newSeverity = 'High';
+        finalReason = `${finalReason} Based on its Priority A classification and continuous occurrence, this issue is treated as High severity.`;
+      } else if (priority === 'B' && (frequency === 'Sometimes' || frequency === 'Always'|| frequency === 'Once')) {
+        newSeverity = 'Medium';
+        finalReason = `${finalReason} Given its Priority B classification and frequent occurrence, this issue is considered Medium severity.`;
+      } else if (priority === 'C') {
+        newSeverity = 'Low';
+        finalReason = `${finalReason} As a Priority C issue, it is classified as Low severity due to its limited impact.`;
+      }
+
+      // Override AI severity if priority rules apply
+      if (newSeverity) {
+        row['Severity'] = newSeverity;
+        row['Severity Reason'] = finalReason;
+      }
+    }
+    
+    return row;
   },
 
   formatResponse(aiResult, originalRows) {
@@ -227,19 +268,22 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
-    // Merge AI results with original core identifiers
+    // Merge AI results with original core identifiers and apply priority rules
     const mergedRows = aiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
-      return {
+      
+      // Create the base merged row
+      const baseRow = {
         'Case Code': original['Case Code'] || '',
         'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
           ? deriveModelNameFromSwVer(original['S/W Ver.'])
           : (original['Model No.'] || ''),
         'Progr.Stat.': original['Progr.Stat.'] || '',
-        'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
+        'Priority': original['Priority'] || '',
+        'Occurr. Freq.': original['Occurr. Freq.'] || '',
+        'S/W Ver.': original['S/W Ver.'] || '',
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
-        'Resolve': original['Resolve'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
@@ -248,6 +292,9 @@ module.exports = {
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
+      
+      // Apply priority rules to override AI severity if applicable
+      return this.applyPriorityRules(baseRow, original);
     });
 
     return mergedRows;
@@ -257,7 +304,7 @@ module.exports = {
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
       if (['Title','Problem','Ai Summary','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
+      if (h === 'Model No.') return { wch: 20 };
       if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };

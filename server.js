@@ -183,12 +183,11 @@ async function callOllamaCached(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
  * callOllama - robust HTTP call to local Ollama server with cancellation support
  * prompt: string or object
  * model: string (e.g. "qwen3:4b-instruct")
- * opts: { port:number, timeoutMs:number, stream:boolean, sessionId:string }
+ * opts: { port:number, timeoutMs:number, sessionId:string }
  */
 async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
-  const useStream = opts.stream === true;
   const sessionId = opts.sessionId;
 
   const callStart = Date.now();
@@ -213,19 +212,19 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
         ? { 
             model, 
             prompt, 
-            stream: useStream,
+            stream: false,
             options: { temperature: 0.2 }
           }
         : { 
             model, 
             prompt, 
-            stream: useStream,
+            stream: false,
             options: { temperature: 0.2 }
           };
       const data = JSON.stringify(payload);
 
-      console.log('[callOllama] port=%d model=%s byteLen=%d stream=%s session=%s',
-        port, model, Buffer.byteLength(data), useStream, sessionId);
+      console.log('[callOllama] port=%d model=%s byteLen=%d session=%s',
+        port, model, Buffer.byteLength(data), sessionId);
 
       const options = {
         hostname: '127.0.0.1',
@@ -244,81 +243,20 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
       const req = http.request(options, (res) => {
         res.setEncoding('utf8');
 
-        // If not streaming, accumulate as before and parse once
-        if (!useStream) {
-          let raw = '';
-          res.on('data', (chunk) => raw += chunk);
-          res.on('end', () => {
-            if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
-            try {
-              const json = JSON.parse(raw);
-              const out = json.response ?? json; // prefer response field if present
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(out);
-            } catch (err) {
-              return reject(new Error('Failed to parse Ollama response: ' + err.message + ' raw:' + raw.slice(0,2000)));
-            }
-          });
-          return;
-        }
-
-        // STREAMING: attempt to parse line-delimited JSON or accumulate response fields
-        let buffer = '';
-        let lastResponsePart = '';
-        res.on('data', (chunk) => {
-          buffer += chunk;
-
-          // Try to split by newline and parse per-line JSON when possible
-          const lines = buffer.split(/\r?\n/);
-          // keep incomplete last line in buffer
-          buffer = lines.pop();
-
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              // some stream endpoints emit raw JSON objects per line
-              const obj = JSON.parse(line);
-              // If model sends a "response" field per event, prefer the last one
-              if (obj && (obj.response || obj.text || obj.output)) {
-                lastResponsePart = (obj.response ?? obj.text ?? obj.output);
-              } else if (typeof obj === 'string') {
-                lastResponsePart = obj;
-              } else {
-                // fallback: stringify object
-                lastResponsePart = JSON.stringify(obj);
-              }
-            } catch (e) {
-              // not JSON — append as raw text
-              lastResponsePart += line;
-            }
-          }
-        });
-
+        // Simplified response handling - no streaming logic
+        let raw = '';
+        res.on('data', (chunk) => raw += chunk);
         res.on('end', () => {
-          // Use lastResponsePart if found, otherwise try to parse remaining buffer
-          if (lastResponsePart) {
+          if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
+          try {
+            const json = JSON.parse(raw);
+            const out = json.response ?? json; // prefer response field if present
             aiRequestTimes.push(Date.now() - callStart);
             aiRequestCount++;
-            return resolve(lastResponsePart);
+            return resolve(out);
+          } catch (err) {
+            return reject(new Error('Failed to parse Ollama response: ' + err.message + ' raw:' + raw.slice(0,2000)));
           }
-
-          // try parse buffer as JSON
-          if (buffer && buffer.trim()) {
-            try {
-              const json = JSON.parse(buffer);
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(json.response ?? json);
-            } catch (err) {
-              // last-resort: return buffer as text
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(buffer);
-            }
-          }
-
-          reject(new Error(`Empty stream end from Ollama (status ${res.statusCode})`));
         });
       });
 
@@ -494,8 +432,8 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
     // Build prompt
     const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
 
-    // Call AI (cached) - default to stream: false
-    const result = await callOllamaCached(prompt, model, { timeoutMs: false, stream: false, sessionId });
+    // Call AI (cached)
+    const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId });
 
     // Format response
     try {
