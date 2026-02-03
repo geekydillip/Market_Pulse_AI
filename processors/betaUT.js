@@ -1,5 +1,5 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/UTportalPrompt');
+const promptTemplate = require('../prompts/betaUT');
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -34,7 +34,7 @@ function normalizeHeaders(rows) {
     'progr.stat.': 'Progr.Stat.',
     'progress status': 'Progr.Stat.',
     'status': 'Progr.Stat.',
-    
+
     // Resolve variants
     'Resolve': 'Resolve',
     'plm status': 'Resolve',

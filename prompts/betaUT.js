@@ -11,9 +11,9 @@ For each row:
    CP Crash, App Crash, ANR, Slow/Lag Performance Issue, Feature Missing, Poor Quality, UI Issue, Heating Issue, Battery Drain, Compatibility Issue, Restart, other Issue, or "".
 7. Ai Summary → One clean sentence describing the actual issue.
 8. Severity:
-   - High: device unusable / crashes / freezing / data loss/ Lag / Hang / Touch and Very Basic feature not working.
-   - Medium: partial malfunction or intermittent failure or Function failure.
-   - Low: minor UI issue or cosmetic/suggestion.
+   - High: device unusable, boot failure, CP Crash, repeated crash loop, data loss risk, system completely blocked, frequent crashes, freezing, lag/hang/touch not responding.
+   - Medium: App Crash, major function broken, network or core feature failure that strongly impacts usage, partial malfunction, intermittent failure, degraded performance, feature not working as expected but workaround exists.
+   - Low: minor UI issue, cosmetic problem, small usability suggestion, or low-impact behavior.
 9. Severity Reason → One sentence explaining the chosen severity.
 
 Rules:
