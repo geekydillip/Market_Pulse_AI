@@ -223,7 +223,7 @@
 
 <!-- PROCESSING TYPE BUTTONS -->
 <div class="grid grid-cols-2 gap-6 mb-6">
-  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-emerald-500/30 rounded-xl overflow-hidden transition-all hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]" data-type="ut_portal">
+  <button class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-emerald-500/30 rounded-xl overflow-hidden transition-all hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]" data-type="employee_ut">
     <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
     <i class="fa-solid fa-trophy text-2xl"></i>
     <span class="font-bold text-white tracking-wide">UT PORTAL</span>
@@ -449,7 +449,7 @@ function updateQueueStatus() {
   // Processing type
   if (selectedProcessingType) {
     const typeLabels = {
-      'ut_portal': 'UT Portal Issues',
+      'employee_ut': 'Employee UT Issues',
       'samsung_members_plm': 'Samsung Members PLM',
       'samsung_members_voc': 'Samsung Members VOC',
       'qings': 'QINGS',

@@ -147,9 +147,9 @@
         <i class="fa-solid fa-mobile-screen mr-2"></i>
         BETA UT
       </a>
-      <a href="UTportal_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-lime-600 hover:from-slate-800 hover:to-lime-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
+      <a href="employee_ut_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-lime-600 hover:from-slate-800 hover:to-lime-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
         <i class="fa-solid fa-trophy mr-2"></i>
-        UT PORTAL
+        EMPLOYEE UT
       </a>
     </div>
   </div>
@@ -178,7 +178,7 @@
     </div>
     <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-slate-700 to-orange-600 hover:from-slate-800 hover:to-orange-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
       <i class="fa-solid fa-question-circle mr-2"></i>
-      QINGS
+      SERVICE ISSUE
     </button>
   </div>
 </section>
@@ -272,7 +272,7 @@
             <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model Number</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Global VOC PLM</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Beta UT</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">UT Portal</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">EMPLOYEE UT</th>
           </tr>
         </thead>
         <tbody id="model-summary-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
@@ -626,13 +626,32 @@ function updateSeveritySplit() {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Calculate totals across all sources - same logic as Source Distribution
+  // Calculate totals across all sources for OPEN ISSUES ONLY
   const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High || 0), 0);
   const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium || 0), 0);
   const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low || 0), 0);
 
-  const totalIssues = totalHigh + totalMedium + totalLow;
-  if (totalIssues === 0) return;
+  // Calculate the proportion of open issues for each severity level
+  // We need to apply the open rate to each severity count
+  const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+  const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+  
+  // If we have total issues, calculate the open rate and apply it to severity counts
+  let openHigh, openMedium, openLow;
+  if (totalAllIssues > 0) {
+    const openRate = totalOpenIssues / totalAllIssues;
+    openHigh = Math.round(totalHigh * openRate);
+    openMedium = Math.round(totalMedium * openRate);
+    openLow = Math.round(totalLow * openRate);
+  } else {
+    // Fallback to original counts if no total data
+    openHigh = totalHigh;
+    openMedium = totalMedium;
+    openLow = totalLow;
+  }
+
+  const totalOpen = openHigh + openMedium + openLow;
+  if (totalOpen === 0) return;
 
   // Calculate arrow positions for each pie slice
   const centerX = 0.5; // center x (50%)
@@ -747,7 +766,7 @@ function updateSeveritySplit() {
         },
         data: [
           {
-            value: totalHigh,
+            value: openHigh,
             name: 'High',
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
@@ -758,7 +777,7 @@ function updateSeveritySplit() {
             }
           },
           {
-            value: totalMedium,
+            value: openMedium,
             name: 'Medium',
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
@@ -769,7 +788,7 @@ function updateSeveritySplit() {
             }
           },
           {
-            value: totalLow,
+            value: openLow,
             name: 'Low',
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
@@ -798,8 +817,41 @@ function updateTopModelsChart() {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Take top 10 models
-  const topModels = dashboardData.topModels.slice(0, 10).reverse();
+  // Calculate open issues for each model based on source model summary
+  const modelOpenIssues = {};
+  
+  // Get open issue counts from source model summary
+  if (dashboardData.sourceModelSummary) {
+    dashboardData.sourceModelSummary
+      .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'UT Portal')
+      .forEach(item => {
+        // Calculate open issues proportion for this model based on overall open rate
+        const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+        const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+        
+        let openRate = 1;
+        if (totalAllIssues > 0) {
+          openRate = totalOpenIssues / totalAllIssues;
+        }
+        
+        if (!modelOpenIssues[item.model]) {
+          modelOpenIssues[item.model] = 0;
+        }
+        modelOpenIssues[item.model] += Math.round(item.issue_count * openRate);
+      });
+  }
+
+  // Create array of models with open issues and sort by open issue count
+  const modelsWithOpenIssues = Object.entries(modelOpenIssues)
+    .filter(([model, count]) => count > 0)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10)
+    .map(([model, count]) => ({ label: model, value: count }));
+
+  // If no models have open issues, use original data but with zero counts
+  const topModels = modelsWithOpenIssues.length > 0 ? modelsWithOpenIssues : 
+    dashboardData.topModels.slice(0, 10).map(model => ({ ...model, value: 0 }));
+
   const modelNames = topModels.map(model => {
     return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
   });
@@ -815,7 +867,7 @@ function updateTopModelsChart() {
         const modelIndex = params[0].dataIndex;
         const fullName = topModels[modelIndex].label;
         const count = params[0].value;
-        return `${fullName}<br/>Issues: ${count}`;
+        return `${fullName}<br/>Open Issues: ${count}`;
       }
     },
     grid: {
@@ -841,7 +893,7 @@ function updateTopModelsChart() {
     },
     series: [
       {
-        name: 'Issues',
+        name: 'Open Issues',
         type: 'bar',
         barWidth: '60%',
         data: issueCounts,
@@ -876,8 +928,50 @@ function updateTopModulesChart() {
   const chart = echarts.init(chartDom);
   const colors = getChartColors();
 
-  // Take top 10 modules
-  const topModules = dashboardData.topModules.slice(0, 10).reverse();
+  // Calculate open issues for each module based on source model summary
+  const moduleOpenIssues = {};
+  
+  // Get open issue counts from source model summary
+  if (dashboardData.sourceModelSummary) {
+    dashboardData.sourceModelSummary
+      .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'UT Portal')
+      .forEach(item => {
+        // Calculate open issues proportion for this module based on overall open rate
+        const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+        const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+        
+        let openRate = 1;
+        if (totalAllIssues > 0) {
+          openRate = totalOpenIssues / totalAllIssues;
+        }
+        
+        // Count issues per module from top_modules array
+        if (item.top_modules && item.top_modules.length > 0) {
+          // Distribute the issue count across top modules
+          const moduleCount = item.top_modules.length;
+          const issuesPerModule = Math.round(item.issue_count / moduleCount * openRate);
+          
+          item.top_modules.forEach(module => {
+            if (!moduleOpenIssues[module]) {
+              moduleOpenIssues[module] = 0;
+            }
+            moduleOpenIssues[module] += issuesPerModule;
+          });
+        }
+      });
+  }
+
+  // Create array of modules with open issues and sort by open issue count
+  const modulesWithOpenIssues = Object.entries(moduleOpenIssues)
+    .filter(([module, count]) => count > 0)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10)
+    .map(([module, count]) => ({ label: module, value: count }));
+
+  // If no modules have open issues, use original data but with zero counts
+  const topModules = modulesWithOpenIssues.length > 0 ? modulesWithOpenIssues : 
+    dashboardData.topModules.slice(0, 10).map(module => ({ ...module, value: 0 }));
+
   const moduleNames = topModules.map(module => {
     return module.label.length > 15 ? module.label.substring(0, 15) + '...' : module.label;
   });
@@ -893,7 +987,7 @@ function updateTopModulesChart() {
         const moduleIndex = params[0].dataIndex;
         const fullName = topModules[moduleIndex].label;
         const count = params[0].value;
-        return `${fullName}<br/>Issues: ${count}`;
+        return `${fullName}<br/>Open Issues: ${count}`;
       }
     },
     grid: {
@@ -919,7 +1013,7 @@ function updateTopModulesChart() {
     },
     series: [
       {
-        name: 'Issues',
+        name: 'Open Issues',
         type: 'bar',
         barWidth: '60%',
         data: issueCounts,
@@ -974,7 +1068,16 @@ function createModelSummaryTable() {
   // Clear existing content
   tbody.innerHTML = '';
 
-  // Get all models with the new data sources and calculate total issues per model
+  // Calculate open issues proportion for filtering
+  const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+  const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+  
+  let openRate = 1;
+  if (totalAllIssues > 0) {
+    openRate = totalOpenIssues / totalAllIssues;
+  }
+
+  // Get all models with the new data sources and calculate OPEN issues per model
   const modelStats = {};
 
   dashboardData.sourceModelSummary
@@ -983,17 +1086,25 @@ function createModelSummaryTable() {
       if (!modelStats[item.model]) {
         modelStats[item.model] = { totalIssues: 0, sources: {} };
       }
-      modelStats[item.model].totalIssues += item.issue_count;
-      modelStats[item.model].sources[item.source] = item;
+      
+      // Calculate open issues for this model based on open rate
+      const openIssues = Math.round(item.issue_count * openRate);
+      modelStats[item.model].totalIssues += openIssues;
+      
+      // Store the original data but with open issues count
+      modelStats[item.model].sources[item.source] = {
+        ...item,
+        issue_count: openIssues
+      };
     });
 
-  // Sort models by total issues and take top 10
+  // Sort models by OPEN issues and take top 10
   const topModels = Object.entries(modelStats)
     .sort(([,a], [,b]) => b.totalIssues - a.totalIssues)
     .slice(0, 10)
     .map(([modelName, stats]) => ({ label: modelName, value: stats.totalIssues, sources: stats.sources }));
 
-  console.log('Top models with new data sources:', topModels);
+  console.log('Top models with OPEN issues:', topModels);
 
   topModels.forEach((model, index) => {
     console.log(`Processing model ${index}:`, model);
@@ -1028,16 +1139,14 @@ function createModelSummaryTable() {
       cell.className = 'px-4 py-3 text-sm text-slate-700 dark:text-slate-300';
 
       // Find model data for this source
-      const modelData = dashboardData.sourceModelSummary.find(item =>
-        item.model === model.label && item.source === sourceKey
-      );
+      const modelData = model.sources[sourceKey];
 
-      console.log(`Model ${model.label}, Source ${sourceKey}, Data:`, modelData);
+      console.log(`Model ${model.label}, Source ${sourceKey}, Open Data:`, modelData);
 
       if (modelData) {
-        // Format the cell content
+        // Format the cell content with OPEN issues
         let content = `<div class="space-y-1">`;
-        content += `<div><strong>Total Issues:</strong> ${modelData.issue_count}</div>`;
+        content += `<div><strong>Open Issues:</strong> ${modelData.issue_count}</div>`;
 
         // Add combined Top Modules & Issues section
         if (modelData.top_modules && modelData.top_modules.length > 0) {
@@ -1088,7 +1197,7 @@ function createModelSummaryTable() {
     tbody.appendChild(tr);
   });
 
-  console.log('Table creation completed with new data sources');
+  console.log('Table creation completed with OPEN issues data');
 }
 
 // Update timestamp

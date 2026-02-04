@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>UT Portal Issues</title>
+<title>Employee UT Issues</title>
 
 <!-- Font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
 
 <!-- HEADER -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">UT Portal - Overview</h1>
+  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Employee UT - Overview</h1>
 
   <div class="flex gap-2">
     <a href="main.html"
@@ -198,7 +198,7 @@
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Model Wise Beta Issues Summary</h3>
         <div class="flex items-center gap-2">
-          <a href="BetaIssues_detailsData.html" class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+          <a href="employee_ut_detailsData.html" class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
             <i class="fa-solid fa-eye mr-1"></i>
             Details
           </a>
@@ -241,7 +241,7 @@
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Category Wise Beta Issues Summary</h3>
         <div class="flex items-center gap-2">
-          <a href="BetaIssues_detailsData.html" class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+          <a href="employee_ut_detailsData.html" class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
             <i class="fa-solid fa-eye mr-1"></i>
             Details
           </a>
@@ -295,11 +295,11 @@ async function loadDashboardData() {
     const jsonData = await response.json();
 
     // Fetch analytics data
-    const analyticsResponse = await fetch('/api/analytics/ut_portal');
+    const analyticsResponse = await fetch('/api/analytics/employee_ut');
     const analyticsData = await analyticsResponse.json();
 
     // Extract UT Portal specific data
-    dashboardData.kpis = jsonData.kpis['UT Portal'];
+    dashboardData.kpis = jsonData.kpis['EMPLOYEE UT'];
     dashboardData.topModels = jsonData.ut_portal_top_models;
     dashboardData.topModules = jsonData.ut_portal_top_modules;
     dashboardData.analytics = analyticsData;

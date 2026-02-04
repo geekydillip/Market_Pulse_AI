@@ -133,7 +133,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Mapping of frontend processingType to processor filenames
 const processorMap = {
-  'ut_portal': 'UTportal',
+  'employee_ut': 'EmployeeUT',
   'samsung_members_voc': 'samsungMembersVoc',
   'global_voc_plm': 'globalvocplm',
   'beta_ut': 'betaUT'
@@ -213,13 +213,13 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
             model, 
             prompt, 
             stream: false,
-            options: { temperature: 0.2 }
+            options: { temperature: 0.1 }
           }
         : { 
             model, 
             prompt, 
             stream: false,
-            options: { temperature: 0.2 }
+            options: { temperature: 0.1 }
           };
       const data = JSON.stringify(payload);
 
@@ -305,9 +305,9 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['ut_portal', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut']; // Supported processing types for Excel files
+    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut']; // Supported processing types for Excel files
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "ut_portal", "global_voc_plm", "beta_ut", "samsung_members_voc", or "clean".' });
+      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "employee_ut", "global_voc_plm", "beta_ut", "samsung_members_voc", or "clean".' });
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();

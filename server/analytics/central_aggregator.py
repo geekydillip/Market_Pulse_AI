@@ -110,7 +110,7 @@ def compute_central_kpis(data: dict) -> dict:
     """
     kpis = {}
     processor_map = {
-        'ut_portal': 'UT Portal',
+        'employee_ut': 'EMPLOYEE UT',
         'global_voc_plm': 'Global VOC PLM',
         'beta_ut': 'Beta UT'
     }
@@ -169,7 +169,7 @@ def compute_top_modules(data: dict) -> list:
     Filter out Critical severity issues as per requirements.
     """
     # Only include data from these sources (excluding Samsung Members VOC)
-    included_folders = {'ut_portal', 'global_voc_plm', 'beta_ut'}
+    included_folders = {'employee_ut', 'global_voc_plm', 'beta_ut'}
 
     all_modules = {}
     for folder, dfs in data.items():
@@ -186,79 +186,6 @@ def compute_top_modules(data: dict) -> list:
     sorted_modules = sorted(all_modules.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_modules[:10]]
 
-def compute_series_distribution(data: dict) -> list:
-    """
-    Distribution by series type.
-    Calculate this data from analytics.json file Samsung Members PLM folders only.
-    Uses 'S/W Ver.' with new logic for samsung_members_plm.
-    Filter out Critical severity issues as per requirements.
-    """
-    def categorize_series_new(model):
-        """Categorize model into series based on new logic (no SM- prefix)"""
-        if not model or not isinstance(model, str):
-            return 'Unknown'
-
-        model_upper = model.upper()
-
-        # Special case: Moved S series models
-        if model_upper.startswith('(MOVED) S'):
-            return 'S Series'
-        # S Series
-        elif model_upper.startswith('S') or model_upper.startswith('G'):
-            return 'S Series'
-        # A Series
-        elif model_upper.startswith('A'):
-            return 'A Series'
-        # M Series
-        elif model_upper.startswith('M'):
-            return 'M Series'
-        # E Series (treated as F Series)
-        elif model_upper.startswith('E'):
-            return 'F Series'
-        # Fold & Flip Series
-        elif model_upper.startswith('F9') or model_upper.startswith('F7'):
-            return 'Fold & Flip Series'
-        # F Series (other F models)
-        elif model_upper.startswith('F'):
-            return 'F Series'
-        # Tablet
-        elif model_upper.startswith('X') or model_upper.startswith('T'):
-            return 'Tablet'
-        # Watch
-        elif model_upper.startswith('L') or model_upper.startswith('R'):
-            return 'Watch'
-        # Ring
-        elif model_upper.startswith('Q'):
-            return 'Ring'
-        # Everything else
-        else:
-            return 'Others'
-
-    # Only process Global VOC PLM data
-    folder = 'global_voc_plm'
-    if folder not in data:
-        return []
-
-    dfs = data[folder]
-    combined = combine_dataframes(dfs)
-    # Apply severity filter to exclude Critical
-    combined = filter_allowed_severity(combined)
-
-    # Use 'S/W Ver.' column with new categorization
-    column = 'S/W Ver.'
-    categorize_func = categorize_series_new
-
-    series_counts = {}
-    if column in combined.columns:
-        for _, row in combined.iterrows():
-            model = str(row.get(column, '')).strip()
-            if model:
-                series = categorize_func(model)
-                series_counts[series] = series_counts.get(series, 0) + 1
-
-    # Sort by count descending and return top series
-    sorted_series = sorted(series_counts.items(), key=lambda x: x[1], reverse=True)
-    return [{"label": series, "value": int(cnt)} for series, cnt in sorted_series]
 
 def compute_top_models(data: dict) -> list:
     """
@@ -548,13 +475,12 @@ if __name__ == "__main__":
             print(json.dumps({"error": f"Unknown command: {command}"}))
         sys.exit(0)
 
-    # Default behavior - return all data including matrix, summary, and filtered models
+# Default behavior - return all data including matrix, summary, and filtered models
     base_path = "./downloads"
     try:
         data = load_all_excels(base_path)
         kpis, status_kpis = compute_central_kpis(data)
         top_modules = compute_top_modules(data)
-        series_distribution = compute_series_distribution(data)
         top_models = compute_top_models(data)
         high_issues = compute_high_issues(data)
 
@@ -581,7 +507,6 @@ if __name__ == "__main__":
             "total_issues": total_issues,
             "high_issues_count": high_issues_count,
             "top_modules": top_modules,
-            "series_distribution": series_distribution,
             "top_models": top_models,
             "high_issues": high_issues,
             "model_module_matrix": model_module_matrix,

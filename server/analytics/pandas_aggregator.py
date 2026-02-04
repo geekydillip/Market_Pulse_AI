@@ -4,6 +4,21 @@ import json
 import math
 from pathlib import Path
 
+# Load model name mappings
+def load_model_name_mappings():
+    """Load model name mappings from modelName.json"""
+    try:
+        with open('modelName.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print("Warning: modelName.json not found, using empty mappings")
+        return {}
+    except json.JSONDecodeError:
+        print("Warning: Invalid JSON in modelName.json, using empty mappings")
+        return {}
+
+MODEL_NAME_MAPPINGS = load_model_name_mappings()
+
 def sanitize_nan(obj):
     """
     Recursively replace NaN values with None for JSON serialization
@@ -136,6 +151,83 @@ def group_by_column(df: pd.DataFrame, column: str) -> list:
         # Fallback: return empty list if there's any issue
         return []
 
+def map_model_name(model_number):
+    """
+    Map model number to friendly name using the loaded mappings.
+    Implements the same logic as the frontend getModelName function.
+    """
+    if not model_number or pd.isna(model_number):
+        return model_number
+
+    model_str = str(model_number).strip()
+    
+    # If it's already a clean model number, try direct lookup first
+    if model_str in MODEL_NAME_MAPPINGS:
+        return MODEL_NAME_MAPPINGS[model_str]
+
+    # Extract core identifier using improved regex that handles underscores and complex patterns
+    # This pattern captures: SM-A176BE_SWA_16_INS -> A176BE
+    import re
+    match = re.match(r'SM-([A-Z0-9]+)', model_str)
+    if not match:
+        return model_str
+
+    core_identifier = match.group(1)
+    
+    # Strategy 1: Try the exact extracted identifier first
+    exact_key = f"SM-{core_identifier}"
+    if exact_key in MODEL_NAME_MAPPINGS:
+        return MODEL_NAME_MAPPINGS[exact_key]
+
+    # Strategy 2: Try to extract base model by removing suffixes
+    # Common suffixes to try in order of preference
+    suffixes = [
+        "BE", "B", "FN", "F", "U", "EUR", "US", "VZW", "INS", "DD", "XX", "SWA", "KSA", "THL", "MYS", "SGP", "IND", "PHL", "HKG", "TW"
+    ]
+
+    # Try removing suffixes from the core identifier
+    for suffix in suffixes:
+        if core_identifier.endswith(suffix):
+            base_key = f"SM-{core_identifier[:-len(suffix)]}"
+            if base_key in MODEL_NAME_MAPPINGS:
+                return MODEL_NAME_MAPPINGS[base_key]
+
+    # Strategy 3: Try common base patterns
+    # For example, if we have "A176BE", try "A176", "A17", etc.
+    base_patterns = [
+        core_identifier[:-1],  # Remove last character
+        core_identifier[:-2],  # Remove last two characters
+        core_identifier[:-3],  # Remove last three characters
+    ]
+
+    for pattern in base_patterns:
+        if len(pattern) > 0:
+            base_key = f"SM-{pattern}"
+            if base_key in MODEL_NAME_MAPPINGS:
+                return MODEL_NAME_MAPPINGS[base_key]
+
+    # Strategy 4: Try alternative suffix combinations
+    # If we have "A176", try common suffixes
+    for suffix in ["B", "F", "FN", "U"]:
+        alt_key = f"SM-{core_identifier}{suffix}"
+        if alt_key in MODEL_NAME_MAPPINGS:
+            return MODEL_NAME_MAPPINGS[alt_key]
+
+    # Strategy 5: Enhanced fallback for complex patterns
+    # Try to find any model that starts with the core identifier
+    core_prefix = f"SM-{core_identifier}"
+    for key, value in MODEL_NAME_MAPPINGS.items():
+        if key.startswith(core_prefix):
+            return value
+
+    # Strategy 6: Try to find any model that contains the core identifier
+    for key, value in MODEL_NAME_MAPPINGS.items():
+        if core_identifier in key:
+            return value
+
+    # Fallback to original model number if no match found
+    return model_str
+
 def time_series(df: pd.DataFrame, date_column: str) -> list:
     """
     Return daily counts sorted by date.
@@ -171,6 +263,11 @@ if __name__ == "__main__":
 
         kpis = compute_kpis(df)
         top_models = group_by_column(df, 'Model No.')
+        
+        # Apply server-side model name mapping to top_models
+        for model_entry in top_models:
+            model_entry['friendly_name'] = map_model_name(model_entry['label'])
+        
         categories = group_by_column(df, 'Module')
         # Include time_series if 'Date' column exists
         time_data = time_series(df, 'Date') if 'Date' in df.columns else []

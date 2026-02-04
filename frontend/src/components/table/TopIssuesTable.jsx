@@ -1,4 +1,5 @@
 import Card from "../common/Card";
+import { getModelName } from "../../utils/formatters";
 
 export default function TopIssuesTable({ data }) {
   return (
@@ -16,7 +17,7 @@ export default function TopIssuesTable({ data }) {
             {data.slice(0, 10).map((row, i) => (
               <tr key={i}>
                 <td className="p-2 text-slate-900 dark:text-slate-100">{row.source}</td>
-                <td className="p-2 text-slate-900 dark:text-slate-100">{row.model}</td>
+                <td className="p-2 text-slate-900 dark:text-slate-100">{getModelName(row.model)}</td>
                 <td className="p-2 text-right text-slate-900 dark:text-slate-100">{row.issue_count}</td>
               </tr>
             ))}
