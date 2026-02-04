@@ -298,10 +298,10 @@ async function loadDashboardData() {
     const analyticsResponse = await fetch('/api/analytics/employee_ut');
     const analyticsData = await analyticsResponse.json();
 
-    // Extract UT Portal specific data
+    // Extract Employee UT specific data
     dashboardData.kpis = jsonData.kpis['EMPLOYEE UT'];
-    dashboardData.topModels = jsonData.ut_portal_top_models;
-    dashboardData.topModules = jsonData.ut_portal_top_modules;
+    dashboardData.topModels = jsonData.employee_ut_top_models;
+    dashboardData.topModules = jsonData.employee_ut_top_modules;
     dashboardData.analytics = analyticsData;
 
     // Use corrected counts from central dashboard (fixed aggregation) instead of local analytics.json

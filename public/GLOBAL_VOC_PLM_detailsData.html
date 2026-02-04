@@ -371,7 +371,7 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/W Ver.</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Module</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Summarized Problem</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ai Summary</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" id="severity-header">Severity</th>
                                     </tr>
                                 </thead>
@@ -468,7 +468,7 @@
 
         async function loadData() {
             try {
-                const response = await fetch('/api/dashboard?category=samsung_members_plm');
+                const response = await fetch('/api/dashboard?category=global_voc_plm');
                 const data = await response.json();
 
                 if (data.success === false) {
@@ -1148,7 +1148,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['S/W Ver.'] || row.sWVer || 'N/A'}</td>
                     <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${row.title || row.Title || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['Sub-Module'] || row.subModule || 'N/A'}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${row['Summarized Problem'] || row.summarizedProblem || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${row['Ai Summary'] || row.summarizedProblem || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${severityClass}">
                             ${row.Severity || row.severity || 'Low'}

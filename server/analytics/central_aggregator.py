@@ -128,6 +128,17 @@ def compute_central_kpis(data: dict) -> dict:
                     "Close" if x.startswith("Close") else
                     "Open" if x.startswith("Open") else x
                 )
+            
+            # For Employee UT data, also check the "Resolve" column for status information
+            if folder == 'employee_ut' and "Resolve" in combined.columns:
+                # Map Resolve column values to status categories
+                resolve_mapping = {
+                    'Close': 'Close',
+                    'Resolve': 'Resolve', 
+                    'Not Resolve': 'Open',
+                    'Reviewed': 'Open'  # Treat Reviewed as Open since it's not resolved/closed
+                }
+                combined["Progr.Stat."] = combined["Resolve"].map(resolve_mapping).fillna(combined["Progr.Stat."])
 
             total = len(combined)
 

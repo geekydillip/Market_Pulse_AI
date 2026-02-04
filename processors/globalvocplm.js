@@ -187,47 +187,6 @@ module.exports = {
     return freq.toString().trim().toLowerCase();
   },
 
-  /**
-   * Apply priority-based severity rules to override AI-determined severity
-   * Rules:
-   * - Priority A + Frequency Always → High
-   * - Priority B + Frequency Often/Always → Medium  
-   * - Priority C → Low (regardless of frequency)
-   * 
-   * This function blends AI-generated natural language with business rules
-   * to create user-friendly severity reasons.
-   */
-  applyPriorityRules(aiRow, originalRow) {
-    const row = { ...aiRow }; // Create a copy to avoid mutating original
-    const priority = (originalRow['Priority'] || '').toString().trim();
-    const frequency = this.normalizeFrequency(originalRow['Occurr. Freq.']);
-    
-    // Only apply rules if we have both priority and frequency data
-    if (priority && frequency) {
-      let newSeverity = null;
-      let finalReason = row['Severity Reason'] || '';
-
-      // Apply priority rules with natural language blending
-      if (priority === 'A' && frequency === 'Always') {
-        newSeverity = 'High';
-        finalReason = `${finalReason} Based on its Priority A classification and continuous occurrence, this issue is treated as High severity.`;
-      } else if (priority === 'B' && (frequency === 'Sometimes' || frequency === 'Always'|| frequency === 'Once')) {
-        newSeverity = 'Medium';
-        finalReason = `${finalReason} Given its Priority B classification and frequent occurrence, this issue is considered Medium severity.`;
-      } else if (priority === 'C') {
-        newSeverity = 'Low';
-        finalReason = `${finalReason} As a Priority C issue, it is classified as Low severity due to its limited impact.`;
-      }
-
-      // Override AI severity if priority rules apply
-      if (newSeverity) {
-        row['Severity'] = newSeverity;
-        row['Severity Reason'] = finalReason;
-      }
-    }
-    
-    return row;
-  },
 
   formatResponse(aiResult, originalRows) {
     let aiRows;
@@ -293,8 +252,7 @@ module.exports = {
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
       
-      // Apply priority rules to override AI severity if applicable
-      return this.applyPriorityRules(baseRow, original);
+      return baseRow;
     });
 
     return mergedRows;
