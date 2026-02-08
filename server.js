@@ -815,8 +815,8 @@ async function processExcel(req, res) {
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
 
-    // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 1;
+    // Get chunk size from request or default to 5
+    const chunkSize = parseInt(req.body.chunkSize) || 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
     logger.log('=== Chunking Configuration ===');
