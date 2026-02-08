@@ -602,6 +602,80 @@ app.post('/api/cancel/:sessionId', (req, res) => {
   }
 });
 
+// LogManager class for structured logging with file persistence
+class LogManager {
+  constructor(sessionId, filename, processorType) {
+    this.sessionId = sessionId;
+    this.filename = filename;
+    this.processorType = processorType;
+    this.startTime = new Date();
+
+    // Create log directory if it doesn't exist
+    const logDir = './logs';
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+
+    // Generate log filename
+    const timestamp = this.startTime.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    this.logPath = path.join(logDir, `${filename}_${timestamp}_${processorType}.log`);
+    this.logStream = null;
+  }
+
+  init() {
+    try {
+      // Create write stream
+      this.logStream = fs.createWriteStream(this.logPath, { flags: 'a' });
+
+      // Write metadata header
+      this.writeToFile('='.repeat(80));
+      this.writeToFile('MarketPulse AI - Processing Log');
+      this.writeToFile('='.repeat(80));
+      this.writeToFile(`Session ID: ${this.sessionId}`);
+      this.writeToFile(`Original File: ${this.filename}`);
+      this.writeToFile(`Processor: ${this.processorType}`);
+      this.writeToFile(`Started: ${this.startTime.toISOString()}`);
+      this.writeToFile('='.repeat(80));
+      this.writeToFile('');
+    } catch (error) {
+      console.error('Failed to initialize log file:', error);
+    }
+  }
+
+  writeToFile(message) {
+    if (this.logStream) {
+      this.logStream.write(message + '\n');
+    }
+  }
+
+  log(message) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}`;
+
+    // Write to console
+    console.log(message);
+
+    // Write to file
+    this.writeToFile(logMessage);
+  }
+
+  close() {
+    if (this.logStream) {
+      const endTime = new Date();
+      const duration = ((endTime - this.startTime) / 1000).toFixed(2);
+
+      this.writeToFile('');
+      this.writeToFile('='.repeat(80));
+      this.writeToFile(`Completed: ${endTime.toISOString()}`);
+      this.writeToFile(`Total Duration: ${duration} seconds`);
+      this.writeToFile('='.repeat(80));
+
+      this.logStream.end();
+      this.logStream = null;
+    }
+  }
+}
+
 // Excel processing with chunking
 async function processExcel(req, res) {
   try {
@@ -636,6 +710,15 @@ async function processExcel(req, res) {
       activeRequests: new Set()
     });
 
+    // Initialize logger
+    const logger = new LogManager(sessionId, fileNameBase, processingType);
+    logger.init();
+    logger.log('=== Processing Started ===');
+    logger.log(`File: ${originalName}`);
+    logger.log(`Processor: ${processingType}`);
+    logger.log(`AI Model: ${model}`);
+    logger.log('');
+
     // Detect file type and read accordingly
     const ext = path.extname(originalName).toLowerCase();
     let rows;
@@ -647,20 +730,66 @@ async function processExcel(req, res) {
 
     if (ext === '.csv') {
       // CSV file - convert to JSON first
+      logger.log('Converting CSV to JSON...');
+      const conversionStart = Date.now();
+
       try {
         const csvData = convertCSVToJSON(uploadedPath);
         rows = csvData.rows;
         headers = csvData.headers;
-        console.log(`CSV file parsed: ${rows.length} rows, headers: ${headers.join(', ')}`);
+
+        const conversionDuration = Date.now() - conversionStart;
+
+        logger.log('✅ CSV Conversion Success!');
+        logger.log(`  - Rows: ${rows.length}`);
+        logger.log(`  - Columns: ${headers.length}`);
+        logger.log(`  - Headers: [${headers.join(', ')}]`);
+        logger.log(`  - Duration: ${conversionDuration}ms`);
+
+        if (rows.length > 0) {
+          logger.log(`  - Sample data (first ${Math.min(2, rows.length)} rows):`);
+          rows.slice(0, 2).forEach((row, i) => {
+            const rowPreview = JSON.stringify(row).substring(0, 100);
+            logger.log(`    Row ${i + 1}: ${rowPreview}${JSON.stringify(row).length > 100 ? '...' : ''}`);
+          });
+        }
+
+        // Explicit conversion completion message
+        logger.log(`${originalName} converted into JSON format completed.`);
+        logger.log('');
       } catch (csvError) {
         if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
         return res.status(400).json({ error: 'Failed to parse CSV: ' + csvError.message });
       }
     } else {
       // Excel file - use processor-specific logic
+      logger.log('Reading Excel file...');
+      const conversionStart = Date.now();
+
       // Use processor's readAndNormalizeExcel if available, else fallback to UTportal
       const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/UTportal').readAndNormalizeExcel;
       rows = readAndNormalizeExcel(uploadedPath) || [];
+
+      const conversionDuration = Date.now() - conversionStart;
+      headers = processor.expectedHeaders || ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem'];
+
+      logger.log('✅ Excel Conversion Success!');
+      logger.log(`  - Rows: ${rows.length}`);
+      logger.log(`  - Columns: ${headers.length}`);
+      logger.log(`  - Headers: [${headers.join(', ')}]`);
+      logger.log(`  - Duration: ${conversionDuration}ms`);
+
+      if (rows.length > 0) {
+        logger.log(`  - Sample data (first ${Math.min(2, rows.length)} rows):`);
+        rows.slice(0, 2).forEach((row, i) => {
+          const rowPreview = JSON.stringify(row).substring(0, 100);
+          logger.log(`    Row ${i + 1}: ${rowPreview}${JSON.stringify(row).length > 100 ? '...' : ''}`);
+        });
+      }
+
+      // Explicit conversion completion message
+      logger.log(`${originalName} converted into JSON format completed.`);
+      logger.log('');
 
       // Sanity check: verify we have meaningful rows with relevant data based on processor type
       let meaningful;
@@ -689,6 +818,14 @@ async function processExcel(req, res) {
     // 50 row chunking for balanced performance and accuracy
     const chunkSize = 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
+
+    logger.log('=== Chunking Configuration ===');
+    logger.log(`  - Total Rows: ${ROWSCOUNT}`);
+    logger.log(`  - Chunk Size: ${chunkSize} row(s) per chunk`);
+    logger.log(`  - Total Chunks: ${numberOfChunks}`);
+    logger.log(`  - Parallel Limit: 4 concurrent chunks`);
+    logger.log('Starting AI processing...');
+    logger.log('');
 
     // Initialize monotonically increasing completion counter
     let completedChunks = 0;
@@ -728,6 +865,10 @@ async function processExcel(req, res) {
         // Increment counter and send monotonically increasing progress
         completedChunks++;
         const percent = Math.round((completedChunks / numberOfChunks) * 100);
+
+        // Log chunk completion
+        logger.log(`Chunk ${completedChunks}/${numberOfChunks} completed (${percent}%)`);
+
         const message = percent < 90
           ? `Processing Dataâ€¦ ${percent}% complete`
           : `Finalizing outputâ€¦ ${percent}% complete`;
@@ -926,6 +1067,14 @@ async function processExcel(req, res) {
     precomputeAnalytics(processingType, processedPath).catch(err =>
       console.warn('Analytics precomputation failed:', err.message)
     );
+
+    // Log completion summary
+    logger.log('');
+    logger.log('=== Processing Completed ===');
+    logger.log(`Total chunks processed: ${numberOfChunks}`);
+    logger.log(`Output file: ${processedExcelFilename}`);
+    logger.log(`Total processing time: ${((Date.now() - tStart) / 1000).toFixed(2)} seconds`);
+    logger.close();
 
     res.json({
       success: true,
