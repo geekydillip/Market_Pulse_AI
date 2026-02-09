@@ -3,6 +3,7 @@ import os
 import json
 import math
 from pathlib import Path
+from datetime import date, datetime
 
 # Load model name mappings
 def load_model_name_mappings():
@@ -21,10 +22,12 @@ MODEL_NAME_MAPPINGS = load_model_name_mappings()
 
 def sanitize_nan(obj):
     """
-    Recursively replace NaN values with None for JSON serialization
+    Recursively replace NaN values with None and convert dates to strings for JSON serialization
     """
     if isinstance(obj, float) and math.isnan(obj):
         return None
+    elif isinstance(obj, (date, datetime)):
+        return obj.isoformat()
     elif isinstance(obj, dict):
         return {k: sanitize_nan(v) for k, v in obj.items()}
     elif isinstance(obj, list):

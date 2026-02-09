@@ -34,10 +34,20 @@ function normalizeHeaders(rows) {
     // Sub Type
     'sub type': 'Sub Type',
     'sub_type': 'Sub Type',
+    // Questioned Date
+    'questioned_date': 'Date',
+    'questioned date': 'Date',
+    'date': 'Date',
+    // Status
+    'status': 'Status',
+    // Platform
+    'platform': 'S/W Ver.',
+    's/w ver.': 'S/W Ver.',
+    's/w_ver.': 'S/W Ver.',
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['No','Model No.','OS','CSC','Category','Application Name','Application Type','content','Main Type','Sub Type','Module','Sub-Module','AI Insight'];
+  const canonicalCols = ['No', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'AI Insight'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -71,6 +81,14 @@ function normalizeHeaders(rows) {
       if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
       out[tgt] = (found !== undefined && found !== null) ? found : '';
     }
+
+    // Transform Platform/S/W Ver. column
+    if (out['S/W Ver.']) {
+      // Platform column has data like TP1A.220624.014.E236BXXS5CWL1 or BP2A.250605.031.A3.S938BXXU5BYI3
+      // Keep only the last 13 characters
+      const val = String(out['S/W Ver.']).trim();
+      out['S/W Ver.'] = val.slice(-13);
+    }
     return out;
   });
 
@@ -87,7 +105,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['model_no','os','csc','category','application_name','content','main_type','sub_type','3rd party/native','model no.','application name','main type','sub type']; // input headers (lowercase checks)
+  const expectedHeaderKeywords = ['model_no', 'os', 'csc', 'category', 'application_name', 'content', 'main_type', 'sub_type', '3rd party/native', 'model no.', 'application name', 'main type', 'sub type']; // input headers (lowercase checks)
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -131,7 +149,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'samsungMembersVoc',
-  expectedHeaders: ['No', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
+  expectedHeaders: ['No', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -155,6 +173,7 @@ module.exports = {
           .replace(/\n+/g, ' ') // Replace multiple newlines with space
           .trim();
       }
+
       return cleanedRow;
     });
 
@@ -249,6 +268,9 @@ module.exports = {
 
       return {
         'No': original['No'] || original['S/N'] || '',  // Preserve original No column data
+        'Date': original['Date'] || '',
+        'Status': original['Status'] || '',
+        'S/W Ver.': original['S/W Ver.'] || '',
         'Model No.': original['Model No.'] || '',
         'OS': original['OS'] || '',
         'CSC': original['CSC'] || '',
@@ -274,7 +296,7 @@ module.exports = {
     return finalHeaders.map((h, idx) => {
       if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
       if (h === 'Application Name') return { wch: 25 };
-      if (['No', 'Model No.', 'OS', 'CSC'].includes(h)) return { wch: 15 };
+      if (['No', 'Model No.', 'OS', 'CSC', 'Date', 'Status', 'S/W Ver.'].includes(h)) return { wch: 15 };
       if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type'].includes(h)) return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
