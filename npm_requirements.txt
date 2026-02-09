@@ -1,0 +1,36 @@
+# Node.js Dependencies for Market Pulse AI
+
+To set up the project on a fresh system, installation of the following packages is required.
+
+## Backend (Root Directory)
+Run `npm install` in the project root to install these:
+
+- cors
+- echarts
+- echarts-for-react
+- exceljs
+- express
+- multer
+- xlsx
+- xlsx-js-style
+
+## Frontend (frontend/ Directory)
+Run `npm install` in the `frontend/` directory to install these:
+
+### Core Dependencies
+- next
+- react
+- react-dom
+- echarts
+- echarts-for-react
+
+### Development & content/CSS Dependencies
+- typescript
+- @types/node
+- @types/react
+- @types/react-dom
+- autoprefixer
+- eslint
+- eslint-config-next
+- postcss
+- tailwindcss
