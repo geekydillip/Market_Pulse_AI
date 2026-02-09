@@ -99,11 +99,11 @@ Each dashboard provides:
 
 1. **Navigate to Upload Tab**: Select files with drag-and-drop or browse (.xls, .xlsx, .json, .csv)
 2. **Choose Processing Type**:
-   - **UT Portal** (`employee_ut`): Analysis for UT Portal data (Employee UT)
-   - **Samsung Members VOC** (`samsung_members_voc`): Analysis for Samsung Members VOC data
-   - **Global VOC PLM** (`global_voc_plm`): Analysis for Global VOC PLM data
-   - **Beta UT** (`beta_ut`): Analysis for Beta UT data
-   - **Clean**: Generic data cleaning without AI processing
+   - Beta User Issues for beta tester feedback analysis
+   - Samsung Members PLM for Samsung member PLM data
+   - Samsung Members VOC for Samsung member VOC data
+   - PLM Issues for Product Lifecycle Management
+   - Clean for deterministic data cleansing without AI
 3. **Select AI Model**: Choose from available Ollama models (defaults to qwen3:4b-instruct)
 4. **Process File**: Click "Process with AI" and monitor real-time progress
 5. **Download Results**: Automatically download processed files and processing logs
@@ -301,43 +301,6 @@ Each dashboard provides:
 
 **Description**: Exports current visualization data as CSV file.
 
-### `/api/samsung-members-plm` - Samsung Members PLM Summary
-
-**Method**: `GET`
-
-**Description**: Returns a dynamically generated Excel-like summary table for Samsung Members PLM data, including PLM status counts, series counts, and module counts.
-
-### `/api/central/*` - Centralized Dashboard APIs
-
-**Method**: `GET`
-
-**Description**: Suite of endpoints returning aggregated data for the main dashboard.
-- `/api/central/kpis`: Key Performance Indicators (Total, High, Medium, Low)
-- `/api/central/top-modules`: Top modules list
-- `/api/central/series-distribution`: Series distribution data
-- `/api/central/top-models`: Top models list
-- `/api/central/high-issues`: List of top high severity issues
-- `/api/central/model-module-matrix`: Matrix of models vs modules
-- `/api/central/source-model-summary`: Summary by source and model
-
-### `/api/analytics/:module` - Module Analytics
-
-**Method**: `GET`
-
-**Description**: Returns pre-aggregated analytics for a specific module (e.g., `employee_ut`, `beta_ut`).
-
-### `/api/download-excel` - Excel Download
-
-**Method**: `POST`
-
-**Parameters**:
-- `data`: Array (required) - Data to export
-- `exportType`: string (required) - One of: `modules`, `total`, `high`, `video`
-- `filename`: string (optional) - Output filename
-
-**Description**: Generates and downloads an Excel file based on the provided data and export type.
-
-
 ### How to Use Table Features
 
 #### Pagination
@@ -458,14 +421,14 @@ Market Pulse AI/
 │   └── tsconfig.json                  # TypeScript configuration
 ├── processors/                        # Modular processing pipeline
 │   ├── _helpers.js                    # Shared utility functions
-│   ├── EmployeeUT.js                  # Employee UT processor
-│   ├── betaUT.js                      # Beta UT processor
-│   ├── globalvocplm.js                # Global VOC PLM processor
+│   ├── betaIssues.js                  # Beta User Issues processor
+│   ├── plmIssues.js                   # PLM Issues processor
+│   ├── samsungMembersPlm.js           # Samsung Members PLM processor
 │   └── samsungMembersVoc.js           # Samsung Members VOC processor
 ├── prompts/                           # AI prompt templates
-│   ├── EmployeeUTPrompt.js            # Employee UT prompt
-│   ├── betaUT.js                      # Beta UT prompt
-│   ├── globalvocplm.js                # Global VOC PLM prompt
+│   ├── betaIssuesPrompt.js            # Beta User Issues prompt
+│   ├── plmIssuesPrompt.js             # PLM Issues prompt
+│   ├── samsungMembersPlmPrompt.js     # Samsung Members PLM prompt
 │   └── samsungMembers_voc.js          # Samsung Members VOC prompt
 ├── public/                            # Static frontend files
 │   ├── main.html                      # Main dashboard with advanced analytics

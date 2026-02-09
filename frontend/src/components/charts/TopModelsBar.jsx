@@ -1,14 +1,13 @@
 import ReactECharts from "echarts-for-react";
 import Card from "../common/Card";
 import { useTheme } from "../../hooks/useTheme";
-import { getModelName } from "../../utils/formatters";
 
 export default function TopModelsBar({ data }) {
   const theme = useTheme();
 
   // Sort data by value descending
   const sortedData = [...data].sort((a, b) => b.value - a.value);
-  const labels = sortedData.map(d => getModelName(d.label));
+  const labels = sortedData.map(d => d.label);
   const values = sortedData.map(d => d.value);
 
   const option = {
