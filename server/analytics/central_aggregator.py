@@ -243,7 +243,7 @@ def compute_high_issues(data: dict) -> list:
     Apply severity filtering to exclude Critical issues as per requirements.
     """
     processor_map = {
-        'ut_portal': 'UT',
+        'employee_ut': 'UT',
         'global_voc_plm': 'PLM',
         'beta_ut': 'Beta'
     }
@@ -355,7 +355,7 @@ def compute_source_model_summary(data: dict) -> list:
     Filter out Critical severity issues as per requirements.
     """
     source_map = {
-        'ut_portal': 'UT Portal',
+        'employee_ut': 'EMPLOYEE UT',
         'global_voc_plm': 'Global VOC PLM',
         'beta_ut': 'Beta UT'
     }
@@ -501,7 +501,7 @@ if __name__ == "__main__":
 
         # Get filtered top models for each source (excluding Samsung Members VOC)
         filtered_top_models = {}
-        for folder_name in ['ut_portal', 'global_voc_plm', 'beta_ut']:
+        for folder_name in ['employee_ut', 'global_voc_plm', 'beta_ut']:
             filtered_top_models[folder_name] = compute_top_models_by_source(data, folder_name)
 
         # Compute total issues and high issues counts
