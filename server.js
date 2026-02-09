@@ -1,5 +1,4 @@
-
-/*
+﻿/*
   Minimal Express init. Ensure this block appears BEFORE any app.get/app.post calls.
 */
 const path = require('path');
@@ -17,12 +16,10 @@ const DEFAULT_AI_MODEL = 'qwen3:4b-instruct';
 
 // Security constants
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
-const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.json', '.csv'];
+const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.csv'];
 const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel',
-  'application/json',
-  'text/json',
   'text/csv',
   'application/csv',
   'text/plain'
@@ -71,9 +68,9 @@ function sanitizeInput(input) {
   if (typeof input !== 'string') return input;
   // Remove any potential script tags and dangerous characters
   return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-              .replace(/javascript:/gi, '')
-              .replace(/on\w+\s*=/gi, '')
-              .trim();
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .trim();
 }
 
 app.use(cors());
@@ -134,10 +131,10 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Mapping of frontend processingType to processor filenames
 const processorMap = {
-  'beta_user_issues': 'betaIssues',
-  'samsung_members_plm': 'samsungMembersPlm',
-  'plm_issues': 'plmIssues',
-  'samsung_members_voc': 'samsungMembersVoc'
+  'employee_ut': 'EmployeeUT',
+  'samsung_members_voc': 'samsungMembersVoc',
+  'global_voc_plm': 'globalvocplm',
+  'beta_ut': 'betaUT'
 };
 
 // Cache for identical prompts
@@ -184,12 +181,11 @@ async function callOllamaCached(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
  * callOllama - robust HTTP call to local Ollama server with cancellation support
  * prompt: string or object
  * model: string (e.g. "qwen3:4b-instruct")
- * opts: { port:number, timeoutMs:number, stream:boolean, sessionId:string }
+ * opts: { port:number, timeoutMs:number, sessionId:string }
  */
 async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
-  const useStream = opts.stream === true;
   const sessionId = opts.sessionId;
 
   const callStart = Date.now();
@@ -211,12 +207,22 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
       }
 
       const payload = typeof prompt === 'string'
-        ? { model, prompt, stream: useStream }
-        : { model, prompt, stream: useStream };
+        ? {
+          model,
+          prompt,
+          stream: false,
+          options: { temperature: 0.1 }
+        }
+        : {
+          model,
+          prompt,
+          stream: false,
+          options: { temperature: 0.1 }
+        };
       const data = JSON.stringify(payload);
 
-      console.log('[callOllama] port=%d model=%s byteLen=%d stream=%s session=%s',
-        port, model, Buffer.byteLength(data), useStream, sessionId);
+      console.log('[callOllama] port=%d model=%s byteLen=%d session=%s',
+        port, model, Buffer.byteLength(data), sessionId);
 
       const options = {
         hostname: '127.0.0.1',
@@ -235,81 +241,20 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
       const req = http.request(options, (res) => {
         res.setEncoding('utf8');
 
-        // If not streaming, accumulate as before and parse once
-        if (!useStream) {
-          let raw = '';
-          res.on('data', (chunk) => raw += chunk);
-          res.on('end', () => {
-            if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
-            try {
-              const json = JSON.parse(raw);
-              const out = json.response ?? json; // prefer response field if present
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(out);
-            } catch (err) {
-              return reject(new Error('Failed to parse Ollama response: ' + err.message + ' raw:' + raw.slice(0,2000)));
-            }
-          });
-          return;
-        }
-
-        // STREAMING: attempt to parse line-delimited JSON or accumulate response fields
-        let buffer = '';
-        let lastResponsePart = '';
-        res.on('data', (chunk) => {
-          buffer += chunk;
-
-          // Try to split by newline and parse per-line JSON when possible
-          const lines = buffer.split(/\r?\n/);
-          // keep incomplete last line in buffer
-          buffer = lines.pop();
-
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              // some stream endpoints emit raw JSON objects per line
-              const obj = JSON.parse(line);
-              // If model sends a "response" field per event, prefer the last one
-              if (obj && (obj.response || obj.text || obj.output)) {
-                lastResponsePart = (obj.response ?? obj.text ?? obj.output);
-              } else if (typeof obj === 'string') {
-                lastResponsePart = obj;
-              } else {
-                // fallback: stringify object
-                lastResponsePart = JSON.stringify(obj);
-              }
-            } catch (e) {
-              // not JSON — append as raw text
-              lastResponsePart += line;
-            }
-          }
-        });
-
+        // Simplified response handling - no streaming logic
+        let raw = '';
+        res.on('data', (chunk) => raw += chunk);
         res.on('end', () => {
-          // Use lastResponsePart if found, otherwise try to parse remaining buffer
-          if (lastResponsePart) {
+          if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
+          try {
+            const json = JSON.parse(raw);
+            const out = json.response ?? json; // prefer response field if present
             aiRequestTimes.push(Date.now() - callStart);
             aiRequestCount++;
-            return resolve(lastResponsePart);
+            return resolve(out);
+          } catch (err) {
+            return reject(new Error('Failed to parse Ollama response: ' + err.message + ' raw:' + raw.slice(0, 2000)));
           }
-
-          // try parse buffer as JSON
-          if (buffer && buffer.trim()) {
-            try {
-              const json = JSON.parse(buffer);
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(json.response ?? json);
-            } catch (err) {
-              // last-resort: return buffer as text
-              aiRequestTimes.push(Date.now() - callStart);
-              aiRequestCount++;
-              return resolve(buffer);
-            }
-          }
-
-          reject(new Error(`Empty stream end from Ollama (status ${res.statusCode})`));
         });
       });
 
@@ -354,28 +299,22 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
 app.post('/api/process', upload.single('file'), validateFileUpload, async (req, res) => {
   try {
     // Sanitize input parameters to prevent injection
-    const processingType = sanitizeInput(req.body.processingType || 'beta_user_issues');
+    const processingType = sanitizeInput(req.body.processingType || 'ut_portal');
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['beta_user_issues', 'clean', 'samsung_members_plm', 'samsung_members_voc', 'plm_issues']; // Supported processing types
+    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut']; // Supported processing types for Excel files
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type.' });
+      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "employee_ut", "global_voc_plm", "beta_ut", "samsung_members_voc", or "clean".' });
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();
 
-    if (ext === '.xlsx' || ext === '.xls') {
-      // Excel files - process with chunking
+    if (ext === '.xlsx' || ext === '.xls' || ext === '.csv') {
+      // Excel and CSV files - both convert to JSON internally and output Excel
       return processExcel(req, res);
-    } else if (ext === '.json') {
-      // JSON files - parse and process like Excel rows
-      return processJSON(req, res);
-    } else if (ext === '.csv') {
-      // CSV files - parse and process like JSON rows
-      return processCSV(req, res);
     } else {
-      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls), JSON (.json), and CSV (.csv) files are supported' });
+      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls) and CSV (.csv) files are supported' });
     }
 
   } catch (error) {
@@ -485,8 +424,8 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
     // Build prompt
     const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
 
-    // Call AI (cached) - default to stream: false
-    const result = await callOllamaCached(prompt, model, { timeoutMs: false, stream: false, sessionId });
+    // Call AI (cached)
+    const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId });
 
     // Format response
     try {
@@ -531,471 +470,6 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
     };
   }
 }
-
-// CSV processing - parse and process like JSON rows
-async function processCSV(req, res) {
-  try {
-    const uploadedPath = req.file.path;
-    const originalName = req.file.originalname;
-    const fileNameBase = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-
-    const modelRaw = (req.body.model || '').toString();
-    const sanitizedModel = modelRaw.replace(/[^a-zA-Z0-9]/g, '_');
-    const processedCSVFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.csv`;
-    const logFilename = `${fileNameBase}_log.json`;
-
-    // Read and parse CSV file
-    const fileContent = fs.readFileSync(uploadedPath, 'utf-8');
-    let rows;
-    try {
-      // Simple CSV parser - split by lines and commas
-      const lines = fileContent.trim().split('\n');
-      if (lines.length < 2) {
-        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-        return res.status(400).json({ error: 'CSV file must contain at least a header row and one data row' });
-      }
-
-      // Parse header row
-      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-
-      // Parse data rows
-      rows = lines.slice(1).map((line, index) => {
-        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-        if (values.length !== headers.length) {
-          console.warn(`Row ${index + 2}: Expected ${headers.length} columns, got ${values.length}`);
-        }
-        const row = {};
-        headers.forEach((header, i) => {
-          row[header] = values[i] || '';
-        });
-        return row;
-      });
-
-      if (rows.length === 0) {
-        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-        return res.status(400).json({ error: 'CSV file must contain at least one data row' });
-      }
-    } catch (parseError) {
-      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-      return res.status(400).json({ error: 'Invalid CSV format: ' + parseError.message });
-    }
-
-    const tStart = Date.now();
-    const headers = Object.keys(rows[0] || {});
-
-    // Use Beta user issues processing type for CSV (since only structured data should be in CSV)
-    const processingType = req.body.processingType || 'beta_user_issues';
-    const model = req.body.model || 'qwen3:4b-instruct';
-    const sessionId = req.body.sessionId || 'default';
-
-    // Initialize session tracking for cancellation
-    activeSessions.set(sessionId, {
-      cancelled: false,
-      startTime: Date.now(),
-      abortController: new AbortController(),
-      activeRequests: new Set()
-    });
-
-    // Unified chunked processing (works for all types: clean, voc, custom)
-    const numberOfInputRows = rows.length;
-    const ROWSCOUNT = rows.length || 0;
-
-    // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 50;
-    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
-
-    // Initialize monotonically increasing completion counter
-    let completedChunks = 0;
-
-    // Send initial progress for CSV
-    sendProgress(sessionId, {
-      type: 'progress',
-      percent: 0,
-      message: 'Preparing data...',
-      chunksCompleted: 0,
-      totalChunks: numberOfChunks
-    });
-
-    // Build chunk tasks
-    const tasks = [];
-    for (let i = 0; i < numberOfChunks; i++) {
-      const startIdx = i * chunkSize;
-      const endIdx = Math.min(startIdx + chunkSize, rows.length);
-      const chunkRows = rows.slice(startIdx, endIdx);
-      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
-      tasks.push(async () => {
-        // Check for cancellation before processing
-        const session = activeSessions.get(sessionId);
-        if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
-          return { chunkId: i, status: 'cancelled', processedRows: [] };
-        }
-
-        const result = await processChunk(chunk, processingType, model, i, sessionId);
-
-        // Check for cancellation after processing
-        if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
-          return result; // Still return the result but mark as potentially cancelled
-        }
-
-        // Increment counter and send monotonically increasing progress
-        completedChunks++;
-        const percent = Math.round((completedChunks / numberOfChunks) * 100);
-        const message = percent < 90
-          ? `Processing Data… ${percent}% completed`
-          : `Finalizing output… ${percent}% completed`;
-        sendProgress(sessionId, {
-          type: 'progress',
-          percent,
-          message,
-          chunksCompleted: completedChunks,
-          totalChunks: numberOfChunks
-        });
-        return result;
-      });
-    }
-
-    // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4);
-
-    // Process results
-    const allProcessedRows = [];
-    const addedColumns = new Set();
-
-    chunkResults.forEach(result => {
-      if (!result) return;
-      if (result.status === 'ok' && Array.isArray(result.processedRows)) {
-        result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
-          allProcessedRows[originalIdx] = row;
-          Object.keys(row || {}).forEach(col => {
-            if (!headers.includes(col)) addedColumns.add(col);
-          });
-        });
-      } else if (Array.isArray(result.processedRows)) {
-        // include failed chunk rows (they may contain error fields)
-        result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
-          allProcessedRows[originalIdx] = row;
-          if (row && row.error) addedColumns.add('error');
-        });
-      }
-    });
-
-    // Filter out null entries if any (though shouldn't have)
-    const finalRows = allProcessedRows.filter(row => row != null);
-
-    // Create final headers: original + any added columns
-    const finalHeaders = [...headers];
-    addedColumns.forEach(col => {
-      if (!finalHeaders.includes(col)) finalHeaders.push(col);
-    });
-
-    // Convert back to CSV format
-    const csvLines = [];
-    // Add header row
-    csvLines.push(finalHeaders.map(h => `"${h}"`).join(','));
-    // Add data rows
-    finalRows.forEach(row => {
-      const csvRow = finalHeaders.map(header => {
-        const value = row[header] || '';
-        // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        const stringValue = String(value);
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-          return `"${stringValue.replace(/"/g, '""')}"`;
-        }
-        return stringValue;
-      });
-      csvLines.push(csvRow.join(','));
-    });
-    const csvContent = csvLines.join('\n');
-
-    // Generate log (defensive)
-    const failedRows = [];
-    (chunkResults || []).forEach(cr => {
-      (cr.processedRows || []).forEach((row, idx) => {
-        if (row && row.error) {
-          const originalIdx = (cr.chunkId * chunkSize) + idx;
-          failedRows.push({
-            row_index: originalIdx,
-            chunk_id: cr.chunkId,
-            error_reason: row.error
-          });
-        }
-      });
-    });
-
-    const log = {
-      total_processing_time_ms: Date.now() - tStart,
-      total_processing_time_seconds: ((Date.now() - tStart) / 1000).toFixed(3),
-      number_of_input_rows: numberOfInputRows,
-      number_of_chunks: numberOfChunks,
-      number_of_output_rows: finalRows.length,
-      failed_row_details: failedRows,
-      added_columns: Array.from(addedColumns),
-      chunks_processing_time: (chunkResults || []).map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
-    };
-
-    if (processingType === 'clean') {
-      log.assumptions = [
-        "Applied generic cleaning: trimmed whitespace, normalized dates to ISO YYYY-MM-DD, converted numeric-looking strings to numbers, kept empty cells as empty strings."
-      ];
-    }
-
-    // Save files
-    const dlDir = path.join(__dirname, 'downloads', processingType);
-    if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
-
-    const processedPath = path.join(dlDir, processedCSVFilename);
-    const logPath = path.join(dlDir, logFilename);
-
-    fs.writeFileSync(processedPath, csvContent);
-    fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
-
-    // Clean up uploaded file
-    try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
-
-    res.json({
-      success: true,
-      total_processing_time_ms: Date.now() - tStart,
-      processedRows: finalRows,
-      downloads: [
-        { url: `/downloads/${processingType}/${processedCSVFilename}`, filename: processedCSVFilename },
-        { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }
-      ]
-    });
-  } catch (error) {
-    console.error('CSV processing error:', error);
-    // Attempt to remove uploaded file on unexpected error
-    try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Processing failed'
-    });
-  }
-}
-
-// JSON processing - parse and process like Excel rows
-async function processJSON(req, res) {
-  try {
-    const uploadedPath = req.file.path;
-    const originalName = req.file.originalname;
-    const fileNameBase = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-
-    const modelRaw = (req.body.model || '').toString();
-    const sanitizedModel = modelRaw.replace(/[^a-zA-Z0-9]/g, '_');
-    const processedJSONFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.json`;
-    const logFilename = `${fileNameBase}_log.json`;
-
-    // Read and parse JSON file
-    const fileContent = fs.readFileSync(uploadedPath, 'utf-8');
-    let rows;
-    try {
-      rows = JSON.parse(fileContent);
-      if (!Array.isArray(rows)) {
-        // clean up uploaded file
-        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-        return res.status(400).json({ error: 'JSON file must contain an array of objects' });
-      }
-      if (rows.length === 0 || typeof rows[0] !== 'object') {
-        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-        return res.status(400).json({ error: 'JSON file must contain an array of non-empty objects' });
-      }
-    } catch (parseError) {
-      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-      return res.status(400).json({ error: 'Invalid JSON format: ' + parseError.message });
-    }
-
-    const tStart = Date.now();
-    const headers = Object.keys(rows[0] || {});
-
-    // Use Beta user issues processing type for JSON (since only structured data should be in JSON)
-    const processingType = req.body.processingType || 'beta_user_issues';
-    const model = req.body.model || 'qwen3:4b-instruct';
-    const sessionId = req.body.sessionId || 'default';
-
-    // Initialize session tracking for cancellation
-    activeSessions.set(sessionId, {
-      cancelled: false,
-      startTime: Date.now(),
-      abortController: new AbortController(),
-      activeRequests: new Set()
-    });
-
-    // Unified chunked processing (works for all types: clean, voc, custom)
-    const numberOfInputRows = rows.length;
-    const ROWSCOUNT = rows.length || 0;
-
-    // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 50;
-    const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
-
-    // Initialize monotonically increasing completion counter
-    let completedChunks = 0;
-
-    // Send initial progress for JSON
-    sendProgress(sessionId, {
-      type: 'progress',
-      percent: 0,
-      message: 'Preparing data...',
-      chunksCompleted: 0,
-      totalChunks: numberOfChunks
-    });
-
-    // Build chunk tasks
-    const tasks = [];
-    for (let i = 0; i < numberOfChunks; i++) {
-      const startIdx = i * chunkSize;
-      const endIdx = Math.min(startIdx + chunkSize, rows.length);
-      const chunkRows = rows.slice(startIdx, endIdx);
-      const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
-      tasks.push(async () => {
-        // Check for cancellation before processing
-        const session = activeSessions.get(sessionId);
-        if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
-          return { chunkId: i, status: 'cancelled', processedRows: [] };
-        }
-
-        const result = await processChunk(chunk, processingType, model, i, sessionId);
-
-        // Check for cancellation after processing
-        if (session && session.cancelled) {
-          console.log(`Session ${sessionId} cancelled after processing chunk ${i}`);
-          return result; // Still return the result but mark as potentially cancelled
-        }
-
-        // Increment counter and send monotonically increasing progress
-        completedChunks++;
-        const percent = Math.round((completedChunks / numberOfChunks) * 100);
-        const message = percent < 90
-          ? `Processing Data… ${percent}% complete`
-          : `Finalizing output… ${percent}% complete`;
-        sendProgress(sessionId, {
-          type: 'progress',
-          percent,
-          message,
-          chunksCompleted: completedChunks,
-          totalChunks: numberOfChunks
-        });
-        return result;
-      });
-    }
-
-    // Run with concurrency limit (4)
-    const chunkResults = await runTasksWithLimit(tasks, 4);
-
-    // Process results
-    const allProcessedRows = [];
-    const addedColumns = new Set();
-
-    chunkResults.forEach(result => {
-      if (!result) return;
-      if (result.status === 'ok' && Array.isArray(result.processedRows)) {
-        result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
-          allProcessedRows[originalIdx] = row;
-          Object.keys(row || {}).forEach(col => {
-            if (!headers.includes(col)) addedColumns.add(col);
-          });
-        });
-      } else if (Array.isArray(result.processedRows)) {
-        // include failed chunk rows (they may contain error fields)
-        result.processedRows.forEach((row, idx) => {
-          const originalIdx = (result.chunkId * chunkSize) + idx;
-          allProcessedRows[originalIdx] = row;
-          if (row && row.error) addedColumns.add('error');
-        });
-      }
-    });
-
-    // Filter out null entries if any (though shouldn't have)
-    const finalRows = allProcessedRows.filter(row => row != null);
-
-    // Generate log (defensive)
-    const failedRows = [];
-    (chunkResults || []).forEach(cr => {
-      (cr.processedRows || []).forEach((row, idx) => {
-        if (row && row.error) {
-          const originalIdx = (cr.chunkId * chunkSize) + idx;
-          failedRows.push({
-            row_index: originalIdx,
-            chunk_id: cr.chunkId,
-            error_reason: row.error
-          });
-        }
-      });
-    });
-
-    const log = {
-      total_processing_time_ms: Date.now() - tStart,
-      total_processing_time_seconds: ((Date.now() - tStart) / 1000).toFixed(3),
-      number_of_input_rows: numberOfInputRows,
-      number_of_chunks: numberOfChunks,
-      number_of_output_rows: finalRows.length,
-      failed_row_details: failedRows,
-      added_columns: Array.from(addedColumns),
-      chunks_processing_time: (chunkResults || []).map(cr => ({ chunk_id: cr.chunkId, time_ms: cr.processingTime }))
-    };
-
-    if (processingType === 'clean') {
-      log.assumptions = [
-        "Applied generic cleaning: trimmed whitespace, normalized dates to ISO YYYY-MM-DD, converted numeric-looking strings to numbers, kept empty cells as empty strings."
-      ];
-    }
-
-    // Save files
-    const dlDir = path.join(__dirname, 'downloads', processingType);
-    if (!fs.existsSync(dlDir)) fs.mkdirSync(dlDir, { recursive: true });
-
-    const processedPath = path.join(dlDir, processedJSONFilename);
-    const logPath = path.join(dlDir, logFilename);
-
-    fs.writeFileSync(processedPath, JSON.stringify(finalRows, null, 2));
-    fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
-
-    // Clean up uploaded file
-    try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
-
-    res.json({
-      success: true,
-      total_processing_time_ms: Date.now() - tStart,
-      processedRows: finalRows,
-      downloads: [
-        { url: `/downloads/${processingType}/${processedJSONFilename}`, filename: processedJSONFilename },
-        { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }
-      ]
-    });
-  } catch (error) {
-    console.error('JSON processing error:', error);
-    // Attempt to remove uploaded file on unexpected error
-    try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Processing failed'
-    });
-  }
-}
-
 
 // Progress SSE endpoint
 app.get('/api/progress/:sessionId', (req, res) => {
@@ -1052,16 +526,16 @@ async function precomputeAnalytics(module, processedPath) {
 
     pythonProcess.on('close', (code) => {
       if (code === 0) {
-        console.log(`✅ Analytics precomputed for ${module}`);
+        console.log(`âœ… Analytics precomputed for ${module}`);
 
         // Trigger central cache update after analytics are ready
         generateCentralCache().catch(err =>
-          console.warn('⚠️ Central cache generation failed:', err.message)
+          console.warn('âš ï¸ Central cache generation failed:', err.message)
         );
 
         resolve();
       } else {
-        console.warn(`⚠️ Analytics precomputation failed for ${module}:`, stderr);
+        console.warn(`âš ï¸ Analytics precomputation failed for ${module}:`, stderr);
         resolve(); // Don't fail the whole process
       }
     });
@@ -1087,10 +561,10 @@ async function generateCentralCache() {
 
     pythonProcess.on('close', (code) => {
       if (code === 0) {
-        console.log('✅ Central dashboard cache updated');
+        console.log('âœ… Central dashboard cache updated');
         resolve();
       } else {
-        console.warn('⚠️ Central cache generation failed:', stderr);
+        console.warn('âš ï¸ Central cache generation failed:', stderr);
         resolve(); // Don't fail the whole process
       }
     });
@@ -1128,6 +602,80 @@ app.post('/api/cancel/:sessionId', (req, res) => {
   }
 });
 
+// LogManager class for structured logging with file persistence
+class LogManager {
+  constructor(sessionId, filename, processorType) {
+    this.sessionId = sessionId;
+    this.filename = filename;
+    this.processorType = processorType;
+    this.startTime = new Date();
+
+    // Create log directory if it doesn't exist
+    const logDir = './logs';
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+
+    // Generate log filename
+    const timestamp = this.startTime.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    this.logPath = path.join(logDir, `${filename}_${timestamp}_${processorType}.log`);
+    this.logStream = null;
+  }
+
+  init() {
+    try {
+      // Create write stream
+      this.logStream = fs.createWriteStream(this.logPath, { flags: 'a' });
+
+      // Write metadata header
+      this.writeToFile('='.repeat(80));
+      this.writeToFile('MarketPulse AI - Processing Log');
+      this.writeToFile('='.repeat(80));
+      this.writeToFile(`Session ID: ${this.sessionId}`);
+      this.writeToFile(`Original File: ${this.filename}`);
+      this.writeToFile(`Processor: ${this.processorType}`);
+      this.writeToFile(`Started: ${this.startTime.toISOString()}`);
+      this.writeToFile('='.repeat(80));
+      this.writeToFile('');
+    } catch (error) {
+      console.error('Failed to initialize log file:', error);
+    }
+  }
+
+  writeToFile(message) {
+    if (this.logStream) {
+      this.logStream.write(message + '\n');
+    }
+  }
+
+  log(message) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}`;
+
+    // Write to console
+    console.log(message);
+
+    // Write to file
+    this.writeToFile(logMessage);
+  }
+
+  close() {
+    if (this.logStream) {
+      const endTime = new Date();
+      const duration = ((endTime - this.startTime) / 1000).toFixed(2);
+
+      this.writeToFile('');
+      this.writeToFile('='.repeat(80));
+      this.writeToFile(`Completed: ${endTime.toISOString()}`);
+      this.writeToFile(`Total Duration: ${duration} seconds`);
+      this.writeToFile('='.repeat(80));
+
+      this.logStream.end();
+      this.logStream = null;
+    }
+  }
+}
+
 // Excel processing with chunking
 async function processExcel(req, res) {
   try {
@@ -1146,9 +694,7 @@ async function processExcel(req, res) {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const dateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
 
-    const modelRaw = (req.body.model || '').toString();
-    const sanitizedModel = modelRaw.replace(/[^a-zA-Z0-9]/g, '_');
-    const processedExcelFilename = `${fileNameBase}_${sanitizedModel}_${dateTime}_Processed.xlsx`;
+    const processedExcelFilename = `${fileNameBase}_${dateTime}_Processed.xlsx`;
     const logFilename = `${fileNameBase}_log.json`;
 
     // Use the requested processing type for Excel
@@ -1164,38 +710,122 @@ async function processExcel(req, res) {
       activeRequests: new Set()
     });
 
-    // Load the dynamic processor for reading and processing
+    // Initialize logger
+    const logger = new LogManager(sessionId, fileNameBase, processingType);
+    logger.init();
+    logger.log('=== Processing Started ===');
+    logger.log(`File: ${originalName}`);
+    logger.log(`Processor: ${processingType}`);
+    logger.log(`AI Model: ${model}`);
+    logger.log('');
+
+    // Detect file type and read accordingly
+    const ext = path.extname(originalName).toLowerCase();
+    let rows;
+    let headers;
+
+    // Load processor for both Excel and CSV
     const processorName = processorMap[processingType];
     const processor = require('./processors/' + processorName);
 
-    // Use processor's readAndNormalizeExcel if available, else fallback to betaIssues
-    const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/betaIssues').readAndNormalizeExcel;
-    let rows = readAndNormalizeExcel(uploadedPath) || [];
+    if (ext === '.csv') {
+      // CSV file - convert to JSON first
+      logger.log('Converting CSV to JSON...');
+      const conversionStart = Date.now();
 
-    // Sanity check: verify we have meaningful rows with relevant data based on processor type
-    let meaningful;
-    if (processingType === 'samsung_members_voc') {
-      meaningful = rows.filter(r => String(r['content']||'').trim() !== '');
-      console.log(`Read ${rows.length} rows; ${meaningful.length} rows with content data.`);
+      try {
+        const csvData = convertCSVToJSON(uploadedPath);
+        rows = csvData.rows;
+        headers = csvData.headers;
+
+        const conversionDuration = Date.now() - conversionStart;
+
+        logger.log('✅ CSV Conversion Success!');
+        logger.log(`  - Rows: ${rows.length}`);
+        logger.log(`  - Columns: ${headers.length}`);
+        logger.log(`  - Headers: [${headers.join(', ')}]`);
+        logger.log(`  - Duration: ${conversionDuration}ms`);
+
+        if (rows.length > 0) {
+          logger.log(`  - Sample data (first ${Math.min(2, rows.length)} rows):`);
+          rows.slice(0, 2).forEach((row, i) => {
+            const rowPreview = JSON.stringify(row).substring(0, 100);
+            logger.log(`    Row ${i + 1}: ${rowPreview}${JSON.stringify(row).length > 100 ? '...' : ''}`);
+          });
+        }
+
+        // Explicit conversion completion message
+        logger.log(`${originalName} converted into JSON format completed.`);
+        logger.log('');
+      } catch (csvError) {
+        if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+        return res.status(400).json({ error: 'Failed to parse CSV: ' + csvError.message });
+      }
     } else {
-      // Default check for Title/Problem (beta_user_issues, etc.)
-      meaningful = rows.filter(r => String(r['Title']||'').trim() !== '' || String(r['Problem']||'').trim() !== '');
-      console.log(`Read ${rows.length} rows; ${meaningful.length} rows with Title/Problem data.`);
-    }
-    if (meaningful.length === 0) {
-      console.warn('No meaningful rows found - check header detection logic or the uploaded file.');
+      // Excel file - use processor-specific logic
+      logger.log('Reading Excel file...');
+      const conversionStart = Date.now();
+
+      // Use processor's readAndNormalizeExcel if available, else fallback to UTportal
+      const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/UTportal').readAndNormalizeExcel;
+      rows = readAndNormalizeExcel(uploadedPath) || [];
+
+      const conversionDuration = Date.now() - conversionStart;
+      headers = processor.expectedHeaders || ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem'];
+
+      logger.log('✅ Excel Conversion Success!');
+      logger.log(`  - Rows: ${rows.length}`);
+      logger.log(`  - Columns: ${headers.length}`);
+      logger.log(`  - Headers: [${headers.join(', ')}]`);
+      logger.log(`  - Duration: ${conversionDuration}ms`);
+
+      if (rows.length > 0) {
+        logger.log(`  - Sample data (first ${Math.min(2, rows.length)} rows):`);
+        rows.slice(0, 2).forEach((row, i) => {
+          const rowPreview = JSON.stringify(row).substring(0, 100);
+          logger.log(`    Row ${i + 1}: ${rowPreview}${JSON.stringify(row).length > 100 ? '...' : ''}`);
+        });
+      }
+
+      // Explicit conversion completion message
+      logger.log(`${originalName} converted into JSON format completed.`);
+      logger.log('');
+
+      // Sanity check: verify we have meaningful rows with relevant data based on processor type
+      let meaningful;
+      if (processingType === 'samsung_members_voc') {
+        meaningful = rows.filter(r => String(r['content'] || '').trim() !== '');
+        console.log(`Read ${rows.length} rows; ${meaningful.length} rows with content data.`);
+      } else {
+        // Default check for Title/Problem (beta_user_issues, etc.)
+        meaningful = rows.filter(r => String(r['Title'] || '').trim() !== '' || String(r['Problem'] || '').trim() !== '');
+        console.log(`Read ${rows.length} rows; ${meaningful.length} rows with Title/Problem data.`);
+      }
+      if (meaningful.length === 0) {
+        console.warn('No meaningful rows found - check header detection logic or the uploaded file.');
+      }
     }
 
-    // Set headers to the canonical columns (using processor's expectedHeaders if available)
-    const headers = processor.expectedHeaders || ['Case Code','Model No.','S/W Ver.','Title','Problem'];
+    // Set headers (use processor's expectedHeaders if available)
+    if (!headers || headers.length === 0) {
+      headers = processor.expectedHeaders || ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem'];
+    }
 
     // Unified chunked processing (works for all types: clean, voc, custom)
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
 
-    // 50 row chunking for balanced performance and accuracy
-    const chunkSize = 50;
+    // Get chunk size from request or default to 5
+    const chunkSize = parseInt(req.body.chunkSize) || 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
+
+    logger.log('=== Chunking Configuration ===');
+    logger.log(`  - Total Rows: ${ROWSCOUNT}`);
+    logger.log(`  - Chunk Size: ${chunkSize} row(s) per chunk`);
+    logger.log(`  - Total Chunks: ${numberOfChunks}`);
+    logger.log(`  - Parallel Limit: 4 concurrent chunks`);
+    logger.log('Starting AI processing...');
+    logger.log('');
 
     // Initialize monotonically increasing completion counter
     let completedChunks = 0;
@@ -1235,9 +865,13 @@ async function processExcel(req, res) {
         // Increment counter and send monotonically increasing progress
         completedChunks++;
         const percent = Math.round((completedChunks / numberOfChunks) * 100);
+
+        // Log chunk completion
+        logger.log(`Chunk ${completedChunks}/${numberOfChunks} completed (${percent}%)`);
+
         const message = percent < 90
-          ? `Processing Data… ${percent}% complete`
-          : `Finalizing output… ${percent}% complete`;
+          ? `Processing Dataâ€¦ ${percent}% complete`
+          : `Finalizing outputâ€¦ ${percent}% complete`;
         sendProgress(sessionId, {
           type: 'progress',
           percent,
@@ -1320,7 +954,7 @@ async function processExcel(req, res) {
     const totalColumns = finalHeaders.length;
 
     // Define column alignments based on webpage table
-    const centerAlignColumns = [0, 1, 2, 6, 7, 8, 9, 10, 11, 13]; // Case Code, Title, Problem, Module (0-based)
+    const centerAlignColumns = [0, 1, 2, 6, 7, 8, 9, 10, 11, 12, 13]; // Case Code, Title, Problem, Module (0-based)
     // Case Code (0), Model (1), Grade (2), S/W Ver. (3), Severity (7) are centered
 
     Object.keys(newSheet).forEach((cellKey) => {
@@ -1366,7 +1000,7 @@ async function processExcel(req, res) {
     });
 
     // === Apply Header Styling ===
-    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Summarized Problem', 'Severity', 'Severity Reason','Resolve Type','R&D Comment', '3rd Party/Native', 'Module/Apps', 'AI Insight', 'Members'];
+    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'Severity Reason', 'Ai Summary', 'AI Insight'];
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;
@@ -1427,23 +1061,31 @@ async function processExcel(req, res) {
     fs.writeFileSync(processedPath, buf);
     fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
 
-    try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) {}
+    try { if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath); } catch (e) { }
 
     // Precompute analytics after successful processing
     precomputeAnalytics(processingType, processedPath).catch(err =>
       console.warn('Analytics precomputation failed:', err.message)
     );
 
+    // Log completion summary
+    logger.log('');
+    logger.log('=== Processing Completed ===');
+    logger.log(`Total chunks processed: ${numberOfChunks}`);
+    logger.log(`Output file: ${processedExcelFilename}`);
+    logger.log(`Total processing time: ${((Date.now() - tStart) / 1000).toFixed(2)} seconds`);
+    logger.close();
+
     res.json({
       success: true,
       total_processing_time_ms: Date.now() - tStart,
       processedRows: schemaMergedRows,
       downloads: [{ url: `/downloads/${processingType}/${processedExcelFilename}`, filename: processedExcelFilename },
-                  { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }]
+      { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }]
     });
   } catch (error) {
     console.error('Excel processing error:', error);
-    try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch(e) {}
+    try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) { }
     res.status(500).json({
       success: false,
       error: error.message || 'Processing failed'
@@ -1849,7 +1491,7 @@ app.get('/api/central/kpis', async (req, res) => {
       res.json(cacheData.kpis);
     } else {
       // Fallback: generate cache on-demand
-      console.log('⚠️ Cache not found, generating on-demand...');
+      console.log('âš ï¸ Cache not found, generating on-demand...');
       const { spawn } = require('child_process');
       const pythonProcess = spawn('python', ['server/analytics/generate_central_cache.py']);
 
@@ -1959,7 +1601,7 @@ app.get('/api/central/top-models/:source', async (req, res) => {
   }
 });
 
-// GET /api/central/model-module-matrix -> Returns matrix of Top 10 Models × Top 10 Modules
+// GET /api/central/model-module-matrix -> Returns matrix of Top 10 Models Ã— Top 10 Modules
 app.get('/api/central/model-module-matrix', async (req, res) => {
   try {
     const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
@@ -2006,7 +1648,7 @@ app.get('/api/analytics/:module', async (req, res) => {
 
       if (latestExcel && analyticsStat.mtime >= fs.statSync(latestExcel).mtime) {
         // Cache is fresh, return it directly
-        console.log(`📋 Serving cached analytics for ${module}`);
+        console.log(`ðŸ“‹ Serving cached analytics for ${module}`);
         const cachedData = JSON.parse(fs.readFileSync(analyticsPath, 'utf8'));
         return res.json(cachedData);
       }
@@ -2016,7 +1658,7 @@ app.get('/api/analytics/:module', async (req, res) => {
   }
 
   // Fallback to on-demand computation
-  console.log(`🔄 Computing analytics for ${module}`);
+  console.log(`ðŸ”„ Computing analytics for ${module}`);
   const { spawn } = require('child_process');
 
   const pythonProcess = spawn('python', ['server/analytics/pandas_aggregator.py', module]);
@@ -2200,7 +1842,7 @@ app.post('/api/download-excel', async (req, res) => {
         if (fs.existsSync(tempJsonPath)) {
           fs.unlinkSync(tempJsonPath);
         }
-      } catch (e) {}
+      } catch (e) { }
 
       console.error('Failed to start Python process:', error);
       res.status(500).json({ error: 'Failed to start Excel generation process' });
@@ -2343,7 +1985,7 @@ async function getVisualizationData() {
   // Convert aggregation map to array
   const summary = Array.from(aggregation.entries()).map(([k, entry]) => {
     const [model, grade, module] = k.split('||');
-    const topTitles = Array.from(entry.titleMap.entries()).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([title,count])=>title).join(', ');
+    const topTitles = Array.from(entry.titleMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([title, count]) => title).join(', ');
     return {
       model: model || '',
       grade: grade || '',
@@ -2354,7 +1996,7 @@ async function getVisualizationData() {
   });
 
   // Sort by count descending
-  summary.sort((a,b) => b.count - a.count);
+  summary.sort((a, b) => b.count - a.count);
 
   return { summary, filesScanned: files.length, chosenDir, tried };
 }
@@ -2367,7 +2009,7 @@ app.get('/api/visualize-raw-details', async (req, res) => {
     function pickField(row, candidates) {
       for (const c of candidates) {
         if (row.hasOwnProperty(c) && row[c] !== undefined && row[c] !== null &&
-            String(row[c]).toString().trim() !== '') {
+          String(row[c]).toString().trim() !== '') {
           return String(row[c]).trim();
         }
       }
@@ -2452,17 +2094,17 @@ app.get('/api/visualize/export', async (req, res) => {
   try {
     const resp = await getVisualizationData();
     // Build CSV header
-    const csvHeader = ['model','grade','module','voc','count'];
+    const csvHeader = ['model', 'grade', 'module', 'voc', 'count'];
     const lines = [csvHeader.join(',')];
     resp.summary.forEach(r => {
-      lines.push([r.model,r.grade,r.module,r.voc,r.count].map(v => `\"${String(v||'').replace(/\"/g,'\"\"')}\"`).join(','));
+      lines.push([r.model, r.grade, r.module, r.voc, r.count].map(v => `\"${String(v || '').replace(/\"/g, '\"\"')}\"`).join(','));
     });
     const csv = lines.join('\n');
     res.setHeader('Content-disposition', 'attachment; filename=visualize_summary.csv');
     res.setHeader('Content-Type', 'text/csv');
     res.send(csv);
   } catch (e) {
-    res.status(500).json({ success:false, error: e.message });
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 
@@ -2538,7 +2180,7 @@ app.get('/api/ollama-models', async (req, res) => {
  */
 app.get('/api/module-details', async (req, res) => {
   try {
-    const {model, swver, grade, module, voc} = req.query;
+    const { model, swver, grade, module, voc } = req.query;
 
     const candidateDirs = [
       path.join(process.cwd(), 'downloads'),
@@ -2599,10 +2241,10 @@ app.get('/api/module-details', async (req, res) => {
           const rgrade = pickField(r, ['Grade', 'Garde', 'grade']);
           const mod = pickField(r, ['Module', 'Module Name']);
 
-      // Match model, grade, and module (ignore swver and voc since we aggregated by model+grade+module)
-      if (String(rmodel).toLowerCase().trim() !== String(model).toLowerCase().trim() ||
-          String(rgrade).toLowerCase().trim() !== String(grade).toLowerCase().trim() ||
-          String(mod).toLowerCase().trim() !== String(module).toLowerCase().trim()) continue;
+          // Match model, grade, and module (ignore swver and voc since we aggregated by model+grade+module)
+          if (String(rmodel).toLowerCase().trim() !== String(model).toLowerCase().trim() ||
+            String(rgrade).toLowerCase().trim() !== String(grade).toLowerCase().trim() ||
+            String(mod).toLowerCase().trim() !== String(module).toLowerCase().trim()) continue;
 
           // Collect the detailed fields for display
           details.push({
@@ -2631,7 +2273,7 @@ app.get('/api/module-details', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log('\n🚀 Centralized Dashboard is running!');
-  console.log(`📍 Open your browser and go to: http://localhost:${PORT}`);
-  console.log('🤖 Make sure Ollama is running (qwen3:4b-instruct)\n');
+  console.log('\nðŸš€ Centralized Dashboard is running!');
+  console.log(`ðŸ“ Open your browser and go to: http://localhost:${PORT}`);
+  console.log('ðŸ¤– Make sure Ollama is running (qwen3:4b-instruct)\n');
 });

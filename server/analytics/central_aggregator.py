@@ -38,11 +38,18 @@ def derive_model_name_from_sw_ver(sw_ver):
 def transform_model_names(df):
     """
     Transform Model No. column for OS Beta entries using S/W Ver.
+    Also remove [Regular Folder] prefix from model names.
     """
-    if 'Model No.' in df.columns and 'S/W Ver.' in df.columns:
+    if 'Model No.' in df.columns:
         # Apply transformation where Model No. starts with "[OS Beta]"
-        mask = df['Model No.'].astype(str).str.startswith('[OS Beta]')
-        df.loc[mask, 'Model No.'] = df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+        if 'S/W Ver.' in df.columns:
+            mask_os_beta = df['Model No.'].astype(str).str.startswith('[OS Beta]')
+            df.loc[mask_os_beta, 'Model No.'] = df.loc[mask_os_beta, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+        
+        # Remove [Regular Folder] prefix from model names
+        mask_regular_folder = df['Model No.'].astype(str).str.startswith('[Regular Folder]')
+        if mask_regular_folder.any():
+            df.loc[mask_regular_folder, 'Model No.'] = df.loc[mask_regular_folder, 'Model No.'].str.replace(r'^\[Regular Folder\]', '', regex=True)
     return df
 
 def load_all_excels(base_path: str) -> dict:
@@ -103,9 +110,9 @@ def compute_central_kpis(data: dict) -> dict:
     """
     kpis = {}
     processor_map = {
-        'beta_user_issues': 'Beta User Issues',
-        'samsung_members_plm': 'Samsung Members PLM',
-        'samsung_members_voc': 'Samsung Members VOC'
+        'employee_ut': 'EMPLOYEE UT',
+        'global_voc_plm': 'Global VOC PLM',
+        'beta_ut': 'Beta UT'
     }
     total_status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
     for folder, dfs in data.items():
@@ -121,6 +128,17 @@ def compute_central_kpis(data: dict) -> dict:
                     "Close" if x.startswith("Close") else
                     "Open" if x.startswith("Open") else x
                 )
+            
+            # For Employee UT data, also check the "Resolve" column for status information
+            if folder == 'employee_ut' and "Resolve" in combined.columns:
+                # Map Resolve column values to status categories
+                resolve_mapping = {
+                    'Close': 'Close',
+                    'Resolve': 'Resolve', 
+                    'Not Resolve': 'Open',
+                    'Reviewed': 'Open'  # Treat Reviewed as Open since it's not resolved/closed
+                }
+                combined["Progr.Stat."] = combined["Resolve"].map(resolve_mapping).fillna(combined["Progr.Stat."])
 
             total = len(combined)
 
@@ -161,8 +179,8 @@ def compute_top_modules(data: dict) -> list:
     Aggregate top 10 modules from Beta User Issues, Samsung Members PLM, and Samsung Members VOC only.
     Filter out Critical severity issues as per requirements.
     """
-    # Only include data from these three sources
-    included_folders = {'beta_user_issues', 'samsung_members_plm', 'samsung_members_voc'}
+    # Only include data from these sources (excluding Samsung Members VOC)
+    included_folders = {'employee_ut', 'global_voc_plm', 'beta_ut'}
 
     all_modules = {}
     for folder, dfs in data.items():
@@ -179,79 +197,6 @@ def compute_top_modules(data: dict) -> list:
     sorted_modules = sorted(all_modules.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_modules[:10]]
 
-def compute_series_distribution(data: dict) -> list:
-    """
-    Distribution by series type.
-    Calculate this data from analytics.json file Samsung Members PLM folders only.
-    Uses 'S/W Ver.' with new logic for samsung_members_plm.
-    Filter out Critical severity issues as per requirements.
-    """
-    def categorize_series_new(model):
-        """Categorize model into series based on new logic (no SM- prefix)"""
-        if not model or not isinstance(model, str):
-            return 'Unknown'
-
-        model_upper = model.upper()
-
-        # Special case: Moved S series models
-        if model_upper.startswith('(MOVED) S'):
-            return 'S Series'
-        # S Series
-        elif model_upper.startswith('S') or model_upper.startswith('G'):
-            return 'S Series'
-        # A Series
-        elif model_upper.startswith('A'):
-            return 'A Series'
-        # M Series
-        elif model_upper.startswith('M'):
-            return 'M Series'
-        # E Series (treated as F Series)
-        elif model_upper.startswith('E'):
-            return 'F Series'
-        # Fold & Flip Series
-        elif model_upper.startswith('F9') or model_upper.startswith('F7'):
-            return 'Fold & Flip Series'
-        # F Series (other F models)
-        elif model_upper.startswith('F'):
-            return 'F Series'
-        # Tablet
-        elif model_upper.startswith('X') or model_upper.startswith('T'):
-            return 'Tablet'
-        # Watch
-        elif model_upper.startswith('L') or model_upper.startswith('R'):
-            return 'Watch'
-        # Ring
-        elif model_upper.startswith('Q'):
-            return 'Ring'
-        # Everything else
-        else:
-            return 'Others'
-
-    # Only process Samsung Members PLM data
-    folder = 'samsung_members_plm'
-    if folder not in data:
-        return []
-
-    dfs = data[folder]
-    combined = combine_dataframes(dfs)
-    # Apply severity filter to exclude Critical
-    combined = filter_allowed_severity(combined)
-
-    # Use 'S/W Ver.' column with new categorization
-    column = 'S/W Ver.'
-    categorize_func = categorize_series_new
-
-    series_counts = {}
-    if column in combined.columns:
-        for _, row in combined.iterrows():
-            model = str(row.get(column, '')).strip()
-            if model:
-                series = categorize_func(model)
-                series_counts[series] = series_counts.get(series, 0) + 1
-
-    # Sort by count descending and return top series
-    sorted_series = sorted(series_counts.items(), key=lambda x: x[1], reverse=True)
-    return [{"label": series, "value": int(cnt)} for series, cnt in sorted_series]
 
 def compute_top_models(data: dict) -> list:
     """
@@ -298,9 +243,9 @@ def compute_high_issues(data: dict) -> list:
     Apply severity filtering to exclude Critical issues as per requirements.
     """
     processor_map = {
-        'beta_user_issues': 'Beta',
-        'samsung_members_plm': 'PLM',
-        'samsung_members_voc': 'VOC'
+        'ut_portal': 'UT',
+        'global_voc_plm': 'PLM',
+        'beta_ut': 'Beta'
     }
 
     # First, find the module with maximum High severity issue count
@@ -410,9 +355,9 @@ def compute_source_model_summary(data: dict) -> list:
     Filter out Critical severity issues as per requirements.
     """
     source_map = {
-        'beta_user_issues': 'Beta',
-        'samsung_members_plm': 'PLM',
-        'samsung_members_voc': 'VOC'
+        'ut_portal': 'UT Portal',
+        'global_voc_plm': 'Global VOC PLM',
+        'beta_ut': 'Beta UT'
     }
 
     summary = []
@@ -523,7 +468,7 @@ if __name__ == "__main__":
             print(json.dumps(models))
         elif command == "top-models-plm":
             data = load_all_excels("./downloads")
-            models = compute_top_models_by_source(data, 'samsung_members_plm')
+            models = compute_top_models_by_source(data, 'global_voc_plm')
             print(json.dumps(models))
         elif command == "top-models-voc":
             data = load_all_excels("./downloads")
@@ -541,13 +486,12 @@ if __name__ == "__main__":
             print(json.dumps({"error": f"Unknown command: {command}"}))
         sys.exit(0)
 
-    # Default behavior - return all data including matrix, summary, and filtered models
+# Default behavior - return all data including matrix, summary, and filtered models
     base_path = "./downloads"
     try:
         data = load_all_excels(base_path)
         kpis, status_kpis = compute_central_kpis(data)
         top_modules = compute_top_modules(data)
-        series_distribution = compute_series_distribution(data)
         top_models = compute_top_models(data)
         high_issues = compute_high_issues(data)
 
@@ -555,9 +499,9 @@ if __name__ == "__main__":
         model_module_matrix = compute_model_module_matrix(data)
         source_model_summary = compute_source_model_summary(data)
 
-        # Get filtered top models for each source
+        # Get filtered top models for each source (excluding Samsung Members VOC)
         filtered_top_models = {}
-        for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
+        for folder_name in ['ut_portal', 'global_voc_plm', 'beta_ut']:
             filtered_top_models[folder_name] = compute_top_models_by_source(data, folder_name)
 
         # Compute total issues and high issues counts
@@ -574,7 +518,6 @@ if __name__ == "__main__":
             "total_issues": total_issues,
             "high_issues_count": high_issues_count,
             "top_modules": top_modules,
-            "series_distribution": series_distribution,
             "top_models": top_models,
             "high_issues": high_issues,
             "model_module_matrix": model_module_matrix,

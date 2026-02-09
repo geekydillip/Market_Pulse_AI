@@ -15,8 +15,8 @@ import traceback
 
 # --------- CONFIGURATION (edit these if you want) ----------
 BASE_DIR = Path(__file__).parent.resolve()   # folder where script is located
-SOURCE_DIR = BASE_DIR / "uploads"         # default source folder
-DEST_DIR = BASE_DIR / "uploads"         # default destination folder
+SOURCE_DIR = BASE_DIR / "D:\\RAW data\\json_output"         # default source folder
+DEST_DIR = BASE_DIR / "D:\\RAW data\\json_output"         # default destination folder
 OVERWRITE = False                            # set True to overwrite existing .xlsx files
 # -----------------------------------------------------------
 
