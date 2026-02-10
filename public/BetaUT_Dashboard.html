@@ -335,9 +335,45 @@
   <script>
     // Global state
     let dashboardData = {};
+    let modelNameMapping = {};
 
-    // Initialize dashboard when page loads
-    document.addEventListener('DOMContentLoaded', function () {
+    async function loadModelNameMapping() {
+      try {
+        const response = await fetch('/modelName.json');
+        modelNameMapping = await response.json();
+        console.log(`Loaded ${Object.keys(modelNameMapping).length} model name mappings`);
+      } catch (error) {
+        console.warn('Failed to load modelName.json:', error);
+        modelNameMapping = {};
+      }
+    }
+
+    function applyModelNameMapping(modelNumber) {
+      if (!modelNumber || typeof modelNumber !== 'string') return modelNumber;
+      const modelStr = modelNumber.trim();
+
+      // Try exact match first
+      if (modelNameMapping[modelStr]) return modelNameMapping[modelStr];
+
+      // Extract base model number (e.g., SM-S931 from SM-S931BE_SWA_16_DD)
+      const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
+      if (match) {
+        const baseModel = match[1];
+        for (const [mapKey, friendlyName] of Object.entries(modelNameMapping)) {
+          if (mapKey.startsWith(baseModel)) return friendlyName;
+        }
+      }
+
+      // Fallback: try prefix matching
+      const sortedKeys = Object.keys(modelNameMapping).sort((a, b) => b.length - a.length);
+      for (const key of sortedKeys) {
+        if (modelStr.startsWith(key)) return modelNameMapping[key];
+      }
+      return modelNumber;
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      await loadModelNameMapping();
       loadDashboardData();
     });
 
@@ -734,7 +770,8 @@
       const modelSummary = {};
 
       dashboardData.analytics.rows.forEach(row => {
-        const model = row['Model No.'] || 'Unknown';
+        const modelRaw = row['Model No.'] || 'Unknown';
+        const model = applyModelNameMapping(modelRaw);
         const progrStat = row['Progr.Stat.'] || '';
 
         if (!modelSummary[model]) {
@@ -750,22 +787,25 @@
           };
         }
 
-        // Categorize based on Prog.Stat.
+        // Categorize based on Prog.Stat. - use startsWith for flexibility
         let category = '';
-        if (progrStat === 'Open') {
+        if (progrStat.startsWith('Open')) {
           category = 'Open';
-        } else if (progrStat === 'Resolve - App Update') {
+        } else if (progrStat.startsWith('Resolve - App Update')) {
           category = 'Resolve - App Update';
-        } else if (progrStat === 'Resolve - Duplicated') {
+        } else if (progrStat.startsWith('Resolve - Duplicated')) {
           category = 'Resolve - Duplicated';
-        } else if (progrStat === 'Resolve - Not Released') {
+        } else if (progrStat.startsWith('Resolve - Not Released')) {
           category = 'Resolve - Not Released';
-        } else if (progrStat === 'Resolve - Released') {
+        } else if (progrStat.startsWith('Resolve - Released')) {
           category = 'Resolve - Released';
-        } else if (progrStat === 'Resolve - Unnecessary') {
+        } else if (progrStat.startsWith('Resolve - Unnecessary')) {
           category = 'Resolve - Unnecessary';
-        } else if (progrStat === 'Close') {
+        } else if (progrStat.startsWith('Close')) {
           category = 'Close';
+        } else if (progrStat.startsWith('Resolve')) {
+          // Catch any other Resolve variants not matching above categories
+          category = 'Resolve - Unnecessary';
         }
 
         if (category) {
@@ -869,22 +909,25 @@
           };
         }
 
-        // Categorize based on Prog.Stat.
+        // Categorize based on Prog.Stat. - use startsWith for flexibility
         let category = '';
-        if (progrStat === 'Open') {
+        if (progrStat.startsWith('Open')) {
           category = 'Open';
-        } else if (progrStat === 'Resolve - App Update') {
+        } else if (progrStat.startsWith('Resolve - App Update')) {
           category = 'Resolve - App Update';
-        } else if (progrStat === 'Resolve - Duplicated') {
+        } else if (progrStat.startsWith('Resolve - Duplicated')) {
           category = 'Resolve - Duplicated';
-        } else if (progrStat === 'Resolve - Not Released') {
+        } else if (progrStat.startsWith('Resolve - Not Released')) {
           category = 'Resolve - Not Released';
-        } else if (progrStat === 'Resolve - Released') {
+        } else if (progrStat.startsWith('Resolve - Released')) {
           category = 'Resolve - Released';
-        } else if (progrStat === 'Resolve - Unnecessary') {
+        } else if (progrStat.startsWith('Resolve - Unnecessary')) {
           category = 'Resolve - Unnecessary';
-        } else if (progrStat === 'Close') {
+        } else if (progrStat.startsWith('Close')) {
           category = 'Close';
+        } else if (progrStat.startsWith('Resolve')) {
+          // Catch any other Resolve variants not matching above categories
+          category = 'Resolve - Unnecessary';
         }
 
         if (category) {

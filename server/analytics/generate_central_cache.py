@@ -27,7 +27,7 @@ def aggregate_analytics_data():
     Returns tuple: (total_unique_models, total_unique_modules)
     """
     analytics_files = [
-        './downloads/ut_portal/analytics.json',
+        './downloads/employee_ut/analytics.json',
         './downloads/global_voc_plm/analytics.json',
         './downloads/beta_ut/analytics.json',
         './downloads/samsung_members_voc/analytics.json'
@@ -70,6 +70,13 @@ def get_per_source_data():
     top_titles_CaseCode contains one "CaseCode : Title" entry per top_module.
     Returns dict with per-source data.
     """
+    # Import model name mapping function
+    try:
+        from central_aggregator import apply_model_name_mapping
+    except ImportError:
+        print("[WARNING] Could not import model name mapping function")
+        apply_model_name_mapping = lambda x: x  # Fallback to identity function
+    
     analytics_files = [
         ('./downloads/employee_ut/analytics.json', 'employee_ut'),
         ('./downloads/global_voc_plm/analytics.json', 'global_voc_plm'),
@@ -85,8 +92,16 @@ def get_per_source_data():
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
 
-                # Extract top_models
-                top_models = data.get('top_models', [])
+                # Extract and map top_models
+                top_models_raw = data.get('top_models', [])
+                top_models = []
+                for model in top_models_raw:
+                    model_copy = model.copy()
+                    # Apply friendly name mapping to label
+                    if 'label' in model_copy:
+                        friendly_name = apply_model_name_mapping(model_copy['label'])
+                        model_copy['label'] = friendly_name
+                    top_models.append(model_copy)
 
                 # Extract categories as top_modules
                 top_modules = data.get('categories', [])
@@ -148,7 +163,8 @@ def run_aggregator_directly():
 
         # Get filtered top models for each source
         filtered_top_models = {}
-        for folder_name in ['beta_user_issues', 'samsung_members_plm', 'samsung_members_voc']:
+        folders_to_process = ['beta_ut', 'global_voc_plm', 'samsung_members_voc']
+        for folder_name in folders_to_process:
             filtered_top_models[folder_name] = ca.compute_top_models_by_source(data, folder_name)
 
         # Compute total issues and high issues counts

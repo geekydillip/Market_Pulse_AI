@@ -6,17 +6,16 @@ const promptTemplate = require('../prompts/EmployeeUTPrompt');
  */
 function normalizeHeaders(rows) {
   // Map header name variants to canonical names
+  // keys MUST be lowercased to match the normalization logic
   const headerMap = {
 
     // Model variants
     'model no.': 'Model No.',
-    'Dev. Mdl. Name/Item Name': 'Model No.',
     'dev. mdl. name/item name': 'Model No.',
     'target model': 'Model No.',
 
     // Case Code variants
     'case code': 'Case Code',
-    'plm code': 'Case Code',
     'plm code': 'Case Code',
 
     // S/W Ver variants
@@ -33,13 +32,12 @@ function normalizeHeaders(rows) {
     // Progr.Stat. variants
     'progr.stat.': 'Progr.Stat.',
     'progress status': 'Progr.Stat.',
-    'PLM status': 'Progr.Stat.',
+    'plm status': 'Progr.Stat.',
 
     // Resolve variants
-    'Resolve': 'Resolve',
-    'PLM resolve option1': 'Resolve',
+    'resolve': 'Resolve',
+    'plm resolve option1': 'Resolve',
     'resolution': 'Resolve',
-    'Resolve Option(Medium)': 'Resolve',
     'resolve option(medium)': 'Resolve',
 
     // Additional columns from your Excel file to preserve
@@ -60,38 +58,74 @@ function normalizeHeaders(rows) {
   // canonical columns you expect in the downstream processing
   const canonicalCols = ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve'];
 
+  // Priority definitions for column resolution
+  // If multiple raw headers map to the same canonical column, use this order (first match wins)
+  const priorityMap = {
+    'Progr.Stat.': ['PLM Status', 'Progr.Stat.', 'Progress status'],
+    'Resolve': ['PLM resolve option1', 'Resolve', 'resolution', 'Resolve Option(Medium)']
+  };
+
   const normalizedRows = rows.map(orig => {
     const out = {};
-    // Build a reverse map of original header -> canonical (if possible)
-    const keyMap = {}; // rawKey -> canonical
+
+    // First, map all available raw keys to their canonical counterparts
+    const availableValues = {}; // canonical -> array of { raw: string, value: any }
+
     Object.keys(orig).forEach(rawKey => {
       const norm = String(rawKey || '').trim().toLowerCase();
-      const mapped = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
-      if (mapped) keyMap[rawKey] = mapped;
-      else {
+      let canonical = headerMap[norm] || headerMap[norm.replace(/\s+|\./g, '')] || null;
+
+      if (!canonical) {
         // try exact match to canonical
         for (const c of canonicalCols) {
           if (norm === String(c).toLowerCase() || norm === String(c).toLowerCase().replace(/\s+|\./g, '')) {
-            keyMap[rawKey] = c;
+            canonical = c;
             break;
           }
         }
       }
-    });
-    // Fill canonical fields
-    for (const tgt of canonicalCols) {
-      // find a source raw key that maps to this tgt
-      let found = null;
-      for (const rawKey of Object.keys(orig)) {
-        if (keyMap[rawKey] === tgt) {
-          found = orig[rawKey];
-          break;
-        }
+
+      if (canonical) {
+        if (!availableValues[canonical]) availableValues[canonical] = [];
+        availableValues[canonical].push({ raw: rawKey, value: orig[rawKey] });
       }
-      // also if tgt exists exactly as a raw header name, use it
-      if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
-      out[tgt] = (found !== undefined && found !== null) ? found : '';
+    });
+
+    // Validates which value to pick for each canonical column
+    for (const tgt of canonicalCols) {
+      const candidates = availableValues[tgt];
+      let selectedValue = '';
+
+      if (candidates && candidates.length > 0) {
+        // If we have specific priorities for this column
+        if (priorityMap[tgt]) {
+          // Sort candidates based on priority list
+          candidates.sort((a, b) => {
+            const aRaw = String(a.raw).trim().toLowerCase();
+            const bRaw = String(b.raw).trim().toLowerCase();
+
+            // Find index in priority list (case-insensitive)
+            let aIdx = priorityMap[tgt].findIndex(p => String(p).toLowerCase() === aRaw);
+            let bIdx = priorityMap[tgt].findIndex(p => String(p).toLowerCase() === bRaw);
+
+            // If not in priority map, push to end
+            if (aIdx === -1) aIdx = 999;
+            if (bIdx === -1) bIdx = 999;
+
+            return aIdx - bIdx;
+          });
+        }
+        // Take the top candidate
+        selectedValue = candidates[0].value;
+      }
+      // If no candidate found from map, check if direct property exists (fallback)
+      else if (Object.prototype.hasOwnProperty.call(orig, tgt)) {
+        selectedValue = orig[tgt];
+      }
+
+      out[tgt] = (selectedValue !== undefined && selectedValue !== null) ? selectedValue : '';
     }
+
     return out;
   });
 

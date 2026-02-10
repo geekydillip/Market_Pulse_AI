@@ -4,6 +4,84 @@ import json
 import math
 from pathlib import Path
 
+# Load model name mapping from modelName.json
+_MODEL_NAME_MAPPING = None
+
+def load_model_name_mapping():
+    """
+    Load model name mapping from modelName.json in the root directory.
+    Returns a dictionary mapping model numbers to friendly names.
+    """
+    global _MODEL_NAME_MAPPING
+    if _MODEL_NAME_MAPPING is not None:
+        return _MODEL_NAME_MAPPING
+    
+    try:
+        json_path = Path(__file__).parent.parent.parent / 'modelName.json'
+        if json_path.exists():
+            with open(json_path, 'r', encoding='utf-8') as f:
+                _MODEL_NAME_MAPPING = json.load(f)
+                print(f"[OK] Loaded {len(_MODEL_NAME_MAPPING)} model name mappings from modelName.json")
+        else:
+            _MODEL_NAME_MAPPING = {}
+            print(f"[WARNING] modelName.json not found at {json_path}")
+    except Exception as e:
+        _MODEL_NAME_MAPPING = {}
+        print(f"[ERROR] Failed to load modelName.json: {e}")
+    
+    return _MODEL_NAME_MAPPING
+
+def apply_model_name_mapping(model_number):
+    """
+    Convert model number to friendly name using modelName.json mapping.
+    Extracts base model number (e.g., SM-S931 from SM-S931BE) for matching.
+    
+    Args:
+        model_number: Raw model number (e.g., "SM-S928BE_SWA_16_DD" or "SM-S938B")
+    
+    Returns:
+        Friendly name if found (e.g., "S24 Ultra"), otherwise original model_number
+    
+    Examples:
+        SM-S938B -> S25 Ultra (exact match with SM-S938B in mapping)
+        SM-S931BE -> S25 (matches SM-S931B after extracting base SM-S931)
+        SM-S928BE_SWA_16_DD -> S24 Ultra (matches SM-S928B after extracting base SM-S928)
+    """
+    if not model_number or not isinstance(model_number, str):
+        return model_number
+    
+    mapping = load_model_name_mapping()
+    if not mapping:
+        return model_number
+    
+    model_str = str(model_number).strip()
+    
+    # Try exact match first
+    if model_str in mapping:
+        return mapping[model_str]
+    
+    # Extract base model number (e.g., SM-S931 from SM-S931BE_SWA_16_DD)
+    # Pattern: SM-XXXX where X is letter or digit
+    import re
+    match = re.match(r'(SM-[A-Z]\d{2,4})', model_str)
+    if match:
+        base_model = match.group(1)  # e.g., "SM-S931"
+        
+        # Look for mapping keys that start with this base
+        # e.g., SM-S931B, SM-S931U would both match base SM-S931
+        for map_key, friendly_name in mapping.items():
+            if map_key.startswith(base_model):
+                return friendly_name
+    
+    # Fallback: try prefix matching with full mapping keys
+    for model_key in sorted(mapping.keys(), key=len, reverse=True):
+        if model_str.startswith(model_key):
+            return mapping[model_key]
+    
+    # Return original if no match found
+    return model_number
+
+
 def sanitize_nan(obj):
     """
     Recursively replace NaN values with None for JSON serialization
@@ -102,6 +180,49 @@ def filter_allowed_severity(df: pd.DataFrame) -> pd.DataFrame:
         return df[df['Severity'].isin(allowed_severity)]
     return df
 
+def normalize_status(df: pd.DataFrame, source_folder: str = None) -> pd.DataFrame:
+    """
+    Normalize 'Progr.Stat.' column to standard values (Open, Resolve, Close).
+    Handles Employee UT specific logic where 'Resolve' column overrides 'Progr.Stat.'.
+    """
+    df = df.copy()
+    
+    # Special handling for Employee UT: Use 'Resolve' column if available
+    if source_folder == 'employee_ut' and "Resolve" in df.columns:
+        resolve_mapping = {
+            'Close': 'Close',
+            'Resolve': 'Resolve', 
+            'Not Resolve': 'Open',
+            'Reviewed': 'Open'
+        }
+        # Update Progr.Stat. based on Resolve column, falling back to existing Progr.Stat.
+        if "Progr.Stat." not in df.columns:
+            df["Progr.Stat."] = df["Resolve"].map(resolve_mapping)
+        else:
+            df["Progr.Stat."] = df["Resolve"].map(resolve_mapping).fillna(df["Progr.Stat."])
+
+    # Standardize Progr.Stat. values
+    if "Progr.Stat." in df.columns:
+        df["Progr.Stat."] = df["Progr.Stat."].astype(str).apply(lambda x:
+            "Resolve" if x.startswith("Resolve") else
+            "Close" if x.startswith("Close") else
+            "Open" if x.startswith("Open") else x
+        )
+    
+    return df
+
+def filter_open_resolve(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filter DataFrame to include only 'Open' and 'Resolve' issues.
+    Excludes 'Close' and other non-active statuses.
+    Assumes status has been normalized or compatible.
+    """
+    if "Progr.Stat." not in df.columns:
+        return df
+        
+    # Keep rows where status starts with Open or Resolve
+    return df[df["Progr.Stat."].astype(str).apply(lambda x: x.startswith("Open") or x.startswith("Resolve"))]
+
 def compute_central_kpis(data: dict) -> dict:
     """
     Compute KPIs for each processor type with severity breakdowns.
@@ -121,35 +242,24 @@ def compute_central_kpis(data: dict) -> dict:
             # Apply severity filter to exclude Critical
             combined = filter_allowed_severity(combined)
 
-            # Normalize status names - handle variants
-            if "Progr.Stat." in combined.columns:
-                combined["Progr.Stat."] = combined["Progr.Stat."].astype(str).apply(lambda x:
-                    "Resolve" if x.startswith("Resolve") else
-                    "Close" if x.startswith("Close") else
-                    "Open" if x.startswith("Open") else x
-                )
+            # Normalize status names - handle variants and Employee UT logic
+            combined = normalize_status(combined, folder)
+
+            # Filter for Open+Resolve issues BEFORE calculating severity
+            # This ensures severity counts only include active (non-closed) issues
+            combined_open_resolve = filter_open_resolve(combined)
             
-            # For Employee UT data, also check the "Resolve" column for status information
-            if folder == 'employee_ut' and "Resolve" in combined.columns:
-                # Map Resolve column values to status categories
-                resolve_mapping = {
-                    'Close': 'Close',
-                    'Resolve': 'Resolve', 
-                    'Not Resolve': 'Open',
-                    'Reviewed': 'Open'  # Treat Reviewed as Open since it's not resolved/closed
-                }
-                combined["Progr.Stat."] = combined["Resolve"].map(resolve_mapping).fillna(combined["Progr.Stat."])
+            # Total now represents Open + Resolve issues only
+            total = len(combined_open_resolve)
 
-            total = len(combined)
-
-            # Compute severity counts
+            # Compute severity counts from Open+Resolve issues only
             severity_counts = {'High': 0, 'Medium': 0, 'Low': 0}
-            if 'Severity' in combined.columns:
-                severity_series = combined['Severity'].value_counts()
+            if 'Severity' in combined_open_resolve.columns:
+                severity_series = combined_open_resolve['Severity'].value_counts()
                 for severity in severity_counts.keys():
                     severity_counts[severity] = int(severity_series.get(severity, 0))
 
-            # Compute status counts for this source
+            # Compute status counts for this source (from ALL issues for accurate KPIs)
             status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
             if "Progr.Stat." in combined.columns:
                 vc = combined["Progr.Stat."].value_counts()
@@ -158,7 +268,7 @@ def compute_central_kpis(data: dict) -> dict:
                 status_counts["Resolve"] = int(vc.get("Resolve", 0))
 
             kpis[processor_map[folder]] = {
-                'total': total,
+                'total': total,  # Now represents Open + Resolve count
                 'High': severity_counts['High'],
                 'Medium': severity_counts['Medium'],
                 'Low': severity_counts['Low'],
@@ -188,7 +298,13 @@ def compute_top_modules(data: dict) -> list:
             combined = combine_dataframes(dfs)
             # Apply severity filter to exclude Critical
             combined = filter_allowed_severity(combined)
+
+            # Normalize status and filter for Open/Resolve issues
+            combined = normalize_status(combined, folder)
+            combined = filter_open_resolve(combined)
+
             if 'Module' in combined.columns:
+                # Count modules for Open/Resolve issues only
                 modules = combined['Module'].value_counts()
                 for module, count in modules.items():
                     if pd.notna(module) and str(module).strip():
@@ -208,12 +324,20 @@ def compute_top_models(data: dict) -> list:
         combined = combine_dataframes(dfs)
         # Apply severity filter to exclude Critical
         combined = filter_allowed_severity(combined)
+
+        # Normalize status and filter for Open/Resolve issues
+        combined = normalize_status(combined, folder)
+        combined = filter_open_resolve(combined)
+
         if 'Model No.' in combined.columns:
+            # Count models for Open/Resolve issues only
             models = combined['Model No.'].value_counts()
             for model, count in models.items():
                 if pd.notna(model) and str(model).strip():
                     model_str = str(model).strip()
-                    all_models[model_str] = all_models.get(model_str, 0) + count
+                    # Apply friendly name mapping
+                    friendly_name = apply_model_name_mapping(model_str)
+                    all_models[friendly_name] = all_models.get(friendly_name, 0) + count
     sorted_models = sorted(all_models.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_models[:10]]
 
@@ -222,18 +346,26 @@ def compute_top_models_by_source(data: dict, source_folder: str) -> list:
     Top 10 models by issue count for a specific data source.
     Filter out Critical severity issues as per requirements.
     """
-    all_models = {}
+    new_models = {}
     if source_folder in data:
         combined = combine_dataframes(data[source_folder])
         # Apply severity filter to exclude Critical
         combined = filter_allowed_severity(combined)
+
+        # Normalize status and filter for Open/Resolve issues
+        combined = normalize_status(combined, source_folder)
+        combined = filter_open_resolve(combined)
+
         if 'Model No.' in combined.columns:
+            # Count models for Open/Resolve issues only
             models = combined['Model No.'].value_counts()
             for model, count in models.items():
                 if pd.notna(model) and str(model).strip():
                     model_str = str(model).strip()
-                    all_models[model_str] = all_models.get(model_str, 0) + count
-    sorted_models = sorted(all_models.items(), key=lambda x: x[1], reverse=True)
+                    # Apply friendly name mapping
+                    friendly_name = apply_model_name_mapping(model_str)
+                    new_models[friendly_name] = new_models.get(friendly_name, 0) + count
+    sorted_models = sorted(new_models.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_models[:10]]
 
 def compute_high_issues(data: dict) -> list:

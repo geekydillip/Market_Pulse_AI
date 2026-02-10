@@ -90,6 +90,11 @@ app.get('/main.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'main.html'));
 });
 
+// Serve modelName.json from root directory
+app.get('/modelName.json', (req, res) => {
+  res.sendFile(path.join(__dirname, 'modelName.json'));
+});
+
 // serve frontend static files (adjust folder if your frontend is in 'public')
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/downloads', express.static('downloads'));
@@ -134,7 +139,8 @@ const processorMap = {
   'employee_ut': 'EmployeeUT',
   'samsung_members_voc': 'samsungMembersVoc',
   'global_voc_plm': 'globalvocplm',
-  'beta_ut': 'betaUT'
+  'beta_ut': 'betaUT',
+  'beta_ut_voc': 'BetaUTVoc'
 };
 
 // Cache for identical prompts
@@ -303,9 +309,9 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut']; // Supported processing types for Excel files
+    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut', 'beta_ut_voc']; // Supported processing types for Excel files
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "employee_ut", "global_voc_plm", "beta_ut", "samsung_members_voc", or "clean".' });
+      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "employee_ut", "global_voc_plm", "beta_ut", "beta_ut_voc", "samsung_members_voc", or "clean".' });
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();

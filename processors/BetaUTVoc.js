@@ -148,7 +148,7 @@ function normalizeRows(rows) {
 }
 
 module.exports = {
-  id: 'samsungMembersVoc',
+  id: 'BetaUTVoc',
   expectedHeaders: ['No', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
 
   validateHeaders(rawHeaders) {

@@ -24,8 +24,8 @@ const dashboardCategory = document.body.dataset.category;
 
 // Category display names
 const categoryTitles = {
-  'beta_user_issues': 'Beta User Issues',
-  'samsung_members_plm': 'Samsung Members PLM',
+  'beta_ut': 'Beta User Issues',
+  'global_voc_plm': 'Samsung Members PLM',
   'samsung_members_voc': 'Samsung Members VOC',
   'plm_issues': 'PLM Issues',
   'blogger_issues': 'Blogger Issues',
@@ -389,7 +389,7 @@ function exportCurrentPage() {
       }
 
       const now = new Date();
-      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+      const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
       const model = currentFilters.model ? currentFilters.model.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Models';
       const severity = currentFilters.severity ? currentFilters.severity : 'All_Severities';
       const fileName = `dashboard_modules_${model}_${severity}_page_${paginationState.page}_${timestamp}.xlsx`;
@@ -493,9 +493,9 @@ function escapeHtml(s) {
 function cleanIssueTitle(title) {
   if (!title) return "";
   return title.replace(/([a-z])([A-Z])/g, '$1 $2') // Insert space between lowercase and uppercase
-              .replace(/Camerasays/gi, 'Camera says') // Specific override for common error
-              .replace(/camerassays/gi, 'Camera says') // Handle case variations
-              .trim();
+    .replace(/Camerasays/gi, 'Camera says') // Specific override for common error
+    .replace(/camerassays/gi, 'Camera says') // Handle case variations
+    .trim();
 }
 
 // --- START: Normalize model helper ---
@@ -550,7 +550,7 @@ function renderModelList(sortedModels, containerEl) {
     return;
   }
 
-  top.forEach(({model, count}) => {
+  top.forEach(({ model, count }) => {
     const btn = document.createElement('button');
     btn.className = 'model-chip w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
 
@@ -656,7 +656,7 @@ function buildSeverityDonutData(rows) {
   const data = labels.map(l => severityCounts[l]);
 
   // Optional: If you want a fixed order (High, Medium, Low) -- reorder:
-  const order = ['High','Medium','Low'];
+  const order = ['High', 'Medium', 'Low'];
   const orderedLabels = [];
   const orderedData = [];
   for (const o of order) {
@@ -806,7 +806,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
     // Update summary for screen readers
     const totalIssues = sevCounts.reduce((sum, count) => sum + count, 0);
     const severitySummary = sevLabels.map((label, idx) =>
-      `${label}: ${sevCounts[idx]} issues (${Math.round((sevCounts[idx]/totalIssues)*100)}%)`
+      `${label}: ${sevCounts[idx]} issues (${Math.round((sevCounts[idx] / totalIssues) * 100)}%)`
     ).join(', ');
     sevEl.setAttribute('aria-description', `Total issues: ${totalIssues}. ${severitySummary}.`);
 
@@ -855,17 +855,17 @@ function renderCharts(severityDistribution, moduleDistribution) {
               usePointStyle: true,
               pointStyle: 'circle'
             },
-            onClick: function(e, legendItem) {
+            onClick: function (e, legendItem) {
               const index = legendItem.index;
               const ci = severityChart;
               const meta = ci.getDatasetMeta(0);
               meta.data[index].hidden = !meta.data[index].hidden;
               ci.update();
             },
-            onHover: function(e, legendItem) {
+            onHover: function (e, legendItem) {
               if (e.target) e.target.style.cursor = 'pointer';
             },
-            onLeave: function(e, legendItem) {
+            onLeave: function (e, legendItem) {
               if (e.target) e.target.style.cursor = 'default';
             }
           },
@@ -878,7 +878,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
             cornerRadius: 8,
             displayColors: true,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.label || '';
                 const value = context.parsed;
                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -977,10 +977,10 @@ function renderCharts(severityDistribution, moduleDistribution) {
             left: 10
           }
         },
-        onHover: function(event, elements) {
+        onHover: function (event, elements) {
           event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
         },
-        onClick: function(event, elements) {
+        onClick: function (event, elements) {
           if (elements.length > 0) {
             const clickedElement = elements[0];
             const moduleName = this.data.labels[clickedElement.index];
@@ -1003,10 +1003,10 @@ function renderCharts(severityDistribution, moduleDistribution) {
             borderWidth: 1,
             cornerRadius: 8,
             callbacks: {
-              title: function(context) {
+              title: function (context) {
                 return `Module: ${context[0].label}`;
               },
-              label: function(context) {
+              label: function (context) {
                 const value = context.parsed.x;
                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                 const percentage = Math.round((value / total) * 100);
@@ -1047,7 +1047,7 @@ function renderCharts(severityDistribution, moduleDistribution) {
               font: {
                 size: 11
               },
-              callback: function(value, index) {
+              callback: function (value, index) {
                 const label = this.getLabelForValue(index);
                 return label.length > 15 ? label.substring(0, 15) + '...' : label;
               }
@@ -1555,7 +1555,7 @@ function exportFiltered() {
       }
 
       const now = new Date();
-      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+      const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
       const model = currentFilters.model ? currentFilters.model.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Models';
       const severity = currentFilters.severity ? currentFilters.severity : 'All_Severities';
       const fileName = `dashboard_${model}_${severity}_${timestamp}.xlsx`;
@@ -1581,7 +1581,7 @@ function exportCurrentView() {
       }
 
       const now = new Date();
-      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+      const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
       const model = currentFilters.model ? currentFilters.model.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Models';
       const severity = currentFilters.severity ? currentFilters.severity : 'All_Severities';
       const fileName = `dashboard_${model}_${severity}_first_20_${timestamp}.xlsx`;
@@ -1642,7 +1642,7 @@ function handleHighCardExport() {
       }
 
       const now = new Date();
-      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+      const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
       const model = currentFilters.model ? currentFilters.model.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Models';
       const fileName = `dashboard_${model}_High_Severity_${timestamp}.xlsx`;
 
@@ -1670,7 +1670,7 @@ function handleModalExport() {
 
       const data = rows.map(row => {
         const cells = Array.from(row.querySelectorAll('td'));
-        const isPlm = dashboardCategory === 'samsung_members_plm';
+        const isPlm = dashboardCategory === 'global_voc_plm';
 
         const baseData = {
           'Case Code': cells[0]?.textContent?.trim() || '',
@@ -1693,7 +1693,7 @@ function handleModalExport() {
 
       const module = modalTitle.textContent.replace('Issues in ', '').replace(' — Loading...', '').replace(/ \([\d]+ issues\)$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
       const now = new Date();
-      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+      const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
       const fileName = `module_${module}_${timestamp}.xlsx`;
 
       exportToExcel(data, fileName);
@@ -1733,7 +1733,7 @@ function showModuleDetails(module, moduleData) {
   );
 
   // Determine if this is a PLM dashboard
-  const isPlm = dashboardCategory === 'samsung_members_plm';
+  const isPlm = dashboardCategory === 'global_voc_plm';
 
   // Sorting state
   let currentSortColumn = null;
@@ -1791,14 +1791,14 @@ function showModuleDetails(module, moduleData) {
         let pillText = 'Low';
 
         if (severityStr === 'high') {
-            pillClass = 'high';
-            pillText = 'HIGH';
+          pillClass = 'high';
+          pillText = 'HIGH';
         } else if (severityStr === 'medium') {
-            pillClass = 'medium';
-            pillText = 'MEDIUM';
+          pillClass = 'medium';
+          pillText = 'MEDIUM';
         } else {
-            pillClass = 'low';
-            pillText = 'LOW';
+          pillClass = 'low';
+          pillText = 'LOW';
         }
 
         const severityPill = `<span class="pill ${pillClass}">${pillText}</span>`;
@@ -2050,145 +2050,145 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-// DSR Export function - generates formatted text report
-function handleDSRExport() {
-  setTimeout(() => {
-    try {
-      const rows = currentDashboardData.rows || [];
-      if (rows.length === 0) {
-        alert('No PLM issues data available to generate DSR report.');
-        return;
-      }
+  // DSR Export function - generates formatted text report
+  function handleDSRExport() {
+    setTimeout(() => {
+      try {
+        const rows = currentDashboardData.rows || [];
+        if (rows.length === 0) {
+          alert('No PLM issues data available to generate DSR report.');
+          return;
+        }
 
-      console.log('DSR Debug: First 3 rows of data:', rows.slice(0, 3));
-      console.log('DSR Debug: Available keys in first row:', Object.keys(rows[0] || {}));
+        console.log('DSR Debug: First 3 rows of data:', rows.slice(0, 3));
+        console.log('DSR Debug: Available keys in first row:', Object.keys(rows[0] || {}));
 
-      // Group issues by category (using Module field as primary category)
-      const categories = {};
+        // Group issues by category (using Module field as primary category)
+        const categories = {};
 
-      rows.forEach((row, index) => {
-        const module = (row.module || row.Module || 'Unknown').trim();
-        const severity = (row.severity || row.Severity || 'Unknown').toLowerCase();
+        rows.forEach((row, index) => {
+          const module = (row.module || row.Module || 'Unknown').trim();
+          const severity = (row.severity || row.Severity || 'Unknown').toLowerCase();
 
-        // Only include high severity issues for DSR
-        if (severity === 'high') {
-          if (!categories[module]) {
-            categories[module] = [];
-          }
+          // Only include high severity issues for DSR
+          if (severity === 'high') {
+            if (!categories[module]) {
+              categories[module] = [];
+            }
 
-          const caseCode = row.caseId || row['Case Code'] || row.caseCode || row['case code'] || row.CaseCode || row.case_id || row.CaseID || 'N/A';
-          const title = (row.title || row.Title || 'N/A').trim();
-          const model = row.modelFromFile || row['Model No.'] || 'N/A';
+            const caseCode = row.caseId || row['Case Code'] || row.caseCode || row['case code'] || row.CaseCode || row.case_id || row.CaseID || 'N/A';
+            const title = (row.title || row.Title || 'N/A').trim();
+            const model = row.modelFromFile || row['Model No.'] || 'N/A';
 
-          if (index < 5) { // Debug first 5 high severity issues
-            console.log(`DSR Debug: Row ${index} - Case Code fields:`, {
-              'Case Code': row['Case Code'],
-              caseCode: row.caseCode,
-              'case code': row['case code'],
-              CaseCode: row.CaseCode,
-              case_id: row.case_id,
-              CaseID: row.CaseID,
-              final: caseCode
+            if (index < 5) { // Debug first 5 high severity issues
+              console.log(`DSR Debug: Row ${index} - Case Code fields:`, {
+                'Case Code': row['Case Code'],
+                caseCode: row.caseCode,
+                'case code': row['case code'],
+                CaseCode: row.CaseCode,
+                case_id: row.case_id,
+                CaseID: row.CaseID,
+                final: caseCode
+              });
+            }
+
+            categories[module].push({
+              caseCode,
+              title,
+              model
             });
           }
-
-          categories[module].push({
-            caseCode,
-            title,
-            model
-          });
-        }
-      });
-
-      // Generate formatted text report
-      let report = 'PLM Major Issues Summary\n\n';
-
-      // Map modules to standard categories
-      const categoryMapping = {
-        'System': ['System', 'Kernel', 'OS', 'Android'],
-        'GPS': ['GPS', 'Location', 'Navigation'],
-        'Current': ['Current', 'Battery', 'Power'],
-        'Function': ['Function', 'UI', 'UX', 'Camera', 'Audio', 'Network'],
-        'AI': ['AI', 'Bixby', 'Assistant', 'Intelligence']
-      };
-
-      const standardCategories = ['System', 'GPS', 'Current', 'Function', 'AI'];
-      let categoryCounter = 1;
-
-      standardCategories.forEach(categoryName => {
-        const matchingModules = categoryMapping[categoryName] || [];
-        let categoryIssues = [];
-
-        // Collect issues from matching modules
-        matchingModules.forEach(moduleKeyword => {
-          Object.keys(categories).forEach(module => {
-            if (module.toLowerCase().includes(moduleKeyword.toLowerCase())) {
-              categoryIssues = categoryIssues.concat(categories[module]);
-            }
-          });
         });
 
-        // Also check if module name matches category
-        if (categories[categoryName]) {
-          categoryIssues = categoryIssues.concat(categories[categoryName]);
-        }
+        // Generate formatted text report
+        let report = 'PLM Major Issues Summary\n\n';
 
-        if (categoryIssues.length > 0) {
-          report += `${categoryCounter}. ${categoryName}\n`;
+        // Map modules to standard categories
+        const categoryMapping = {
+          'System': ['System', 'Kernel', 'OS', 'Android'],
+          'GPS': ['GPS', 'Location', 'Navigation'],
+          'Current': ['Current', 'Battery', 'Power'],
+          'Function': ['Function', 'UI', 'UX', 'Camera', 'Audio', 'Network'],
+          'AI': ['AI', 'Bixby', 'Assistant', 'Intelligence']
+        };
 
-          categoryIssues.forEach((issue, index) => {
-            const issueNumber = index + 1;
-            const formattedTitle = cleanIssueTitle(issue.title);
-            report += `    ${categoryCounter}.${issueNumber} ${issue.caseCode}: ${formattedTitle}\n`;
+        const standardCategories = ['System', 'GPS', 'Current', 'Function', 'AI'];
+        let categoryCounter = 1;
+
+        standardCategories.forEach(categoryName => {
+          const matchingModules = categoryMapping[categoryName] || [];
+          let categoryIssues = [];
+
+          // Collect issues from matching modules
+          matchingModules.forEach(moduleKeyword => {
+            Object.keys(categories).forEach(module => {
+              if (module.toLowerCase().includes(moduleKeyword.toLowerCase())) {
+                categoryIssues = categoryIssues.concat(categories[module]);
+              }
+            });
           });
 
-          report += '\n';
-          categoryCounter++;
-        }
-      });
+          // Also check if module name matches category
+          if (categories[categoryName]) {
+            categoryIssues = categoryIssues.concat(categories[categoryName]);
+          }
 
-      // Add any remaining categories not in standard list
-      Object.keys(categories).forEach(module => {
-        const isStandard = standardCategories.some(cat =>
-          categoryMapping[cat] && categoryMapping[cat].some(keyword =>
-            module.toLowerCase().includes(keyword.toLowerCase())
-          )
-        );
+          if (categoryIssues.length > 0) {
+            report += `${categoryCounter}. ${categoryName}\n`;
 
-        if (!isStandard && categories[module].length > 0) {
-          report += `${categoryCounter}. ${module}\n`;
-          categories[module].forEach((issue, index) => {
-            const issueNumber = index + 1;
-            const formattedTitle = cleanIssueTitle(issue.title);
-            report += `    ${categoryCounter}.${issueNumber} ${issue.caseCode}: ${formattedTitle}\n`;
-          });
-          report += '\n';
-          categoryCounter++;
-        }
-      });
+            categoryIssues.forEach((issue, index) => {
+              const issueNumber = index + 1;
+              const formattedTitle = cleanIssueTitle(issue.title);
+              report += `    ${categoryCounter}.${issueNumber} ${issue.caseCode}: ${formattedTitle}\n`;
+            });
 
-      // Generate filename with timestamp
-      const now = new Date();
-      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
-      const fileName = `PLM_DSR_Report_${timestamp}.txt`;
+            report += '\n';
+            categoryCounter++;
+          }
+        });
 
-      // Download the text file
-      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+        // Add any remaining categories not in standard list
+        Object.keys(categories).forEach(module => {
+          const isStandard = standardCategories.some(cat =>
+            categoryMapping[cat] && categoryMapping[cat].some(keyword =>
+              module.toLowerCase().includes(keyword.toLowerCase())
+            )
+          );
 
-    } catch (error) {
-      console.error('DSR export error:', error);
-      alert('DSR report generation failed. Please try again.');
-    }
-  }, 100);
-}
+          if (!isStandard && categories[module].length > 0) {
+            report += `${categoryCounter}. ${module}\n`;
+            categories[module].forEach((issue, index) => {
+              const issueNumber = index + 1;
+              const formattedTitle = cleanIssueTitle(issue.title);
+              report += `    ${categoryCounter}.${issueNumber} ${issue.caseCode}: ${formattedTitle}\n`;
+            });
+            report += '\n';
+            categoryCounter++;
+          }
+        });
+
+        // Generate filename with timestamp
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+        const fileName = `PLM_DSR_Report_${timestamp}.txt`;
+
+        // Download the text file
+        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+      } catch (error) {
+        console.error('DSR export error:', error);
+        alert('DSR report generation failed. Please try again.');
+      }
+    }, 100);
+  }
 
   // Close modal on ESC key
   document.addEventListener('keydown', (e) => {
