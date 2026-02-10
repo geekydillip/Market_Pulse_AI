@@ -176,42 +176,11 @@
 
     </section>
 
-    <!-- MODULE ISSUE BREAKDOWN TABLE -->
-    <section class="mt-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Module Issue Breakdown</h3>
-            <div class="w-8 h-8 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg flex items-center justify-center">
-              <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400"></i>
-            </div>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full" id="module-breakdown-table">
-            <thead class="bg-slate-50 dark:bg-slate-700">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-1/4">
-                  Module
-                </th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-1/6">
-                  Count
-                </th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-7/12">
-                  Issue Descriptions
-                </th>
-              </tr>
-            </thead>
-            <tbody id="module-breakdown-table-body"
-              class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+
+
+
+
+
 
   </div>
 
@@ -241,7 +210,7 @@
         updateKPIs();
         updateTopModelsChart();
         updateTopModulesChart();
-        updateModuleBreakdownTable();
+
 
       } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -264,107 +233,7 @@
       if (closeEl) closeEl.textContent = (dashboardData.kpis.close_issues || 0).toLocaleString();
     }
 
-    // Update Module Breakdown Table
-    function updateModuleBreakdownTable() {
-      const tbody = document.getElementById('module-breakdown-table-body');
-      if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
 
-      tbody.innerHTML = '';
-
-      // Process data to aggregate by module > sub-module > AI Insight
-      const moduleData = {};
-
-      dashboardData.analytics.rows.forEach(row => {
-        const module = row['Module'] || 'Unknown';
-        const subModule = row['Sub-Module'] || 'Unknown';
-        const aiInsight = row['AI Insight'] || 'No description available';
-
-        if (!moduleData[module]) {
-          moduleData[module] = {
-            count: 0,
-            subModules: {}
-          };
-        }
-
-        moduleData[module].count++;
-
-        if (!moduleData[module].subModules[subModule]) {
-          moduleData[module].subModules[subModule] = {
-            count: 0,
-            insights: {}
-          };
-        }
-        moduleData[module].subModules[subModule].count++;
-
-        if (!moduleData[module].subModules[subModule].insights[aiInsight]) {
-          moduleData[module].subModules[subModule].insights[aiInsight] = 0;
-        }
-        moduleData[module].subModules[subModule].insights[aiInsight]++;
-      });
-
-      // Convert to array and sort by count descending
-      const sortedModules = Object.entries(moduleData)
-        .sort(([, a], [, b]) => b.count - a.count)
-        .slice(0, 10); // Top 10 modules
-
-      // Render table rows
-      sortedModules.forEach(([moduleName, data]) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
-
-        // Sort sub-modules by count descending and take top 10
-        const sortedSubModules = Object.entries(data.subModules)
-          .sort(([, a], [, b]) => b.count - a.count)
-          .slice(0, 10); // Top 10 sub-modules
-
-        // Create nested sub-module and insights HTML
-        let subModuleHTML = '<div class="space-y-3">';
-        sortedSubModules.forEach(([subModule, subData]) => {
-          // Sort insights by count descending and take top 3
-          const sortedInsights = Object.entries(subData.insights)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 3); // Top 3 insights per sub-module
-
-          subModuleHTML += `
-            <div class="mb-2">
-              <div class="font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                <span class="inline-block w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
-                ${subModule} <span class="text-indigo-600 dark:text-indigo-400">(${subData.count})</span>
-              </div>
-              <ul class="ml-6 space-y-1">
-          `;
-
-          sortedInsights.forEach(([insight, count]) => {
-            subModuleHTML += `
-              <li class="text-sm text-slate-600 dark:text-slate-400">
-                <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 mr-2"></span>
-                ${insight} <span class="font-medium text-slate-900 dark:text-slate-100">(${count})</span>
-              </li>
-            `;
-          });
-
-          subModuleHTML += `
-              </ul>
-            </div>
-          `;
-        });
-        subModuleHTML += '</div>';
-
-        tr.innerHTML = `
-          <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
-            ${moduleName}
-          </td>
-          <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">
-            ${data.count}
-          </td>
-          <td class="px-4 py-3">
-            ${subModuleHTML}
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-      });
-    }
 
     // Update top models chart - Bar Chart
     function updateTopModelsChart() {
@@ -643,124 +512,7 @@
       tbody.appendChild(totalTr);
     }
 
-    // Update module summary table with Prog.Stat. aggregation
-    function updateModuleSummaryTable() {
-      const tbody = document.getElementById('module-summary-table-body');
-      if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
 
-      // Clear existing content
-      tbody.innerHTML = '';
-
-      // Process analytics data to aggregate by module and Prog.Stat. categories
-      const moduleSummary = {};
-
-      dashboardData.analytics.rows.forEach(row => {
-        const module = row['Module'] || 'Unknown';
-        const progrStat = row['Progr.Stat.'] || '';
-
-        if (!moduleSummary[module]) {
-          moduleSummary[module] = {
-            'Open': 0,
-            'Resolve - App Update': 0,
-            'Resolve - Duplicated': 0,
-            'Resolve - Not Released': 0,
-            'Resolve - Released': 0,
-            'Resolve - Unnecessary': 0,
-            'Close': 0,
-            'Total': 0
-          };
-        }
-
-        // Categorize based on Prog.Stat.
-        let category = '';
-        if (progrStat === 'Open') {
-          category = 'Open';
-        } else if (progrStat === 'Resolve - App Update') {
-          category = 'Resolve - App Update';
-        } else if (progrStat === 'Resolve - Duplicated') {
-          category = 'Resolve - Duplicated';
-        } else if (progrStat === 'Resolve - Not Released') {
-          category = 'Resolve - Not Released';
-        } else if (progrStat === 'Resolve - Released') {
-          category = 'Resolve - Released';
-        } else if (progrStat === 'Resolve - Unnecessary') {
-          category = 'Resolve - Unnecessary';
-        } else if (progrStat === 'Close') {
-          category = 'Close';
-        }
-
-        if (category) {
-          moduleSummary[module][category]++;
-          moduleSummary[module]['Total']++;
-        }
-      });
-
-      // Convert to array and sort by Total descending
-      const sortedModules = Object.entries(moduleSummary)
-        .sort(([, a], [, b]) => b.Total - a.Total)
-        .slice(0, 10); // Show top 10 modules
-
-      // Calculate Grand Total
-      const grandTotal = {
-        'Open': 0,
-        'Resolve - App Update': 0,
-        'Resolve - Duplicated': 0,
-        'Resolve - Not Released': 0,
-        'Resolve - Released': 0,
-        'Resolve - Unnecessary': 0,
-        'Close': 0,
-        'Total': 0
-      };
-
-      sortedModules.forEach(([, counts]) => {
-        grandTotal['Open'] += counts['Open'] || 0;
-        grandTotal['Resolve - App Update'] += counts['Resolve - App Update'] || 0;
-        grandTotal['Resolve - Duplicated'] += counts['Resolve - Duplicated'] || 0;
-        grandTotal['Resolve - Not Released'] += counts['Resolve - Not Released'] || 0;
-        grandTotal['Resolve - Released'] += counts['Resolve - Released'] || 0;
-        grandTotal['Resolve - Unnecessary'] += counts['Resolve - Unnecessary'] || 0;
-        grandTotal['Close'] += counts['Close'] || 0;
-        grandTotal['Total'] += counts['Total'] || 0;
-      });
-
-      // Render table rows
-      sortedModules.forEach(([module, counts]) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
-
-        tr.innerHTML = `
-      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${module}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Open'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Duplicated'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
-    `;
-
-        tbody.appendChild(tr);
-      });
-
-      // Add Grand Total row
-      const totalTr = document.createElement('tr');
-      totalTr.className = 'bg-slate-100 dark:bg-slate-700 border-t-2 border-slate-300 dark:border-slate-600';
-
-      totalTr.innerHTML = `
-    <td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Open']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - App Update']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Duplicated']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Close']}</td>
-    <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
-  `;
-
-      tbody.appendChild(totalTr);
-    }
 
     // Theme-aware color helper
     function getChartColors() {
