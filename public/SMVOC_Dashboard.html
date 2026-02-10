@@ -176,65 +176,7 @@
 
     </section>
 
-    <!-- TOP 10 MODULE WISE ISSUE SUMMARY TABLE -->
-    <section class="mt-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Category Wise Issue Summary</h3>
-            <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
-              <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
-            </div>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full" id="module-summary-table">
-            <thead class="bg-slate-50 dark:bg-slate-700">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Module</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Total</th>
-              </tr>
-            </thead>
-            <tbody id="module-summary-table-body"
-              class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
 
-    <!-- TOP 10 3RD PARTY ISSUE SUMMARY TABLE -->
-    <section class="mt-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 3rd Party Issue Summary</h3>
-            <div class="w-8 h-8 bg-purple-50 dark:bg-purple-950/30 rounded-lg flex items-center justify-center">
-              <i class="fa-solid fa-layer-group text-purple-600 dark:text-purple-400"></i>
-            </div>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full" id="third-party-summary-table">
-            <thead class="bg-slate-50 dark:bg-slate-700">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  3rd Party App</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Total</th>
-              </tr>
-            </thead>
-            <tbody id="third-party-summary-table-body"
-              class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
 
 
 
@@ -268,8 +210,7 @@
         updateKPIs();
         updateTopModelsChart();
         updateTopModulesChart();
-        updateModuleSummaryTable();
-        updateThirdPartySummaryTable();
+
 
       } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -292,61 +233,7 @@
       if (closeEl) closeEl.textContent = (dashboardData.kpis.close_issues || 0).toLocaleString();
     }
 
-    // Update Module Summary Table
-    function updateModuleSummaryTable() {
-      const tbody = document.getElementById('module-summary-table-body');
-      if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
 
-      tbody.innerHTML = '';
-      const moduleCounts = {};
-
-      dashboardData.analytics.rows.forEach(row => {
-        const module = row['Module'] || 'Unknown';
-        moduleCounts[module] = (moduleCounts[module] || 0) + 1;
-      });
-
-      const sortedModules = Object.entries(moduleCounts)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10);
-
-      sortedModules.forEach(([module, count]) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
-        tr.innerHTML = `
-          <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${module}</td>
-          <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${count}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    // Update 3rd Party Summary Table
-    function updateThirdPartySummaryTable() {
-      const tbody = document.getElementById('third-party-summary-table-body');
-      if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
-
-      tbody.innerHTML = '';
-      const appCounts = {};
-
-      dashboardData.analytics.rows.forEach(row => {
-        const appName = row['Application Name'] || 'Unknown';
-        appCounts[appName] = (appCounts[appName] || 0) + 1;
-      });
-
-      const sortedApps = Object.entries(appCounts)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10);
-
-      sortedApps.forEach(([app, count]) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
-        tr.innerHTML = `
-          <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${app}</td>
-          <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${count}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
 
     // Update top models chart - Bar Chart
     function updateTopModelsChart() {
@@ -625,124 +512,7 @@
       tbody.appendChild(totalTr);
     }
 
-    // Update module summary table with Prog.Stat. aggregation
-    function updateModuleSummaryTable() {
-      const tbody = document.getElementById('module-summary-table-body');
-      if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
 
-      // Clear existing content
-      tbody.innerHTML = '';
-
-      // Process analytics data to aggregate by module and Prog.Stat. categories
-      const moduleSummary = {};
-
-      dashboardData.analytics.rows.forEach(row => {
-        const module = row['Module'] || 'Unknown';
-        const progrStat = row['Progr.Stat.'] || '';
-
-        if (!moduleSummary[module]) {
-          moduleSummary[module] = {
-            'Open': 0,
-            'Resolve - App Update': 0,
-            'Resolve - Duplicated': 0,
-            'Resolve - Not Released': 0,
-            'Resolve - Released': 0,
-            'Resolve - Unnecessary': 0,
-            'Close': 0,
-            'Total': 0
-          };
-        }
-
-        // Categorize based on Prog.Stat.
-        let category = '';
-        if (progrStat === 'Open') {
-          category = 'Open';
-        } else if (progrStat === 'Resolve - App Update') {
-          category = 'Resolve - App Update';
-        } else if (progrStat === 'Resolve - Duplicated') {
-          category = 'Resolve - Duplicated';
-        } else if (progrStat === 'Resolve - Not Released') {
-          category = 'Resolve - Not Released';
-        } else if (progrStat === 'Resolve - Released') {
-          category = 'Resolve - Released';
-        } else if (progrStat === 'Resolve - Unnecessary') {
-          category = 'Resolve - Unnecessary';
-        } else if (progrStat === 'Close') {
-          category = 'Close';
-        }
-
-        if (category) {
-          moduleSummary[module][category]++;
-          moduleSummary[module]['Total']++;
-        }
-      });
-
-      // Convert to array and sort by Total descending
-      const sortedModules = Object.entries(moduleSummary)
-        .sort(([, a], [, b]) => b.Total - a.Total)
-        .slice(0, 10); // Show top 10 modules
-
-      // Calculate Grand Total
-      const grandTotal = {
-        'Open': 0,
-        'Resolve - App Update': 0,
-        'Resolve - Duplicated': 0,
-        'Resolve - Not Released': 0,
-        'Resolve - Released': 0,
-        'Resolve - Unnecessary': 0,
-        'Close': 0,
-        'Total': 0
-      };
-
-      sortedModules.forEach(([, counts]) => {
-        grandTotal['Open'] += counts['Open'] || 0;
-        grandTotal['Resolve - App Update'] += counts['Resolve - App Update'] || 0;
-        grandTotal['Resolve - Duplicated'] += counts['Resolve - Duplicated'] || 0;
-        grandTotal['Resolve - Not Released'] += counts['Resolve - Not Released'] || 0;
-        grandTotal['Resolve - Released'] += counts['Resolve - Released'] || 0;
-        grandTotal['Resolve - Unnecessary'] += counts['Resolve - Unnecessary'] || 0;
-        grandTotal['Close'] += counts['Close'] || 0;
-        grandTotal['Total'] += counts['Total'] || 0;
-      });
-
-      // Render table rows
-      sortedModules.forEach(([module, counts]) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
-
-        tr.innerHTML = `
-      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${module}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Open'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Duplicated'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
-    `;
-
-        tbody.appendChild(tr);
-      });
-
-      // Add Grand Total row
-      const totalTr = document.createElement('tr');
-      totalTr.className = 'bg-slate-100 dark:bg-slate-700 border-t-2 border-slate-300 dark:border-slate-600';
-
-      totalTr.innerHTML = `
-    <td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Open']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - App Update']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Duplicated']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Close']}</td>
-    <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
-  `;
-
-      tbody.appendChild(totalTr);
-    }
 
     // Theme-aware color helper
     function getChartColors() {
