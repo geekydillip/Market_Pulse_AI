@@ -167,6 +167,11 @@ def run_aggregator_directly():
         for folder_name in folders_to_process:
             filtered_top_models[folder_name] = ca.compute_top_models_by_source(data, folder_name)
 
+        # Get filtered top modules for each source
+        filtered_top_modules = {}
+        for folder_name in folders_to_process:
+            filtered_top_modules[folder_name] = ca.compute_top_modules_by_source(data, folder_name)
+
         # Compute total issues and high issues counts
         total_issues = sum(kpis[source]['total'] for source in kpis)
         high_issues_count = sum(kpis[source]['High'] for source in kpis)
@@ -185,7 +190,8 @@ def run_aggregator_directly():
             "high_issues": high_issues,
             "model_module_matrix": model_module_matrix,
             "source_model_summary": source_model_summary,
-            "filtered_top_models": filtered_top_models
+            "filtered_top_models": filtered_top_models,
+            "filtered_top_modules": filtered_top_modules
         }
 
         # Sanitize NaN values
@@ -228,6 +234,7 @@ def generate_central_cache():
     model_module_matrix = base_data.get("model_module_matrix", {"models": [], "modules": [], "matrix": []})
     source_model_summary = base_data.get("source_model_summary", [])
     filtered_top_models = base_data.get("filtered_top_models", {})
+    filtered_top_modules = base_data.get("filtered_top_modules", {})
 
     # Aggregate unique models and modules from all analytics.json files
     total_unique_models, total_unique_modules = aggregate_analytics_data()
@@ -247,6 +254,7 @@ def generate_central_cache():
         "model_module_matrix": model_module_matrix,
         "source_model_summary": source_model_summary,
         "filtered_top_models": filtered_top_models,
+        "filtered_top_modules": filtered_top_modules,
         "total_unique_models": total_unique_models,
         "total_unique_modules": total_unique_modules,
         **per_source_data  # Include per-source data
@@ -310,6 +318,7 @@ def validate_cache_freshness():
             "model_module_matrix": current_data.get("model_module_matrix", {"models": [], "modules": [], "matrix": []}),
             "source_model_summary": current_data.get("source_model_summary", []),
             "filtered_top_models": current_data.get("filtered_top_models", {}),
+            "filtered_top_modules": current_data.get("filtered_top_modules", {}),
         }
 
         # Aggregate current totals

@@ -249,9 +249,7 @@
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Resolve - Unnecessary</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Close</th>
+
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Total</th>
@@ -313,9 +311,7 @@
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Resolve - Unnecessary</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Close</th>
+
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Total</th>
@@ -381,7 +377,8 @@
     async function loadDashboardData() {
       try {
         // Fetch data from central_dashboard.json
-        const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
+        // Fetch data from central_dashboard.json with cache buster
+        const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json?v=' + new Date().getTime());
         const jsonData = await response.json();
 
         // Fetch analytics data
@@ -390,8 +387,21 @@
 
         // Extract Beta UT specific data
         dashboardData.kpis = jsonData.kpis['Beta UT'];
-        dashboardData.topModels = jsonData.beta_ut_top_models;
-        dashboardData.topModules = jsonData.beta_ut_top_modules;
+
+        // Use filtered top models if available (Open + Resolved), otherwise fallback to legacy unfiltered
+        if (jsonData.filtered_top_models && jsonData.filtered_top_models.beta_ut) {
+          dashboardData.topModels = jsonData.filtered_top_models.beta_ut;
+        } else {
+          dashboardData.topModels = jsonData.beta_ut_top_models;
+        }
+
+        // Use filtered top modules if available (Open + Resolved), otherwise fallback to legacy unfiltered
+        if (jsonData.filtered_top_modules && jsonData.filtered_top_modules.beta_ut) {
+          dashboardData.topModules = jsonData.filtered_top_modules.beta_ut;
+        } else {
+          dashboardData.topModules = jsonData.beta_ut_top_modules;
+        }
+
         dashboardData.analytics = analyticsData;
 
         // Use corrected counts from central dashboard (fixed aggregation) instead of local analytics.json
@@ -611,11 +621,17 @@
       const colors = getChartColors();
 
       // Take top 10 models
-      const topModels = dashboardData.topModels.slice(0, 10).reverse();
+      let topModels = [];
+      if (dashboardData.filtered_top_models && dashboardData.filtered_top_models.beta_ut) {
+        topModels = dashboardData.filtered_top_models.beta_ut;
+      } else {
+        topModels = dashboardData.topModels || [];
+      }
+      topModels = topModels.slice(0, 10).reverse();
       const modelNames = topModels.map(model => {
         return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
       });
-      const issueCounts = topModels.map(model => model.count);
+      const issueCounts = topModels.map(model => model.value || model.count);
 
       const option = {
         textStyle: {
@@ -689,11 +705,17 @@
       const colors = getChartColors();
 
       // Take top 10 modules
-      const topModules = dashboardData.topModules.slice(0, 10).reverse();
+      let topModules = [];
+      if (dashboardData.filtered_top_modules && dashboardData.filtered_top_modules.beta_ut) {
+        topModules = dashboardData.filtered_top_modules.beta_ut;
+      } else {
+        topModules = dashboardData.topModules || [];
+      }
+      topModules = topModules.slice(0, 10).reverse();
       const moduleNames = topModules.map(module => {
         return module.label.length > 15 ? module.label.substring(0, 15) + '...' : module.label;
       });
-      const issueCounts = topModules.map(module => module.count);
+      const issueCounts = topModules.map(module => module.value || module.count);
 
       const option = {
         textStyle: {
@@ -801,9 +823,11 @@
           category = 'Resolve - Released';
         } else if (progrStat.startsWith('Resolve - Unnecessary')) {
           category = 'Resolve - Unnecessary';
-        } else if (progrStat.startsWith('Close')) {
-          category = 'Close';
-        } else if (progrStat.startsWith('Resolve')) {
+        }
+        // else if (progrStat.startsWith('Close')) {
+        //   category = 'Close';
+        // } 
+        else if (progrStat.startsWith('Resolve')) {
           // Catch any other Resolve variants not matching above categories
           category = 'Resolve - Unnecessary';
         }
@@ -838,7 +862,7 @@
         grandTotal['Resolve - Not Released'] += counts['Resolve - Not Released'] || 0;
         grandTotal['Resolve - Released'] += counts['Resolve - Released'] || 0;
         grandTotal['Resolve - Unnecessary'] += counts['Resolve - Unnecessary'] || 0;
-        grandTotal['Close'] += counts['Close'] || 0;
+
         grandTotal['Total'] += counts['Total'] || 0;
       });
 
@@ -855,7 +879,7 @@
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
+
       <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
     `;
 
@@ -874,7 +898,7 @@
     <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
     <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
     <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Close']}</td>
+
     <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
   `;
 
@@ -923,9 +947,11 @@
           category = 'Resolve - Released';
         } else if (progrStat.startsWith('Resolve - Unnecessary')) {
           category = 'Resolve - Unnecessary';
-        } else if (progrStat.startsWith('Close')) {
-          category = 'Close';
-        } else if (progrStat.startsWith('Resolve')) {
+        }
+        // else if (progrStat.startsWith('Close')) {
+        //   category = 'Close';
+        // } 
+        else if (progrStat.startsWith('Resolve')) {
           // Catch any other Resolve variants not matching above categories
           category = 'Resolve - Unnecessary';
         }
@@ -960,7 +986,7 @@
         grandTotal['Resolve - Not Released'] += counts['Resolve - Not Released'] || 0;
         grandTotal['Resolve - Released'] += counts['Resolve - Released'] || 0;
         grandTotal['Resolve - Unnecessary'] += counts['Resolve - Unnecessary'] || 0;
-        grandTotal['Close'] += counts['Close'] || 0;
+
         grandTotal['Total'] += counts['Total'] || 0;
       });
 
@@ -977,7 +1003,7 @@
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
       <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
+
       <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
     `;
 
@@ -996,7 +1022,7 @@
     <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
     <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
     <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Close']}</td>
+
     <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
   `;
 

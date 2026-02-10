@@ -318,9 +318,15 @@ def compute_top_models(data: dict) -> list:
     """
     Top 10 models by issue count across all data.
     Filter out Critical severity issues as per requirements.
+    Restricted to PLM Sources only (Beta UT, Employee UT, Global VOC PLM).
     """
+    # Only include data from these sources (excluding Samsung Members VOC)
+    PLM_SOURCES = {'employee_ut', 'global_voc_plm', 'beta_ut'}
+
     all_models = {}
     for folder, dfs in data.items():
+        if folder not in PLM_SOURCES:
+            continue
         combined = combine_dataframes(dfs)
         # Apply severity filter to exclude Critical
         combined = filter_allowed_severity(combined)
@@ -367,6 +373,31 @@ def compute_top_models_by_source(data: dict, source_folder: str) -> list:
                     new_models[friendly_name] = new_models.get(friendly_name, 0) + count
     sorted_models = sorted(new_models.items(), key=lambda x: x[1], reverse=True)
     return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_models[:10]]
+
+def compute_top_modules_by_source(data: dict, source_folder: str) -> list:
+    """
+    Top 10 modules by issue count for a specific data source.
+    Filter out Critical severity issues as per requirements.
+    """
+    new_modules = {}
+    if source_folder in data:
+        combined = combine_dataframes(data[source_folder])
+        # Apply severity filter to exclude Critical
+        combined = filter_allowed_severity(combined)
+
+        # Normalize status and filter for Open/Resolve issues
+        combined = normalize_status(combined, source_folder)
+        combined = filter_open_resolve(combined)
+
+        if 'Module' in combined.columns:
+            # Count modules for Open/Resolve issues only
+            modules = combined['Module'].value_counts()
+            for module, count in modules.items():
+                if pd.notna(module) and str(module).strip():
+                    module_str = str(module).strip()
+                    new_modules[module_str] = new_modules.get(module_str, 0) + count
+    sorted_modules = sorted(new_modules.items(), key=lambda x: x[1], reverse=True)
+    return [{"label": mod, "value": int(cnt)} for mod, cnt in sorted_modules[:10]]
 
 def compute_high_issues(data: dict) -> list:
     """
@@ -439,6 +470,7 @@ def compute_model_module_matrix(data: dict) -> dict:
     module_names = [item['label'] for item in top_modules]
 
     # Create matrix: rows = models, columns = modules
+    PLM_SOURCES = {'employee_ut', 'global_voc_plm', 'beta_ut'}
     matrix = []
     for model in model_names:
         row = []
@@ -446,9 +478,16 @@ def compute_model_module_matrix(data: dict) -> dict:
             # Count issues for this model-module combination
             count = 0
             for folder, dfs in data.items():
+                if folder not in PLM_SOURCES:
+                    continue
                 combined = combine_dataframes(dfs)
                 # Apply severity filter to exclude Critical
                 combined = filter_allowed_severity(combined)
+
+                # Normalize status and filter for Open/Resolve issues
+                combined = normalize_status(combined, folder)
+                combined = filter_open_resolve(combined)
+
                 if 'Model No.' in combined.columns and 'Module' in combined.columns:
                     # Filter for this specific model and module
                     filtered = combined[
@@ -502,6 +541,10 @@ def compute_source_model_summary(data: dict) -> list:
         combined = combine_dataframes(dfs)
         # Apply severity filter to exclude Critical
         combined = filter_allowed_severity(combined)
+
+        # Normalize status and filter for Open/Resolve issues
+        combined = normalize_status(combined, folder)
+        combined = filter_open_resolve(combined)
 
         if 'Model No.' not in combined.columns:
             continue

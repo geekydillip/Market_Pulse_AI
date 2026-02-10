@@ -491,12 +491,13 @@
       const closeIssuesEl = document.getElementById('close-issues');
 
       // Use pre-computed values from backend
-      if (totalIssuesEl) totalIssuesEl.textContent = (dashboardData.totalIssues || 0).toLocaleString();
-
-      // Calculate total status counts across all sources
+      // Update Total to include ALL issues (Open + Resolved + Close)
       const totalOpen = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
       const totalResolved = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.resolved || 0), 0);
       const totalClose = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.close || 0), 0);
+
+      const grandTotal = totalOpen + totalResolved + totalClose;
+      if (totalIssuesEl) totalIssuesEl.textContent = grandTotal.toLocaleString();
 
       if (openIssuesEl) openIssuesEl.textContent = totalOpen.toLocaleString();
       if (resolvedIssuesEl) resolvedIssuesEl.textContent = totalResolved.toLocaleString();
@@ -723,32 +724,18 @@
       const chart = echarts.init(chartDom);
       const colors = getChartColors();
 
-      // Calculate totals across all sources for OPEN ISSUES ONLY
+      // Calculate totals across all sources (High/Medium/Low already represent Open + Resolved)
       const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High || 0), 0);
       const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium || 0), 0);
       const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low || 0), 0);
 
-      // Calculate the proportion of open issues for each severity level
-      // We need to apply the open rate to each severity count
-      const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
-      const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+      // Use raw counts directly as they are already filtered for Open + Resolved
+      const high = totalHigh;
+      const medium = totalMedium;
+      const low = totalLow;
 
-      // If we have total issues, calculate the open rate and apply it to severity counts
-      let openHigh, openMedium, openLow;
-      if (totalAllIssues > 0) {
-        const openRate = totalOpenIssues / totalAllIssues;
-        openHigh = Math.round(totalHigh * openRate);
-        openMedium = Math.round(totalMedium * openRate);
-        openLow = Math.round(totalLow * openRate);
-      } else {
-        // Fallback to original counts if no total data
-        openHigh = totalHigh;
-        openMedium = totalMedium;
-        openLow = totalLow;
-      }
-
-      const totalOpen = openHigh + openMedium + openLow;
-      if (totalOpen === 0) return;
+      const total = high + medium + low;
+      if (total === 0) return;
 
       // Calculate arrow positions for each pie slice
       const centerX = 0.5; // center x (50%)
@@ -759,9 +746,9 @@
 
       const graphicElements = [];
       const data = [
-        { value: totalHigh, name: 'High' },
-        { value: totalMedium, name: 'Medium' },
-        { value: totalLow, name: 'Low' }
+        { value: high, name: 'High' },
+        { value: medium, name: 'Medium' },
+        { value: low, name: 'Low' }
       ].filter(item => item.value > 0); // Only show arrows for slices with values
 
       // Calculate cumulative angles
@@ -863,7 +850,7 @@
             },
             data: [
               {
-                value: openHigh,
+                value: high,
                 name: 'High',
                 itemStyle: {
                   color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
@@ -874,7 +861,7 @@
                 }
               },
               {
-                value: openMedium,
+                value: medium,
                 name: 'Medium',
                 itemStyle: {
                   color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
@@ -885,7 +872,7 @@
                 }
               },
               {
-                value: openLow,
+                value: low,
                 name: 'Low',
                 itemStyle: {
                   color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
