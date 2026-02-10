@@ -312,10 +312,10 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
 
-        // Sort sub-modules by count descending and take top 10
+        // Sort sub-modules by count descending and take top 5
         const sortedSubModules = Object.entries(data.subModules)
           .sort(([, a], [, b]) => b.count - a.count)
-          .slice(0, 10); // Top 10 sub-modules
+          .slice(0, 5); // Top 5 sub-modules
 
         // Create nested sub-module and insights HTML
         let subModuleHTML = '<div class="space-y-3">';

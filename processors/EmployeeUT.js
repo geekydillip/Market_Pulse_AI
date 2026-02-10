@@ -5,43 +5,43 @@ const promptTemplate = require('../prompts/EmployeeUTPrompt');
  * Shared header normalization utility - eliminates code duplication
  */
 function normalizeHeaders(rows) {
-    // Map header name variants to canonical names
-    const headerMap = {
+  // Map header name variants to canonical names
+  const headerMap = {
 
     // Model variants
     'model no.': 'Model No.',
     'Dev. Mdl. Name/Item Name': 'Model No.',
     'dev. mdl. name/item name': 'Model No.',
     'target model': 'Model No.',
-    
+
     // Case Code variants
     'case code': 'Case Code',
     'plm code': 'Case Code',
     'plm code': 'Case Code',
-    
+
     // S/W Ver variants
     's/w ver.': 'S/W Ver.',
     'version occurred': 'S/W Ver.',
-    
+
     // Title variants
     'title': 'Title',
-    
+
     // Problem variants
     'problem': 'Problem',
     'issue': 'Problem',
-    
+
     // Progr.Stat. variants
     'progr.stat.': 'Progr.Stat.',
     'progress status': 'Progr.Stat.',
-    'status': 'Progr.Stat.',
-    
+    'PLM status': 'Progr.Stat.',
+
     // Resolve variants
     'Resolve': 'Resolve',
-    'plm status': 'Resolve',
+    'PLM resolve option1': 'Resolve',
     'resolution': 'Resolve',
     'Resolve Option(Medium)': 'Resolve',
     'resolve option(medium)': 'Resolve',
-    
+
     // Additional columns from your Excel file to preserve
     'reg. by id': 'Reg. by ID',
     'registered date': 'Registered Date',
@@ -49,7 +49,7 @@ function normalizeHeaders(rows) {
     'priority': 'Priority',
     'occurr. freq.': 'Occurr. Freq.',
     'feature': 'Feature',
-    
+
     // Module variants
     'module': 'Module',
     'sub-module': 'Sub-Module',
@@ -58,7 +58,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve'];
+  const canonicalCols = ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -108,7 +108,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['case code', 'plm code','plm status', 'target model', 'version occurred','Case Code','Dev. Mdl. Name/Item Name','Model No.','Progr.Stat.','S/W Ver.','Title','Problem','Resolve']; // lowercase checks
+  const expectedHeaderKeywords = ['case code', 'plm code', 'plm status', 'target model', 'version occurred', 'Case Code', 'Dev. Mdl. Name/Item Name', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -256,7 +256,7 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['Title','Problem','Ai Summary','Severity Reason'].includes(h)) return { wch: 41 };
+      if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
       if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
       if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
