@@ -1,1326 +1,1282 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Market Pulse - VOC Intelligence</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Market Pulse - VOC Intelligence</title>
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-  <!-- ECharts -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1',
-            },
-            secondary: {
-              50: '#f8fafc',
-              100: '#f1f5f9',
-              500: '#64748b',
-              600: '#475569',
-              700: '#334155',
-            },
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          primary: {
+            50: '#f0f9ff',
+            100: '#e0f2fe',
+            500: '#0ea5e9',
+            600: '#0284c7',
+            700: '#0369a1',
+          },
+          secondary: {
+            50: '#f8fafc',
+            100: '#f1f5f9',
+            500: '#64748b',
+            600: '#475569',
+            700: '#334155',
           },
         },
       },
-    }
+    },
+  }
 
 
-    // System theme detection
-    function updateTheme() {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.toggle('dark', isDark);
-    }
+  // System theme detection
+  function updateTheme() {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', isDark);
+  }
 
-    // Listen for theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+  // Listen for theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
 
-    // Set initial theme
-    updateTheme();
-  </script>
+  // Set initial theme
+  updateTheme();
+</script>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
-  <div class="max-w-7xl mx-auto px-6 py-6">
+<div class="max-w-7xl mx-auto px-6 py-6">
 
-    <!-- HEADER -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI DASHBOARD</h1>
+<!-- HEADER -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI DASHBOARD</h1>
 
-      <div class="flex gap-2">
-        <a href="aiprocessor.html"
-          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-          <i class="fa-solid fa-brain mr-2"></i>
-          AI PROCESSOR
-        </a>
-      </div>
-    </div>
-
-    <!-- KPI -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total PLM Issues</p>
-            <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
-          </div>
-          <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-            <i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400 text-xl"></i>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="bg-red-50 dark:bg-red-950/30 rounded-xl shadow-lg p-6 border-2 border-red-200 dark:border-red-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full -mr-8 -mt-8"></div>
-        <div class="flex items-center justify-between relative z-10">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Open</p>
-            <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="open-issues">0</p>
-          </div>
-          <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
-            <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl shadow-lg p-6 border-2 border-yellow-200 dark:border-yellow-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-full -mr-8 -mt-8"></div>
-        <div class="flex items-center justify-between relative z-10">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Resolve</p>
-            <p class="text-3xl font-bold text-yellow-800 dark:text-yellow-200 mt-1" id="resolved-issues">0</p>
-          </div>
-          <div class="p-3 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
-            <i class="fa-solid fa-check-circle text-yellow-600 dark:text-yellow-400 text-xl"></i>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="bg-green-50 dark:bg-green-950/30 rounded-xl shadow-lg p-6 border-2 border-green-200 dark:border-green-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full -mr-8 -mt-8"></div>
-        <div class="flex items-center justify-between relative z-10">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Close</p>
-            <p class="text-3xl font-bold text-green-800 dark:text-green-200 mt-1" id="close-issues">0</p>
-          </div>
-          <div class="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
-            <i class="fa-solid fa-times-circle text-green-600 dark:text-green-400 text-xl"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CATEGORY HEADERS -->
-    <section class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
-
-      <div class="md:col-span-2 space-y-2">
-        <div
-          class="bg-green-50 dark:bg-green-950/30 rounded-xl shadow-lg p-4 text-slate-900 dark:text-slate-100 transition-all duration-300 border-2 border-green-200 dark:border-green-800 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full -mr-8 -mt-8"></div>
-          <div class="flex items-center justify-center relative z-10">
-            <h3 class="text-lg font-bold text-center">PLM</h3>
-            <i class="fa-solid fa-list-check text-xl opacity-70 ml-4 text-slate-600 dark:text-slate-300"></i>
-          </div>
-          <p class="text-slate-600 dark:text-slate-300 text-xs mt-1 text-center">Reported VOC and Issues on PLM</p>
-        </div>
-
-        <div class="flex flex-wrap gap-3">
-          <a href="GLOBAL_VOC_PLM_Dashboard.html"
-            class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
-            <i class="fa-solid fa-globe mr-2"></i>
-            GLOBAL VOC PLM
-          </a>
-          <a href="BetaUT_Dashboard.html"
-            class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-teal-600 hover:from-slate-800 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
-            <i class="fa-solid fa-mobile-screen mr-2"></i>
-            BETA UT
-          </a>
-          <a href="employee_ut_Dashboard.html"
-            class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-lime-600 hover:from-slate-800 hover:to-lime-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
-            <i class="fa-solid fa-trophy mr-2"></i>
-            EMPLOYEE UT
-          </a>
-        </div>
-      </div>
-
-      <div class="md:col-span-1 space-y-2">
-        <div
-          class="bg-purple-50 dark:bg-purple-950/30 rounded-xl shadow-lg p-4 text-slate-900 dark:text-slate-100 transition-all duration-300 border-2 border-purple-200 dark:border-purple-800 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full -mr-8 -mt-8"></div>
-          <div class="flex items-center justify-center relative z-10">
-            <h3 class="text-lg font-bold text-center">VOC</h3>
-            <i class="fa-solid fa-comments text-xl opacity-70 ml-4 text-slate-600 dark:text-slate-300"></i>
-          </div>
-          <p class="text-slate-600 dark:text-slate-300 text-xs mt-1 text-center">Voice of Customer</p>
-        </div>
-        <a href="SMVOC_Dashboard.html"
-          class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
-          <i class="fa-solid fa-comments mr-2"></i>
-          SAMSUNG MEMBERS VOC
-        </a>
-      </div>
-
-      <div class="md:col-span-1 space-y-2">
-        <div
-          class="bg-orange-50 dark:bg-orange-950/30 rounded-xl shadow-lg p-4 text-slate-900 dark:text-slate-100 transition-all duration-300 border-2 border-orange-200 dark:border-orange-800 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-16 h-16 bg-orange-500/10 rounded-full -mr-8 -mt-8"></div>
-          <div class="flex items-center justify-center relative z-10">
-            <h3 class="text-lg font-bold text-center">Analytics</h3>
-            <i class="fa-solid fa-chart-line text-xl opacity-70 ml-4 text-slate-600 dark:text-slate-300"></i>
-          </div>
-          <p class="text-slate-600 dark:text-slate-300 text-xs mt-1 text-center">Insights</p>
-        </div>
-        <button
-          class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-slate-700 to-orange-600 hover:from-slate-800 hover:to-orange-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
-          <i class="fa-solid fa-question-circle mr-2"></i>
-          SERVICE ISSUE
-        </button>
-      </div>
-    </section>
-
-    <!-- CHARTS ROW -->
-    <section class="grid grid-cols-12 gap-4">
-
-      <!-- SEVERITY SPLIT - Donut Chart -->
-      <div class="col-span-3">
-        <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[280px]">
-          <!-- Header with subtle accent -->
-          <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Wise Issue Count</h3>
-              <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chart Container -->
-          <div class="p-4 flex items-center justify-bottom">
-            <div id="severity-split-chart" class="h-[180px] w-full"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TOP MODELS - Professional Design -->
-      <div class="col-span-5">
-        <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[280px]">
-          <!-- Header with subtle accent -->
-          <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Models</h3>
-              <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chart Container -->
-          <div class="p-4">
-            <div id="top-models-chart" class="h-[180px] w-full"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TOP MODULES - Donut Chart -->
-      <div class="col-span-4">
-        <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[280px]">
-          <!-- Header with subtle accent -->
-          <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Modules</h3>
-              <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chart Container -->
-          <div class="p-4">
-            <div id="top-modules-chart" class="h-[180px] w-full"></div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-
-
-    <!-- MODEL SUMMARY TABLE -->
-    <section class="mt-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-        <!-- Header with subtle accent -->
-        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Model Summary Analysis</h3>
-            <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
-              <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Table Container -->
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-slate-50 dark:bg-slate-700">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  SL. NO.</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Model Number</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Global VOC PLM</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Beta UT</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  EMPLOYEE UT</th>
-              </tr>
-            </thead>
-            <tbody id="model-summary-table-body"
-              class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-              <!-- Dynamic content will be inserted here -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
+  <div class="flex gap-2">
+    <a href="aiprocessor.html"
+       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+      <i class="fa-solid fa-brain mr-2"></i>
+      AI PROCESSOR
+    </a>
   </div>
+</div>
 
-  <!-- DETAILS MODAL -->
-  <div id="details-modal" class="fixed inset-0 z-50 hidden">
-    <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeDetailsModal()"></div>
-    <div
-      class="relative mx-auto my-8 max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl flex flex-col overflow-hidden">
-      <div
-        class="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700">
-        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Detailed Model Analysis</h2>
-        <button class="text-slate-400 hover:text-slate-600 dark:text-slate-300 text-2xl leading-none"
-          onclick="closeDetailsModal()">×</button>
+<!-- KPI -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total PLM Issues</p>
+        <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
       </div>
-      <div class="flex-1 overflow-y-auto p-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
-          <div class="text-center">
-            <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-models">0</div>
-            <div class="text-sm text-slate-600 dark:text-slate-400">Total Models</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-issues">0</div>
-            <div class="text-sm text-slate-600 dark:text-slate-400">Total Issues</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold text-red-600 dark:text-red-400" id="modal-high-risk">0</div>
-            <div class="text-sm text-slate-600 dark:text-slate-400">High Risk Models</div>
-          </div>
-        </div>
-        <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
-          <table class="w-full">
-            <thead class="bg-slate-50 dark:bg-slate-700">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Rank</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Model</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Module</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Source</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Issues</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Severity</th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Risk Level</th>
-              </tr>
-            </thead>
-            <tbody id="modal-table-body"
-              class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-              <!-- Dynamic content will be inserted here -->
-            </tbody>
-          </table>
-        </div>
+      <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
+        <i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400 text-xl"></i>
       </div>
     </div>
   </div>
 
-  <script>
-    // Global state
-    let dashboardData = {
-      kpis: {},
-      topModels: [],
-      topModules: []
-    };
+  <div class="bg-red-50 dark:bg-red-950/30 rounded-xl shadow-lg p-6 border-2 border-red-200 dark:border-red-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Open</p>
+        <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="open-issues">0</p>
+      </div>
+      <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
+        <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
 
-    // Initialize dashboard when page loads
-    document.addEventListener('DOMContentLoaded', function () {
-      loadDashboardData();
-    });
+  <div class="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl shadow-lg p-6 border-2 border-yellow-200 dark:border-yellow-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Resolve</p>
+        <p class="text-3xl font-bold text-yellow-800 dark:text-yellow-200 mt-1" id="resolved-issues">0</p>
+      </div>
+      <div class="p-3 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
+        <i class="fa-solid fa-check-circle text-yellow-600 dark:text-yellow-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
 
-    // Add accessibility attributes to table headers
-    document.addEventListener('DOMContentLoaded', function () {
-      // Add scope="col" to table headers for accessibility
-      const tableHeaders = document.querySelectorAll('th');
-      tableHeaders.forEach(header => {
-        header.setAttribute('scope', 'col');
-      });
-    });
+  <div class="bg-green-50 dark:bg-green-950/30 rounded-xl shadow-lg p-6 border-2 border-green-200 dark:border-green-800 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full -mr-8 -mt-8"></div>
+    <div class="flex items-center justify-between relative z-10">
+      <div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Close</p>
+        <p class="text-3xl font-bold text-green-800 dark:text-green-200 mt-1" id="close-issues">0</p>
+      </div>
+      <div class="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
+        <i class="fa-solid fa-times-circle text-green-600 dark:text-green-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+</div>
 
-    // Load all dashboard data from central_dashboard.json
-    async function loadDashboardData() {
-      try {
-        // Fetch data from central_dashboard.json (contains all pre-aggregated data)
-        const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
-        const jsonData = await response.json();
+<!-- CATEGORY HEADERS -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
+  
+  <div class="md:col-span-2 space-y-2">
+    <div class="bg-green-50 dark:bg-green-950/30 rounded-xl shadow-lg p-4 text-slate-900 dark:text-slate-100 transition-all duration-300 border-2 border-green-200 dark:border-green-800 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full -mr-8 -mt-8"></div>
+      <div class="flex items-center justify-center relative z-10">
+        <h3 class="text-lg font-bold text-center">PLM</h3>
+        <i class="fa-solid fa-list-check text-xl opacity-70 ml-4 text-slate-600 dark:text-slate-300"></i>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 text-xs mt-1 text-center">Reported VOC and Issues on PLM</p>
+    </div>
+    
+    <div class="flex flex-wrap gap-3">
+      <a href="GLOBAL_VOC_PLM_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
+        <i class="fa-solid fa-globe mr-2"></i>
+        GLOBAL VOC PLM
+      </a>
+      <a href="BetaUT_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-teal-600 hover:from-slate-800 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
+        <i class="fa-solid fa-mobile-screen mr-2"></i>
+        BETA UT
+      </a>
+      <a href="employee_ut_Dashboard.html" class="flex-1 min-w-[100px] items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-lime-600 hover:from-slate-800 hover:to-lime-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
+        <i class="fa-solid fa-trophy mr-2"></i>
+        EMPLOYEE UT
+      </a>
+    </div>
+  </div>
 
-        // Extract data from the JSON structure - use pre-computed values
-        dashboardData.kpis = jsonData.kpis;
-        dashboardData.totalIssues = jsonData.total_issues;
-        dashboardData.highIssuesCount = jsonData.high_issues_count;
-        dashboardData.topModules = jsonData.top_modules;
-        dashboardData.topModels = jsonData.top_models;
-        dashboardData.seriesDistribution = jsonData.series_distribution;
-        dashboardData.sourceModelSummary = jsonData.source_model_summary;
-        dashboardData.modelModuleMatrix = jsonData.model_module_matrix;
-        dashboardData.filteredTopModels = jsonData.filtered_top_models;
-        dashboardData.totalUniqueModels = jsonData.total_unique_models;
-        dashboardData.totalUniqueModules = jsonData.total_unique_modules;
+  <div class="md:col-span-1 space-y-2">
+    <div class="bg-purple-50 dark:bg-purple-950/30 rounded-xl shadow-lg p-4 text-slate-900 dark:text-slate-100 transition-all duration-300 border-2 border-purple-200 dark:border-purple-800 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full -mr-8 -mt-8"></div>
+      <div class="flex items-center justify-center relative z-10">
+        <h3 class="text-lg font-bold text-center">VOC</h3>
+        <i class="fa-solid fa-comments text-xl opacity-70 ml-4 text-slate-600 dark:text-slate-300"></i>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 text-xs mt-1 text-center">Voice of Customer</p>
+    </div>
+    <a href="SMVOC_Dashboard.html" class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
+      <i class="fa-solid fa-comments mr-2"></i>
+      SAMSUNG MEMBERS VOC
+    </a>
+  </div>
 
-        // Update all UI elements
-        updateKPIs();
-        updateSeveritySplit();
-        updateTopModelsChart();
-        updateTopModulesChart();
-        createModelSummaryTable();
+  <div class="md:col-span-1 space-y-2">
+    <div class="bg-orange-50 dark:bg-orange-950/30 rounded-xl shadow-lg p-4 text-slate-900 dark:text-slate-100 transition-all duration-300 border-2 border-orange-200 dark:border-orange-800 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-16 h-16 bg-orange-500/10 rounded-full -mr-8 -mt-8"></div>
+      <div class="flex items-center justify-center relative z-10">
+        <h3 class="text-lg font-bold text-center">Analytics</h3>
+        <i class="fa-solid fa-chart-line text-xl opacity-70 ml-4 text-slate-600 dark:text-slate-300"></i>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 text-xs mt-1 text-center">Insights</p>
+    </div>
+    <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-slate-700 to-orange-600 hover:from-slate-800 hover:to-orange-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center">
+      <i class="fa-solid fa-question-circle mr-2"></i>
+      SERVICE ISSUE
+    </button>
+  </div>
+</section>
 
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        // Keep static data as fallback
+<!-- CHARTS ROW -->
+<section class="grid grid-cols-12 gap-4">
+
+<!-- SEVERITY SPLIT - Donut Chart -->
+<div class="col-span-3">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[280px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Wise Issue Count</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4 flex items-center justify-bottom">
+      <div id="severity-split-chart" class="h-[180px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP MODELS - Professional Design -->
+<div class="col-span-5">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[280px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Models</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="top-models-chart" class="h-[180px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP MODULES - Donut Chart -->
+<div class="col-span-4">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[280px]">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Modules</h3>
+        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-4">
+      <div id="top-modules-chart" class="h-[180px] w-full"></div>
+    </div>
+  </div>
+</div>
+
+</section>
+
+
+
+<!-- MODEL SUMMARY TABLE -->
+<section class="mt-8">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+    <!-- Header with subtle accent -->
+    <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Model Summary Analysis</h3>
+        <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-slate-50 dark:bg-slate-700">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">SL. NO.</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model Number</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Global VOC PLM</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Beta UT</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">EMPLOYEE UT</th>
+          </tr>
+        </thead>
+        <tbody id="model-summary-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+          <!-- Dynamic content will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- DETAILS MODAL -->
+<div id="details-modal" class="fixed inset-0 z-50 hidden">
+  <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeDetailsModal()"></div>
+  <div class="relative mx-auto my-8 max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl flex flex-col overflow-hidden">
+    <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700">
+      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Detailed Model Analysis</h2>
+      <button class="text-slate-400 hover:text-slate-600 dark:text-slate-300 text-2xl leading-none" onclick="closeDetailsModal()">×</button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-models">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">Total Models</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-900 dark:text-slate-100" id="modal-total-issues">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">Total Issues</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-red-600 dark:text-red-400" id="modal-high-risk">0</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400">High Risk Models</div>
+        </div>
+      </div>
+      <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
+        <table class="w-full">
+          <thead class="bg-slate-50 dark:bg-slate-700">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rank</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Module</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Source</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issues</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Severity</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Risk Level</th>
+            </tr>
+          </thead>
+          <tbody id="modal-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+            <!-- Dynamic content will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global state
+let dashboardData = {
+  kpis: {},
+  topModels: [],
+  topModules: []
+};
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  loadDashboardData();
+});
+
+// Add accessibility attributes to table headers
+document.addEventListener('DOMContentLoaded', function() {
+  // Add scope="col" to table headers for accessibility
+  const tableHeaders = document.querySelectorAll('th');
+  tableHeaders.forEach(header => {
+    header.setAttribute('scope', 'col');
+  });
+});
+
+// Load all dashboard data from central_dashboard.json
+async function loadDashboardData() {
+  try {
+    // Fetch data from central_dashboard.json (contains all pre-aggregated data)
+    const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
+    const jsonData = await response.json();
+
+    // Extract data from the JSON structure - use pre-computed values
+    dashboardData.kpis = jsonData.kpis;
+    dashboardData.totalIssues = jsonData.total_issues;
+    dashboardData.highIssuesCount = jsonData.high_issues_count;
+    dashboardData.topModules = jsonData.top_modules;
+    dashboardData.topModels = jsonData.top_models;
+    dashboardData.seriesDistribution = jsonData.series_distribution;
+    dashboardData.sourceModelSummary = jsonData.source_model_summary;
+    dashboardData.modelModuleMatrix = jsonData.model_module_matrix;
+    dashboardData.filteredTopModels = jsonData.filtered_top_models;
+    dashboardData.totalUniqueModels = jsonData.total_unique_models;
+    dashboardData.totalUniqueModules = jsonData.total_unique_modules;
+
+    // Update all UI elements
+    updateKPIs();
+    updateSeveritySplit();
+    updateTopModelsChart();
+    updateTopModulesChart();
+    createModelSummaryTable();
+
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    // Keep static data as fallback
+  }
+}
+
+// Update KPI values
+function updateKPIs() {
+  // Update KPI elements using correct IDs - use pre-computed values
+  const totalIssuesEl = document.getElementById('total-issues');
+  const openIssuesEl = document.getElementById('open-issues');
+  const resolvedIssuesEl = document.getElementById('resolved-issues');
+  const closeIssuesEl = document.getElementById('close-issues');
+
+  // Use pre-computed values from backend
+  if (totalIssuesEl) totalIssuesEl.textContent = (dashboardData.totalIssues || 0).toLocaleString();
+
+  // Calculate total status counts across all sources
+  const totalOpen = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+  const totalResolved = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.resolved || 0), 0);
+  const totalClose = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.close || 0), 0);
+
+  if (openIssuesEl) openIssuesEl.textContent = totalOpen.toLocaleString();
+  if (resolvedIssuesEl) resolvedIssuesEl.textContent = totalResolved.toLocaleString();
+  if (closeIssuesEl) closeIssuesEl.textContent = totalClose.toLocaleString();
+}
+
+// Update source distribution chart - 100% Stacked Horizontal Bar
+function updateSourceDistribution() {
+  const chartDom = document.getElementById('source-distribution-chart');
+  if (!chartDom) {
+    return;
+  }
+
+  console.log("HTML Dashboard - Updating source distribution");
+  console.log("KPIs data:", dashboardData.kpis);
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Use actual severity data from KPIs instead of classifying by count
+  const severityData = dashboardData.kpis || {};
+  console.log("Severity data from KPIs:", severityData);
+
+  // Map display names to KPI keys
+  const displayToKPI = {
+    'Beta Users': 'Beta User Issues',
+    'S.M. PLM': 'Samsung Members PLM',
+    'S.M. VOC': 'Samsung Members VOC'
+  };
+
+  const sources = ['Beta Users', 'S.M. PLM', 'S.M. VOC'];
+
+  // Extract severity counts directly from KPIs
+  const highData = sources.map(source => {
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.High || 0;
+    console.log(`High for ${source} (${kpiKey}):`, value);
+    return value;
+  });
+
+  const mediumData = sources.map(source => {
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.Medium || 0;
+    console.log(`Medium for ${source} (${kpiKey}):`, value);
+    return value;
+  });
+
+  const lowData = sources.map(source => {
+    const kpiKey = displayToKPI[source];
+    const value = severityData[kpiKey]?.Low || 0;
+    console.log(`Low for ${source} (${kpiKey}):`, value);
+    return value;
+  });
+
+  console.log("Final data arrays - High:", highData, "Medium:", mediumData, "Low:", lowData);
+
+  // Create mapping from display names to data keys
+  const displayNameToKey = {
+    'Beta Users': 'Beta',
+    'S.M. PLM': 'PLM',
+    'S.M. VOC': 'VOC'
+  };
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        let result = '';
+        params.forEach(param => {
+          const source = param.name;
+          const severity = param.seriesName;
+          const value = param.value;
+          result += `${source}<br/>${severity}: ${value}<br/>`;
+        });
+        return result;
       }
-    }
-
-    // Update KPI values
-    function updateKPIs() {
-      // Update KPI elements using correct IDs - use pre-computed values
-      const totalIssuesEl = document.getElementById('total-issues');
-      const openIssuesEl = document.getElementById('open-issues');
-      const resolvedIssuesEl = document.getElementById('resolved-issues');
-      const closeIssuesEl = document.getElementById('close-issues');
-
-      // Use pre-computed values from backend
-      if (totalIssuesEl) totalIssuesEl.textContent = (dashboardData.totalIssues || 0).toLocaleString();
-
-      // Calculate total status counts across all sources
-      const totalOpen = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
-      const totalResolved = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.resolved || 0), 0);
-      const totalClose = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.close || 0), 0);
-
-      if (openIssuesEl) openIssuesEl.textContent = totalOpen.toLocaleString();
-      if (resolvedIssuesEl) resolvedIssuesEl.textContent = totalResolved.toLocaleString();
-      if (closeIssuesEl) closeIssuesEl.textContent = totalClose.toLocaleString();
-    }
-
-    // Update source distribution chart - 100% Stacked Horizontal Bar
-    function updateSourceDistribution() {
-      const chartDom = document.getElementById('source-distribution-chart');
-      if (!chartDom) {
-        return;
+    },
+    legend: {
+      data: ['High', 'Medium', 'Low'],
+      bottom: 10,
+      orient: 'horizontal',
+      textStyle: {
+        color: colors.textPrimary
       }
-
-      console.log("HTML Dashboard - Updating source distribution");
-      console.log("KPIs data:", dashboardData.kpis);
-
-      const chart = echarts.init(chartDom);
-      const colors = getChartColors();
-
-      // Use actual severity data from KPIs instead of classifying by count
-      const severityData = dashboardData.kpis || {};
-      console.log("Severity data from KPIs:", severityData);
-
-      // Map display names to KPI keys
-      const displayToKPI = {
-        'Beta Users': 'Beta User Issues',
-        'S.M. PLM': 'Samsung Members PLM',
-        'S.M. VOC': 'Samsung Members VOC'
-      };
-
-      const sources = ['Beta Users', 'S.M. PLM', 'S.M. VOC'];
-
-      // Extract severity counts directly from KPIs
-      const highData = sources.map(source => {
-        const kpiKey = displayToKPI[source];
-        const value = severityData[kpiKey]?.High || 0;
-        console.log(`High for ${source} (${kpiKey}):`, value);
-        return value;
-      });
-
-      const mediumData = sources.map(source => {
-        const kpiKey = displayToKPI[source];
-        const value = severityData[kpiKey]?.Medium || 0;
-        console.log(`Medium for ${source} (${kpiKey}):`, value);
-        return value;
-      });
-
-      const lowData = sources.map(source => {
-        const kpiKey = displayToKPI[source];
-        const value = severityData[kpiKey]?.Low || 0;
-        console.log(`Low for ${source} (${kpiKey}):`, value);
-        return value;
-      });
-
-      console.log("Final data arrays - High:", highData, "Medium:", mediumData, "Low:", lowData);
-
-      // Create mapping from display names to data keys
-      const displayNameToKey = {
-        'Beta Users': 'Beta',
-        'S.M. PLM': 'PLM',
-        'S.M. VOC': 'VOC'
-      };
-
-      const option = {
-        textStyle: {
+    },
+    grid: {
+      left: '20%',
+      right: '0%',
+      top: '10%',
+      bottom: '20%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'value',
+      axisLabel: {
+        show: false,
+        fontSize: 10,
+        color: colors.textPrimary
+      },
+      splitLine: {
+        show: false
+      }
+    },
+    yAxis: {
+      type: 'category',
+      data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'], // Match the order of sources array
+      axisLabel: {
+        fontSize: 12,
+        interval: 0,
+        color: colors.textPrimary
+      }
+    },
+    series: [
+      {
+        name: 'High',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '50%', // Thicker bars for cylindrical effect
+        data: highData,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#ef4444' },
+            { offset: 0.5, color: '#dc2626' },
+            { offset: 1, color: '#b91c1c' }
+          ]),
+          borderRadius: [12, 0, 0, 12],
+          shadowBlur: 8,
+          shadowColor: 'rgba(239, 68, 68, 0.3)'
+        },
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            shadowBlur: 12,
+            shadowColor: 'rgba(239, 68, 68, 0.5)'
+          }
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
           color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Medium',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '70%',
+        data: mediumData,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#fbbf24' },
+            { offset: 0.5, color: '#f59e0b' },
+            { offset: 1, color: '#d97706' }
+          ]),
+          borderRadius: [0, 0, 0, 0],
+          shadowBlur: 8,
+          shadowColor: 'rgba(245, 158, 11, 0.3)',
+          opacity: 0.75
         },
-        tooltip: {
-          trigger: 'axis',
-          formatter: function (params) {
-            let result = '';
-            params.forEach(param => {
-              const source = param.name;
-              const severity = param.seriesName;
-              const value = param.value;
-              result += `${source}<br/>${severity}: ${value}<br/>`;
-            });
-            return result;
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            opacity: 1,
+            shadowBlur: 12,
+            shadowColor: 'rgba(245, 158, 11, 0.5)'
           }
         },
-        legend: {
-          data: ['High', 'Medium', 'Low'],
-          bottom: 10,
-          orient: 'horizontal',
-          textStyle: {
-            color: colors.textPrimary
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
+        }
+      },
+      {
+        name: 'Low',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '70%',
+        data: lowData,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#9ca3af' },
+            { offset: 0.5, color: '#6b7280' },
+            { offset: 1, color: '#4b5563' }
+          ]),
+          borderRadius: [4, 4, 0, 0],
+          shadowBlur: 8,
+          shadowColor: 'rgba(107, 114, 128, 0.3)'
+        },
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            shadowBlur: 12,
+            shadowColor: 'rgba(107, 114, 128, 0.5)'
           }
         },
-        grid: {
-          left: '20%',
-          right: '0%',
-          top: '10%',
-          bottom: '20%',
-          borderColor: colors.gridLines
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: '{c}',
+          fontSize: 12,
+          color: colors.textPrimary
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update severity split chart - Donut Chart
+function updateSeveritySplit() {
+  const chartDom = document.getElementById('severity-split-chart');
+  if (!chartDom) return;
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Calculate totals across all sources for OPEN ISSUES ONLY
+  const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High || 0), 0);
+  const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium || 0), 0);
+  const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low || 0), 0);
+
+  // Calculate the proportion of open issues for each severity level
+  // We need to apply the open rate to each severity count
+  const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+  const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+  
+  // If we have total issues, calculate the open rate and apply it to severity counts
+  let openHigh, openMedium, openLow;
+  if (totalAllIssues > 0) {
+    const openRate = totalOpenIssues / totalAllIssues;
+    openHigh = Math.round(totalHigh * openRate);
+    openMedium = Math.round(totalMedium * openRate);
+    openLow = Math.round(totalLow * openRate);
+  } else {
+    // Fallback to original counts if no total data
+    openHigh = totalHigh;
+    openMedium = totalMedium;
+    openLow = totalLow;
+  }
+
+  const totalOpen = openHigh + openMedium + openLow;
+  if (totalOpen === 0) return;
+
+  // Calculate arrow positions for each pie slice
+  const centerX = 0.5; // center x (50%)
+  const centerY = 0.45; // center y (45%)
+  const outerRadius = 0.8; // outer radius (70%)
+  const innerRadius = 0.55; // inner radius (55%)
+  const arrowLength = 0.5; // length of arrow extension
+
+  const graphicElements = [];
+  const data = [
+    { value: totalHigh, name: 'High' },
+    { value: totalMedium, name: 'Medium' },
+    { value: totalLow, name: 'Low' }
+  ].filter(item => item.value > 0); // Only show arrows for slices with values
+
+  // Calculate cumulative angles
+  let totalValue = data.reduce((sum, item) => sum + item.value, 0);
+  let currentAngle = -Math.PI / 2; // Start from top
+
+  data.forEach((item, index) => {
+    const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
+    const midAngle = currentAngle + sliceAngle / 2;
+
+    // Calculate arrow start position (outer edge of slice)
+    const startX = centerX + Math.cos(midAngle) * outerRadius;
+    const startY = centerY + Math.sin(midAngle) * outerRadius;
+
+    // Calculate arrow end position (extended outward)
+    const endX = centerX + Math.cos(midAngle) * (outerRadius + arrowLength);
+    const endY = centerY + Math.sin(midAngle) * (outerRadius + arrowLength);
+
+    // Add arrow line
+    graphicElements.push({
+      type: 'line',
+      shape: {
+        x1: startX * chartDom.clientWidth,
+        y1: startY * chartDom.clientHeight,
+        x2: endX * chartDom.clientWidth,
+        y2: endY * chartDom.clientHeight
+      },
+      style: {
+        stroke: colors.textPrimary,
+        lineWidth: 2
+      }
+    });
+
+    // Add arrowhead (triangle)
+    const arrowSize = 8;
+    const angle = Math.atan2(endY - startY, endX - startX);
+    graphicElements.push({
+      type: 'polygon',
+      shape: {
+        points: [
+          [endX * chartDom.clientWidth, endY * chartDom.clientHeight],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle - Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle - Math.PI/6)],
+          [endX * chartDom.clientWidth - arrowSize * Math.cos(angle + Math.PI/6),
+           endY * chartDom.clientHeight - arrowSize * Math.sin(angle + Math.PI/6)]
+        ]
+      },
+      style: {
+        fill: colors.textPrimary
+      }
+    });
+
+    currentAngle += sliceAngle;
+  });
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
+    },
+    legend: {
+      data: ['High', 'Medium', 'Low'],
+      bottom: '5%',
+      orient: 'horizontal',
+      textStyle: {
+        color: colors.textPrimary
+      }
+    },
+    series: [
+      {
+        name: 'Severity',
+        type: 'pie',
+        radius: ['55%', '70%'], // Smaller inner radius, larger outer
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {
+          show: true,
+          position: 'outside',
+          formatter: '{c}',
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: colors.textPrimary,
+          align: 'center',
+          verticalAlign: 'middle'
         },
-        xAxis: {
-          type: 'value',
-          axisLabel: {
-            show: false,
-            fontSize: 10,
-            color: colors.textPrimary
-          },
-          splitLine: {
-            show: false
+        labelLine: {
+          show: true,
+          length: 12,
+          length2: 5,
+          smooth: true,
+          lineStyle: {
+            color: colors.textPrimary,
+            width: 1,
+            opacity: 0.7
           }
         },
-        yAxis: {
-          type: 'category',
-          data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'], // Match the order of sources array
-          axisLabel: {
-            fontSize: 12,
-            interval: 0,
-            color: colors.textPrimary
-          }
-        },
-        series: [
+        data: [
           {
+            value: openHigh,
             name: 'High',
-            type: 'bar',
-            stack: 'total',
-            barWidth: '50%', // Thicker bars for cylindrical effect
-            data: highData,
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
                 { offset: 0, color: '#ef4444' },
                 { offset: 0.5, color: '#dc2626' },
                 { offset: 1, color: '#b91c1c' }
-              ]),
-              borderRadius: [12, 0, 0, 12],
-              shadowBlur: 8,
-              shadowColor: 'rgba(239, 68, 68, 0.3)'
-            },
-            emphasis: {
-              focus: 'series',
-              itemStyle: {
-                shadowBlur: 12,
-                shadowColor: 'rgba(239, 68, 68, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'inside',
-              formatter: '{c}',
-              fontSize: 12,
-              color: colors.textPrimary
+              ])
             }
           },
           {
+            value: openMedium,
             name: 'Medium',
-            type: 'bar',
-            stack: 'total',
-            barWidth: '70%',
-            data: mediumData,
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
                 { offset: 0, color: '#fbbf24' },
                 { offset: 0.5, color: '#f59e0b' },
                 { offset: 1, color: '#d97706' }
-              ]),
-              borderRadius: [0, 0, 0, 0],
-              shadowBlur: 8,
-              shadowColor: 'rgba(245, 158, 11, 0.3)',
-              opacity: 0.75
-            },
-            emphasis: {
-              focus: 'series',
-              itemStyle: {
-                opacity: 1,
-                shadowBlur: 12,
-                shadowColor: 'rgba(245, 158, 11, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'inside',
-              formatter: '{c}',
-              fontSize: 12,
-              color: colors.textPrimary
+              ])
             }
           },
           {
+            value: openLow,
             name: 'Low',
-            type: 'bar',
-            stack: 'total',
-            barWidth: '70%',
-            data: lowData,
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
                 { offset: 0, color: '#9ca3af' },
                 { offset: 0.5, color: '#6b7280' },
                 { offset: 1, color: '#4b5563' }
-              ]),
-              borderRadius: [4, 4, 0, 0],
-              shadowBlur: 8,
-              shadowColor: 'rgba(107, 114, 128, 0.3)'
-            },
-            emphasis: {
-              focus: 'series',
-              itemStyle: {
-                shadowBlur: 12,
-                shadowColor: 'rgba(107, 114, 128, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'inside',
-              formatter: '{c}',
-              fontSize: 12,
-              color: colors.textPrimary
+              ])
             }
-          }
-        ]
-      };
-
-      chart.setOption(option);
-      window.addEventListener('resize', () => chart.resize());
-    }
-
-    // Update severity split chart - Donut Chart
-    function updateSeveritySplit() {
-      const chartDom = document.getElementById('severity-split-chart');
-      if (!chartDom) return;
-
-      const chart = echarts.init(chartDom);
-      const colors = getChartColors();
-
-      // Calculate totals across all sources for OPEN ISSUES ONLY
-      const totalHigh = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.High || 0), 0);
-      const totalMedium = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Medium || 0), 0);
-      const totalLow = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.Low || 0), 0);
-
-      // Calculate the proportion of open issues for each severity level
-      // We need to apply the open rate to each severity count
-      const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
-      const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
-
-      // If we have total issues, calculate the open rate and apply it to severity counts
-      let openHigh, openMedium, openLow;
-      if (totalAllIssues > 0) {
-        const openRate = totalOpenIssues / totalAllIssues;
-        openHigh = Math.round(totalHigh * openRate);
-        openMedium = Math.round(totalMedium * openRate);
-        openLow = Math.round(totalLow * openRate);
-      } else {
-        // Fallback to original counts if no total data
-        openHigh = totalHigh;
-        openMedium = totalMedium;
-        openLow = totalLow;
-      }
-
-      const totalOpen = openHigh + openMedium + openLow;
-      if (totalOpen === 0) return;
-
-      // Calculate arrow positions for each pie slice
-      const centerX = 0.5; // center x (50%)
-      const centerY = 0.45; // center y (45%)
-      const outerRadius = 0.8; // outer radius (70%)
-      const innerRadius = 0.55; // inner radius (55%)
-      const arrowLength = 0.5; // length of arrow extension
-
-      const graphicElements = [];
-      const data = [
-        { value: totalHigh, name: 'High' },
-        { value: totalMedium, name: 'Medium' },
-        { value: totalLow, name: 'Low' }
-      ].filter(item => item.value > 0); // Only show arrows for slices with values
-
-      // Calculate cumulative angles
-      let totalValue = data.reduce((sum, item) => sum + item.value, 0);
-      let currentAngle = -Math.PI / 2; // Start from top
-
-      data.forEach((item, index) => {
-        const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
-        const midAngle = currentAngle + sliceAngle / 2;
-
-        // Calculate arrow start position (outer edge of slice)
-        const startX = centerX + Math.cos(midAngle) * outerRadius;
-        const startY = centerY + Math.sin(midAngle) * outerRadius;
-
-        // Calculate arrow end position (extended outward)
-        const endX = centerX + Math.cos(midAngle) * (outerRadius + arrowLength);
-        const endY = centerY + Math.sin(midAngle) * (outerRadius + arrowLength);
-
-        // Add arrow line
-        graphicElements.push({
-          type: 'line',
-          shape: {
-            x1: startX * chartDom.clientWidth,
-            y1: startY * chartDom.clientHeight,
-            x2: endX * chartDom.clientWidth,
-            y2: endY * chartDom.clientHeight
-          },
-          style: {
-            stroke: colors.textPrimary,
-            lineWidth: 2
-          }
-        });
-
-        // Add arrowhead (triangle)
-        const arrowSize = 8;
-        const angle = Math.atan2(endY - startY, endX - startX);
-        graphicElements.push({
-          type: 'polygon',
-          shape: {
-            points: [
-              [endX * chartDom.clientWidth, endY * chartDom.clientHeight],
-              [endX * chartDom.clientWidth - arrowSize * Math.cos(angle - Math.PI / 6),
-              endY * chartDom.clientHeight - arrowSize * Math.sin(angle - Math.PI / 6)],
-              [endX * chartDom.clientWidth - arrowSize * Math.cos(angle + Math.PI / 6),
-              endY * chartDom.clientHeight - arrowSize * Math.sin(angle + Math.PI / 6)]
-            ]
-          },
-          style: {
-            fill: colors.textPrimary
-          }
-        });
-
-        currentAngle += sliceAngle;
-      });
-
-      const option = {
-        textStyle: {
-          color: colors.textPrimary
-        },
-        tooltip: {
-          trigger: 'item',
-          formatter: '{b}: {c} ({d}%)'
-        },
-        legend: {
-          data: ['High', 'Medium', 'Low'],
-          bottom: '0%',
-          orient: 'horizontal',
-          textStyle: {
-            color: colors.textPrimary
-          }
-        },
-        series: [
-          {
-            name: 'Severity',
-            type: 'pie',
-            radius: ['55%', '70%'], // Smaller inner radius, larger outer
-            center: ['50%', '45%'],
-            avoidLabelOverlap: false,
-            label: {
-              show: true,
-              position: 'outside',
-              formatter: '{c}',
-              fontSize: 12,
-              fontWeight: 'bold',
-              color: colors.textPrimary,
-              align: 'center',
-              verticalAlign: 'middle'
-            },
-            labelLine: {
-              show: true,
-              length: 12,
-              length2: 5,
-              smooth: true,
-              lineStyle: {
-                color: colors.textPrimary,
-                width: 1,
-                opacity: 0.7
-              }
-            },
-            data: [
-              {
-                value: openHigh,
-                name: 'High',
-                itemStyle: {
-                  color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                    { offset: 0, color: '#ef4444' },
-                    { offset: 0.5, color: '#dc2626' },
-                    { offset: 1, color: '#b91c1c' }
-                  ])
-                }
-              },
-              {
-                value: openMedium,
-                name: 'Medium',
-                itemStyle: {
-                  color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                    { offset: 0, color: '#fbbf24' },
-                    { offset: 0.5, color: '#f59e0b' },
-                    { offset: 1, color: '#d97706' }
-                  ])
-                }
-              },
-              {
-                value: openLow,
-                name: 'Low',
-                itemStyle: {
-                  color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                    { offset: 0, color: '#9ca3af' },
-                    { offset: 0.5, color: '#6b7280' },
-                    { offset: 1, color: '#4b5563' }
-                  ])
-                }
-              }
-            ],
-            minAngle: 5 // Ensure Low slice is visible
           }
         ],
-        graphic: graphicElements.length > 0 ? graphicElements : null
-      };
-
-      chart.setOption(option);
-      window.addEventListener('resize', () => chart.resize());
-    }
-
-    // Update top models chart - Horizontal Bar Chart
-    function updateTopModelsChart() {
-      const chartDom = document.getElementById('top-models-chart');
-      if (!chartDom || !dashboardData.topModels) return;
-
-      const chart = echarts.init(chartDom);
-      const colors = getChartColors();
-
-      // Calculate open issues for each model based on source model summary
-      const modelOpenIssues = {};
-
-      // Get open issue counts from source model summary
-      if (dashboardData.sourceModelSummary) {
-        dashboardData.sourceModelSummary
-          .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'EMPLOYEE UT')
-          .forEach(item => {
-            // Calculate open issues proportion for this model based on overall open rate
-            const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
-            const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
-
-            let openRate = 1;
-            if (totalAllIssues > 0) {
-              openRate = totalOpenIssues / totalAllIssues;
-            }
-
-            if (!modelOpenIssues[item.model]) {
-              modelOpenIssues[item.model] = 0;
-            }
-            modelOpenIssues[item.model] += Math.round(item.issue_count * openRate);
-          });
+        minAngle: 5 // Ensure Low slice is visible
       }
+    ],
+    graphic: graphicElements.length > 0 ? graphicElements : null
+  };
 
-      // Create array of models with open issues and sort by open issue count
-      const modelsWithOpenIssues = Object.entries(modelOpenIssues)
-        .filter(([model, count]) => count > 0)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-        .map(([model, count]) => ({ label: model, value: count }));
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
 
-      // If no models have open issues, use original data but with zero counts
-      const topModels = modelsWithOpenIssues.length > 0 ? modelsWithOpenIssues :
-        dashboardData.topModels.slice(0, 10).map(model => ({ ...model, value: 0 }));
+// Update top models chart - Horizontal Bar Chart
+function updateTopModelsChart() {
+  const chartDom = document.getElementById('top-models-chart');
+  if (!chartDom || !dashboardData.topModels) return;
 
-      const modelNames = topModels.map(model => {
-        return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Calculate open issues for each model based on source model summary
+  const modelOpenIssues = {};
+  
+  // Get open issue counts from source model summary
+  if (dashboardData.sourceModelSummary) {
+    dashboardData.sourceModelSummary
+      .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'UT Portal')
+      .forEach(item => {
+        // Calculate open issues proportion for this model based on overall open rate
+        const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+        const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+        
+        let openRate = 1;
+        if (totalAllIssues > 0) {
+          openRate = totalOpenIssues / totalAllIssues;
+        }
+        
+        if (!modelOpenIssues[item.model]) {
+          modelOpenIssues[item.model] = 0;
+        }
+        modelOpenIssues[item.model] += Math.round(item.issue_count * openRate);
       });
-      const issueCounts = topModels.map(model => model.value);
+  }
 
-      const option = {
-        textStyle: {
+  // Create array of models with open issues and sort by open issue count
+  const modelsWithOpenIssues = Object.entries(modelOpenIssues)
+    .filter(([model, count]) => count > 0)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10)
+    .map(([model, count]) => ({ label: model, value: count }));
+
+  // If no models have open issues, use original data but with zero counts
+  const topModels = modelsWithOpenIssues.length > 0 ? modelsWithOpenIssues : 
+    dashboardData.topModels.slice(0, 10).map(model => ({ ...model, value: 0 }));
+
+  const modelNames = topModels.map(model => {
+    return model.label.length > 12 ? model.label.substring(0, 12) + '...' : model.label;
+  });
+  const issueCounts = topModels.map(model => model.value);
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const modelIndex = params[0].dataIndex;
+        const fullName = topModels[modelIndex].label;
+        const count = params[0].value;
+        return `${fullName}<br/>Open Issues: ${count}`;
+      }
+    },
+    grid: {
+      left: '28%',
+      right: '5%',
+      top: '8%',
+      bottom: '8%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'value',
+      show: false
+    },
+    yAxis: {
+      type: 'category',
+      data: modelNames,
+      inverse: true,
+      axisLabel: {
+        interval: 0,
+        rotate: 0,
+        fontSize: 11,
+        color: colors.textPrimary
+      }
+    },
+    series: [
+      {
+        name: 'Open Issues',
+        type: 'bar',
+        barWidth: '60%',
+        data: issueCounts,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#0ea5e9' },
+            { offset: 0.5, color: '#0284c7' },
+            { offset: 1, color: '#0369a1' }
+          ]),
+          borderRadius: [4, 4, 4, 4]
+        },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{c}',
+          fontSize: 11,
           color: colors.textPrimary
-        },
-        tooltip: {
-          trigger: 'axis',
-          formatter: function (params) {
-            const modelIndex = params[0].dataIndex;
-            const fullName = topModels[modelIndex].label;
-            const count = params[0].value;
-            return `${fullName}<br/>Open Issues: ${count}`;
-          }
-        },
-        grid: {
-          left: '28%',
-          right: '5%',
-          top: '8%',
-          bottom: '8%',
-          borderColor: colors.gridLines
-        },
-        xAxis: {
-          type: 'value',
-          show: false
-        },
-        yAxis: {
-          type: 'category',
-          data: modelNames,
-          inverse: true,
-          axisLabel: {
-            interval: 0,
-            rotate: 0,
-            fontSize: 11,
-            color: colors.textPrimary
-          }
-        },
-        series: [
-          {
-            name: 'Open Issues',
-            type: 'bar',
-            barWidth: '60%',
-            data: issueCounts,
-            itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#0ea5e9' },
-                { offset: 0.5, color: '#0284c7' },
-                { offset: 1, color: '#0369a1' }
-              ]),
-              borderRadius: [4, 4, 4, 4]
-            },
-            label: {
-              show: true,
-              position: 'right',
-              formatter: '{c}',
-              fontSize: 11,
-              color: colors.textPrimary
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update top modules chart - Horizontal Bar Chart
+function updateTopModulesChart() {
+  const chartDom = document.getElementById('top-modules-chart');
+  if (!chartDom || !dashboardData.topModules) return;
+
+  const chart = echarts.init(chartDom);
+  const colors = getChartColors();
+
+  // Calculate open issues for each module based on source model summary
+  const moduleOpenIssues = {};
+  
+  // Get open issue counts from source model summary
+  if (dashboardData.sourceModelSummary) {
+    dashboardData.sourceModelSummary
+      .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'UT Portal')
+      .forEach(item => {
+        // Calculate open issues proportion for this module based on overall open rate
+        const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+        const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+        
+        let openRate = 1;
+        if (totalAllIssues > 0) {
+          openRate = totalOpenIssues / totalAllIssues;
+        }
+        
+        // Count issues per module from top_modules array
+        if (item.top_modules && item.top_modules.length > 0) {
+          // Distribute the issue count across top modules
+          const moduleCount = item.top_modules.length;
+          const issuesPerModule = Math.round(item.issue_count / moduleCount * openRate);
+          
+          item.top_modules.forEach(module => {
+            if (!moduleOpenIssues[module]) {
+              moduleOpenIssues[module] = 0;
             }
-          }
-        ]
-      };
-
-      chart.setOption(option);
-      window.addEventListener('resize', () => chart.resize());
-    }
-
-    // Update top modules chart - Horizontal Bar Chart
-    function updateTopModulesChart() {
-      const chartDom = document.getElementById('top-modules-chart');
-      if (!chartDom || !dashboardData.topModules) return;
-
-      const chart = echarts.init(chartDom);
-      const colors = getChartColors();
-
-      // Calculate open issues for each module based on source model summary
-      const moduleOpenIssues = {};
-
-      // Get open issue counts from source model summary
-      if (dashboardData.sourceModelSummary) {
-        dashboardData.sourceModelSummary
-          .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'EMPLOYEE UT')
-          .forEach(item => {
-            // Calculate open issues proportion for this module based on overall open rate
-            const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
-            const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
-
-            let openRate = 1;
-            if (totalAllIssues > 0) {
-              openRate = totalOpenIssues / totalAllIssues;
-            }
-
-            // Count issues per module from top_modules array
-            if (item.top_modules && item.top_modules.length > 0) {
-              // Distribute the issue count across top modules
-              const moduleCount = item.top_modules.length;
-              const issuesPerModule = Math.round(item.issue_count / moduleCount * openRate);
-
-              item.top_modules.forEach(module => {
-                if (!moduleOpenIssues[module]) {
-                  moduleOpenIssues[module] = 0;
-                }
-                moduleOpenIssues[module] += issuesPerModule;
-              });
-            }
+            moduleOpenIssues[module] += issuesPerModule;
           });
-      }
-
-      // Create array of modules with open issues and sort by open issue count
-      const modulesWithOpenIssues = Object.entries(moduleOpenIssues)
-        .filter(([module, count]) => count > 0)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-        .map(([module, count]) => ({ label: module, value: count }));
-
-      // If no modules have open issues, use original data but with zero counts
-      const topModules = modulesWithOpenIssues.length > 0 ? modulesWithOpenIssues :
-        dashboardData.topModules.slice(0, 10).map(module => ({ ...module, value: 0 }));
-
-      const moduleNames = topModules.map(module => {
-        return module.label.length > 15 ? module.label.substring(0, 15) + '...' : module.label;
+        }
       });
-      const issueCounts = topModules.map(module => module.value);
+  }
 
-      const option = {
-        textStyle: {
+  // Create array of modules with open issues and sort by open issue count
+  const modulesWithOpenIssues = Object.entries(moduleOpenIssues)
+    .filter(([module, count]) => count > 0)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10)
+    .map(([module, count]) => ({ label: module, value: count }));
+
+  // If no modules have open issues, use original data but with zero counts
+  const topModules = modulesWithOpenIssues.length > 0 ? modulesWithOpenIssues : 
+    dashboardData.topModules.slice(0, 10).map(module => ({ ...module, value: 0 }));
+
+  const moduleNames = topModules.map(module => {
+    return module.label.length > 15 ? module.label.substring(0, 15) + '...' : module.label;
+  });
+  const issueCounts = topModules.map(module => module.value);
+
+  const option = {
+    textStyle: {
+      color: colors.textPrimary
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const moduleIndex = params[0].dataIndex;
+        const fullName = topModules[moduleIndex].label;
+        const count = params[0].value;
+        return `${fullName}<br/>Open Issues: ${count}`;
+      }
+    },
+    grid: {
+      left: '27%',
+      right: '5%',
+      top: '8%',
+      bottom: '8%',
+      borderColor: colors.gridLines
+    },
+    xAxis: {
+      type: 'value',
+      show: false
+    },
+    yAxis: {
+      type: 'category',
+      data: moduleNames,
+      inverse: true,
+      axisLabel: {
+        interval: 0,
+        rotate: 0,
+        fontSize: 10,
+        color: colors.textPrimary
+      }
+    },
+    series: [
+      {
+        name: 'Open Issues',
+        type: 'bar',
+        barWidth: '60%',
+        data: issueCounts,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#10b981' },
+            { offset: 0.5, color: '#059669' },
+            { offset: 1, color: '#047857' }
+          ]),
+          borderRadius: [4, 4, 4, 4]
+        },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{c}',
+          fontSize: 11,
           color: colors.textPrimary
-        },
-        tooltip: {
-          trigger: 'axis',
-          formatter: function (params) {
-            const moduleIndex = params[0].dataIndex;
-            const fullName = topModules[moduleIndex].label;
-            const count = params[0].value;
-            return `${fullName}<br/>Open Issues: ${count}`;
-          }
-        },
-        grid: {
-          left: '27%',
-          right: '5%',
-          top: '8%',
-          bottom: '8%',
-          borderColor: colors.gridLines
-        },
-        xAxis: {
-          type: 'value',
-          show: false
-        },
-        yAxis: {
-          type: 'category',
-          data: moduleNames,
-          inverse: true,
-          axisLabel: {
-            interval: 0,
-            rotate: 0,
-            fontSize: 10,
-            color: colors.textPrimary
-          }
-        },
-        series: [
-          {
-            name: 'Open Issues',
-            type: 'bar',
-            barWidth: '60%',
-            data: issueCounts,
-            itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#10b981' },
-                { offset: 0.5, color: '#059669' },
-                { offset: 1, color: '#047857' }
-              ]),
-              borderRadius: [4, 4, 4, 4]
-            },
-            label: {
-              show: true,
-              position: 'right',
-              formatter: '{c}',
-              fontSize: 11,
-              color: colors.textPrimary
-            }
-          }
-        ]
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', () => chart.resize());
+}
+
+// Update model summary table
+function createModelSummaryTable() {
+  console.log('createModelSummaryTable called');
+  console.log('dashboardData:', dashboardData);
+  console.log('topModels:', dashboardData.topModels);
+  console.log('sourceModelSummary:', dashboardData.sourceModelSummary);
+
+  const tbody = document.getElementById('model-summary-table-body');
+  console.log('tbody element:', tbody);
+
+  if (!tbody) {
+    console.error('Table body element not found');
+    return;
+  }
+
+  if (!dashboardData.topModels) {
+    console.error('dashboardData.topModels is not available');
+    return;
+  }
+
+  if (!dashboardData.sourceModelSummary) {
+    console.error('dashboardData.sourceModelSummary is not available');
+    return;
+  }
+
+  // Clear existing content
+  tbody.innerHTML = '';
+
+  // Calculate open issues proportion for filtering
+  const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
+  const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+  
+  let openRate = 1;
+  if (totalAllIssues > 0) {
+    openRate = totalOpenIssues / totalAllIssues;
+  }
+
+  // Get all models with the new data sources and calculate OPEN issues per model
+  const modelStats = {};
+
+  dashboardData.sourceModelSummary
+    .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'UT Portal')
+    .forEach(item => {
+      if (!modelStats[item.model]) {
+        modelStats[item.model] = { totalIssues: 0, sources: {} };
+      }
+      
+      // Calculate open issues for this model based on open rate
+      const openIssues = Math.round(item.issue_count * openRate);
+      modelStats[item.model].totalIssues += openIssues;
+      
+      // Store the original data but with open issues count
+      modelStats[item.model].sources[item.source] = {
+        ...item,
+        issue_count: openIssues
       };
+    });
 
-      chart.setOption(option);
-      window.addEventListener('resize', () => chart.resize());
-    }
+  // Sort models by OPEN issues and take top 10
+  const topModels = Object.entries(modelStats)
+    .sort(([,a], [,b]) => b.totalIssues - a.totalIssues)
+    .slice(0, 10)
+    .map(([modelName, stats]) => ({ label: modelName, value: stats.totalIssues, sources: stats.sources }));
 
-    // Update model summary table
-    function createModelSummaryTable() {
-      console.log('createModelSummaryTable called');
-      console.log('dashboardData:', dashboardData);
-      console.log('topModels:', dashboardData.topModels);
-      console.log('sourceModelSummary:', dashboardData.sourceModelSummary);
+  console.log('Top models with OPEN issues:', topModels);
 
-      const tbody = document.getElementById('model-summary-table-body');
-      console.log('tbody element:', tbody);
+  topModels.forEach((model, index) => {
+    console.log(`Processing model ${index}:`, model);
 
-      if (!tbody) {
-        console.error('Table body element not found');
-        return;
-      }
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
 
-      if (!dashboardData.topModels) {
-        console.error('dashboardData.topModels is not available');
-        return;
-      }
+    // Serial Number cell
+    const slNoCell = document.createElement('td');
+    slNoCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 text-center';
+    slNoCell.textContent = index + 1;
+    tr.appendChild(slNoCell);
 
-      if (!dashboardData.sourceModelSummary) {
-        console.error('dashboardData.sourceModelSummary is not available');
-        return;
-      }
+    // Model Number cell
+    const modelCell = document.createElement('td');
+    modelCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100';
+    modelCell.textContent = model.label;
+    tr.appendChild(modelCell);
 
-      // Clear existing content
-      tbody.innerHTML = '';
+    // Define source mappings for new columns
+    const sourceMapping = {
+      'Global VOC PLM': 'Global VOC PLM',
+      'Beta UT': 'Beta UT',
+      'UT Portal': 'UT Portal'
+    };
 
-      // Calculate open issues proportion for filtering
-      const totalOpenIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
-      const totalAllIssues = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.total || 0), 0);
+    // Create cells for each new source
+    const sources = ['Global VOC PLM', 'Beta UT', 'UT Portal'];
 
-      let openRate = 1;
-      if (totalAllIssues > 0) {
-        openRate = totalOpenIssues / totalAllIssues;
-      }
+    sources.forEach(sourceKey => {
+      const cell = document.createElement('td');
+      cell.className = 'px-4 py-3 text-sm text-slate-700 dark:text-slate-300';
 
-      // Get all models with the new data sources and calculate OPEN issues per model
-      const modelStats = {};
+      // Find model data for this source
+      const modelData = model.sources[sourceKey];
 
-      dashboardData.sourceModelSummary
-        .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'EMPLOYEE UT')
-        .forEach(item => {
-          if (!modelStats[item.model]) {
-            modelStats[item.model] = { totalIssues: 0, sources: {} };
-          }
+      console.log(`Model ${model.label}, Source ${sourceKey}, Open Data:`, modelData);
 
-          // Calculate open issues for this model based on open rate
-          const openIssues = Math.round(item.issue_count * openRate);
-          modelStats[item.model].totalIssues += openIssues;
+      if (modelData) {
+        // Format the cell content with OPEN issues
+        let content = `<div class="space-y-1">`;
+        content += `<div><strong>Open Issues:</strong> ${modelData.issue_count}</div>`;
 
-          // Store the original data but with open issues count
-          modelStats[item.model].sources[item.source] = {
-            ...item,
-            issue_count: openIssues
-          };
-        });
+        // Add combined Top Modules & Issues section
+        if (modelData.top_modules && modelData.top_modules.length > 0) {
+          content += `<div><strong>Top Modules & Issues:</strong></div>`;
+          content += `<ul class="text-xs space-y-1 ml-2">`;
 
-      // Sort models by OPEN issues and take top 10
-      const topModels = Object.entries(modelStats)
-        .sort(([, a], [, b]) => b.totalIssues - a.totalIssues)
-        .slice(0, 10)
-        .map(([modelName, stats]) => ({ label: modelName, value: stats.totalIssues, sources: stats.sources }));
+          // Show top 5 modules with issues distributed underneath
+          const maxItems = Math.min(5, modelData.top_modules.length);
+          for (let i = 0; i < maxItems; i++) {
+            const module = modelData.top_modules[i];
+            content += `<li>• ${module}`;
 
-      console.log('Top models with OPEN issues:', topModels);
+            // Add issue title under this module (if available)
+            if (modelData.top_titles && modelData.top_titles[i]) {
+              const title = modelData.top_titles[i];
+              const truncatedTitle = title.length > 80 ? title.substring(0, 80) + '...' : title;
 
-      topModels.forEach((model, index) => {
-        console.log(`Processing model ${index}:`, model);
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
-
-        // Serial Number cell
-        const slNoCell = document.createElement('td');
-        slNoCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 text-center';
-        slNoCell.textContent = index + 1;
-        tr.appendChild(slNoCell);
-
-        // Model Number cell
-        const modelCell = document.createElement('td');
-        modelCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100';
-        modelCell.textContent = model.label;
-        tr.appendChild(modelCell);
-
-        // Define source mappings for new columns
-        const sourceMapping = {
-          'Global VOC PLM': 'Global VOC PLM',
-          'Beta UT': 'Beta UT',
-          'EMPLOYEE UT': 'EMPLOYEE UT'
-        };
-
-        // Create cells for each new source
-        const sources = ['Global VOC PLM', 'Beta UT', 'EMPLOYEE UT'];
-
-        sources.forEach(sourceKey => {
-          const cell = document.createElement('td');
-          cell.className = 'px-4 py-3 text-sm text-slate-700 dark:text-slate-300';
-
-          // Find model data for this source
-          const modelData = model.sources[sourceKey];
-
-          console.log(`Model ${model.label}, Source ${sourceKey}, Open Data:`, modelData);
-
-          if (modelData) {
-            // Format the cell content with OPEN issues
-            let content = `<div class="space-y-1">`;
-            content += `<div><strong>Open Issues:</strong> ${modelData.issue_count}</div>`;
-
-            // Add combined Top Modules & Issues section
-            if (modelData.top_modules && modelData.top_modules.length > 0) {
-              content += `<div><strong>Top Modules & Issues:</strong></div>`;
-              content += `<ul class="text-xs space-y-1 ml-2">`;
-
-              // Show top 5 modules with issues distributed underneath
-              const maxItems = Math.min(5, modelData.top_modules.length);
-              for (let i = 0; i < maxItems; i++) {
-                const module = modelData.top_modules[i];
-                content += `<li>• ${module}`;
-
-                // Add issue title under this module (if available)
-                if (modelData.top_titles && modelData.top_titles[i]) {
-                  const title = modelData.top_titles[i];
-                  const truncatedTitle = title.length > 80 ? title.substring(0, 80) + '...' : title;
-
-                  content += `<br/><span class="ml-4">- ${truncatedTitle}</span>`;
-                }
-                content += `</li>`;
-              }
-              content += `</ul>`;
-            } else if (modelData.top_titles && modelData.top_titles.length > 0) {
-              // Show Top Issues section when there are no modules but there are titles
-              content += `<div><strong>Top Issues:</strong></div>`;
-              content += `<ul class="text-xs space-y-1 ml-2">`;
-
-              // Show top 5 issue titles
-              const maxItems = Math.min(5, modelData.top_titles.length);
-              for (let i = 0; i < maxItems; i++) {
-                const title = modelData.top_titles[i];
-                const truncatedTitle = title.length > 80 ? title.substring(0, 80) + '...' : title;
-
-                content += `<li>• ${truncatedTitle}</li>`;
-              }
-              content += `</ul>`;
+              content += `<br/><span class="ml-4">- ${truncatedTitle}</span>`;
             }
-
-            content += `</div>`;
-            cell.innerHTML = content;
-          } else {
-            cell.innerHTML = '<div class="text-slate-400">No data</div>';
+            content += `</li>`;
           }
+          content += `</ul>`;
+        } else if (modelData.top_titles && modelData.top_titles.length > 0) {
+          // Show Top Issues section when there are no modules but there are titles
+          content += `<div><strong>Top Issues:</strong></div>`;
+          content += `<ul class="text-xs space-y-1 ml-2">`;
 
-          tr.appendChild(cell);
-        });
+          // Show top 5 issue titles
+          const maxItems = Math.min(5, modelData.top_titles.length);
+          for (let i = 0; i < maxItems; i++) {
+            const title = modelData.top_titles[i];
+            const truncatedTitle = title.length > 80 ? title.substring(0, 80) + '...' : title;
 
-        tbody.appendChild(tr);
-      });
+            content += `<li>• ${truncatedTitle}</li>`;
+          }
+          content += `</ul>`;
+        }
 
-      console.log('Table creation completed with OPEN issues data');
-    }
+        content += `</div>`;
+        cell.innerHTML = content;
+      } else {
+        cell.innerHTML = '<div class="text-slate-400">No data</div>';
+      }
 
-    // Update timestamp
-    function updateTimestamp() {
-      const now = new Date();
-      const formatted = now.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-      // Note: main.html doesn't have a timestamp element, so this is for future use
-    }
+      tr.appendChild(cell);
+    });
 
-    // Show details modal with comprehensive data
-    function showDetailsModal() {
-      const modal = document.getElementById('details-modal');
-      const totalModelsEl = document.getElementById('modal-total-models');
-      const totalIssuesEl = document.getElementById('modal-total-issues');
-      const highRiskEl = document.getElementById('modal-high-risk');
-      const tbody = document.getElementById('modal-table-body');
+    tbody.appendChild(tr);
+  });
 
-      if (!modal || !tbody) return;
+  console.log('Table creation completed with OPEN issues data');
+}
 
-      // Calculate stats
-      const totalIssues = Object.values(dashboardData.kpis).reduce((sum, val) => sum + val, 0);
-      const totalModels = dashboardData.topModels.length;
-      const highRiskModels = dashboardData.topModels.filter(model =>
-        model.value > 200 // Models with more than 200 issues are considered high risk
-      ).length;
+// Update timestamp
+function updateTimestamp() {
+  const now = new Date();
+  const formatted = now.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  // Note: main.html doesn't have a timestamp element, so this is for future use
+}
 
-      // Update stats
-      if (totalModelsEl) totalModelsEl.textContent = totalModels;
-      if (totalIssuesEl) totalIssuesEl.textContent = totalIssues;
-      if (highRiskEl) highRiskEl.textContent = highRiskModels;
+// Show details modal with comprehensive data
+function showDetailsModal() {
+  const modal = document.getElementById('details-modal');
+  const totalModelsEl = document.getElementById('modal-total-models');
+  const totalIssuesEl = document.getElementById('modal-total-issues');
+  const highRiskEl = document.getElementById('modal-high-risk');
+  const tbody = document.getElementById('modal-table-body');
 
-      // Clear existing content
-      tbody.innerHTML = '';
+  if (!modal || !tbody) return;
 
-      // Generate comprehensive table with all available models using real analytics data
-      dashboardData.topModels.forEach((model, index) => {
-        // Get real model data from source_model_summary
-        const modelData = dashboardData.sourceModelSummary?.find(item =>
-          item.model === model.label
-        );
+  // Calculate stats
+  const totalIssues = Object.values(dashboardData.kpis).reduce((sum, val) => sum + val, 0);
+  const totalModels = dashboardData.topModels.length;
+  const highRiskModels = dashboardData.topModels.filter(model =>
+    model.value > 200 // Models with more than 200 issues are considered high risk
+  ).length;
 
-        // Use real data if available, otherwise fallback
-        const topModule = modelData?.top_modules?.[0] || 'N/A';
-        const topIssue = modelData?.top_titles?.[0] || 'Various issues reported';
-        const source = modelData?.source || 'Unknown';
+  // Update stats
+  if (totalModelsEl) totalModelsEl.textContent = totalModels;
+  if (totalIssuesEl) totalIssuesEl.textContent = totalIssues;
+  if (highRiskEl) highRiskEl.textContent = highRiskModels;
 
-        // Map source to display name
-        const sourceDisplayName = {
-          'Beta': 'Beta User Issues',
-          'PLM': 'S.M. PLM',
-          'VOC': 'S.M. VOC'
-        }[source] || source;
+  // Clear existing content
+  tbody.innerHTML = '';
 
-        // Determine severity based on actual issue count from analytics
-        const issueCount = modelData?.issue_count || model.value;
-        const severity = issueCount > 300 ? 'critical' : issueCount > 200 ? 'high' : issueCount > 100 ? 'medium' : 'low';
-        const severityIcon = severity === 'critical' ? 'fa-circle' :
-          severity === 'high' ? 'fa-triangle-exclamation' :
-            severity === 'medium' ? 'fa-exclamation-triangle' : 'fa-info-circle';
-        const severityText = severity.charAt(0).toUpperCase() + severity.slice(1);
+  // Generate comprehensive table with all available models using real analytics data
+  dashboardData.topModels.forEach((model, index) => {
+    // Get real model data from source_model_summary
+    const modelData = dashboardData.sourceModelSummary?.find(item =>
+      item.model === model.label
+    );
 
-        // Risk level based on severity
-        const riskClass = severity === 'critical' ? 'high' : severity === 'high' ? 'high' : 'major';
-        const riskText = riskClass === 'high' ? 'High Risk' : 'Major Risk';
+    // Use real data if available, otherwise fallback
+    const topModule = modelData?.top_modules?.[0] || 'N/A';
+    const topIssue = modelData?.top_titles?.[0] || 'Various issues reported';
+    const source = modelData?.source || 'Unknown';
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+    // Map source to display name
+    const sourceDisplayName = {
+      'Beta': 'Beta User Issues',
+      'PLM': 'S.M. PLM',
+      'VOC': 'S.M. VOC'
+    }[source] || source;
+
+    // Determine severity based on actual issue count from analytics
+    const issueCount = modelData?.issue_count || model.value;
+    const severity = issueCount > 300 ? 'critical' : issueCount > 200 ? 'high' : issueCount > 100 ? 'medium' : 'low';
+    const severityIcon = severity === 'critical' ? 'fa-circle' :
+                        severity === 'high' ? 'fa-triangle-exclamation' :
+                        severity === 'medium' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    const severityText = severity.charAt(0).toUpperCase() + severity.slice(1);
+
+    // Risk level based on severity
+    const riskClass = severity === 'critical' ? 'high' : severity === 'high' ? 'high' : 'major';
+    const riskText = riskClass === 'high' ? 'High Risk' : 'Major Risk';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
       <td class="px-4 py-3 text-sm text-slate-900">${index + 1}</td>
       <td class="px-4 py-3 text-sm text-slate-900">${model.label}</td>
       <td class="px-4 py-3 text-sm text-slate-500">${topModule}</td>
@@ -1337,51 +1293,50 @@
         </span>
       </td>
     `;
-        tbody.appendChild(tr);
-      });
+    tbody.appendChild(tr);
+  });
 
-      // Show modal using Tailwind classes
-      modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  // Show modal using Tailwind classes
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden'; // Prevent background scrolling
 
-      // Add ESC key listener
-      document.addEventListener('keydown', handleModalKeydown);
-    }
+  // Add ESC key listener
+  document.addEventListener('keydown', handleModalKeydown);
+}
 
-    function closeDetailsModal() {
-      const modal = document.getElementById('details-modal');
-      if (modal) {
-        modal.classList.add('hidden');
-        document.body.style.overflow = ''; // Restore scrolling
-      }
+function closeDetailsModal() {
+  const modal = document.getElementById('details-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    document.body.style.overflow = ''; // Restore scrolling
+  }
 
-      // Remove ESC key listener
-      document.removeEventListener('keydown', handleModalKeydown);
-    }
+  // Remove ESC key listener
+  document.removeEventListener('keydown', handleModalKeydown);
+}
 
-    function handleModalKeydown(event) {
-      if (event.key === 'Escape') {
-        closeDetailsModal();
-      }
-    }
+function handleModalKeydown(event) {
+  if (event.key === 'Escape') {
+    closeDetailsModal();
+  }
+}
 
-    // Theme-aware color helper for charts
-    function getChartColors() {
-      const isDark = document.documentElement.classList.contains('dark');
+// Theme-aware color helper for charts
+function getChartColors() {
+  const isDark = document.documentElement.classList.contains('dark');
 
-      return {
-        textPrimary: isDark ? '#FFFFFF' : '#000000',
-        textSecondary: isDark ? '#FFFFFF' : '#000000',
-        gridLines: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-      };
-    }
+  return {
+    textPrimary: isDark ? '#FFFFFF' : '#000000',
+    textSecondary: isDark ? '#FFFFFF' : '#000000',
+    gridLines: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+  };
+}
 
-    // Error handling
-    function handleError(error) {
-      console.error('Dashboard error:', error);
-      // Could show error message to user if needed
-    }
-  </script>
+// Error handling
+function handleError(error) {
+  console.error('Dashboard error:', error);
+  // Could show error message to user if needed
+}
+</script>
 </body>
-
 </html>
