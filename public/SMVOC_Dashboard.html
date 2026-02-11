@@ -15,6 +15,9 @@
   <!-- ECharts -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
+  <!-- SheetJS for Excel Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -182,8 +185,15 @@
         <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Module Issue Breakdown</h3>
-            <div class="w-8 h-8 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg flex items-center justify-center">
-              <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400"></i>
+            <div class="flex gap-2">
+              <button onclick="exportTableToExcel()"
+                class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow transition-colors duration-200">
+                <i class="fa-solid fa-file-excel mr-2"></i>
+                Export Excel
+              </button>
+              <div class="w-8 h-8 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400"></i>
+              </div>
             </div>
           </div>
         </div>
@@ -207,9 +217,13 @@
                   class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[40%]">
                   Issue Descriptions
                 </th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[40%]">
-                  Global VOC PLM
+                <th onclick="toggleGlobalVocSort()"
+                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[40%] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors select-none group">
+                  <div class="flex items-center gap-2">
+                    Global VOC PLM
+                    <i id="global-voc-sort-icon"
+                      class="fa-solid fa-sort text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors"></i>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -351,83 +365,18 @@
 
       tbody.innerHTML = '';
 
-      // 1. Create a Lookup Set from Samsung Members Data for O(1) matching
-      // Signature: FriendlyModel|Module|Content(normalized)
-      const smvocSignatureSet = new Set();
+      tbody.innerHTML = '';
 
-      // Helper to normalize key text (Exact match with backend logic)
-      function normalizeKeyText(text) {
-        if (!text) return "";
-        return text.replace(/_x000d_/g, ' ')
-          .replace(/[\r\n]+/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .toLowerCase();
-      }
+      // 1. Process Data using helper
+      const moduleData = processModuleData();
 
-      // Also process data to aggregate by module > sub-module > AI Insight (existing logic)
-      const moduleData = {};
-
-      dashboardData.analytics.rows.forEach(row => {
-        const module = row['Module'] || 'Unknown';
-        const subModule = row['Sub-Module'] || 'Unknown';
-        const aiInsight = row['AI Insight'] || 'No description available';
-        const modelNo = row['Model No.'] || '';
-        const content = row['content'] || ''; // Note: lower-case 'content' in source
-
-        // Add to signature set for matching
-        let signature = null;
-        if (modelNo && module && content) {
-          const friendlyModel = applyModelNameMapping(modelNo);
-          // Normalize: remove _x000d_, collapse spaces
-          const normContent = normalizeKeyText(content);
-          signature = `${friendlyModel}|${module}|${normContent}`;
-          smvocSignatureSet.add(signature);
-        }
-
-        row._signature = signature; // Store for easy lookup
-
-        if (!moduleData[module]) {
-          moduleData[module] = {
-            count: 0,
-            subModules: {},
-            models: new Set(),
-            signatures: new Set()
-          };
-        }
-
-        moduleData[module].count++;
-        if (modelNo) {
-          moduleData[module].models.add(modelNo);
-        }
-
-        if (signature) {
-          moduleData[module].signatures.add(signature);
-        }
-
-        if (!moduleData[module].subModules[subModule]) {
-          moduleData[module].subModules[subModule] = {
-            count: 0,
-            insights: {}
-          };
-        }
-        moduleData[module].subModules[subModule].count++;
-
-        if (!moduleData[module].subModules[subModule].insights[aiInsight]) {
-          moduleData[module].subModules[subModule].insights[aiInsight] = 0;
-        }
-        moduleData[module].subModules[subModule].insights[aiInsight]++;
-      });
-
-      // Convert to array and sort by count descending
-      const sortedModules = Object.entries(moduleData)
-        .sort(([, a], [, b]) => b.count - a.count)
-        .slice(0, 10); // Top 10 modules
+      // 2. Sort Modules using helper (handles sorting state)
+      const sortedModules = sortModules(moduleData);
 
       // Render table rows
       sortedModules.forEach(([moduleName, data]) => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
+        tr.className = ''; // Removed hover effect as requested
 
         // Sort sub-modules by count descending and take top 5
         const sortedSubModules = Object.entries(data.subModules)
@@ -475,26 +424,9 @@
 
         // Find matching Global VOC PLM cases
         // Use Pre-Calculated Semantic Matches (fuzzy matching from server)
-        const matchedCases = [];
-        const processedSignatures = new Set();
-
-        if (data.signatures && data.signatures.size > 0) {
-          data.signatures.forEach(sig => {
-            if (processedSignatures.has(sig)) return;
-            processedSignatures.add(sig);
-
-            const matches = semanticMatches[sig];
-            if (matches && matches.length > 0) {
-              matches.forEach(m => {
-                matchedCases.push({
-                  code: m.code,
-                  title: m.title,
-                  subModule: m.subModule || 'General'
-                });
-              });
-            }
-          });
-        }
+        // Find matching Global VOC PLM cases
+        // Use Pre-Calculated Semantic Matches (fuzzy matching from server)
+        const matchedCases = getGlobalVocMatches(data.signatures);
 
         // Group by Sub-Module and deduplicate cases
         const gvBySubModule = {};
@@ -728,6 +660,227 @@
 
 
 
+
+
+    // Sorting State
+    let globalVocSortState = 'none'; // 'none', 'asc', 'desc'
+
+    // Toggle Global VOC Sort
+    function toggleGlobalVocSort() {
+      const icon = document.getElementById('global-voc-sort-icon');
+
+      if (globalVocSortState === 'none') {
+        globalVocSortState = 'desc';
+        icon.className = 'fa-solid fa-sort-down text-indigo-600 dark:text-indigo-400 transition-colors';
+      } else if (globalVocSortState === 'desc') {
+        globalVocSortState = 'asc';
+        icon.className = 'fa-solid fa-sort-up text-indigo-600 dark:text-indigo-400 transition-colors';
+      } else {
+        globalVocSortState = 'none';
+        icon.className = 'fa-solid fa-sort text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors';
+      }
+
+      updateModuleBreakdownTable();
+    }
+
+    // Export to Excel
+    function exportTableToExcel() {
+      if (!dashboardData.analytics || !dashboardData.analytics.rows) return;
+
+      // 1. Prepare Data
+      // We need to replicate the logic from updateModuleBreakdownTable to get the exact same rows
+      const moduleData = processModuleData(); // Extract processing logic to reuse
+
+      // Sort modules based on current table sort state
+      const sortedModules = sortModules(moduleData);
+
+      // Flatten data for Excel
+      const excelRows = [];
+
+      sortedModules.forEach(([moduleName, data]) => {
+        // Get friendly model names
+        const friendlyModelNames = Array.from(data.models)
+          .map(modelNo => applyModelNameMapping(modelNo))
+          .sort();
+        const modelNamesDisplay = [...new Set(friendlyModelNames)].join(', ');
+
+        // Get Sub-modules and Issues
+        const sortedSubModules = Object.entries(data.subModules)
+          .sort(([, a], [, b]) => b.count - a.count);
+
+        // Get Global VOC matches
+        const globalVocMatches = getGlobalVocMatches(data.signatures);
+        const gvBySubModule = {};
+        const seenCodes = new Set();
+
+        globalVocMatches.forEach(c => {
+          if (!seenCodes.has(c.code)) {
+            seenCodes.add(c.code);
+            if (!gvBySubModule[c.subModule]) gvBySubModule[c.subModule] = [];
+            gvBySubModule[c.subModule].push(c);
+          }
+        });
+
+        // Create a row for each sub-module/insight combination or just aggregation
+        // To make it readable in Excel, we'll format it as:
+        // Model | Module | Count | Issue Descriptions (Text) | Global VOC PLM (Text)
+
+        let issueDescText = "";
+        sortedSubModules.forEach(([subMod, subData]) => {
+          issueDescText += `${subMod} (${subData.count})\n`;
+          const sortedInsights = Object.entries(subData.insights)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5); // Take top 5 for text
+          sortedInsights.forEach(([insight, count]) => {
+            issueDescText += `  - ${insight} (${count})\n`;
+          });
+          issueDescText += "\n";
+        });
+
+        let globalVocText = "";
+        Object.keys(gvBySubModule).sort().forEach(subMod => {
+          const cases = gvBySubModule[subMod];
+          globalVocText += `${subMod} (${cases.length})\n`;
+          cases.forEach(c => {
+            globalVocText += `  - ${c.code}: ${c.title}\n`;
+          });
+          globalVocText += "\n";
+        });
+
+        excelRows.push({
+          "Model Name": modelNamesDisplay,
+          "Module": moduleName,
+          "Count": data.count,
+          "Issue Descriptions": issueDescText.trim(),
+          "Global VOC PLM": globalVocText.trim()
+        });
+      });
+
+      // 2. Create Workbook
+      const ws = XLSX.utils.json_to_sheet(excelRows);
+
+      // Auto-width columns
+      const colWidths = [
+        { wch: 30 }, // Model
+        { wch: 20 }, // Module
+        { wch: 10 }, // Count
+        { wch: 60 }, // Issue Desc
+        { wch: 60 }  // Global VOC
+      ];
+      ws['!cols'] = colWidths;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Module Breakdown");
+
+      // 3. Download
+      XLSX.writeFile(wb, "Module_Issue_Breakdown.xlsx");
+    }
+
+    // Helper: Process Module Data (extracted from updateModuleBreakdownTable)
+    function processModuleData() {
+      const moduleData = {};
+
+      // Helper: Normalize Text
+      function normalizeKeyText(text) {
+        if (!text) return "";
+        return text.replace(/_x000d_/g, ' ')
+          .replace(/[\r\n]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+      }
+
+      // Re-create the signature set if needed, but we can just process rows
+      dashboardData.analytics.rows.forEach(row => {
+        const module = row['Module'] || 'Unknown';
+        const subModule = row['Sub-Module'] || 'Unknown';
+        const aiInsight = row['AI Insight'] || 'No description available';
+        const modelNo = row['Model No.'] || '';
+        const content = row['content'] || '';
+
+        // Add to signature set for matching
+        let signature = null;
+        if (modelNo && module && content) {
+          const friendlyModel = applyModelNameMapping(modelNo);
+          // Normalize: remove _x000d_, collapse spaces
+          const normContent = normalizeKeyText(content);
+          signature = `${friendlyModel}|${module}|${normContent}`;
+        }
+
+        row._signature = signature; // Store for easy lookup
+
+        const sig = row._signature; // Already calculated on load/update
+
+        if (!moduleData[module]) {
+          moduleData[module] = {
+            count: 0,
+            subModules: {},
+            models: new Set(),
+            signatures: new Set()
+          };
+        }
+
+        moduleData[module].count++;
+        if (modelNo) moduleData[module].models.add(modelNo);
+        if (sig) moduleData[module].signatures.add(sig);
+
+        if (!moduleData[module].subModules[subModule]) {
+          moduleData[module].subModules[subModule] = { count: 0, insights: {} };
+        }
+        moduleData[module].subModules[subModule].count++;
+
+        if (!moduleData[module].subModules[subModule].insights[aiInsight]) {
+          moduleData[module].subModules[subModule].insights[aiInsight] = 0;
+        }
+        moduleData[module].subModules[subModule].insights[aiInsight]++;
+      });
+      return moduleData;
+    }
+
+    // Helper: Get Global VOC Matches for a set of signatures
+    function getGlobalVocMatches(signatures) {
+      const matchedCases = [];
+      const processedSignatures = new Set();
+
+      if (signatures && signatures.size > 0) {
+        signatures.forEach(sig => {
+          if (processedSignatures.has(sig)) return;
+          processedSignatures.add(sig);
+
+          const matches = semanticMatches[sig];
+          if (matches && matches.length > 0) {
+            matches.forEach(m => {
+              matchedCases.push({
+                code: m.code,
+                title: m.title,
+                subModule: m.subModule || 'General'
+              });
+            });
+          }
+        });
+      }
+      return matchedCases;
+    }
+
+    // Helper: Sort Modules based on state
+    function sortModules(moduleData) {
+      let entries = Object.entries(moduleData);
+
+      if (globalVocSortState === 'none') {
+        // Default: Sort by Module Count Descending
+        return entries.sort(([, a], [, b]) => b.count - a.count).slice(0, 10);
+      }
+
+      // Sort by Global VOC match count
+      entries.sort(([, a], [, b]) => {
+        const matchesA = getGlobalVocMatches(a.signatures).length;
+        const matchesB = getGlobalVocMatches(b.signatures).length;
+
+        return globalVocSortState === 'asc' ? matchesA - matchesB : matchesB - matchesA;
+      });
+
+      return entries.slice(0, 10);
+    }
 
 
     // Theme-aware color helper

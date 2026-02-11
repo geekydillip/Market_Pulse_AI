@@ -21,13 +21,13 @@ def load_model_name_mapping():
         if json_path.exists():
             with open(json_path, 'r', encoding='utf-8') as f:
                 _MODEL_NAME_MAPPING = json.load(f)
-                print(f"[OK] Loaded {len(_MODEL_NAME_MAPPING)} model name mappings from modelName.json")
+                # print(f"[OK] Loaded {len(_MODEL_NAME_MAPPING)} model name mappings from modelName.json")
         else:
             _MODEL_NAME_MAPPING = {}
-            print(f"[WARNING] modelName.json not found at {json_path}")
+            # print(f"[WARNING] modelName.json not found at {json_path}")
     except Exception as e:
         _MODEL_NAME_MAPPING = {}
-        print(f"[ERROR] Failed to load modelName.json: {e}")
+        # print(f"[ERROR] Failed to load modelName.json: {e}")
     
     return _MODEL_NAME_MAPPING
 
@@ -149,7 +149,7 @@ def load_all_excels(base_path: str) -> dict:
                 for excel in excels:
                     # Skip temporary Excel files that start with ~$
                     if excel.name.startswith('~$'):
-                        print(f"Warning: Skipping temporary Excel file: {excel}")
+                        # print(f"Warning: Skipping temporary Excel file: {excel}")
                         continue
                     try:
                         df = pd.read_excel(excel)
@@ -157,7 +157,9 @@ def load_all_excels(base_path: str) -> dict:
                         df = transform_model_names(df)
                         dfs.append(df)
                     except Exception as e:
-                        print(f"Warning: Failed to load {excel}: {e}")
+                        print(f"Warning: Failed to load {excel}: {e}") # Keep this one as print since it might be useful debugging in logs, but check if needed. Better to be safe.
+                        import sys
+                        sys.stderr.write(f"Warning: Failed to load {excel}: {e}\n")
                 if dfs:
                     data[folder.name] = dfs
     return data

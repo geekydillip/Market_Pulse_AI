@@ -91,8 +91,8 @@
         <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full -mr-8 -mt-8"></div>
         <div class="flex items-center justify-between relative z-10">
           <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Open</p>
-            <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="open-issues">0</p>
+            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Not Resolve</p>
+            <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="not-resolve-issues">0</p>
           </div>
           <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
             <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
@@ -228,7 +228,7 @@
                   Model No.</th>
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Open</th>
+                  Not Resolve</th>
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Resolve - App Update</th>
@@ -292,7 +292,7 @@
                   Module</th>
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Open</th>
+                  Not Resolve</th>
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Resolve - App Update</th>
@@ -426,13 +426,17 @@
       if (!dashboardData.analytics || !dashboardData.analytics.kpis || !dashboardData.kpis) return;
 
       const totalEl = document.getElementById('total-issues');
-      const openEl = document.getElementById('open-issues');
+      const notResolveEl = document.getElementById('not-resolve-issues');
       const resolvedEl = document.getElementById('resolved-issues');
       const closeEl = document.getElementById('close-issues');
 
-      // Total comes from analytics (row count), status counts come from corrected central dashboard data
+      // Total comes from analytics (row count), status counts come from corrected central dashboard data.
+      // Exception: "Not Resolve" count is calculated directly from analytics data to match the table.
       if (totalEl) totalEl.textContent = (dashboardData.analytics.kpis.total_rows || 0).toLocaleString();
-      if (openEl) openEl.textContent = (dashboardData.kpis.open_issues || 0).toLocaleString();
+
+      const notResolveCount = dashboardData.analytics?.rows?.filter(r => r['Progr.Stat.'] === 'Not Resolve').length || 0;
+      if (notResolveEl) notResolveEl.textContent = notResolveCount.toLocaleString();
+
       if (resolvedEl) resolvedEl.textContent = (dashboardData.kpis.resolved_issues || 0).toLocaleString();
       if (closeEl) closeEl.textContent = (dashboardData.kpis.close_issues || 0).toLocaleString();
     }
@@ -779,7 +783,7 @@
         thead.innerHTML = `
           <tr>
             <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model No.</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Resolved</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Resolve</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Request to 3rd Party(Non Samsung Issue)</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">App Update via App Store</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Fixed(Except Source changes)</th>
@@ -799,7 +803,7 @@
       // Process analytics data to aggregate by model and Prog.Stat. categories
       const modelSummary = {};
       const targetStatuses = [
-        "Not Resolved",
+        "Not Resolve",
         "Request to 3rd Party(Non Samsung Issue)",
         "App Update via App Store",
         "Issue Fixed(Except Source changes)",
@@ -814,14 +818,31 @@
         const modelRaw = row['Model No.'] || 'Unknown';
         const model = applyModelNameMapping(modelRaw); // Apply friendly name
         const progrStat = (row['Progr.Stat.'] || '').trim();
+        const resolveDetail = (row['Resolve'] || '').trim();
 
         if (!modelSummary[model]) {
           modelSummary[model] = { 'Total': 0 };
           targetStatuses.forEach(status => modelSummary[model][status] = 0);
         }
 
-        if (targetStatuses.includes(progrStat)) {
-          modelSummary[model][progrStat]++;
+        // Logic:
+        // 1. If Progr.Stat. is 'Not Resolve', count as 'Not Resolve'
+        // 2. Else if Resolve detail matches one of the columns, count as that column
+        // 3. Otherwise, it's not counted in the specific columns (e.g. 'Not reproduced' is ignored in this table)
+
+        if (progrStat === 'Close') {
+          return;
+        }
+
+        let categoryKey = null;
+        if (progrStat === 'Not Resolve') {
+          categoryKey = 'Not Resolve';
+        } else if (resolveDetail && targetStatuses.includes(resolveDetail)) {
+          categoryKey = resolveDetail;
+        }
+
+        if (categoryKey) {
+          modelSummary[model][categoryKey]++;
           modelSummary[model]['Total']++;
         }
       });
@@ -887,7 +908,7 @@
         thead.innerHTML = `
           <tr>
             <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Module</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Resolved</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Resolve</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Request to 3rd Party(Non Samsung Issue)</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">App Update via App Store</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Fixed(Except Source changes)</th>
@@ -907,7 +928,7 @@
       // Process analytics data to aggregate by module and Prog.Stat. categories
       const moduleSummary = {};
       const targetStatuses = [
-        "Not Resolved",
+        "Not Resolve",
         "Request to 3rd Party(Non Samsung Issue)",
         "App Update via App Store",
         "Issue Fixed(Except Source changes)",
@@ -921,14 +942,22 @@
       dashboardData.analytics.rows.forEach(row => {
         const module = row['Module'] || 'Unknown';
         const progrStat = (row['Progr.Stat.'] || '').trim();
+        const resolveDetail = (row['Resolve'] || '').trim();
 
         if (!moduleSummary[module]) {
           moduleSummary[module] = { 'Total': 0 };
           targetStatuses.forEach(status => moduleSummary[module][status] = 0);
         }
 
-        if (targetStatuses.includes(progrStat)) {
-          moduleSummary[module][progrStat]++;
+        let categoryKey = null;
+        if (progrStat === 'Not Resolve') {
+          categoryKey = 'Not Resolve';
+        } else if (resolveDetail && targetStatuses.includes(resolveDetail)) {
+          categoryKey = resolveDetail;
+        }
+
+        if (categoryKey) {
+          moduleSummary[module][categoryKey]++;
           moduleSummary[module]['Total']++;
         }
       });

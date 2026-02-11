@@ -12,10 +12,12 @@ def load_model_name_mappings():
         with open('modelName.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        print("Warning: modelName.json not found, using empty mappings")
+        import sys
+        sys.stderr.write("Warning: modelName.json not found, using empty mappings\n")
         return {}
     except json.JSONDecodeError:
-        print("Warning: Invalid JSON in modelName.json, using empty mappings")
+        import sys
+        sys.stderr.write("Warning: Invalid JSON in modelName.json, using empty mappings\n")
         return {}
 
 MODEL_NAME_MAPPINGS = load_model_name_mappings()
@@ -89,16 +91,19 @@ def load_all_excels(folder_path: str) -> pd.DataFrame:
         try:
             df = pd.read_excel(excel_file, dtype=dtype_spec, engine='openpyxl')
             dfs.append(df)
-            print(f"Loaded {len(df)} rows from {excel_file.name}")
+            import sys
+            sys.stderr.write(f"Loaded {len(df)} rows from {excel_file.name}\n")
         except Exception as e:
-            print(f"Warning: Failed to load {excel_file.name}: {e}")
+            import sys
+            sys.stderr.write(f"Warning: Failed to load {excel_file.name}: {e}\n")
 
     if not dfs:
         raise FileNotFoundError(f"Failed to load any Excel files from {folder_path}")
 
     # Combine all DataFrames
     combined_df = pd.concat(dfs, ignore_index=True, sort=False)
-    print(f"Combined {len(dfs)} files with total {len(combined_df)} rows")
+    import sys
+    sys.stderr.write(f"Combined {len(dfs)} files with total {len(combined_df)} rows\n")
 
     # Optimize memory for large datasets
     if len(combined_df) > 10000:
