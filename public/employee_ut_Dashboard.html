@@ -197,13 +197,13 @@
 
     </section>
 
-    <!-- TOP 10 MODEL WISE BETA ISSUES SUMMARY TABLE -->
+    <!-- Top 10 Model Wise UT Issues Status TABLE -->
     <section class="mt-8">
       <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
         <!-- Header with subtle accent -->
         <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Model Wise Beta Issues Summary
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Model Wise UT Issues Status
             </h3>
             <div class="flex items-center gap-2">
               <a href="employee_ut_detailsData.html"
@@ -261,14 +261,14 @@
       </div>
     </section>
 
-    <!-- TOP 10 CATEGORY WISE BETA ISSUES SUMMARY TABLE -->
+    <!-- TOP 10 Module Wise UT Issues Status TABLE -->
     <section class="mt-8">
       <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
         <!-- Header with subtle accent -->
         <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Category Wise Beta Issues
-              Summary</h3>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Module Wise UT Issues Status
+            </h3>
             <div class="flex items-center gap-2">
               <a href="employee_ut_detailsData.html"
                 class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
@@ -289,7 +289,7 @@
               <tr>
                 <th
                   class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Category</th>
+                  Module</th>
                 <th
                   class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Open</th>
@@ -767,58 +767,61 @@
       window.addEventListener('resize', () => chart.resize());
     }
 
-    // Update model summary table with Prog.Stat. aggregation
+    // Update model summary table with specific columns
     function updateModelSummaryTable() {
+      const thead = document.querySelector('#model-summary-table thead');
       const tbody = document.getElementById('model-summary-table-body');
+
       if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
+
+      // Update Table Headers
+      if (thead) {
+        thead.innerHTML = `
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Model No.</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Resolved</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Request to 3rd Party(Non Samsung Issue)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">App Update via App Store</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Fixed(Except Source changes)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Fixed(Source changes)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not problem</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Insufficient Defect Info.</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Maintain current status</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Duplicated issue(Cause side)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
+          </tr>
+        `;
+      }
 
       // Clear existing content
       tbody.innerHTML = '';
 
       // Process analytics data to aggregate by model and Prog.Stat. categories
       const modelSummary = {};
+      const targetStatuses = [
+        "Not Resolved",
+        "Request to 3rd Party(Non Samsung Issue)",
+        "App Update via App Store",
+        "Issue Fixed(Except Source changes)",
+        "Issue Fixed(Source changes)",
+        "Not problem",
+        "Insufficient Defect Info.",
+        "Maintain current status",
+        "Duplicated issue(Cause side)"
+      ];
 
       dashboardData.analytics.rows.forEach(row => {
         const modelRaw = row['Model No.'] || 'Unknown';
         const model = applyModelNameMapping(modelRaw); // Apply friendly name
-        const progrStat = row['Progr.Stat.'] || '';
+        const progrStat = (row['Progr.Stat.'] || '').trim();
 
         if (!modelSummary[model]) {
-          modelSummary[model] = {
-            'Open': 0,
-            'Resolve - App Update': 0,
-            'Resolve - Duplicated': 0,
-            'Resolve - Not Released': 0,
-            'Resolve - Released': 0,
-            'Resolve - Unnecessary': 0,
-            'Close': 0,
-            'Total': 0
-          };
+          modelSummary[model] = { 'Total': 0 };
+          targetStatuses.forEach(status => modelSummary[model][status] = 0);
         }
 
-        // Categorize based on Prog.Stat. - use startsWith for flexibility
-        let category = '';
-        if (progrStat.startsWith('Open')) {
-          category = 'Open';
-        } else if (progrStat.startsWith('Resolve - App Update')) {
-          category = 'Resolve - App Update';
-        } else if (progrStat.startsWith('Resolve - Duplicated')) {
-          category = 'Resolve - Duplicated';
-        } else if (progrStat.startsWith('Resolve - Not Released')) {
-          category = 'Resolve - Not Released';
-        } else if (progrStat.startsWith('Resolve - Released')) {
-          category = 'Resolve - Released';
-        } else if (progrStat.startsWith('Resolve - Unnecessary')) {
-          category = 'Resolve - Unnecessary';
-        } else if (progrStat.startsWith('Close')) {
-          category = 'Close';
-        } else if (progrStat.startsWith('Resolve')) {
-          // Catch any other Resolve variants not matching above categories
-          category = 'Resolve - Unnecessary'; // Default to Unnecessary or create a generic Resolve category
-        }
-
-        if (category) {
-          modelSummary[model][category]++;
+        if (targetStatuses.includes(progrStat)) {
+          modelSummary[model][progrStat]++;
           modelSummary[model]['Total']++;
         }
       });
@@ -829,25 +832,13 @@
         .slice(0, 10); // Show top 10 models
 
       // Calculate Grand Total
-      const grandTotal = {
-        'Open': 0,
-        'Resolve - App Update': 0,
-        'Resolve - Duplicated': 0,
-        'Resolve - Not Released': 0,
-        'Resolve - Released': 0,
-        'Resolve - Unnecessary': 0,
-        'Close': 0,
-        'Total': 0
-      };
+      const grandTotal = { 'Total': 0 };
+      targetStatuses.forEach(status => grandTotal[status] = 0);
 
       sortedModels.forEach(([, counts]) => {
-        grandTotal['Open'] += counts['Open'] || 0;
-        grandTotal['Resolve - App Update'] += counts['Resolve - App Update'] || 0;
-        grandTotal['Resolve - Duplicated'] += counts['Resolve - Duplicated'] || 0;
-        grandTotal['Resolve - Not Released'] += counts['Resolve - Not Released'] || 0;
-        grandTotal['Resolve - Released'] += counts['Resolve - Released'] || 0;
-        grandTotal['Resolve - Unnecessary'] += counts['Resolve - Unnecessary'] || 0;
-        grandTotal['Close'] += counts['Close'] || 0;
+        targetStatuses.forEach(status => {
+          grandTotal[status] += counts[status] || 0;
+        });
         grandTotal['Total'] += counts['Total'] || 0;
       });
 
@@ -856,18 +847,15 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
 
-        tr.innerHTML = `
-      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${model}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Open'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Duplicated'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
-    `;
+        let rowHtml = `<td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${model}</td>`;
 
+        targetStatuses.forEach(status => {
+          rowHtml += `<td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts[status] || 0}</td>`;
+        });
+
+        rowHtml += `<td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>`;
+
+        tr.innerHTML = rowHtml;
         tbody.appendChild(tr);
       });
 
@@ -875,72 +863,72 @@
       const totalTr = document.createElement('tr');
       totalTr.className = 'bg-slate-100 dark:bg-slate-700 border-t-2 border-slate-300 dark:border-slate-600';
 
-      totalTr.innerHTML = `
-    <td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Open']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - App Update']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Duplicated']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Close']}</td>
-    <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
-  `;
+      let totalHtml = `<td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>`;
 
+      targetStatuses.forEach(status => {
+        totalHtml += `<td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal[status]}</td>`;
+      });
+
+      totalHtml += `<td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>`;
+
+      totalTr.innerHTML = totalHtml;
       tbody.appendChild(totalTr);
     }
 
-    // Update module summary table with Prog.Stat. aggregation
+    // Update module summary table with specific columns
     function updateModuleSummaryTable() {
+      const thead = document.querySelector('#module-summary-table thead');
       const tbody = document.getElementById('module-summary-table-body');
+
       if (!tbody || !dashboardData.analytics || !dashboardData.analytics.rows) return;
+
+      // Update Table Headers
+      if (thead) {
+        thead.innerHTML = `
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Module</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Resolved</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Request to 3rd Party(Non Samsung Issue)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">App Update via App Store</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Fixed(Except Source changes)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Fixed(Source changes)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not problem</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Insufficient Defect Info.</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Maintain current status</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Duplicated issue(Cause side)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
+          </tr>
+        `;
+      }
 
       // Clear existing content
       tbody.innerHTML = '';
 
       // Process analytics data to aggregate by module and Prog.Stat. categories
       const moduleSummary = {};
+      const targetStatuses = [
+        "Not Resolved",
+        "Request to 3rd Party(Non Samsung Issue)",
+        "App Update via App Store",
+        "Issue Fixed(Except Source changes)",
+        "Issue Fixed(Source changes)",
+        "Not problem",
+        "Insufficient Defect Info.",
+        "Maintain current status",
+        "Duplicated issue(Cause side)"
+      ];
 
       dashboardData.analytics.rows.forEach(row => {
         const module = row['Module'] || 'Unknown';
-        const progrStat = row['Progr.Stat.'] || '';
+        const progrStat = (row['Progr.Stat.'] || '').trim();
 
         if (!moduleSummary[module]) {
-          moduleSummary[module] = {
-            'Open': 0,
-            'Resolve - App Update': 0,
-            'Resolve - Duplicated': 0,
-            'Resolve - Not Released': 0,
-            'Resolve - Released': 0,
-            'Resolve - Unnecessary': 0,
-            'Close': 0,
-            'Total': 0
-          };
+          moduleSummary[module] = { 'Total': 0 };
+          targetStatuses.forEach(status => moduleSummary[module][status] = 0);
         }
 
-        // Categorize based on Prog.Stat. - use startsWith for flexibility
-        let category = '';
-        if (progrStat.startsWith('Open')) {
-          category = 'Open';
-        } else if (progrStat.startsWith('Resolve - App Update')) {
-          category = 'Resolve - App Update';
-        } else if (progrStat.startsWith('Resolve - Duplicated')) {
-          category = 'Resolve - Duplicated';
-        } else if (progrStat.startsWith('Resolve - Not Released')) {
-          category = 'Resolve - Not Released';
-        } else if (progrStat.startsWith('Resolve - Released')) {
-          category = 'Resolve - Released';
-        } else if (progrStat.startsWith('Resolve - Unnecessary')) {
-          category = 'Resolve - Unnecessary';
-        } else if (progrStat.startsWith('Close')) {
-          category = 'Close';
-        } else if (progrStat.startsWith('Resolve')) {
-          // Catch any other Resolve variants not matching above categories
-          category = 'Resolve - Unnecessary'; // Default to Unnecessary or create a generic Resolve category
-        }
-
-        if (category) {
-          moduleSummary[module][category]++;
+        if (targetStatuses.includes(progrStat)) {
+          moduleSummary[module][progrStat]++;
           moduleSummary[module]['Total']++;
         }
       });
@@ -951,25 +939,13 @@
         .slice(0, 10); // Show top 10 modules
 
       // Calculate Grand Total
-      const grandTotal = {
-        'Open': 0,
-        'Resolve - App Update': 0,
-        'Resolve - Duplicated': 0,
-        'Resolve - Not Released': 0,
-        'Resolve - Released': 0,
-        'Resolve - Unnecessary': 0,
-        'Close': 0,
-        'Total': 0
-      };
+      const grandTotal = { 'Total': 0 };
+      targetStatuses.forEach(status => grandTotal[status] = 0);
 
       sortedModules.forEach(([, counts]) => {
-        grandTotal['Open'] += counts['Open'] || 0;
-        grandTotal['Resolve - App Update'] += counts['Resolve - App Update'] || 0;
-        grandTotal['Resolve - Duplicated'] += counts['Resolve - Duplicated'] || 0;
-        grandTotal['Resolve - Not Released'] += counts['Resolve - Not Released'] || 0;
-        grandTotal['Resolve - Released'] += counts['Resolve - Released'] || 0;
-        grandTotal['Resolve - Unnecessary'] += counts['Resolve - Unnecessary'] || 0;
-        grandTotal['Close'] += counts['Close'] || 0;
+        targetStatuses.forEach(status => {
+          grandTotal[status] += counts[status] || 0;
+        });
         grandTotal['Total'] += counts['Total'] || 0;
       });
 
@@ -978,18 +954,15 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
 
-        tr.innerHTML = `
-      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${module}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Open'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Duplicated'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Close'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
-    `;
+        let rowHtml = `<td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${module}</td>`;
 
+        targetStatuses.forEach(status => {
+          rowHtml += `<td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts[status] || 0}</td>`;
+        });
+
+        rowHtml += `<td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>`;
+
+        tr.innerHTML = rowHtml;
         tbody.appendChild(tr);
       });
 
@@ -997,18 +970,15 @@
       const totalTr = document.createElement('tr');
       totalTr.className = 'bg-slate-100 dark:bg-slate-700 border-t-2 border-slate-300 dark:border-slate-600';
 
-      totalTr.innerHTML = `
-    <td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Open']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - App Update']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Duplicated']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Close']}</td>
-    <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
-  `;
+      let totalHtml = `<td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>`;
 
+      targetStatuses.forEach(status => {
+        totalHtml += `<td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal[status]}</td>`;
+      });
+
+      totalHtml += `<td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>`;
+
+      totalTr.innerHTML = totalHtml;
       tbody.appendChild(totalTr);
     }
 

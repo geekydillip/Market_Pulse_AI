@@ -5,34 +5,37 @@ const promptTemplate = require('../prompts/globalvocplm');
  * Shared header normalization utility - eliminates code duplication
  */
 function normalizeHeaders(rows) {
-    // Map header name variants to canonical names
-    const headerMap = {
+  // Map header name variants to canonical names
+  const headerMap = {
 
     // Model variants
     'model no.': 'Model No.',
-    
+
     // Case Code variants
     'case code': 'Case Code',
     'plm code': 'Case Code',
     'plm code': 'Case Code',
-    
+
     // S/W Ver variants
     's/w ver.': 'S/W Ver.',
     'version occurred': 'S/W Ver.',
-    
+
     // Title variants
     'title': 'Title',
-    
+
     // Problem variants
     'problem': 'Problem',
     'issue': 'Problem',
-    
+
     // Progr.Stat. variants
     'progr.stat.': 'Progr.Stat.',
     'progress status': 'Progr.Stat.',
     'status': 'Progr.Stat.',
-    
-    
+
+
+    // Source (usually calculated, but if present)
+    'source': 'Source',
+
     // Additional columns from your Excel file to preserve
     'reg. by id': 'Reg. by ID',
     'registered date': 'Registered Date',
@@ -40,7 +43,7 @@ function normalizeHeaders(rows) {
     'priority': 'Priority',
     'occurr. freq.': 'Occurr. Freq.',
     'feature': 'Feature',
-    
+
     // Module variants
     'module': 'Module',
     'sub-module': 'Sub-Module',
@@ -49,7 +52,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code','Model No.','Progr.Stat.','Title','Priority','Occurr. Freq.','S/W Ver.','Problem'];
+  const canonicalCols = ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -83,6 +86,19 @@ function normalizeHeaders(rows) {
       if (found === null && Object.prototype.hasOwnProperty.call(orig, tgt)) found = orig[tgt];
       out[tgt] = (found !== undefined && found !== null) ? found : '';
     }
+
+    // Extract Source from Title (Derived Field)
+    // Rule: Extract the FIRST value enclosed in square brackets [] from Title
+    const title = out['Title'] || '';
+    let source = 'Unknown';
+    if (title) {
+      const match = title.match(/^\[(.*?)\]/);
+      if (match && match[1]) {
+        source = match[1].trim();
+      }
+    }
+    out['Source'] = source;
+
     return out;
   });
 
@@ -99,7 +115,7 @@ function readAndNormalizeExcel(uploadedPath) {
 
   // Find a header row: first row that contains at least one expected key or at least one non-empty cell
   let headerRowIndex = 0;
-  const expectedHeaderKeywords = ['Case Code','Model No.','Progr.Stat.','S/W Ver.','Title','Problem']; // lowercase checks
+  const expectedHeaderKeywords = ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem']; // lowercase checks
   for (let r = 0; r < sheetRows.length; r++) {
     const row = sheetRows[r];
     if (!Array.isArray(row)) continue;
@@ -120,7 +136,11 @@ function readAndNormalizeExcel(uploadedPath) {
   const rawHeaders = (sheetRows[headerRowIndex] || []).map(h => String(h || '').trim());
 
   // Build data rows starting after headerRowIndex
-  const dataRows = sheetRows.slice(headerRowIndex + 1);
+  const dataRows = sheetRows.slice(headerRowIndex + 1).filter(r => {
+    // Filter out completely empty rows
+    if (!Array.isArray(r)) return false;
+    return r.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== '');
+  });
 
   // Convert dataRows to array of objects keyed by rawHeaders
   let rows = dataRows.map(r => {
@@ -152,9 +172,10 @@ function normalizeRows(rows) {
   return normalizeHeaders(rows);
 }
 
+
 module.exports = {
   id: 'UTportal',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority','Occurr. Freq.','Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -167,6 +188,7 @@ module.exports = {
 
   transform(rows) {
     // Apply normalization using the local normalizeHeaders function
+    // Source extraction is now handled inside normalizeHeaders
     return normalizeHeaders(rows);
   },
 
@@ -230,18 +252,20 @@ module.exports = {
     // Merge AI results with original core identifiers and apply priority rules
     const mergedRows = aiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
-      
+
+      // Create the base merged row
       // Create the base merged row
       const baseRow = {
         'Case Code': original['Case Code'] || '',
+        'Source': original['Source'] || '',
         'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
           ? deriveModelNameFromSwVer(original['S/W Ver.'])
           : (original['Model No.'] || ''),
         'Progr.Stat.': original['Progr.Stat.'] || '',
+        'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',  // From AI (cleaned)
         'Priority': original['Priority'] || '',
         'Occurr. Freq.': original['Occurr. Freq.'] || '',
-        'S/W Ver.': original['S/W Ver.'] || '',
         'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
@@ -251,7 +275,7 @@ module.exports = {
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
-      
+
       return baseRow;
     });
 
@@ -261,9 +285,9 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['Title','Problem','Ai Summary','Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.') return { wch: 20 };
-      if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
+      if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
+      if (['Source', 'Model No.'].includes(h)) return { wch: 20 };
+      if (['S/W Ver.', 'Progr.Stat.', 'Issue Type', 'Sub-Issue Type', 'Case Code'].includes(h)) return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };

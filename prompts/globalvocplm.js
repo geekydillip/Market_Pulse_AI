@@ -48,7 +48,7 @@ Instructions:
 8. SEVERITY:
    - High / Medium / Low.
    - High = device cannot be used (e.g., won’t turn on, no touch, no charging), core functions fail, data loss.
-   - High Severity Modules: Touch, Battery Drain, Sluggish, Lag, Slow, Buffering, No Service, CP Crash, Modem Crash, Restart.
+   - High Severity Modules: Touch, Battery Drain, Sluggish,Stuck,Frozen, Lag, Slow, Buffering, No Service, CP Crash, Modem Crash, Restart.
    - Medium = major feature fails but device remains usable (e.g., app crashes, slow performance).
    - Low = cosmetic or minor UI issues (e.g., text size, color, layout).
    - Rule: Does this issue prevent normal device use?
@@ -81,6 +81,7 @@ Output:
 [
   {
     "Title": "Phone crashes when opening Chrome",
+    "Source": "Samsung Members",
     "Problem": "My phone crashes when I open Chrome and then restarts.",
     "Module": "System",
     "Sub-Module": "Chrome",

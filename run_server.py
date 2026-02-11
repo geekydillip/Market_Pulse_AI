@@ -115,6 +115,24 @@ def generate_analytics_and_cache():
 
         print("🎉 Analytics and cache generation completed")
 
+        # Generate Semantic Matches
+        print("🧠 Generating semantic matches...")
+        try:
+             result = subprocess.run([
+                sys.executable, 'server/analytics/semantic_matcher.py'
+            ], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
+             
+             if result.returncode == 0:
+                 print("✅ Semantic matching completed")
+                 # Optional: print stdout if needed, or just specific lines
+                 # print(result.stdout) 
+             else:
+                 print(f"⚠️ Semantic matching failed (or skipped): {result.stderr}")
+                 print(result.stdout)
+                 
+        except Exception as e:
+            print(f"❌ Error generating semantic matches: {e}")
+
     except Exception as e:
         print(f"❌ Error in analytics/cache generation: {e}")
 
