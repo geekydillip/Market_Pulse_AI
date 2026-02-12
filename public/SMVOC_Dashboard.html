@@ -215,12 +215,12 @@
                 </th>
                 <th
                   class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[40%]">
-                  Issue Descriptions
+                  VOC
                 </th>
                 <th onclick="toggleGlobalVocSort()"
                   class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[40%] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors select-none group">
                   <div class="flex items-center gap-2">
-                    Global VOC PLM
+                    PLM
                     <i id="global-voc-sort-icon"
                       class="fa-solid fa-sort text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors"></i>
                   </div>
@@ -794,6 +794,7 @@
       dashboardData.analytics.rows.forEach(row => {
         const module = row['Module'] || 'Unknown';
         const subModule = row['Sub-Module'] || 'Unknown';
+        if (module === 'Unknown' || subModule === 'Unknown') return; // Skip Unknown data
         const aiInsight = row['AI Insight'] || 'No description available';
         const modelNo = row['Model No.'] || '';
         const content = row['content'] || '';

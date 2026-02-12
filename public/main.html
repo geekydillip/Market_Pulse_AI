@@ -1090,34 +1090,59 @@
         openRate = totalOpenIssues / totalAllIssues;
       }
 
-      // Get all models with the new data sources and calculate OPEN issues per model
+      // Use friendly names for grouping
       const modelStats = {};
 
       dashboardData.sourceModelSummary
         .filter(item => item.source === 'Global VOC PLM' || item.source === 'Beta UT' || item.source === 'EMPLOYEE UT')
         .forEach(item => {
-          if (!modelStats[item.model]) {
-            modelStats[item.model] = { totalIssues: 0, sources: {} };
+          const friendlyName = applyModelNameMapping(item.model);
+
+          if (!modelStats[friendlyName]) {
+            modelStats[friendlyName] = { totalIssues: 0, sources: {} };
           }
 
           // Calculate open issues for this model based on open rate
           const openIssues = Math.round(item.issue_count * openRate);
-          modelStats[item.model].totalIssues += openIssues;
+          modelStats[friendlyName].totalIssues += openIssues;
 
-          // Store the original data but with open issues count
-          modelStats[item.model].sources[item.source] = {
-            ...item,
-            issue_count: openIssues
-          };
+          if (!modelStats[friendlyName].sources[item.source]) {
+            modelStats[friendlyName].sources[item.source] = {
+              source: item.source,
+              issue_count: 0,
+              top_modules: [],
+              top_titles: []
+            };
+          }
+
+          // Aggregate data for this source within the friendly name group
+          const sourceData = modelStats[friendlyName].sources[item.source];
+          sourceData.issue_count += openIssues;
+
+          if (item.top_modules) {
+            item.top_modules.forEach(mod => {
+              if (!sourceData.top_modules.includes(mod)) {
+                sourceData.top_modules.push(mod);
+              }
+            });
+          }
+
+          if (item.top_titles) {
+            item.top_titles.forEach(title => {
+              if (!sourceData.top_titles.includes(title)) {
+                sourceData.top_titles.push(title);
+              }
+            });
+          }
         });
 
-      // Sort models by OPEN issues and take top 10
+      // Sort models by aggregated OPEN issues and take top 10
       const topModels = Object.entries(modelStats)
         .sort(([, a], [, b]) => b.totalIssues - a.totalIssues)
         .slice(0, 10)
-        .map(([modelName, stats]) => ({ label: modelName, value: stats.totalIssues, sources: stats.sources }));
+        .map(([friendlyName, stats]) => ({ label: friendlyName, value: stats.totalIssues, sources: stats.sources }));
 
-      console.log('Top models with OPEN issues:', topModels);
+      console.log('Top models (Friendly) with OPEN issues:', topModels);
 
       topModels.forEach((model, index) => {
         console.log(`Processing model ${index}:`, model);
@@ -1131,11 +1156,10 @@
         slNoCell.textContent = index + 1;
         tr.appendChild(slNoCell);
 
-        // Model Number cell - Apply friendly name mapping
+        // Model Number cell
         const modelCell = document.createElement('td');
         modelCell.className = 'px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100';
-        const friendlyName = applyModelNameMapping(model.label);
-        modelCell.textContent = friendlyName;
+        modelCell.textContent = model.label;
         tr.appendChild(modelCell);
 
         // Define source mappings for new columns

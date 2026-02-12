@@ -6,6 +6,7 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
 
 - **🔒 Privacy-First**: All AI processing stays on your local machine
 - **📊 Advanced Analytics**: Python-powered data aggregation with caching
+- **🧠 Semantic Matching**: Intelligent cross-referencing between VOC sources using NLP
 - **🎨 Professional UI**: Modern responsive dashboard with neumorphic design
 - **⚡ Real-Time Processing**: Live progress updates with Server-Sent Events
 - **🔧 Modular Architecture**: Extensible processing pipeline for different data types
@@ -38,6 +39,10 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
   - Chunked processing for large files (adaptive sizing based on file size)
   - Keep-alive HTTP connections for Ollama
   - Automatic file cleanup and validation
+- **Advanced Analytics & Semantic Matching**:
+  - **Centralized Analytics**: Unified data aggregation engine for holistic performance tracking across all data sources
+  - **Semantic Matching**: Intelligent cross-referencing between SMVOC and Global VOC data using NLP
+  - **Model Name Mapping**: Standardized model identification across different data sources using a central mapping repository
 - **Visualization Dashboard**: Aggregate metrics from processed files with pagination, search, and CSV export
 - **Results Management**: Automatic download of processed files and detailed processing logs
 - **Connection Monitoring**: Real-time Ollama connectivity status
@@ -47,6 +52,7 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
 
 - **Node.js** (v14 or higher)
 - **Ollama** with qwen3:4b-instruct model installed
+- **Python 3.10+** (with `pandas`, `sentence-transformers`, `scikit-learn`, `openpyxl`, `torch`)
 - **Web Browser** (Chrome, Firefox, Edge, etc.)
 
 ## 🛠️ Installation
@@ -62,6 +68,10 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
    cd frontend
    npm install
    cd ..
+   ```
+5. **Install Python dependencies**:
+   ```bash
+   pip install -r requirements.txt
    ```
 
 ## 🚀 Usage
@@ -482,24 +492,18 @@ Market Pulse AI/
 │   └── SMVOC_detailsData.html         # Samsung VOC detailed data
 ├── server/                            # Backend analytics and processing
 │   └── analytics/                     # Python analytics engine
-│       ├── central_aggregator.py      # Central data aggregation
-│       ├── generate_central_cache.py  # Cache generation script
-│       └── pandas_aggregator.py       # Pandas-based analytics
+│       ├── central_aggregator.py      # Main aggregation for cross-source analytics
+│       ├── semantic_matcher.py        # Semantic sentence similarity matching
+│       ├── generate_central_cache.py  # Automated cache generation script
+│       └── pandas_aggregator.py       # Core pandas-based data processing
+├── modelName.json                     # Central model name mapping repository
 ├── downloads/                         # Processed file outputs and analytics
-│   ├── __dashboard_cache__/           # Centralized dashboard cache
-│   │   └── central_dashboard.json     # Pre-aggregated dashboard data
-│   ├── beta_user_issues/              # Beta Issues processed data
-│   │   ├── analytics.json             # Aggregated analytics
-│   │   └── *.xlsx                     # Processed Excel files
+│   ├── __dashboard_cache__/           # Centralized dashboard cache (Pre-computed)
+│   │   └── central_dashboard.json     # Aggregated data for main dashboard UI
+│   ├── beta_user_issues/              # Beta Issues processed data & analytics
 │   ├── plm_issues/                    # PLM Issues processed data
-│   │   ├── analytics.json             # Aggregated analytics
-│   │   └── *.xlsx                     # Processed Excel files
 │   ├── samsung_members_plm/           # Samsung PLM processed data
-│   │   ├── analytics.json             # Aggregated analytics
-│   │   └── *.xlsx                     # Processed Excel files
 │   └── samsung_members_voc/           # Samsung VOC processed data
-│       ├── analytics.json             # Aggregated analytics
-│       └── *.xlsx                     # Processed Excel files
 ├── uploads/                           # Temporary file storage (auto-cleaned)
 └── __pycache__/                       # Python cache files
 ```
@@ -529,11 +533,27 @@ Market Pulse AI/
 - **VOC Analysis**: Specialized prompts for customer feedback data cleaning and analysis (module identification, severity classification, problem summarization)
 - **Generic Cleaning**: Deterministic rules for data normalization (trim whitespace, date ISO format normalization, numeric string conversion)
 
+### Centralized Data Aggregation
+The platform uses a Python-based aggregation engine (`central_aggregator.py`) that periodically scans the `downloads` directories to generate a unified cache (`central_dashboard.json`). This cache powers the highly responsive main dashboard, providing:
+- **KPI Tracking**: Real-time totals for High/Medium/Low severity across all sources.
+- **Source Distribution**: Comparative analysis of issue volume from SMVOC, PLM, and Beta UT.
+- **Performance**: Pre-computed metrics ensure sub-second dashboard load times even with large datasets.
+
+### Semantic Matching Engine
+A key innovation in the platform is the **Semantic Matcher**, which uses `sentence-transformers` and Cosine Similarity to cross-reference issues between **Samsung Members VOC** and **Global VOC PLM**. 
+- **NLP Logic**: It maps problem descriptions into a vector space and identifies duplicate or related issues that may be tracked under different identifiers in different systems.
+- **Thresholding**: Configurable similarity thresholds (default 0.7) to ensure only highly relevant matches are surfaced.
+
+### Model Name Mapping
+To ensure data consistency, the system implements a unified **Model Name Mapping** (`modelName.json`).
+- **Translation**: Automatically converts technical model identifiers (e.g., `SM-S928B`) into user-friendly names (e.g., `S24 Ultra`).
+- **Cross-Platform**: This mapping is utilized by both the Node.js backend for UI display and the Python analytics engine for grouping and reporting.
+
 ### Security & Performance
-- **Local Processing**: All AI inference stays on user machine - no data transmission
-- **File Validation**: Strict type checking, size limits, automatic cleanup
-- **Error Boundaries**: Graceful error handling with retries for AI calls
-- **Resource Management**: Connection pooling, timeout management, memory-efficient processing
+- **Local Processing**: All AI inference and analytics stay on the user's machine - no external data transmission.
+- **File Validation**: Strict type checking, size limits, and automatic cleanup.
+- **Error Boundaries**: Graceful handling with retries for AI calls and robust fallback mechanisms for analytics.
+- **Resource Management**: Connection pooling, timeout management, and memory-efficient chunked processing.
 
 ## 🎯 Data Processing Types
 
@@ -587,6 +607,11 @@ Deterministic automated cleaning without AI:
 
 ## 📈 Recent Updates
 
+- **v1.7.0** - (February 2026) Semantic Matching & Centralized Analytics
+  - **Semantic Matcher**: Implemented NLP-based issue cross-referencing between SMVOC and Global VOC.
+  - **Central Aggregator**: New unified aggregation engine with automated cache generation for faster dashboard performance.
+  - **Model Mapping**: Integrated centralized `modelName.json` mapping across all analytics modules.
+  - **Dependency Update**: Added `sentence-transformers` and `scikit-learn` to the processing pipeline.
 - **v1.6.0** - (January 2026) Project Structure Refinement & Enhanced Dashboard Features
   - **NewChangedStructure**: Major project restructuring for improved maintainability
   - **Enhanced Dashboard UI**: Updated card labels, improved styling, and better user experience

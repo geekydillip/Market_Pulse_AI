@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 # Configuration
-SIMILARITY_THRESHOLD = 0.75
+SIMILARITY_THRESHOLD = 0.50
 MODEL_NAME = 'all-MiniLM-L6-v2'
 
 def load_json(path):
