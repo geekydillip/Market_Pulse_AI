@@ -13,12 +13,12 @@ import json
 import pandas as pd
 import traceback
 
-# --------- CONFIGURATION (edit these if you want) ----------
+# --------- CONFIGURATION (edit these if you want) -----------
 BASE_DIR = Path(__file__).parent.resolve()   # folder where script is located
 SOURCE_DIR = BASE_DIR / "D:\\RAW data\\json_output"         # default source folder
 DEST_DIR = BASE_DIR / "D:\\RAW data\\json_output"         # default destination folder
 OVERWRITE = False                            # set True to overwrite existing .xlsx files
-# -----------------------------------------------------------
+# ------------------------------------------------------------
 
 def convert_single_json(source_path: Path, dest_dir: Path, overwrite: bool=False) -> bool:
     """
