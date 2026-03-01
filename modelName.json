@@ -1,232 +1,1202 @@
 {
-    "SM-G920F": "S6",
-    "SM-G925F": "S6 Edge",
-    "SM-G928F": "S6 Edge+",
-    "SM-G930F": "S7",
-    "SM-G935F": "S7 Edge",
-    "SM-G950F": "S8",
-    "SM-G955F": "S8+",
-    "SM-G960F": "S9",
-    "SM-G965F": "S9+",
-    "SM-G970F": "S10e",
-    "SM-G973F": "S10",
-    "SM-G975F": "S10+",
-    "SM-G977B": "S10 5G",
-    "SM-G980F": "S20",
-    "SM-G985F": "S20+",
-    "SM-G988B": "S20 Ultra",
-    "SM-G780F": "S20 FE",
-    "SM-G991B": "S21",
-    "SM-G996B": "S21+",
-    "SM-G998B": "S21 Ultra",
-    "SM-G990E": "S21 FE",
-    "SM-G990B2": "S21 FE(QC)",
-    "SM-S901B": "S22",
-    "SM-S906B": "S22+",
-    "SM-S908B": "S22 Ultra",
-    "SM-S911B": "S23",
-    "SM-S916B": "S23+",
-    "SM-S918B": "S23 Ultra",
-    "SM-S711B": "S23 FE",
-    "SM-S921B": "S24",
-    "SM-S926B": "S24+",
-    "SM-S928B": "S24 Ultra",
-    "SM-S931B": "S25",
-    "SM-S936B": "S25+",
-    "SM-S938B": "S25 Ultra",
-    "SM-S942B": "S26",
-    "SM-S947B": "S26+",
-    "SM-S948B": "S26 Ultra",
-    "SM-F700F": "Z Flip",
-    "SM-F707B": "Z Flip 5G",
-    "SM-F711B": "Z Flip3 5G",
-    "SM-F721B": "Z Flip4",
-    "SM-F731B": "Z Flip5",
-    "SM-F741B": "Z Flip6",
-    "SM-F751B": "Z Flip7",
-    "SM-F761B": "Z Flip7 FE",
-    "SM-F771B": "Z Flip8",
-    "SM-F900F": "Z Fold",
-    "SM-F916B": "Z Fold2 5G",
-    "SM-F926B": "Z Fold3 5G",
-    "SM-F936B": "Z Fold4",
-    "SM-F946B": "Z Fold5",
-    "SM-F956B": "Z Fold6",
-    "SM-F966B": "Z Fold7",
-    "SM-F976B": "Z Fold8",
-    "SM-A075F": "A07 4G",
-    "SM-A076F": "A07 5G",
-    "SM-A300F": "A3",
-    "SM-A310F": "A3 (2016)",
-    "SM-A320F": "A3 (2017)",
-    "SM-A500F": "A5",
-    "SM-A510F": "A5 (2016)",
-    "SM-A520F": "A5 (2017)",
-    "SM-A700F": "A7",
-    "SM-A710F": "A7 (2016)",
-    "SM-A720F": "A7 (2017)",
-    "SM-A530F": "A8 (2018)",
-    "SM-A750F": "A8 (2018)",
-    "SM-A105F": "A10",
-    "SM-A205F": "A20",
-    "SM-A305F": "A30",
-    "SM-A405F": "A40",
-    "SM-A505F": "A50",
-    "SM-A605F": "A60",
-    "SM-A705F": "A70",
-    "SM-A805F": "A80",
-    "SM-A515F": "A51",
-    "SM-A715F": "A71",
-    "SM-A125F": "A12",
-    "SM-A225F": "A22",
-    "SM-A325F": "A32",
-    "SM-A525F": "A52",
-    "SM-A725F": "A72",
-    "SM-A335F": "A33 5G",
-    "SM-A536B": "A53 5G",
-    "SM-A736B": "A73 5G",
-    "SM-A145F": "A14",
-    "SM-A245F": "A24",
-    "SM-A345F": "A34 5G",
-    "SM-A545F": "A54 5G",
-    "SM-A155F": "A15",
-    "SM-A166P": "A16 5G",
-    "SM-A255F": "A25 5G",
-    "SM-A356B": "A35 5G",
-    "SM-A366E": "A36 5G",
-    "SM-A556B": "A55 5G",
-    "SM-A566B": "A56 5G",
-    "SM-A266B": "A26 5G",
-    "SM-A176B": "A17 5G",
-    "SM-A576B": "A57",
-    "SM-M105F": "M10",
-    "SM-M205F": "M20",
-    "SM-M305F": "M30",
-    "SM-M315F": "M31",
-    "SM-M515F": "M51",
-    "SM-M127F": "M12",
-    "SM-M226B": "M22",
-    "SM-M236B": "M23 5G",
-    "SM-M326B": "M32",
-    "SM-M336B": "M33 5G",
-    "SM-M426B": "M42 5G",
-    "SM-M526B": "M52 5G",
-    "SM-M536B": "M53 5G",
-    "SM-M546B": "M54 5G",
-    "SM-M556B": "M55 5G",
-    "SM-M156B": "M15 5G",
-    "SM-M166P": "M16 5G",
-    "SM-M013F": "M01 Core",
-    "SM-M046B": "M04",
-    "SM-M365B": "M36 5G",
-    "SM-M175B": "M17 5G",
-    "SM-F022B": "F02s",
-    "SM-F042B": "F04",
-    "SM-F122B": "F12",
-    "SM-F132B": "F13",
-    "SM-F142B": "F14 5G",
-    "SM-F222B": "F22",
-    "SM-F232B": "F23 5G",
-    "SM-F342B": "F34 5G",
-    "SM-F411B": "F41",
-    "SM-F426B": "F42 5G",
-    "SM-F522B": "F52 5G",
-    "SM-F621B": "F62",
-    "SM-F366B": "F36 5G",
-    "SM-T710": "Tab S2 8.0",
-    "SM-T715": "Tab S2 8.0 LTE",
-    "SM-T810": "Tab S2 9.7",
-    "SM-T815": "Tab S2 9.7 LTE",
-    "SM-T820": "Tab S3",
-    "SM-T825": "Tab S3 LTE",
-    "SM-T830": "Tab S4",
-    "SM-T835": "Tab S4 LTE",
-    "SM-T860": "Tab S6",
-    "SM-T865": "Tab S6 LTE",
-    "SM-T870": "Tab S7",
-    "SM-T875": "Tab S7 LTE",
-    "SM-T970": "Tab S7+",
-    "SM-T975": "Tab S7+ LTE",
-    "SM-T733": "Tab S7 FE",
-    "SM-T736": "Tab S7 FE LTE",
-    "SM-T720": "Tab S5e",
-    "SM-T725": "Tab S5e LTE",
-    "SM-T736B": "Tab S9 FE",
-    "SM-T731": "Tab S9 FE",
-    "SM-T738": "Tab S9 FE+",
-    "SM-T636": "Tab S9 FE LTE",
-    "SM-T860N": "Tab S6 Lite",
-    "SM-T220": "Tab A7 Lite",
-    "SM-T225": "Tab A7 Lite LTE",
-    "SM-T500": "Tab A7",
-    "SM-T505": "Tab A7 LTE",
-    "SM-T510": "Tab A (2019)",
-    "SM-T515": "Tab A (2019) LTE",
-    "SM-T290": "Tab A 8.0",
-    "SM-T295": "Tab A 8.0 LTE",
-    "SM-T307": "Tab A 8.4",
-    "SM-T387": "Tab A 8.0 (2019)",
-    "SM-T580": "Tab A 10.1",
-    "SM-T585": "Tab A 10.1 LTE",
-    "SM-T595": "Tab A 10.5 LTE",
-    "SM-T900": "Tab S8 Ultra",
-    "SM-T905": "Tab S8 Ultra LTE",
-    "SM-T910": "Tab S9+",
-    "SM-T915": "Tab S9+ LTE",
-    "SM-T920": "Tab S9 Ultra",
-    "SM-T925": "Tab S9 Ultra LTE",
-    "SM-T730": "Tab S9 FE",
-    "SM-T735": "Tab S9 FE LTE",
-    "SM-X300": "Tab Active4 Pro",
-    "SM-X306": "Tab Active4 Pro LTE",
-    "SM-R720": "Gear S2",
-    "SM-R730": "Gear S2 Classic",
-    "SM-R732": "Gear S2 3G",
-    "SM-R735": "Gear S2 3G",
-    "SM-R760": "Gear S3 Frontier",
-    "SM-R770": "Gear S3 Classic",
-    "SM-R800": "Watch 42mm",
-    "SM-R810": "Watch 42mm LTE",
-    "SM-R805": "Watch 46mm",
-    "SM-R815": "Watch 46mm LTE",
-    "SM-R500": "Watch Active",
-    "SM-R505": "Watch Active LTE",
-    "SM-R820": "Watch Active2 40mm",
-    "SM-R830": "Watch Active2 44mm",
-    "SM-R825": "Watch Active2 40mm LTE",
-    "SM-R835": "Watch Active2 44mm LTE",
-    "SM-R840": "Watch3 41mm",
-    "SM-R850": "Watch3 45mm",
-    "SM-R845": "Watch3 41mm LTE",
-    "SM-R855": "Watch3 45mm LTE",
-    "SM-R860": "Watch4 40mm",
-    "SM-R870": "Watch4 44mm",
-    "SM-R865": "Watch4 40mm LTE",
-    "SM-R875": "Watch4 44mm LTE",
-    "SM-R880": "Watch4 Classic 42mm",
-    "SM-R890": "Watch4 Classic 46mm",
-    "SM-R885": "Watch4 Classic 42mm LTE",
-    "SM-R895": "Watch4 Classic 46mm LTE",
-    "SM-R900": "Watch5 40mm",
-    "SM-R910": "Watch5 44mm",
-    "SM-R905": "Watch5 40mm LTE",
-    "SM-R915": "Watch5 44mm LTE",
-    "SM-R920": "Watch5 Pro",
-    "SM-R925": "Watch5 Pro LTE",
-    "SM-R930": "Watch6 40mm",
-    "SM-R940": "Watch6 44mm",
-    "SM-R935": "Watch6 40mm LTE",
-    "SM-R945": "Watch6 44mm LTE",
-    "SM-R950": "Watch6 Classic 43mm",
-    "SM-R960": "Watch6 Classic 47mm",
-    "SM-R955": "Watch6 Classic 43mm LTE",
-    "SM-R965": "Watch6 Classic 47mm LTE",
-    "SM-R930N": "Watch FE",
-    "SM-R931": "Watch7 40mm",
-    "SM-R941": "Watch7 44mm",
-    "SM-R936": "Watch7 40mm LTE",
-    "SM-R946": "Watch7 44mm LTE",
-    "SM-R960N": "Watch Ultra",
-    "SM-R965N": "Watch Ultra LTE",
-    "SM-Q500": "Ring"
+    "SM-A055F": {
+        "name": "A05",
+        "chipset": "Helio G85"
+    },
+    "SM-A066B": {
+        "name": "A06 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-A075F": {
+        "name": "A07 4G",
+        "chipset": "Helio G35"
+    },
+    "SM-A076F": {
+        "name": "A07 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-A105F": {
+        "name": "A10",
+        "chipset": "Exynos 7884"
+    },
+    "SM-A125F": {
+        "name": "A12",
+        "chipset": "Helio P35"
+    },
+    "SM-A145F": {
+        "name": "A14",
+        "chipset": "Helio G80"
+    },
+    "SM-A146B": {
+        "name": "A14 5G",
+        "chipset": "Exynos 1330"
+    },
+    "SM-A155F": {
+        "name": "A15",
+        "chipset": "Helio G99"
+    },
+    "SM-A156E": {
+        "name": "A15 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-A166": {
+        "name": "A16 5G",
+        "chipset": "Exynos 1330"
+    },
+    "SM-A166P": {
+        "name": "A16 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-A176B": {
+        "name": "A17 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-A205F": {
+        "name": "A20",
+        "chipset": "Exynos 7884"
+    },
+    "SM-A225F": {
+        "name": "A22",
+        "chipset": "Helio G80"
+    },
+    "SM-A236E": {
+        "name": "A23 5G",
+        "chipset": "Snapdragon 695"
+    },
+    "SM-A245F": {
+        "name": "A24",
+        "chipset": "Helio G99"
+    },
+    "SM-A255F": {
+        "name": "A25 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-A266B": {
+        "name": "A26 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-A300F": {
+        "name": "A3",
+        "chipset": "Snapdragon 410"
+    },
+    "SM-A305F": {
+        "name": "A30",
+        "chipset": "Exynos 7904"
+    },
+    "SM-A310F": {
+        "name": "A3 (2016)",
+        "chipset": "Exynos 7578"
+    },
+    "SM-A320F": {
+        "name": "A3 (2017)",
+        "chipset": "Exynos 7870"
+    },
+    "SM-A325F": {
+        "name": "A32",
+        "chipset": "Helio G80"
+    },
+    "SM-A335F": {
+        "name": "A33 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-A336E": {
+        "name": "A33 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-A345F": {
+        "name": "A34 5G",
+        "chipset": "Dimensity 1080"
+    },
+    "SM-A346E": {
+        "name": "A34 5G",
+        "chipset": "Dimensity 1080"
+    },
+    "SM-A356B": {
+        "name": "A35 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-A356E": {
+        "name": "A35 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-A366": {
+        "name": "A36 5G",
+        "chipset": "Snapdragon 6 Gen 3"
+    },
+    "SM-A366E": {
+        "name": "A36 5G",
+        "chipset": "Snapdragon 6 Gen 3"
+    },
+    "SM-A405F": {
+        "name": "A40",
+        "chipset": "Exynos 7904"
+    },
+    "SM-A500F": {
+        "name": "A5",
+        "chipset": "Snapdragon 410"
+    },
+    "SM-A505F": {
+        "name": "A50",
+        "chipset": "Exynos 9610"
+    },
+    "SM-A510F": {
+        "name": "A5 (2016)",
+        "chipset": "Exynos 7580"
+    },
+    "SM-A515F": {
+        "name": "A51",
+        "chipset": "Exynos 9611"
+    },
+    "SM-A520F": {
+        "name": "A5 (2017)",
+        "chipset": "Exynos 7880"
+    },
+    "SM-A525F": {
+        "name": "A52",
+        "chipset": "Snapdragon 720G"
+    },
+    "SM-A530F": {
+        "name": "A8 (2018)",
+        "chipset": "Exynos 7885"
+    },
+    "SM-A536B": {
+        "name": "A53 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-A545F": {
+        "name": "A54 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-A546E": {
+        "name": "A54 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-A556B": {
+        "name": "A55 5G",
+        "chipset": "Exynos 1480"
+    },
+    "SM-A556E": {
+        "name": "A55 5G",
+        "chipset": "Exynos 1480"
+    },
+    "SM-A566": {
+        "name": "A56 5G",
+        "chipset": "Exynos 1580"
+    },
+    "SM-A566B": {
+        "name": "A56 5G",
+        "chipset": "Exynos 1580"
+    },
+    "SM-A566E": {
+        "name": "A56 5G",
+        "chipset": "Exynos 1580"
+    },
+    "SM-A576B": {
+        "name": "A57",
+        "chipset": "Snapdragon 7 Gen 1"
+    },
+    "SM-A605F": {
+        "name": "A60",
+        "chipset": "Snapdragon 675"
+    },
+    "SM-A700F": {
+        "name": "A7",
+        "chipset": "Exynos 5430"
+    },
+    "SM-A705F": {
+        "name": "A70",
+        "chipset": "Snapdragon 675"
+    },
+    "SM-A710F": {
+        "name": "A7 (2016)",
+        "chipset": "Exynos 7580"
+    },
+    "SM-A715F": {
+        "name": "A71",
+        "chipset": "Snapdragon 730"
+    },
+    "SM-A720F": {
+        "name": "A7 (2017)",
+        "chipset": "Exynos 7880"
+    },
+    "SM-A725F": {
+        "name": "A72",
+        "chipset": "Snapdragon 720G"
+    },
+    "SM-A736B": {
+        "name": "A73 5G",
+        "chipset": "Snapdragon 778G"
+    },
+    "SM-A750F": {
+        "name": "A8 (2018)",
+        "chipset": "Exynos 7885"
+    },
+    "SM-A805F": {
+        "name": "A80",
+        "chipset": "Snapdragon 730"
+    },
+    "SM-E066B": {
+        "name": "F06 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-E146B": {
+        "name": "F14 5G (Alt Variant)",
+        "chipset": "Exynos 1330"
+    },
+    "SM-E156B": {
+        "name": "F15 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-E236B": {
+        "name": "F23 5G (Alt Variant)",
+        "chipset": "Snapdragon 750G"
+    },
+    "SM-E346B": {
+        "name": "F34 5G (Alt Variant)",
+        "chipset": "Exynos 1280"
+    },
+    "SM-E366B": {
+        "name": "F36 5G (Alt Variant)",
+        "chipset": "Exynos 1380"
+    },
+    "SM-E546B": {
+        "name": "F54 5G (Alt Variant)",
+        "chipset": "Exynos 1380"
+    },
+    "SM-E556B": {
+        "name": "F55 5G",
+        "chipset": "Snapdragon 7 Gen 1"
+    },
+    "SM-F042B": {
+        "name": "F04",
+        "chipset": "Helio P35"
+    },
+    "SM-F122B": {
+        "name": "F12",
+        "chipset": "Exynos 850"
+    },
+    "SM-F132B": {
+        "name": "F13",
+        "chipset": "Exynos 850"
+    },
+    "SM-F142B": {
+        "name": "F14 5G",
+        "chipset": "Exynos 1330"
+    },
+    "SM-F222B": {
+        "name": "F22",
+        "chipset": "Helio G80"
+    },
+    "SM-F232B": {
+        "name": "F23 5G",
+        "chipset": "Snapdragon 750G"
+    },
+    "SM-F342B": {
+        "name": "F34 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-F366B": {
+        "name": "F36 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-F411B": {
+        "name": "F41",
+        "chipset": "Exynos 9611"
+    },
+    "SM-F426B": {
+        "name": "F42 5G",
+        "chipset": "Dimensity 700"
+    },
+    "SM-F522B": {
+        "name": "F52 5G",
+        "chipset": "Snapdragon 750G"
+    },
+    "SM-F621B": {
+        "name": "F62",
+        "chipset": "Exynos 9825"
+    },
+    "SM-F700F": {
+        "name": "Z Flip",
+        "chipset": "Snapdragon 855+"
+    },
+    "SM-F707B": {
+        "name": "Z Flip 5G",
+        "chipset": "Snapdragon 865+"
+    },
+    "SM-F711B": {
+        "name": "Z Flip3 5G",
+        "chipset": "Snapdragon 888"
+    },
+    "SM-F721B": {
+        "name": "Z Flip4",
+        "chipset": "Snapdragon 8+ Gen 1"
+    },
+    "SM-F731B": {
+        "name": "Z Flip5",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-F741B": {
+        "name": "Z Flip6",
+        "chipset": "Snapdragon 8 Gen 3"
+    },
+    "SM-F751": {
+        "name": "Z Flip7",
+        "chipset": "Exynos 2500"
+    },
+    "SM-F751B": {
+        "name": "Z Flip7",
+        "chipset": "Exynos 2500"
+    },
+    "SM-F761": {
+        "name": "Z Flip7 FE",
+        "chipset": "Exynos 2400"
+    },
+    "SM-F761B": {
+        "name": "Z Flip7 FE",
+        "chipset": "Exynos 2400"
+    },
+    "SM-F771": {
+        "name": "Z Flip8",
+        "chipset": "Snapdragon 8 Elite Gen 2"
+    },
+    "SM-F771B": {
+        "name": "Z Flip8",
+        "chipset": "Snapdragon 8 Elite Gen 2"
+    },
+    "SM-F900F": {
+        "name": "Z Fold",
+        "chipset": "Snapdragon 855"
+    },
+    "SM-F916B": {
+        "name": "Z Fold2 5G",
+        "chipset": "Snapdragon 865+"
+    },
+    "SM-F926B": {
+        "name": "Z Fold3 5G",
+        "chipset": "Snapdragon 888"
+    },
+    "SM-F936B": {
+        "name": "Z Fold4",
+        "chipset": "Snapdragon 8+ Gen 1"
+    },
+    "SM-F946B": {
+        "name": "Z Fold5",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-F956B": {
+        "name": "Z Fold6",
+        "chipset": "Snapdragon 8 Gen 3"
+    },
+    "SM-F966": {
+        "name": "Z Fold7",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-F966B": {
+        "name": "Z Fold7",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-F976": {
+        "name": "Z Fold8",
+        "chipset": "Snapdragon 8 Elite Gen 2"
+    },
+    "SM-F976B": {
+        "name": "Z Fold8",
+        "chipset": "Snapdragon 8 Elite Gen 2"
+    },
+    "SM-G780F": {
+        "name": "S20 FE",
+        "chipset": "Exynos 990"
+    },
+    "SM-G781B": {
+        "name": "S20 FE 5G",
+        "chipset": "Snapdragon 865"
+    },
+    "SM-G920F": {
+        "name": "S6",
+        "chipset": "Exynos 7420"
+    },
+    "SM-G925F": {
+        "name": "S6 Edge",
+        "chipset": "Exynos 7420"
+    },
+    "SM-G928F": {
+        "name": "S6 Edge+",
+        "chipset": "Exynos 7420"
+    },
+    "SM-G930F": {
+        "name": "S7",
+        "chipset": "Exynos 8890"
+    },
+    "SM-G935F": {
+        "name": "S7 Edge",
+        "chipset": "Exynos 8890"
+    },
+    "SM-G950F": {
+        "name": "S8",
+        "chipset": "Exynos 8895"
+    },
+    "SM-G955F": {
+        "name": "S8+",
+        "chipset": "Exynos 8895"
+    },
+    "SM-G960F": {
+        "name": "S9",
+        "chipset": "Exynos 9810"
+    },
+    "SM-G965F": {
+        "name": "S9+",
+        "chipset": "Exynos 9810"
+    },
+    "SM-G970F": {
+        "name": "S10e",
+        "chipset": "Exynos 9820"
+    },
+    "SM-G973F": {
+        "name": "S10",
+        "chipset": "Exynos 9820"
+    },
+    "SM-G975F": {
+        "name": "S10+",
+        "chipset": "Exynos 9820"
+    },
+    "SM-G977B": {
+        "name": "S10 5G",
+        "chipset": "Exynos 9820"
+    },
+    "SM-G980F": {
+        "name": "S20",
+        "chipset": "Exynos 990"
+    },
+    "SM-G985F": {
+        "name": "S20+",
+        "chipset": "Exynos 990"
+    },
+    "SM-G988B": {
+        "name": "S20 Ultra",
+        "chipset": "Exynos 990"
+    },
+    "SM-G990B2": {
+        "name": "S21 FE(QC)",
+        "chipset": "Snapdragon 888"
+    },
+    "SM-G990E": {
+        "name": "S21 FE",
+        "chipset": "Exynos 2100"
+    },
+    "SM-G991B": {
+        "name": "S21",
+        "chipset": "Exynos 2100"
+    },
+    "SM-G996B": {
+        "name": "S21+",
+        "chipset": "Exynos 2100"
+    },
+    "SM-G998B": {
+        "name": "S21 Ultra",
+        "chipset": "Exynos 2100"
+    },
+    "SM-L320": {
+        "name": "Watch8 40mm",
+        "chipset": "Exynos W1000"
+    },
+    "SM-L330": {
+        "name": "Watch8 44mm",
+        "chipset": "Exynos W1000"
+    },
+    "SM-L505F": {
+        "name": "Fit3",
+        "chipset": "BES2700"
+    },
+    "SM-L700": {
+        "name": "Watch Ultra 2025",
+        "chipset": "Exynos W1000"
+    },
+    "SM-L705F": {
+        "name": "Watch FE LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-M013F": {
+        "name": "M01 Core",
+        "chipset": "MediaTek MT6739"
+    },
+    "SM-M046B": {
+        "name": "M04",
+        "chipset": "Helio P35"
+    },
+    "SM-M066B": {
+        "name": "M06 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-M105F": {
+        "name": "M10",
+        "chipset": "Exynos 7870"
+    },
+    "SM-M127F": {
+        "name": "M12",
+        "chipset": "Exynos 850"
+    },
+    "SM-M156B": {
+        "name": "M15 5G",
+        "chipset": "Dimensity 6100+"
+    },
+    "SM-M166P": {
+        "name": "M16 5G",
+        "chipset": "Dimensity 6300"
+    },
+    "SM-M175B": {
+        "name": "M17 5G",
+        "chipset": "Dimensity 6300"
+    },
+    "SM-M205F": {
+        "name": "M20",
+        "chipset": "Exynos 7904"
+    },
+    "SM-M226B": {
+        "name": "M22",
+        "chipset": "Helio G80"
+    },
+    "SM-M236B": {
+        "name": "M23 5G",
+        "chipset": "Snapdragon 750G"
+    },
+    "SM-M305F": {
+        "name": "M30",
+        "chipset": "Exynos 7904"
+    },
+    "SM-M315F": {
+        "name": "M31",
+        "chipset": "Exynos 9611"
+    },
+    "SM-M326B": {
+        "name": "M32",
+        "chipset": "Helio G80"
+    },
+    "SM-M336B": {
+        "name": "M33 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-M346B": {
+        "name": "M34 5G",
+        "chipset": "Exynos 1280"
+    },
+    "SM-M356B": {
+        "name": "M35 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-M365B": {
+        "name": "M36 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-M366B": {
+        "name": "M36 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-M426B": {
+        "name": "M42 5G",
+        "chipset": "Snapdragon 750G"
+    },
+    "SM-M515F": {
+        "name": "M51",
+        "chipset": "Snapdragon 730G"
+    },
+    "SM-M526B": {
+        "name": "M52 5G",
+        "chipset": "Snapdragon 778G"
+    },
+    "SM-M536B": {
+        "name": "M53 5G",
+        "chipset": "Dimensity 900"
+    },
+    "SM-M546B": {
+        "name": "M54 5G",
+        "chipset": "Exynos 1380"
+    },
+    "SM-M556B": {
+        "name": "M55 5G",
+        "chipset": "Snapdragon 7 Gen 1"
+    },
+    "SM-M558B": {
+        "name": "M55 5G",
+        "chipset": "Snapdragon 7 Gen 1"
+    },
+    "SM-M566B": {
+        "name": "M56 5G",
+        "chipset": "Exynos 1580"
+    },
+    "SM-Q500": {
+        "name": "Ring",
+        "chipset": "Samsung S3 Gen 2"
+    },
+    "SM-Q501": {
+        "name": "Ring 1",
+        "chipset": "Samsung S3 Gen 2"
+    },
+    "SM-R400N": {
+        "name": "Buds FE",
+        "chipset": "Broadcom BCM43015"
+    },
+    "SM-R500": {
+        "name": "Watch Active",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R505": {
+        "name": "Watch Active LTE",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R720": {
+        "name": "Gear S2",
+        "chipset": "Exynos 3250"
+    },
+    "SM-R730": {
+        "name": "Gear S2 Classic",
+        "chipset": "Exynos 3250"
+    },
+    "SM-R732": {
+        "name": "Gear S2 3G",
+        "chipset": "Exynos 3250"
+    },
+    "SM-R735": {
+        "name": "Gear S2 3G",
+        "chipset": "Exynos 3250"
+    },
+    "SM-R760": {
+        "name": "Gear S3 Frontier",
+        "chipset": "Exynos 7270"
+    },
+    "SM-R770": {
+        "name": "Gear S3 Classic",
+        "chipset": "Exynos 7270"
+    },
+    "SM-R800": {
+        "name": "Watch 42mm",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R805": {
+        "name": "Watch 46mm",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R810": {
+        "name": "Watch 42mm LTE",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R815": {
+        "name": "Watch 46mm LTE",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R820": {
+        "name": "Watch Active2 40mm",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R825": {
+        "name": "Watch Active2 40mm LTE",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R830": {
+        "name": "Watch Active2 44mm",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R835": {
+        "name": "Watch Active2 44mm LTE",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R840": {
+        "name": "Watch3 41mm",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R845": {
+        "name": "Watch3 41mm LTE",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R850": {
+        "name": "Watch3 45mm",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R855": {
+        "name": "Watch3 45mm LTE",
+        "chipset": "Exynos 9110"
+    },
+    "SM-R860": {
+        "name": "Watch4 40mm",
+        "chipset": "Exynos W920"
+    },
+    "SM-R865": {
+        "name": "Watch4 40mm LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R870": {
+        "name": "Watch4 44mm",
+        "chipset": "Exynos W920"
+    },
+    "SM-R875": {
+        "name": "Watch4 44mm LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R880": {
+        "name": "Watch4 Classic 42mm",
+        "chipset": "Exynos W920"
+    },
+    "SM-R885": {
+        "name": "Watch4 Classic 42mm LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R890": {
+        "name": "Watch4 Classic 46mm",
+        "chipset": "Exynos W920"
+    },
+    "SM-R895": {
+        "name": "Watch4 Classic 46mm LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R900": {
+        "name": "Watch5 40mm",
+        "chipset": "Exynos W920"
+    },
+    "SM-R905": {
+        "name": "Watch5 40mm LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R910": {
+        "name": "Watch5 44mm",
+        "chipset": "Exynos W920"
+    },
+    "SM-R915": {
+        "name": "Watch5 44mm LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R920": {
+        "name": "Watch5 Pro",
+        "chipset": "Exynos W920"
+    },
+    "SM-R925": {
+        "name": "Watch5 Pro LTE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R930": {
+        "name": "Watch6 40mm",
+        "chipset": "Exynos W930"
+    },
+    "SM-R930N": {
+        "name": "Watch FE",
+        "chipset": "Exynos W920"
+    },
+    "SM-R931": {
+        "name": "Watch7 40mm",
+        "chipset": "Exynos W1000"
+    },
+    "SM-R935": {
+        "name": "Watch6 40mm LTE",
+        "chipset": "Exynos W930"
+    },
+    "SM-R936": {
+        "name": "Watch7 40mm LTE",
+        "chipset": "Exynos W1000"
+    },
+    "SM-R940": {
+        "name": "Watch6 44mm",
+        "chipset": "Exynos W930"
+    },
+    "SM-R941": {
+        "name": "Watch7 44mm",
+        "chipset": "Exynos W1000"
+    },
+    "SM-R945": {
+        "name": "Watch6 44mm LTE",
+        "chipset": "Exynos W930"
+    },
+    "SM-R946": {
+        "name": "Watch7 44mm LTE",
+        "chipset": "Exynos W1000"
+    },
+    "SM-R950": {
+        "name": "Watch6 Classic 43mm",
+        "chipset": "Exynos W930"
+    },
+    "SM-R955": {
+        "name": "Watch6 Classic 43mm LTE",
+        "chipset": "Exynos W930"
+    },
+    "SM-R960": {
+        "name": "Watch6 Classic 47mm",
+        "chipset": "Exynos W930"
+    },
+    "SM-R960N": {
+        "name": "Watch Ultra",
+        "chipset": "Exynos W1000"
+    },
+    "SM-R965": {
+        "name": "Watch6 Classic 47mm LTE",
+        "chipset": "Exynos W930"
+    },
+    "SM-R965N": {
+        "name": "Watch Ultra LTE",
+        "chipset": "Exynos W1000"
+    },
+    "SM-S711B": {
+        "name": "S23 FE",
+        "chipset": "Exynos 2200"
+    },
+    "SM-S721B": {
+        "name": "S24 FE",
+        "chipset": "Exynos 2400e"
+    },
+    "SM-S731B": {
+        "name": "S25 FE",
+        "chipset": "Exynos 2400e"
+    },
+    "SM-S741B": {
+        "name": "S26 FE",
+        "chipset": "Exynos 2500"
+    },
+    "SM-S901B": {
+        "name": "S22",
+        "chipset": "Exynos 2200"
+    },
+    "SM-S901E": {
+        "name": "S22",
+        "chipset": "Snapdragon 8 Gen 1"
+    },
+    "SM-S906B": {
+        "name": "S22+",
+        "chipset": "Exynos 2200"
+    },
+    "SM-S906E": {
+        "name": "S22+",
+        "chipset": "Snapdragon 8 Gen 1"
+    },
+    "SM-S908B": {
+        "name": "S22 Ultra",
+        "chipset": "Exynos 2200"
+    },
+    "SM-S908E": {
+        "name": "S22 Ultra",
+        "chipset": "Snapdragon 8 Gen 1"
+    },
+    "SM-S911B": {
+        "name": "S23",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-S916B": {
+        "name": "S23+",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-S918B": {
+        "name": "S23 Ultra",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-S921B": {
+        "name": "S24",
+        "chipset": "Exynos 2400"
+    },
+    "SM-S921E": {
+        "name": "S24",
+        "chipset": "Snapdragon 8 Gen 3"
+    },
+    "SM-S926B": {
+        "name": "S24+",
+        "chipset": "Exynos 2400"
+    },
+    "SM-S928B": {
+        "name": "S24 Ultra",
+        "chipset": "Snapdragon 8 Gen 3"
+    },
+    "SM-S931": {
+        "name": "S25",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-S931B": {
+        "name": "S25",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-S936": {
+        "name": "S25+",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-S936B": {
+        "name": "S25+",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-S938": {
+        "name": "S25 Ultra",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-S938B": {
+        "name": "S25 Ultra",
+        "chipset": "Snapdragon 8 Elite"
+    },
+    "SM-S941": {
+        "name": "S26",
+        "chipset": "Exynos 2600"
+    },
+    "SM-S942": {
+        "name": "S26",
+        "chipset": "Exynos 2600"
+    },
+    "SM-S942B": {
+        "name": "S26",
+        "chipset": "Exynos 2600"
+    },
+    "SM-S946": {
+        "name": "S26+",
+        "chipset": "Exynos 2600"
+    },
+    "SM-S947B": {
+        "name": "S26+",
+        "chipset": "Exynos 2600"
+    },
+    "SM-S948": {
+        "name": "S26 Ultra",
+        "chipset": "Exynos 2600"
+    },
+    "SM-S948B": {
+        "name": "S26 Ultra",
+        "chipset": "Exynos 2600"
+    },
+    "SM-T220": {
+        "name": "Tab A7 Lite",
+        "chipset": "Helio P22T"
+    },
+    "SM-T225": {
+        "name": "Tab A7 Lite LTE",
+        "chipset": "Helio P22T"
+    },
+    "SM-T290": {
+        "name": "Tab A 8.0",
+        "chipset": "Snapdragon 429"
+    },
+    "SM-T295": {
+        "name": "Tab A 8.0 LTE",
+        "chipset": "Snapdragon 429"
+    },
+    "SM-T307": {
+        "name": "Tab A 8.4",
+        "chipset": "Exynos 7904"
+    },
+    "SM-T387": {
+        "name": "Tab A 8.0 (2019)",
+        "chipset": "Snapdragon 429"
+    },
+    "SM-T500": {
+        "name": "Tab A7",
+        "chipset": "Snapdragon 662"
+    },
+    "SM-T505": {
+        "name": "Tab A7 LTE",
+        "chipset": "Snapdragon 662"
+    },
+    "SM-T510": {
+        "name": "Tab A (2019)",
+        "chipset": "Exynos 7904"
+    },
+    "SM-T515": {
+        "name": "Tab A (2019) LTE",
+        "chipset": "Exynos 7904"
+    },
+    "SM-T580": {
+        "name": "Tab A 10.1",
+        "chipset": "Exynos 7870"
+    },
+    "SM-T585": {
+        "name": "Tab A 10.1 LTE",
+        "chipset": "Exynos 7870"
+    },
+    "SM-T595": {
+        "name": "Tab A 10.5 LTE",
+        "chipset": "Snapdragon 450"
+    },
+    "SM-T636": {
+        "name": "Tab S9 FE LTE",
+        "chipset": "Exynos 1380"
+    },
+    "SM-T710": {
+        "name": "Tab S2 8.0",
+        "chipset": "Exynos 5433"
+    },
+    "SM-T715": {
+        "name": "Tab S2 8.0 LTE",
+        "chipset": "Exynos 5433"
+    },
+    "SM-T720": {
+        "name": "Tab S5e",
+        "chipset": "Snapdragon 670"
+    },
+    "SM-T725": {
+        "name": "Tab S5e LTE",
+        "chipset": "Snapdragon 670"
+    },
+    "SM-T730": {
+        "name": "Tab S9 FE",
+        "chipset": "Exynos 1380"
+    },
+    "SM-T731": {
+        "name": "Tab S9 FE",
+        "chipset": "Exynos 1380"
+    },
+    "SM-T733": {
+        "name": "Tab S7 FE",
+        "chipset": "Snapdragon 750G"
+    },
+    "SM-T735": {
+        "name": "Tab S9 FE LTE",
+        "chipset": "Exynos 1380"
+    },
+    "SM-T736": {
+        "name": "Tab S7 FE LTE",
+        "chipset": "Snapdragon 750G"
+    },
+    "SM-T736B": {
+        "name": "Tab S9 FE",
+        "chipset": "Exynos 1380"
+    },
+    "SM-T738": {
+        "name": "Tab S9 FE+",
+        "chipset": "Exynos 1380"
+    },
+    "SM-T810": {
+        "name": "Tab S2 9.7",
+        "chipset": "Exynos 5433"
+    },
+    "SM-T815": {
+        "name": "Tab S2 9.7 LTE",
+        "chipset": "Exynos 5433"
+    },
+    "SM-T820": {
+        "name": "Tab S3",
+        "chipset": "Snapdragon 820"
+    },
+    "SM-T825": {
+        "name": "Tab S3 LTE",
+        "chipset": "Snapdragon 820"
+    },
+    "SM-T830": {
+        "name": "Tab S4",
+        "chipset": "Snapdragon 835"
+    },
+    "SM-T835": {
+        "name": "Tab S4 LTE",
+        "chipset": "Snapdragon 835"
+    },
+    "SM-T860": {
+        "name": "Tab S6",
+        "chipset": "Snapdragon 855"
+    },
+    "SM-T860N": {
+        "name": "Tab S6 Lite",
+        "chipset": "Exynos 9611"
+    },
+    "SM-T865": {
+        "name": "Tab S6 LTE",
+        "chipset": "Snapdragon 855"
+    },
+    "SM-T870": {
+        "name": "Tab S7",
+        "chipset": "Snapdragon 865+"
+    },
+    "SM-T875": {
+        "name": "Tab S7 LTE",
+        "chipset": "Snapdragon 865+"
+    },
+    "SM-T900": {
+        "name": "Tab S8 Ultra",
+        "chipset": "Snapdragon 8 Gen 1"
+    },
+    "SM-T905": {
+        "name": "Tab S8 Ultra LTE",
+        "chipset": "Snapdragon 8 Gen 1"
+    },
+    "SM-T910": {
+        "name": "Tab S9+",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-T915": {
+        "name": "Tab S9+ LTE",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-T920": {
+        "name": "Tab S9 Ultra",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-T925": {
+        "name": "Tab S9 Ultra LTE",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-T970": {
+        "name": "Tab S7+",
+        "chipset": "Snapdragon 865+"
+    },
+    "SM-T975": {
+        "name": "Tab S7+ LTE",
+        "chipset": "Snapdragon 865+"
+    },
+    "SM-X115": {
+        "name": "Tab A9",
+        "chipset": "Helio G99"
+    },
+    "SM-X210R": {
+        "name": "Tab A9+",
+        "chipset": "Snapdragon 695"
+    },
+    "SM-X216B": {
+        "name": "Tab A9+ 5G",
+        "chipset": "Snapdragon 695"
+    },
+    "SM-X300": {
+        "name": "Tab Active4 Pro",
+        "chipset": "Snapdragon 778G"
+    },
+    "SM-X306": {
+        "name": "Tab Active4 Pro LTE",
+        "chipset": "Snapdragon 778G"
+    },
+    "SM-X510": {
+        "name": "Tab S9 FE",
+        "chipset": "Exynos 1380"
+    },
+    "SM-X516B": {
+        "name": "Tab S9 FE",
+        "chipset": "Exynos 1380"
+    },
+    "SM-X610": {
+        "name": "Tab S9 FE+",
+        "chipset": "Exynos 1380"
+    },
+    "SM-X706B": {
+        "name": "Tab S9",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-X710": {
+        "name": "Tab S9",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-X800": {
+        "name": "Tab S8+",
+        "chipset": "Snapdragon 8 Gen 1"
+    },
+    "SM-X810": {
+        "name": "Tab S8+",
+        "chipset": "Snapdragon 8 Gen 1"
+    },
+    "SM-X820": {
+        "name": "Tab S10+",
+        "chipset": "MediaTek Dimensity 9300+"
+    },
+    "SM-X916B": {
+        "name": "Tab S9+",
+        "chipset": "Snapdragon 8 Gen 2"
+    },
+    "SM-X920": {
+        "name": "Tab S10 Ultra",
+        "chipset": "MediaTek Dimensity 9300+"
+    },
+    "SM-X926": {
+        "name": "Tab S10 Ultra 5G",
+        "chipset": "MediaTek Dimensity 9300+"
+    },
+    "SM-X926B": {
+        "name": "Tab S10 Ultra 5G",
+        "chipset": "MediaTek Dimensity 9300+"
+    },
+    "SM-X930": {
+        "name": "Tab S10 Ultra",
+        "chipset": "MediaTek Dimensity 9300+"
+    }
 }

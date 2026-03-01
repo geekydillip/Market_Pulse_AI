@@ -2279,7 +2279,7 @@ app.get('/api/module-details', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log('\nðŸš€ Centralized Dashboard is running!');
-  console.log(`ðŸ“ Open your browser and go to: http://localhost:${PORT}`);
-  console.log('ðŸ¤– Make sure Ollama is running (qwen3:4b-instruct)\n');
+  console.log('\nCentralized Dashboard is running!');
+  console.log(`Open your browser and go to: http://localhost:${PORT}`);
+  console.log('Make sure Ollama is running (qwen3:4b-instruct)\n');
 });
