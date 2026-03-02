@@ -349,21 +349,29 @@
       const modelStr = modelNumber.trim();
 
       // Try exact match first
-      if (modelNameMapping[modelStr]) return modelNameMapping[modelStr];
+      if (modelNameMapping[modelStr]) {
+        const mapping = modelNameMapping[modelStr];
+        return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
+      }
 
       // Extract base model number (e.g., SM-S931 from SM-S931BE_SWA_16_DD)
       const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
       if (match) {
         const baseModel = match[1];
-        for (const [mapKey, friendlyName] of Object.entries(modelNameMapping)) {
-          if (mapKey.startsWith(baseModel)) return friendlyName;
+        for (const [mapKey, mapping] of Object.entries(modelNameMapping)) {
+          if (mapKey.startsWith(baseModel)) {
+            return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
+          }
         }
       }
 
       // Fallback: try prefix matching
       const sortedKeys = Object.keys(modelNameMapping).sort((a, b) => b.length - a.length);
       for (const key of sortedKeys) {
-        if (modelStr.startsWith(key)) return modelNameMapping[key];
+        if (modelStr.startsWith(key)) {
+          const mapping = modelNameMapping[key];
+          return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
+        }
       }
       return modelNumber;
     }

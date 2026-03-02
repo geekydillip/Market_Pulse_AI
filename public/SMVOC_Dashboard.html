@@ -264,7 +264,8 @@
 
       // Try exact match first
       if (modelNameMapping[modelStr]) {
-        return modelNameMapping[modelStr];
+        const mapping = modelNameMapping[modelStr];
+        return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
       }
 
       // Extract base model number (e.g., SM-S931 from SM-S931BE_SWA_16_DD)
@@ -273,9 +274,9 @@
         const baseModel = match[1]; // e.g., "SM-S931"
 
         // Look for mapping keys that start with this base
-        for (const [mapKey, friendlyName] of Object.entries(modelNameMapping)) {
+        for (const [mapKey, mapping] of Object.entries(modelNameMapping)) {
           if (mapKey.startsWith(baseModel)) {
-            return friendlyName;
+            return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
           }
         }
       }
@@ -284,7 +285,8 @@
       const sortedKeys = Object.keys(modelNameMapping).sort((a, b) => b.length - a.length);
       for (const key of sortedKeys) {
         if (modelStr.startsWith(key)) {
-          return modelNameMapping[key];
+          const mapping = modelNameMapping[key];
+          return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
         }
       }
 

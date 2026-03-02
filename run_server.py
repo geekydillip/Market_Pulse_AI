@@ -78,14 +78,14 @@ def generate_analytics_and_cache():
     Generate all analytics.json files and central cache before starting server.
     This ensures dashboard has fresh data on startup.
     """
-    print("🔄 Generating analytics and cache data...")
+    print("[BUSY] Generating analytics and cache data...")
 
     try:
         # Generate analytics for all modules
         modules = ['employee_ut', 'global_voc_plm', 'beta_ut', 'samsung_members_voc']
 
         for module in modules:
-            print(f"📊 Generating analytics for {module}...")
+            print(f"[DATA] Generating analytics for {module}...")
             try:
                 result = subprocess.run([
                     sys.executable, 'server/analytics/pandas_aggregator.py',
@@ -93,48 +93,48 @@ def generate_analytics_and_cache():
                 ], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
 
                 if result.returncode == 0:
-                    print(f"✅ Analytics generated for {module}")
+                    print(f"[OK] Analytics generated for {module}")
                 else:
-                    print(f"⚠️ Analytics generation failed for {module}: {result.stderr}")
+                    print(f"[WARN] Analytics generation failed for {module}: {result.stderr}")
             except Exception as e:
-                print(f"❌ Error generating analytics for {module}: {e}")
+                print(f"[ERROR] Error generating analytics for {module}: {e}")
 
         # Generate central cache
-        print("🔄 Generating central dashboard cache...")
+        print("[BUSY] Generating central dashboard cache...")
         try:
             result = subprocess.run([
                 sys.executable, 'server/analytics/generate_central_cache.py'
             ], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
 
             if result.returncode == 0:
-                print("✅ Central cache generated successfully")
+                print("[OK] Central cache generated successfully")
             else:
-                print(f"⚠️ Central cache generation failed: {result.stderr}")
+                print(f"[WARN] Central cache generation failed: {result.stderr}")
         except Exception as e:
-            print(f"❌ Error generating central cache: {e}")
+            print(f"[ERROR] Error generating central cache: {e}")
 
-        print("🎉 Analytics and cache generation completed")
+        print("[DONE] Analytics and cache generation completed")
 
         # Generate Semantic Matches
-        print("🧠 Generating semantic matches...")
+        print("[AI] Generating semantic matches...")
         try:
              result = subprocess.run([
                 sys.executable, 'server/analytics/semantic_matcher.py'
             ], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
              
              if result.returncode == 0:
-                 print("✅ Semantic matching completed")
+                 print("[OK] Semantic matching completed")
                  # Optional: print stdout if needed, or just specific lines
                  # print(result.stdout) 
              else:
-                 print(f"⚠️ Semantic matching failed (or skipped): {result.stderr}")
+                 print(f"[WARN] Semantic matching failed (or skipped): {result.stderr}")
                  print(result.stdout)
                  
         except Exception as e:
-            print(f"❌ Error generating semantic matches: {e}")
+            print(f"[ERROR] Error generating semantic matches: {e}")
 
     except Exception as e:
-        print(f"❌ Error in analytics/cache generation: {e}")
+        print(f"[ERROR] Error in analytics/cache generation: {e}")
 
 def run_server():
     """

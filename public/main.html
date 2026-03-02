@@ -104,7 +104,35 @@
       </button>
     </section>
 
-    <!-- CHARTS ROW REMOVED -->
+    <!-- CHARTS ROW -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Top 10 Models Chart -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+        <h3 class="text-md font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center">
+          <i class="fa-solid fa-mobile-screen mr-2 text-indigo-500"></i>
+          Top 10 Models
+        </h3>
+        <div id="top-models-chart" class="w-full h-64"></div>
+      </div>
+
+      <!-- Top 5 Sources Chart -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+        <h3 class="text-md font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center">
+          <i class="fa-solid fa-layer-group mr-2 text-emerald-500"></i>
+          Top 5 Sources
+        </h3>
+        <div id="top-sources-chart" class="w-full h-64"></div>
+      </div>
+
+      <!-- Severity Wise Issue Chart -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+        <h3 class="text-md font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center">
+          <i class="fa-solid fa-triangle-exclamation mr-2 text-rose-500"></i>
+          Severity Wise Issue
+        </h3>
+        <div id="severity-chart" class="w-full h-64"></div>
+      </div>
+    </section>
 
 
 
@@ -114,7 +142,10 @@
         <!-- Header with subtle accent -->
         <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-2">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top Critical Market Issues</h3>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center">
+              Top Critical Market Issues
+              <span id="last-updated" class="text-xs text-slate-500 dark:text-slate-400 font-normal ml-3"></span>
+            </h3>
             <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
               <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
             </div>
@@ -122,7 +153,7 @@
         </div>
 
         <!-- Table Container -->
-        <div class="overflow-x-auto overflow-y-auto max-h-[550px]">
+        <div class="overflow-x-auto overflow-y-auto max-h-[650px]">
           <table class="w-full">
             <thead
               class="bg-slate-200 dark:bg-slate-900 sticky top-0 z-10 border-b-2 border-slate-300 dark:border-slate-800">
@@ -275,7 +306,8 @@
 
       // Try exact match first
       if (modelNameMapping[modelStr]) {
-        return modelNameMapping[modelStr];
+        const mapping = modelNameMapping[modelStr];
+        return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
       }
 
       // Extract base model number (e.g., SM-S931 from SM-S931BE_SWA_16_DD)
@@ -284,9 +316,9 @@
         const baseModel = match[1]; // e.g., "SM-S931"
 
         // Look for mapping keys that start with this base
-        for (const [mapKey, friendlyName] of Object.entries(modelNameMapping)) {
+        for (const [mapKey, mapping] of Object.entries(modelNameMapping)) {
           if (mapKey.startsWith(baseModel)) {
-            return friendlyName;
+            return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
           }
         }
       }
@@ -295,7 +327,8 @@
       const sortedKeys = Object.keys(modelNameMapping).sort((a, b) => b.length - a.length);
       for (const key of sortedKeys) {
         if (modelStr.startsWith(key)) {
-          return modelNameMapping[key];
+          const mapping = modelNameMapping[key];
+          return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
         }
       }
 
@@ -347,238 +380,137 @@
       }
     }
 
-    // Update KPI values
-    function updateKPIs() {
-      // Update KPI elements using correct IDs - use pre-computed values
+    // Update Global VOC PLM KPI values
+    function updateGlobalKPIs(analyticsData) {
+      const kpis = analyticsData.kpis || {};
+
       const totalIssuesEl = document.getElementById('total-issues');
+      const highIssuesEl = document.getElementById('high-issues');
       const openIssuesEl = document.getElementById('open-issues');
       const resolvedIssuesEl = document.getElementById('resolved-issues');
-      const closeIssuesEl = document.getElementById('close-issues');
 
-      // Use pre-computed values from backend
-      // Update Total to include ALL issues (Open + Resolved + Close)
-      const totalOpen = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.open || 0), 0);
-      const totalResolved = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.resolved || 0), 0);
-      const totalClose = Object.values(dashboardData.kpis).reduce((sum, kpi) => sum + (kpi?.close || 0), 0);
-
-      const grandTotal = totalOpen + totalResolved + totalClose;
-      if (totalIssuesEl) totalIssuesEl.textContent = grandTotal.toLocaleString();
-
-      if (openIssuesEl) openIssuesEl.textContent = totalOpen.toLocaleString();
-      if (resolvedIssuesEl) resolvedIssuesEl.textContent = totalResolved.toLocaleString();
-      if (closeIssuesEl) closeIssuesEl.textContent = totalClose.toLocaleString();
+      if (totalIssuesEl) totalIssuesEl.textContent = (kpis.total_rows || 0).toLocaleString();
+      if (highIssuesEl) highIssuesEl.textContent = (kpis.severity_distribution?.High || 0).toLocaleString();
+      if (openIssuesEl) openIssuesEl.textContent = (kpis.open_issues || 0).toLocaleString();
+      if (resolvedIssuesEl) resolvedIssuesEl.textContent = (kpis.resolved_issues || 0).toLocaleString();
     }
 
-    // Update source distribution chart - 100% Stacked Horizontal Bar
-    function updateSourceDistribution() {
-      const chartDom = document.getElementById('source-distribution-chart');
-      if (!chartDom) {
-        return;
-      }
-
-      console.log("HTML Dashboard - Updating source distribution");
-      console.log("KPIs data:", dashboardData.kpis);
-
-      const chart = echarts.init(chartDom);
+    // Initialize Global VOC PLM Charts
+    function initGlobalCharts(analyticsData) {
+      console.log("Initializing Global VOC PLM Charts...");
       const colors = getChartColors();
 
-      // Use actual severity data from KPIs instead of classifying by count
-      const severityData = dashboardData.kpis || {};
-      console.log("Severity data from KPIs:", severityData);
+      // 1. Top 10 Models Chart
+      const modelsDom = document.getElementById('top-models-chart');
+      if (modelsDom) {
+        const modelsChart = echarts.init(modelsDom);
+        const top10Models = (analyticsData.top_models || []).slice(0, 10);
 
-      // Map display names to KPI keys
-      const displayToKPI = {
-        'Beta Users': 'Beta User Issues',
-        'S.M. PLM': 'Samsung Members PLM',
-        'S.M. VOC': 'Samsung Members VOC'
-      };
-
-      const sources = ['Beta Users', 'S.M. PLM', 'S.M. VOC'];
-
-      // Extract severity counts directly from KPIs
-      const highData = sources.map(source => {
-        const kpiKey = displayToKPI[source];
-        const value = severityData[kpiKey]?.High || 0;
-        console.log(`High for ${source} (${kpiKey}):`, value);
-        return value;
-      });
-
-      const mediumData = sources.map(source => {
-        const kpiKey = displayToKPI[source];
-        const value = severityData[kpiKey]?.Medium || 0;
-        console.log(`Medium for ${source} (${kpiKey}):`, value);
-        return value;
-      });
-
-      const lowData = sources.map(source => {
-        const kpiKey = displayToKPI[source];
-        const value = severityData[kpiKey]?.Low || 0;
-        console.log(`Low for ${source} (${kpiKey}):`, value);
-        return value;
-      });
-
-      console.log("Final data arrays - High:", highData, "Medium:", mediumData, "Low:", lowData);
-
-      // Create mapping from display names to data keys
-      const displayNameToKey = {
-        'Beta Users': 'Beta',
-        'S.M. PLM': 'PLM',
-        'S.M. VOC': 'VOC'
-      };
-
-      const option = {
-        textStyle: {
-          color: colors.textPrimary
-        },
-        tooltip: {
-          trigger: 'axis',
-          formatter: function (params) {
-            let result = '';
-            params.forEach(param => {
-              const source = param.name;
-              const severity = param.seriesName;
-              const value = param.value;
-              result += `${source}<br/>${severity}: ${value}<br/>`;
-            });
-            return result;
-          }
-        },
-        legend: {
-          data: ['High', 'Medium', 'Low'],
-          bottom: 0,
-          orient: 'horizontal',
-          textStyle: {
-            color: colors.textPrimary
-          }
-        },
-        grid: {
-          left: '20%',
-          right: '0%',
-          top: '10%',
-          bottom: '20%',
-          borderColor: colors.gridLines
-        },
-        xAxis: {
-          type: 'value',
-          axisLabel: {
-            show: false,
-            fontSize: 10,
-            color: colors.textPrimary
+        const option = {
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          grid: { left: '3%', right: '8%', bottom: '3%', top: '5%', containLabel: true },
+          xAxis: { type: 'value', show: false, splitLine: { show: false } }, // Remove X-axis and grid
+          yAxis: {
+            type: 'category',
+            data: top10Models.map(m => m.friendly_name || m.label).reverse(),
+            axisLabel: { color: colors.textPrimary, fontSize: 10 },
+            axisLine: { show: false },
+            axisTick: { show: false }
           },
-          splitLine: {
-            show: false
-          }
-        },
-        yAxis: {
-          type: 'category',
-          data: ['Beta Users', 'S.M. PLM', 'S.M. VOC'], // Match the order of sources array
-          axisLabel: {
-            fontSize: 12,
-            interval: 0,
-            color: colors.textPrimary
-          }
-        },
-        series: [
-          {
-            name: 'High',
+          series: [{
+            name: 'Issues',
             type: 'bar',
-            stack: 'total',
-            barWidth: '50%', // Thicker bars for cylindrical effect
-            data: highData,
+            data: top10Models.map(m => m.count).reverse(),
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#ef4444' },
-                { offset: 0.5, color: '#dc2626' },
-                { offset: 1, color: '#b91c1c' }
+                { offset: 0, color: '#6366f1' },
+                { offset: 1, color: '#a855f7' }
               ]),
-              borderRadius: [12, 0, 0, 12],
-              shadowBlur: 8,
-              shadowColor: 'rgba(239, 68, 68, 0.3)'
+              borderRadius: [0, 4, 4, 0]
             },
-            emphasis: {
-              focus: 'series',
-              itemStyle: {
-                shadowBlur: 12,
-                shadowColor: 'rgba(239, 68, 68, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'inside',
-              formatter: '{c}',
-              fontSize: 12,
-              color: colors.textPrimary
-            }
-          },
-          {
-            name: 'Medium',
-            type: 'bar',
-            stack: 'total',
-            barWidth: '70%',
-            data: mediumData,
-            itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#fbbf24' },
-                { offset: 0.5, color: '#f59e0b' },
-                { offset: 1, color: '#d97706' }
-              ]),
-              borderRadius: [0, 0, 0, 0],
-              shadowBlur: 8,
-              shadowColor: 'rgba(245, 158, 11, 0.3)',
-              opacity: 0.75
-            },
-            emphasis: {
-              focus: 'series',
-              itemStyle: {
-                opacity: 1,
-                shadowBlur: 12,
-                shadowColor: 'rgba(245, 158, 11, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'inside',
-              formatter: '{c}',
-              fontSize: 12,
-              color: colors.textPrimary
-            }
-          },
-          {
-            name: 'Low',
-            type: 'bar',
-            stack: 'total',
-            barWidth: '70%',
-            data: lowData,
-            itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#9ca3af' },
-                { offset: 0.5, color: '#6b7280' },
-                { offset: 1, color: '#4b5563' }
-              ]),
-              borderRadius: [4, 4, 0, 0],
-              shadowBlur: 8,
-              shadowColor: 'rgba(107, 114, 128, 0.3)'
-            },
-            emphasis: {
-              focus: 'series',
-              itemStyle: {
-                shadowBlur: 12,
-                shadowColor: 'rgba(107, 114, 128, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'inside',
-              formatter: '{c}',
-              fontSize: 12,
-              color: colors.textPrimary
-            }
-          }
-        ]
-      };
+            label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
+          }]
+        };
+        modelsChart.setOption(option);
+        window.addEventListener('resize', () => modelsChart.resize());
+      }
 
-      chart.setOption(option);
-      window.addEventListener('resize', () => chart.resize());
+      // 2. Top 5 Sources Chart
+      const sourcesDom = document.getElementById('top-sources-chart');
+      if (sourcesDom) {
+        const sourcesChart = echarts.init(sourcesDom);
+        const sourceDist = analyticsData.kpis.source_distribution || {};
+        const sourceData = Object.entries(sourceDist)
+          .map(([name, value]) => ({ name, value }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 5);
+
+        const option = {
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          grid: { left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true },
+          xAxis: { type: 'value', show: false, splitLine: { show: false } },
+          yAxis: {
+            type: 'category',
+            data: sourceData.map(d => d.name).reverse(),
+            axisLabel: { color: colors.textPrimary, fontSize: 10 },
+            axisLine: { show: false },
+            axisTick: { show: false }
+          },
+          series: [{
+            name: 'Issues',
+            type: 'bar',
+            data: sourceData.map(d => d.value).reverse(),
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#3b82f6' },
+                { offset: 1, color: '#1d4ed8' }
+              ]),
+              borderRadius: [0, 4, 4, 0]
+            },
+            label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
+          }]
+        };
+        sourcesChart.setOption(option);
+        window.addEventListener('resize', () => sourcesChart.resize());
+      }
+
+      // 3. Severity Wise Issue Chart
+      const severityDom = document.getElementById('severity-chart');
+      if (severityDom) {
+        const severityChart = echarts.init(severityDom);
+        const sevDist = analyticsData.kpis.severity_distribution || {};
+        const sevCategories = ['Low', 'Medium', 'High']; // Order for correct vertical stack
+        const sevValues = sevCategories.map(cat => sevDist[cat] || 0);
+
+        const option = {
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          grid: { left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true },
+          xAxis: { type: 'value', show: false, splitLine: { show: false } },
+          yAxis: {
+            type: 'category',
+            data: sevCategories,
+            axisLabel: { color: colors.textPrimary, fontSize: 10 },
+            axisLine: { show: false },
+            axisTick: { show: false }
+          },
+          series: [{
+            name: 'Issues',
+            type: 'bar',
+            data: sevValues,
+            itemStyle: {
+              color: function (params) {
+                // Low, Medium, High semantic colors
+                const colorList = ['#10b981', '#f59e0b', '#f43f5e'];
+                return colorList[params.dataIndex];
+              },
+              borderRadius: [0, 4, 4, 0]
+            },
+            label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
+          }]
+        };
+        severityChart.setOption(option);
+        window.addEventListener('resize', () => severityChart.resize());
+      }
     }
 
     // Update model summary table
@@ -612,8 +544,18 @@
 
         tbody.innerHTML = ''; // Clear loading message
 
+        // Initialize charts and KPIs with analytics data
+        updateGlobalKPIs(analyticsData);
+        initGlobalCharts(analyticsData);
+
+        // Filter for High severity and take top 10 (most recent first)
+        const criticalIssues = analyticsData.rows
+          .filter(item => (item.Severity || '').toLowerCase() === 'high')
+          .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0))
+          .slice(0, 10);
+
         // Store and compute fields into global array
-        globalTableData = analyticsData.rows.map(item => {
+        globalTableData = criticalIssues.map(item => {
           // Get model number from data
           const modelNumber = item['Model No.'] || 'N/A';
           const modelStr = modelNumber.trim();
@@ -669,6 +611,7 @@
 
         // Initialize display
         renderTable();
+        updateTimestamp(); // Update the date/time next to the header
         console.log(`Finished mapping and rendering Top Critical Market Issues table with ${analyticsData.rows.length} rows.`);
 
       } catch (error) {
@@ -743,15 +686,11 @@
     // Update timestamp
     function updateTimestamp() {
       const now = new Date();
-      const formatted = now.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-      // Note: main.html doesn't have a timestamp element, so this is for future use
+      const formatted = now.toISOString().split('T')[0];
+      const timestampEl = document.getElementById('last-updated');
+      if (timestampEl) {
+        timestampEl.textContent = `(${formatted})`;
+      }
     }
 
     // Show details modal with comprehensive data

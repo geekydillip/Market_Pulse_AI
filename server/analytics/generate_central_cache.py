@@ -21,6 +21,9 @@ from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
 
+# Add the directory to sys.path to allow importing sibling modules when run as a subprocess
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 def aggregate_analytics_data():
     """
     Read all analytics.json files and aggregate unique models and modules.
