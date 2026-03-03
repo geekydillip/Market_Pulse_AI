@@ -532,16 +532,16 @@ async function precomputeAnalytics(module, processedPath) {
 
     pythonProcess.on('close', (code) => {
       if (code === 0) {
-        console.log(`âœ… Analytics precomputed for ${module}`);
+        console.log(`[SUCCESS] Analytics precomputed for ${module}`);
 
         // Trigger central cache update after analytics are ready
         generateCentralCache().catch(err =>
-          console.warn('âš ï¸ Central cache generation failed:', err.message)
+          console.warn('[WARNING] Central cache generation failed:', err.message)
         );
 
         resolve();
       } else {
-        console.warn(`âš ï¸ Analytics precomputation failed for ${module}:`, stderr);
+        console.warn(`[WARNING] Analytics precomputation failed for ${module}:`, stderr);
         resolve(); // Don't fail the whole process
       }
     });
@@ -567,10 +567,10 @@ async function generateCentralCache() {
 
     pythonProcess.on('close', (code) => {
       if (code === 0) {
-        console.log('âœ… Central dashboard cache updated');
+        console.log('[SUCCESS] Central dashboard cache updated');
         resolve();
       } else {
-        console.warn('âš ï¸ Central cache generation failed:', stderr);
+        console.warn('[WARNING] Central cache generation failed:', stderr);
         resolve(); // Don't fail the whole process
       }
     });
@@ -876,8 +876,8 @@ async function processExcel(req, res) {
         logger.log(`Chunk ${completedChunks}/${numberOfChunks} completed (${percent}%)`);
 
         const message = percent < 90
-          ? `Processing Dataâ€¦ ${percent}% complete`
-          : `Finalizing outputâ€¦ ${percent}% complete`;
+          ? `Processing Data[BUSY] ${percent}% complete`
+          : `Finalizing output[BUSY] ${percent}% complete`;
         sendProgress(sessionId, {
           type: 'progress',
           percent,
@@ -1497,7 +1497,7 @@ app.get('/api/central/kpis', async (req, res) => {
       res.json(cacheData.kpis);
     } else {
       // Fallback: generate cache on-demand
-      console.log('âš ï¸ Cache not found, generating on-demand...');
+      console.log('[WARNING] Cache not found, generating on-demand...');
       const { spawn } = require('child_process');
       const pythonProcess = spawn('python', ['server/analytics/generate_central_cache.py']);
 
@@ -1607,7 +1607,7 @@ app.get('/api/central/top-models/:source', async (req, res) => {
   }
 });
 
-// GET /api/central/model-module-matrix -> Returns matrix of Top 10 Models Ã— Top 10 Modules
+// GET /api/central/model-module-matrix -> Returns matrix of Top 10 Models x Top 10 Modules
 app.get('/api/central/model-module-matrix', async (req, res) => {
   try {
     const cachePath = path.join(__dirname, 'downloads', '__dashboard_cache__', 'central_dashboard.json');
@@ -1654,7 +1654,7 @@ app.get('/api/analytics/:module', async (req, res) => {
 
       if (latestExcel && analyticsStat.mtime >= fs.statSync(latestExcel).mtime) {
         // Cache is fresh, return it directly
-        console.log(`ðŸ“‹ Serving cached analytics for ${module}`);
+        console.log(`Serving cached analytics for ${module}`);
         const cachedData = JSON.parse(fs.readFileSync(analyticsPath, 'utf8'));
         return res.json(cachedData);
       }
@@ -1664,7 +1664,7 @@ app.get('/api/analytics/:module', async (req, res) => {
   }
 
   // Fallback to on-demand computation
-  console.log(`ðŸ”„ Computing analytics for ${module}`);
+  console.log(`Computing analytics for ${module}`);
   const { spawn } = require('child_process');
 
   const pythonProcess = spawn('python', ['server/analytics/pandas_aggregator.py', module]);
