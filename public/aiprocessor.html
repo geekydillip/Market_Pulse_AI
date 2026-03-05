@@ -115,7 +115,7 @@
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
-  <div class="max-w-7xl mx-auto px-6 py-6">
+  <div class="max-w-100% mx-auto px-6 py-6">
 
     <!-- HEADER -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -277,55 +277,70 @@
     </div>
 
     <!-- PROCESSING TYPE BUTTONS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+    <div class="flex flex-row gap-4 mb-6 overflow-x-auto p-4 w-full snap-x">
       <button
-        class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-emerald-500/30 rounded-xl overflow-hidden transition-all hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+        class="processing-btn group relative flex flex-col items-center justify-center gap-3 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden transition-all hover:border-emerald-500 hover:shadow-lg dark:hover:shadow-emerald-500/20 flex-1 min-w-[160px] snap-center cursor-pointer"
         data-type="employee_ut">
         <div
-          class="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          class="absolute inset-0 bg-emerald-50 dark:bg-emerald-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
         </div>
-        <i class="fa-solid fa-trophy text-2xl"></i>
-        <span class="font-bold text-white tracking-wide">EMPLOYEE UT</span>
+        <i
+          class="fa-solid fa-trophy text-3xl text-emerald-600 dark:text-emerald-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span
+          class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide text-center z-10 w-full">EMPLOYEE
+          UT</span>
       </button>
 
       <button
-        class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-violet-500/30 rounded-xl overflow-hidden transition-all hover:border-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)]"
+        class="processing-btn group relative flex flex-col items-center justify-center gap-3 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden transition-all hover:border-violet-500 hover:shadow-lg dark:hover:shadow-violet-500/20 flex-1 min-w-[160px] snap-center cursor-pointer"
         data-type="samsung_members_voc">
         <div
-          class="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          class="absolute inset-0 bg-violet-50 dark:bg-violet-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
         </div>
-        <i class="fa-solid fa-comments text-xl opacity-50"></i>
-        <span class="font-bold text-white tracking-wide">SAMSUNG MEMBERS VOC</span>
+        <i
+          class="fa-solid fa-comments text-3xl text-violet-600 dark:text-violet-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span
+          class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide text-center z-10 w-full">SAMSUNG
+          MEMBERS VOC</span>
       </button>
 
       <button
-        class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-blue-500/30 rounded-xl overflow-hidden transition-all hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+        class="processing-btn group relative flex flex-col items-center justify-center gap-3 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden transition-all hover:border-blue-500 hover:shadow-lg dark:hover:shadow-blue-500/20 flex-1 min-w-[160px] snap-center cursor-pointer"
         data-type="global_voc_plm">
         <div
-          class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          class="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
         </div>
-        <i class="fa-solid fa-globe text-2xl"></i>
-        <span class="font-bold text-white tracking-wide">GLOBAL VOC PLM</span>
+        <i
+          class="fa-solid fa-globe text-3xl text-blue-600 dark:text-blue-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span
+          class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide text-center z-10 w-full">GLOBAL
+          VOC PLM</span>
       </button>
 
       <button
-        class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-orange-500/30 rounded-xl overflow-hidden transition-all hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]"
+        class="processing-btn group relative flex flex-col items-center justify-center gap-3 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden transition-all hover:border-orange-500 hover:shadow-lg dark:hover:shadow-orange-500/20 flex-1 min-w-[160px] snap-center cursor-pointer"
         data-type="beta_ut">
         <div
-          class="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          class="absolute inset-0 bg-orange-50 dark:bg-orange-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
         </div>
-        <i class="fa-solid fa-mobile-screen text-2xl"></i>
-        <span class="font-bold text-white tracking-wide">BETA UT</span>
+        <i
+          class="fa-solid fa-mobile-screen text-3xl text-orange-600 dark:text-orange-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span
+          class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide text-center z-10 w-full">BETA
+          UT</span>
       </button>
 
       <button
-        class="processing-btn group relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 border border-pink-500/30 rounded-xl overflow-hidden transition-all hover:border-pink-500 hover:shadow-[0_0_20px_rgba(236,72,153,0.2)]"
+        class="processing-btn group relative flex flex-col items-center justify-center gap-3 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden transition-all hover:border-pink-500 hover:shadow-lg dark:hover:shadow-pink-500/20 flex-1 min-w-[160px] snap-center cursor-pointer"
         data-type="beta_ut_voc">
         <div
-          class="absolute inset-0 bg-gradient-to-r from-pink-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          class="absolute inset-0 bg-pink-50 dark:bg-pink-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
         </div>
-        <i class="fa-solid fa-flask text-2xl"></i>
-        <span class="font-bold text-white tracking-wide">BETA UT VOC</span>
+        <i
+          class="fa-solid fa-flask text-3xl text-pink-600 dark:text-pink-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span
+          class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide text-center z-10 w-full">BETA
+          UT VOC</span>
       </button>
     </div>
 

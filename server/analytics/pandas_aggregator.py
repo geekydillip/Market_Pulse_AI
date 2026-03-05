@@ -129,13 +129,15 @@ def compute_kpis(df: pd.DataFrame) -> dict:
     category_distribution = df.get('Module', pd.Series()).value_counts().to_dict() if 'Module' in df.columns else {}
     severity_distribution = df.get('Severity', pd.Series()).value_counts().to_dict() if 'Severity' in df.columns else {}
     status_distribution = df.get('Progr.Stat.', pd.Series()).value_counts().to_dict() if 'Progr.Stat.' in df.columns else {}
+    source_distribution = df.get('Source', pd.Series()).value_counts().to_dict() if 'Source' in df.columns else {}
 
     return {
         "total_rows": total_rows,
         "unique_models": unique_models,
         "category_distribution": category_distribution,
         "severity_distribution": severity_distribution,
-        "status_distribution": status_distribution
+        "status_distribution": status_distribution,
+        "source_distribution": source_distribution
     }
 
 def group_by_column(df: pd.DataFrame, column: str) -> list:
@@ -171,7 +173,10 @@ def map_model_name(model_number):
     
     # If it's already a clean model number, try direct lookup first
     if model_str in MODEL_NAME_MAPPINGS:
-        return MODEL_NAME_MAPPINGS[model_str]
+        mapping_value = MODEL_NAME_MAPPINGS[model_str]
+        if isinstance(mapping_value, dict):
+            return mapping_value.get('name', model_str)
+        return mapping_value
 
     # Extract core identifier using improved regex that handles underscores and complex patterns
     # This pattern captures: SM-A176BE_SWA_16_INS -> A176BE
@@ -185,7 +190,10 @@ def map_model_name(model_number):
     # Strategy 1: Try the exact extracted identifier first
     exact_key = f"SM-{core_identifier}"
     if exact_key in MODEL_NAME_MAPPINGS:
-        return MODEL_NAME_MAPPINGS[exact_key]
+        mapping_value = MODEL_NAME_MAPPINGS[exact_key]
+        if isinstance(mapping_value, dict):
+            return mapping_value.get('name', exact_key)
+        return mapping_value
 
     # Strategy 2: Try to extract base model by removing suffixes
     # Common suffixes to try in order of preference
@@ -198,7 +206,10 @@ def map_model_name(model_number):
         if core_identifier.endswith(suffix):
             base_key = f"SM-{core_identifier[:-len(suffix)]}"
             if base_key in MODEL_NAME_MAPPINGS:
-                return MODEL_NAME_MAPPINGS[base_key]
+                mapping_value = MODEL_NAME_MAPPINGS[base_key]
+                if isinstance(mapping_value, dict):
+                    return mapping_value.get('name', base_key)
+                return mapping_value
 
     # Strategy 3: Try common base patterns
     # For example, if we have "A176BE", try "A176", "A17", etc.
@@ -212,7 +223,10 @@ def map_model_name(model_number):
         if len(pattern) > 0:
             base_key = f"SM-{pattern}"
             if base_key in MODEL_NAME_MAPPINGS:
-                return MODEL_NAME_MAPPINGS[base_key]
+                mapping_value = MODEL_NAME_MAPPINGS[base_key]
+                if isinstance(mapping_value, dict):
+                    return mapping_value.get('name', base_key)
+                return mapping_value
 
     # Strategy 4: Try alternative suffix combinations
     # If we have "A176", try common suffixes
@@ -226,11 +240,15 @@ def map_model_name(model_number):
     core_prefix = f"SM-{core_identifier}"
     for key, value in MODEL_NAME_MAPPINGS.items():
         if key.startswith(core_prefix):
+            if isinstance(value, dict):
+                return value.get('name', key)
             return value
 
     # Strategy 6: Try to find any model that contains the core identifier
     for key, value in MODEL_NAME_MAPPINGS.items():
         if core_identifier in key:
+            if isinstance(value, dict):
+                return value.get('name', key)
             return value
 
     # Fallback to original model number if no match found
@@ -288,6 +306,7 @@ if __name__ == "__main__":
                 "unique_models": kpis["unique_models"],
                 "high_issues": kpis["severity_distribution"].get("High", 0),
                 "severity_distribution": kpis["severity_distribution"],
+                "source_distribution": kpis["source_distribution"],
                 "open_issues": kpis["status_distribution"].get("Open", 0),
                 "resolved_issues": kpis["status_distribution"].get("Resolve", 0),
                 "close_issues": kpis["status_distribution"].get("Close", 0)

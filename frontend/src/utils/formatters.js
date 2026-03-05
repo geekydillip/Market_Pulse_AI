@@ -8,10 +8,11 @@ export function getModelName(fullModelNumber) {
   if (!fullModelNumber) return fullModelNumber;
 
   const modelStr = String(fullModelNumber).trim();
-  
+
   // If it's already a clean model number, try direct lookup first
   if (modelNameData[modelStr]) {
-    return modelNameData[modelStr];
+    const mapping = modelNameData[modelStr];
+    return typeof mapping === 'object' ? (mapping.name || modelStr) : mapping;
   }
 
   // Extract core identifier using improved regex that handles underscores and complex patterns
@@ -20,11 +21,12 @@ export function getModelName(fullModelNumber) {
   if (!match) return modelStr;
 
   const coreIdentifier = match[1];
-  
+
   // Strategy 1: Try the exact extracted identifier first
   const exactKey = `SM-${coreIdentifier}`;
   if (modelNameData[exactKey]) {
-    return modelNameData[exactKey];
+    const mapping = modelNameData[exactKey];
+    return typeof mapping === 'object' ? (mapping.name || modelStr) : mapping;
   }
 
   // Strategy 2: Try to extract base model by removing suffixes
@@ -38,7 +40,8 @@ export function getModelName(fullModelNumber) {
     if (coreIdentifier.endsWith(suffix)) {
       const baseKey = `SM-${coreIdentifier.slice(0, -suffix.length)}`;
       if (modelNameData[baseKey]) {
-        return modelNameData[baseKey];
+        const mapping = modelNameData[baseKey];
+        return typeof mapping === 'object' ? (mapping.name || modelStr) : mapping;
       }
     }
   }
@@ -55,7 +58,8 @@ export function getModelName(fullModelNumber) {
     if (pattern.length > 0) {
       const baseKey = `SM-${pattern}`;
       if (modelNameData[baseKey]) {
-        return modelNameData[baseKey];
+        const mapping = modelNameData[baseKey];
+        return typeof mapping === 'object' ? (mapping.name || modelStr) : mapping;
       }
     }
   }
@@ -65,23 +69,24 @@ export function getModelName(fullModelNumber) {
   for (const suffix of ["B", "F", "FN", "U"]) {
     const altKey = `SM-${coreIdentifier}${suffix}`;
     if (modelNameData[altKey]) {
-      return modelNameData[altKey];
+      const mapping = modelNameData[altKey];
+      return typeof mapping === 'object' ? (mapping.name || modelStr) : mapping;
     }
   }
 
   // Strategy 5: Enhanced fallback for complex patterns
   // Try to find any model that starts with the core identifier
   const corePrefix = `SM-${coreIdentifier}`;
-  for (const [key, value] of Object.entries(modelNameData)) {
+  for (const [key, mapping] of Object.entries(modelNameData)) {
     if (key.startsWith(corePrefix)) {
-      return value;
+      return typeof mapping === 'object' ? (mapping.name || modelStr) : mapping;
     }
   }
 
   // Strategy 6: Try to find any model that contains the core identifier
-  for (const [key, value] of Object.entries(modelNameData)) {
+  for (const [key, mapping] of Object.entries(modelNameData)) {
     if (key.includes(coreIdentifier)) {
-      return value;
+      return typeof mapping === 'object' ? (mapping.name || modelStr) : mapping;
     }
   }
 

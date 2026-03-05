@@ -94,8 +94,11 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
 
 After processing data with specialized processing types, access dedicated dashboards:
 
-- **Beta User Issues Dashboard**: `http://localhost:3001/beta_user_issues_dashboard.html`
-- **Samsung Members PLM Dashboard**: `http://localhost:3001/samsung_members_plm_dashboard.html`
+- **Central Dashboard**: `http://localhost:3001/main.html`
+- **Beta UT Dashboard**: `http://localhost:3001/BetaUT_Dashboard.html`
+- **Global VOC PLM Dashboard**: `http://localhost:3001/GLOBAL_VOC_PLM_Dashboard.html`
+- **Samsung Members VOC Dashboard**: `http://localhost:3001/SMVOC_Dashboard.html`
+- **Employee UT Dashboard**: `http://localhost:3001/employee_ut_Dashboard.html`
 
 Each dashboard provides:
 - **KPI Metrics**: Total cases, severity breakdown, module distribution
@@ -484,12 +487,14 @@ Market Pulse AI/
 │   ├── dashboard.js                   # Dashboard logic and utilities
 │   ├── script.js                      # Upload interface logic
 │   ├── styles.css                     # Neumorphic design styles
-│   ├── BetaIssues_Dashboard.html      # Beta Issues specialized dashboard
-│   ├── BetaIssues_detailsData.html    # Beta Issues detailed data
-│   ├── SMPLM_Dashboard.html           # Samsung PLM dashboard
-│   ├── SMPLM_detailsData.html         # Samsung PLM detailed data
-│   ├── SMVOC_Dashboard.html           # Samsung VOC dashboard
-│   └── SMVOC_detailsData.html         # Samsung VOC detailed data
+│   ├── BetaUT_Dashboard.html          # Beta UT specialized dashboard
+│   ├── BetaUT_detailsData.html        # Beta UT detailed data
+│   ├── GLOBAL_VOC_PLM_Dashboard.html  # Global VOC PLM dashboard
+│   ├── GLOBAL_VOC_PLM_detailsData.html# Global VOC PLM detailed data
+│   ├── SMVOC_Dashboard.html           # Samsung Members VOC dashboard
+│   ├── SMVOC_detailsData.html         # Samsung VOC detailed data
+│   ├── employee_ut_Dashboard.html     # Employee UT dashboard
+│   └── employee_ut_detailsData.html   # Employee UT detailed data
 ├── server/                            # Backend analytics and processing
 │   └── analytics/                     # Python analytics engine
 │       ├── central_aggregator.py      # Main aggregation for cross-source analytics
@@ -606,6 +611,14 @@ Deterministic automated cleaning without AI:
 - Verify port 3001 is available
 
 ## 📈 Recent Updates
+
+- **v1.8.0** - (March 2026) System Refinement & Analytics Scoping
+  - **Data Pipeline Scoping**: Centralized dashboard cache logic scoped exclusively to Global VOC PLM data to ensure focused metrics.
+  - **Analytics Refinement**: Implemented individual `analytics.json` caching for BetaUT, Global VOC, and Employee UT dashboards, restoring granular data visualizations.
+  - **Issue Severity Classification**: Enhanced backend classification engine assigning robust Critical, High, Medium, or Low severity tags based on distinct text analysis rules.
+  - **UI/UX Polishing**: Refined the visual aesthetics including color palette updates (blue accents), display of the current date on critical issues tables, and aligned layout for file processors.
+  - **Cross-Referencing**: Expanded PLM similarity mappings within the SMVOC dashboard table to highlight similar PLM problems directly.
+  - **Code Quality & Bug Fixes**: Corrected `modelName.json` parsing logic addressing object-string casting issues, eliminated encoding junk characters in the SSE response stream, and resolved system path errors in automated cache generation scripts.
 
 - **v1.7.0** - (February 2026) Semantic Matching & Centralized Analytics
   - **Semantic Matcher**: Implemented NLP-based issue cross-referencing between SMVOC and Global VOC.

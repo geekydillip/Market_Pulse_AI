@@ -58,7 +58,10 @@ def apply_model_name_mapping(model_number):
     
     # Try exact match first
     if model_str in mapping:
-        return mapping[model_str]
+        mapping_value = mapping[model_str]
+        if isinstance(mapping_value, dict):
+            return mapping_value.get('name', model_str)
+        return mapping_value
     
     # Extract base model number (e.g., SM-S931 from SM-S931BE_SWA_16_DD)
     # Pattern: SM-XXXX where X is letter or digit
@@ -69,14 +72,19 @@ def apply_model_name_mapping(model_number):
         
         # Look for mapping keys that start with this base
         # e.g., SM-S931B, SM-S931U would both match base SM-S931
-        for map_key, friendly_name in mapping.items():
+        for map_key, mapping_value in mapping.items():
             if map_key.startswith(base_model):
-                return friendly_name
+                if isinstance(mapping_value, dict):
+                    return mapping_value.get('name', base_model)
+                return mapping_value
     
     # Fallback: try prefix matching with full mapping keys
     for model_key in sorted(mapping.keys(), key=len, reverse=True):
         if model_str.startswith(model_key):
-            return mapping[model_key]
+            mapping_value = mapping[model_key]
+            if isinstance(mapping_value, dict):
+                return mapping_value.get('name', model_key)
+            return mapping_value
     
     # Return original if no match found
     return model_number

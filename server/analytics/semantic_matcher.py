@@ -129,7 +129,10 @@ def main():
 
         # 1. Exact match
         if model_str in model_name_mapping:
-            return model_name_mapping[model_str]
+            mapping = model_name_mapping[model_str]
+            if isinstance(mapping, dict):
+                return mapping.get('name', model_number)
+            return mapping
         
         # 2. Extract base model (SM-X123)
         # JS: const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
@@ -138,16 +141,21 @@ def main():
         if match:
              base_model = match.group(1)
              # Look for mapping keys starting with this base
-             for map_key, friendly_name in model_name_mapping.items():
+             for map_key, mapping in model_name_mapping.items():
                  if map_key.startswith(base_model):
-                     return friendly_name
+                     if isinstance(mapping, dict):
+                         return mapping.get('name', model_number)
+                     return mapping
         
         # 3. Fallback: prefix matching with full keys
         # JS: sortedKeys = Object.keys(modelNameMapping).sort((a, b) => b.length - a.length);
         sorted_keys = sorted(model_name_mapping.keys(), key=len, reverse=True)
         for key in sorted_keys:
             if model_str.startswith(key):
-                return model_name_mapping[key]
+                mapping = model_name_mapping[key]
+                if isinstance(mapping, dict):
+                    return mapping.get('name', model_number)
+                return mapping
                 
         return model_number
 
