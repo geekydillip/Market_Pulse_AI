@@ -1,12 +1,13 @@
 # Market Pulse AI
 
-A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis platform with interactive dashboards. Features local AI processing using Ollama, supports multiple file formats (Excel, JSON, CSV), and provides specialized processing for different issue types including Beta User Issues, Samsung Members PLM/VOC, and PLM Issues. Includes advanced analytics, real-time progress tracking, and professional dashboard interfaces - all processing happens locally for maximum privacy and security.
+A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis platform with interactive dashboards. Features local AI processing using Ollama, supports multiple file formats (Excel, JSON, CSV), and provides specialized processing for different issue types including Beta User Issues, Samsung Members PLM/VOC, and PLM Issues. Includes advanced analytics, real-time progress tracking, RAG-based semantic search, and professional dashboard interfaces - all processing happens locally for maximum privacy and security.
 
 ## 🌟 Key Highlights
 
 - **🔒 Privacy-First**: All AI processing stays on your local machine
 - **📊 Advanced Analytics**: Python-powered data aggregation with caching
 - **🧠 Semantic Matching**: Intelligent cross-referencing between VOC sources using NLP
+- **🔗 RAG Implementation**: Vector database with semantic search capabilities using FAISS and Sentence Transformers
 - **🎨 Professional UI**: Modern responsive dashboard with neumorphic design
 - **⚡ Real-Time Processing**: Live progress updates with Server-Sent Events
 - **🔧 Modular Architecture**: Extensible processing pipeline for different data types
@@ -505,6 +506,14 @@ Market Pulse AI/
 │   ├── samsung_members_plm/           # Samsung PLM processed data
 │   └── samsung_members_voc/           # Samsung VOC processed data
 ├── uploads/                           # Temporary file storage (auto-cleaned)
+├── RAG_implementation-main/           # RAG system with vector database
+│   ├── build_vector                   # Python script for building vector index
+│   ├── knowledge_base/                # Structured JSON files for semantic search
+│   │   ├── module_guidelines.json     # Module categorization guidelines
+│   │   └── *.json                     # Processed VOC data files
+│   └── vector_db/                     # FAISS vector database
+│       ├── index.faiss                # FAISS vector index file
+│       └── metadata.json              # Document metadata for retrieval
 └── __pycache__/                       # Python cache files
 ```
 
@@ -549,11 +558,22 @@ To ensure data consistency, the system implements a unified **Model Name Mapping
 - **Translation**: Automatically converts technical model identifiers (e.g., `SM-S928B`) into user-friendly names (e.g., `S24 Ultra`).
 - **Cross-Platform**: This mapping is utilized by both the Node.js backend for UI display and the Python analytics engine for grouping and reporting.
 
+### RAG Implementation & Vector Database
+The platform includes a sophisticated Retrieval-Augmented Generation (RAG) system for enhanced semantic search and knowledge retrieval:
+- **Vector Database**: FAISS-based vector store for efficient similarity search across processed documents
+- **Embedding Model**: Sentence Transformers (`all-MiniLM-L6-v2`) for generating semantic embeddings
+- **Knowledge Base**: Structured JSON files containing processed VOC data with metadata
+- **Chunking Strategy**: Adaptive text chunking (200 tokens with 50-token overlap) for optimal retrieval
+- **Semantic Search**: Cosine similarity-based document retrieval for related issue identification
+- **Build Process**: Automated vector index creation and metadata management via `build_vector` script
+
 ### Security & Performance
 - **Local Processing**: All AI inference and analytics stay on the user's machine - no external data transmission.
 - **File Validation**: Strict type checking, size limits, and automatic cleanup.
 - **Error Boundaries**: Graceful handling with retries for AI calls and robust fallback mechanisms for analytics.
 - **Resource Management**: Connection pooling, timeout management, and memory-efficient chunked processing.
+- **Vector Database Optimization**: Efficient FAISS indexing with L2 normalization for cosine similarity
+- **Batch Processing**: Optimized embedding generation with configurable batch sizes (default 64)
 
 ## 🎯 Data Processing Types
 
@@ -604,6 +624,12 @@ Deterministic automated cleaning without AI:
 - Install dependencies: `npm install`
 - Check Node.js version: `node --version`
 - Verify port 3001 is available
+
+### RAG System Issues
+- **Vector Database Not Found**: Run `python RAG_implementation-main/build_vector` to rebuild the vector index
+- **Missing Dependencies**: Ensure all packages in `requirements.txt` are installed, especially `faiss-cpu` and `sentence-transformers`
+- **Knowledge Base Empty**: Add JSON files to `RAG_implementation-main/knowledge_base/` for semantic search
+- **Slow Search Performance**: Check that FAISS index is properly built and metadata is correctly formatted
 
 ## 📈 Recent Updates
 

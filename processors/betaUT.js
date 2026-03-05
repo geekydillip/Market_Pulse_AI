@@ -195,92 +195,148 @@ module.exports = {
     return normalizeHeaders(rows);
   },
 
-  buildPrompt(rows) {
-    // Send only content fields to AI for analysis
-    const aiInputRows = rows.map(row => ({
-      Title: row.Title || '',
-      Problem: row.Problem || ''
-    }));
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
-  },
+  // buildPrompt(rows) {
+  //   // Send only content fields to AI for analysis
+  //   const aiInputRows = rows.map(row => ({
+  //     Title: row.Title || '',
+  //     Problem: row.Problem || ''
+  //   }));
+  //   return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+  // },
 
-  formatResponse(aiResult, originalRows) {
-    let aiRows;
 
-    // Handle different response formats: object, JSON string, or raw text
-    if (typeof aiResult === 'object' && aiResult !== null) {
-      aiRows = aiResult;
-    } else if (typeof aiResult === 'string') {
-      const text = aiResult.trim();
 
-      // First try to parse as complete JSON
+// added by vandana.ojha
+buildPrompt(rows, ragContexts = []) {
+
+  // ----------------------------
+  // Build RAG Section
+  // ----------------------------
+  let ragSection = "";
+
+  rows.forEach((row, index) => {
+    const matches = ragContexts[index] || [];
+
+    if (matches.length > 0) {
+      ragSection += `\n\n### Historical Similar Issues for Row ${index + 1}\n`;
+
+      matches.forEach((m, i) => {
+        ragSection += `
+Issue ${i + 1}:
+Title: ${m.Title || ""}
+Module: ${m.Module || ""}
+Sub Module: ${m["Sub Module"] || ""}
+Issue Type: ${m["Issue Type"] || ""}
+`;
+      });
+    }
+  });
+
+  // ----------------------------
+  // Original AI Input (IMPORTANT)
+  // ----------------------------
+  const aiInputRows = rows.map(row => ({
+    Title: row.Title || '',
+    Problem: row.Problem || ''
+  }));
+
+  const originalPrompt = promptTemplate.replace(
+    '{INPUTDATA_JSON}',
+    JSON.stringify(aiInputRows, null, 2)
+  );
+
+  // ----------------------------
+  // Final Prompt
+  // ----------------------------
+  return `
+${ragSection}
+
+Use above historical issues as contextual reference.
+If strong similarity exists, align classification.
+If clearly different, classify independently.
+
+${originalPrompt}
+`;
+},
+
+
+formatResponse(aiResult, originalRows) {
+let aiRows;
+
+// Handle different response formats: object, JSON string, or raw text
+if (typeof aiResult === 'object' && aiResult !== null) {
+  aiRows = aiResult;
+} else if (typeof aiResult === 'string') {
+  const text = aiResult.trim();
+
+  // First try to parse as complete JSON
+  try {
+    aiRows = JSON.parse(text);
+  } catch (e) {
+    // If that fails, try to extract JSON array from text
+    const firstBracket = text.indexOf('[');
+    const lastBracket = text.lastIndexOf(']');
+    if (firstBracket !== -1 && lastBracket > firstBracket) {
+      const jsonStr = text.substring(firstBracket, lastBracket + 1);
       try {
-        aiRows = JSON.parse(text);
-      } catch (e) {
-        // If that fails, try to extract JSON array from text
-        const firstBracket = text.indexOf('[');
-        const lastBracket = text.lastIndexOf(']');
-        if (firstBracket !== -1 && lastBracket > firstBracket) {
-          const jsonStr = text.substring(firstBracket, lastBracket + 1);
-          try {
-            aiRows = JSON.parse(jsonStr);
-          } catch (e2) {
-            // If JSON parsing fails, return array with error info
-            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
-          }
-        } else {
-          // Last resort: return array with error info
-          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
-        }
+        aiRows = JSON.parse(jsonStr);
+      } catch (e2) {
+        // If JSON parsing fails, return array with error info
+        return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
       }
     } else {
-      // Fallback for unexpected types - return array
-      return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
+      // Last resort: return array with error info
+      return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
     }
+  }
+} else {
+  // Fallback for unexpected types - return array
+  return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
+}
 
-    // Ensure aiRows is an array
-    if (!Array.isArray(aiRows)) {
-      return [{ error: `AI response is not an array: ${typeof aiRows}` }];
-    }
+// Ensure aiRows is an array
+if (!Array.isArray(aiRows)) {
+  return [{ error: `AI response is not an array: ${typeof aiRows}` }];
+}
 
-    // Merge AI results with original core identifiers
-    const mergedRows = aiRows.map((aiRow, index) => {
-      const original = originalRows[index] || {};
-      return {
-        'Case Code': original['Case Code'] || '',
-        'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
-          ? deriveModelNameFromSwVer(original['S/W Ver.'])
-          : removeRegularFolderPrefix(original['Model No.'] || ''),
-        'Progr.Stat.': original['Progr.Stat.'] || '',
-        'S/W Ver.': original['S/W Ver.'] || '',
-        'Title': aiRow['Title'] || '',  // From AI (cleaned)
-        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
-        'Resolve': original['Resolve'] || '',
-        'Module': aiRow['Module'] || '',
-        'Sub-Module': aiRow['Sub-Module'] || '',
-        'Issue Type': aiRow['Issue Type'] || '',
-        'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
-        'Severity': aiRow['Severity'] || '',
-        'Severity Reason': aiRow['Severity Reason'] || ''
-      };
-    });
+// Merge AI results with original core identifiers
+const mergedRows = aiRows.map((aiRow, index) => {
+  const original = originalRows[index] || {};
+  return {
+    'Case Code': original['Case Code'] || '',
+    'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
+      ? deriveModelNameFromSwVer(original['S/W Ver.'])
+      : removeRegularFolderPrefix(original['Model No.'] || ''),
+    'Progr.Stat.': original['Progr.Stat.'] || '',
+    'S/W Ver.': original['S/W Ver.'] || '',
+    'Title': aiRow['Title'] || '',  // From AI (cleaned)
+    'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+    'Resolve': original['Resolve'] || '',
+    'Module': aiRow['Module'] || '',
+    'Sub-Module': aiRow['Sub-Module'] || '',
+    'Issue Type': aiRow['Issue Type'] || '',
+    'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
+    'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
+    'Severity': aiRow['Severity'] || '',
+    'Severity Reason': aiRow['Severity Reason'] || ''
+  };
+});
 
-    return mergedRows;
-  },
+return mergedRows;
+},
 
-  // Returns column width configurations for Excel export
-  getColumnWidths(finalHeaders) {
-    return finalHeaders.map((h, idx) => {
-      if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
-      if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
-      if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
-      if (h === 'error') return { wch: 15 };
-      return { wch: 20 };
-    });
-  },
+// Returns column width configurations for Excel export
+getColumnWidths(finalHeaders) {
+  return finalHeaders.map((h, idx) => {
+    if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
+    if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
+    if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
+    if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
+    if (h === 'error') return { wch: 15 };
+    return { wch: 20 };
+  });
+},
 
-  // Excel reading function used by server.js
-  readAndNormalizeExcel: readAndNormalizeExcel
+// Excel reading function used by server.js
+readAndNormalizeExcel: readAndNormalizeExcel
 };

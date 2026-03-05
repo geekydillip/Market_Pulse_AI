@@ -180,13 +180,62 @@ module.exports = {
     return transformedRows;
   },
 
-  buildPrompt(rows) {
-    // Send only content field to AI for analysis
-    const aiInputRows = rows.map(row => ({
-      content: row.content || ''
-    }));
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+  // buildPrompt(rows) {
+  //   // Send only content field to AI for analysis
+  //   const aiInputRows = rows.map(row => ({
+  //     content: row.content || ''
+  //   }));
+  //   return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+  // },
+
+
+  // added by vandana.ojha
+  buildPrompt(rows, ragContexts = []) {
+
+  let ragSection = "";
+
+  rows.forEach((row, index) => {
+    const matches = ragContexts[index] || [];
+
+    if (matches.length > 0) {
+
+      ragSection += `\n\n### Similar Historical Issues\n`;
+
+      matches.forEach((m, i) => {
+
+        ragSection += `
+Issue ${i + 1}
+Title: ${m.Title || ""}
+Problem: ${m.Problem || ""}
+Content: ${m.Content || ""}
+Module: ${m.Module || ""}
+Sub Module: ${m["Sub Module"] || ""}
+Issue Type: ${m["Issue Type"] || ""}
+`;
+      });
+    }
+  });
+
+  const aiInputRows = rows.map(row => ({
+    content: row.content || ''
+  }));
+
+  const originalPrompt = promptTemplate.replace(
+    '{INPUTDATA_JSON}',
+    JSON.stringify(aiInputRows)
+  );
+
+  return `
+${ragSection}
+
+Use the above issues only as reference.
+Do NOT copy them blindly.
+
+${originalPrompt}
+`;
+
   },
+  
 
   formatResponse(aiResult, originalRows) {
     let aiRows;
@@ -258,6 +307,7 @@ module.exports = {
 
     // Merge AI results with original core identifiers (preserving original Excel fields + AI fields)
     const mergedRows = aiRows.map((aiRow, index) => {
+      if (!aiRow) aiRow = {};   // modified by vandana 
       const original = originalRows[index] || {};
 
       // Validate AI row has expected fields
@@ -281,7 +331,7 @@ module.exports = {
         'Main Type': original['Main Type'] || '',
         'Sub Type': original['Sub Type'] || '',
         'Module': aiRow['Module'] || '',
-        'Sub-Module': aiRow['Sub-Module'] || '',
+        'Sub-Module': aiRow['Sub-Module'] || aiRow['Sub Module'] || '',  // modified by vandana.ojha
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
         'AI Insight': aiRow['AI Insight'] || ''
