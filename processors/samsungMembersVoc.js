@@ -180,13 +180,73 @@ module.exports = {
     return transformedRows;
   },
 
-  buildPrompt(rows) {
-    // Send only content field to AI for analysis
+  // buildPrompt(rows) {
+  //   // Send only content field to AI for analysis
+  //   const aiInputRows = rows.map(row => ({
+  //     content: row.content || ''
+  //   }));
+  //   return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+  // },
+  // added by vandana.ojha
+  buildPrompt(rows, ragContexts = []) {
+  
+    // ----------------------------
+    // Build RAG Section
+    // ----------------------------
+    let ragSection = "";
+  
+    rows.forEach((row, index) => {
+      const matches = ragContexts[index] || [];
+  
+      if (matches.length > 0) {
+        ragSection += `\n\n### Historical Similar Issues for Row ${index + 1}\n`;
+  
+        matches.forEach((m, i) => {
+          ragSection += `
+Issue ${i + 1}:
+Title: ${m.Title || ""}
+Content: ${m.Content || ""}
+Module: ${m.Module || ""}
+Sub Module: ${m["Sub Module"] || ""}
+Issue Type: ${m["Issue Type"] || ""}
+`;
+        });
+      }
+    });
+  
+    // ----------------------------
+    // Original AI Input (IMPORTANT)
+    // ----------------------------
     const aiInputRows = rows.map(row => ({
-      content: row.content || ''
-    }));
-    return promptTemplate.replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
+  content: row.content || ''
+}));
+    // const aiInputRows = rows.map(row => ({
+    //   Title: row.Title || '',
+    //   Problem: row.Problem || ''
+    // }));
+  
+    const originalPrompt = promptTemplate.replace(
+      '{INPUTDATA_JSON}',
+      JSON.stringify(aiInputRows, null, 2)
+    );
+  
+    // ----------------------------
+    // Final Prompt
+    // ----------------------------
+    return `
+  ${ragSection}
+  
+  Use above historical issues as contextual reference.
+  If strong similarity exists, align classification.
+  If clearly different, classify independently.
+  
+  ${originalPrompt}
+  `;
   },
+  // till here
+
+
+
 
   formatResponse(aiResult, originalRows) {
     let aiRows;

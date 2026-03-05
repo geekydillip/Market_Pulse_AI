@@ -1,6 +1,9 @@
 ﻿/*
   Minimal Express init. Ensure this block appears BEFORE any app.get/app.post calls.
 */
+// added by vandana.ojha
+const { getRAGContext } = require("./ragClient");   
+
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -428,14 +431,42 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
     const transformedRows = processor.transform ? processor.transform(chunk.rows) : chunk.rows;
 
     // Build prompt
-    const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
+    // const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
+    
+    // added by vandana.ojha
+    let ragContexts = [];
+
+    for (const row of transformedRows) {
+      const queryText = `${row.Title || ""} ${row.Problem || row.content || ""}`;
+      console.log("Query:", queryText);   // ✅ ADD HERE
+      const ragMatches = await getRAGContext(queryText);
+       console.log("RAG Matches:", ragMatches);  // ✅ ADD HERE
+      ragContexts.push(ragMatches);
+    }
+
+    const prompt = processor.buildPrompt(transformedRows, ragContexts);
+    // till here --> modified
+
 
     // Call AI (cached)
     const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId });
 
+    // added by vandana ojha
+    let aiContent = result;
+
+    // 🔥 FIX FOR OLLAMA CHAT RESPONSE
+    if (result && result.message && result.message.content) {
+      aiContent = result.message.content;
+      }
+
     // Format response
     try {
-      processedRows = processor.formatResponse ? processor.formatResponse(result, chunk.rows) : (typeof result === 'string' ? JSON.parse(result) : result);
+      // processedRows = processor.formatResponse ? processor.formatResponse(result, chunk.rows) : (typeof result === 'string' ? JSON.parse(result) : result);
+
+      // added by vandana ojha
+       processedRows = processor.formatResponse 
+    ? processor.formatResponse(aiContent, chunk.rows) 
+    : (typeof aiContent === 'string' ? JSON.parse(aiContent) : aiContent);
     } catch (err) {
       // If formatting/parsing failed, return error per row
       return {
