@@ -2,7 +2,7 @@
   Minimal Express init. Ensure this block appears BEFORE any app.get/app.post calls.
 */
 // added by vandana.ojha
-const { getRAGContext } = require("./ragClient");   
+const { getRAGContext } = require("./ragClient");
 
 const path = require('path');
 const fs = require('fs');
@@ -432,7 +432,7 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
 
     // Build prompt
     // const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
-    
+
     // added by vandana.ojha
     let ragContexts = [];
 
@@ -440,42 +440,73 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
       const queryText = `${row.Title || ""} ${row.Problem || row.content || ""}`;
       console.log("Query:", queryText);   // ✅ ADD HERE
       const ragMatches = await getRAGContext(queryText);
-       console.log("RAG Matches:", ragMatches);  // ✅ ADD HERE
+      console.log("RAG Matches:", ragMatches);  // ✅ ADD HERE
       ragContexts.push(ragMatches);
     }
 
-    const prompt = processor.buildPrompt(transformedRows, ragContexts);
-    // till here --> modified
+    // Evaluate RAG contexts for threshold-based auto-classification
+    const autoClassifiedRows = [];
+    const rowsRequiringAI = [];
+    const SIMILARITY_THRESHOLD = 0.60;
 
+    for (let i = 0; i < transformedRows.length; i++) {
+      const row = transformedRows[i];
+      const ragContext = ragContexts[i];
 
-    // Call AI (cached)
-    const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId });
+      let autoClassified = false;
 
-    // added by vandana ojha
-    let aiContent = result;
+      if (ragContext && ragContext.length > 0) {
+        const bestMatch = ragContext[0];
+        if (bestMatch.similarity_score && bestMatch.similarity_score >= SIMILARITY_THRESHOLD) {
+          // Auto-classify using best match
+          autoClassified = true;
 
-    // 🔥 FIX FOR OLLAMA CHAT RESPONSE
-    if (result && result.message && result.message.content) {
-      aiContent = result.message.content;
+          // Copy classification data
+          row['Module'] = bestMatch['Module'] || '';
+          // Handle different keys for Sub Module
+          row['Sub Module'] = bestMatch['Sub Module'] || bestMatch['Sub-Module'] || '';
+          row['Issue Type'] = bestMatch['Issue Type'] || '';
+          row['AI_Confidence'] = bestMatch.similarity_score;
+          row['Auto_Classified'] = true;
+
+          autoClassifiedRows.push(row);
+          console.log(`[Auto-Classified] Row matched with score ${bestMatch.similarity_score.toFixed(3)}: ${row.Title || row.Problem || ''}`);
+        }
       }
 
-    // Format response
-    try {
-      // processedRows = processor.formatResponse ? processor.formatResponse(result, chunk.rows) : (typeof result === 'string' ? JSON.parse(result) : result);
+      if (!autoClassified) {
+        rowsRequiringAI.push(row);
+      }
+    }
+
+    let processedRows = [...autoClassifiedRows];
+
+    if (rowsRequiringAI.length > 0) {
+      const prompt = processor.buildPrompt(rowsRequiringAI, ragContexts.filter((_, i) => !autoClassifiedRows.includes(transformedRows[i])));
+
+      // Call AI (cached)
+      const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId });
 
       // added by vandana ojha
-       processedRows = processor.formatResponse 
-    ? processor.formatResponse(aiContent, chunk.rows) 
-    : (typeof aiContent === 'string' ? JSON.parse(aiContent) : aiContent);
-    } catch (err) {
-      // If formatting/parsing failed, return error per row
-      return {
-        chunkId,
-        processedRows: chunk.rows.map((row) => ({ ...row, error: `Failed to parse processor result: ${err.message}` })),
-        status: 'failed',
-        processingTime: Date.now() - startTime,
-        error: err.message
-      };
+      let aiContent = result;
+
+      // 🔥 FIX FOR OLLAMA CHAT RESPONSE
+      if (result && result.message && result.message.content) {
+        aiContent = result.message.content;
+      }
+
+      // Format response
+      try {
+        const aiProcessedRows = processor.formatResponse
+          ? processor.formatResponse(aiContent, rowsRequiringAI)
+          : (typeof aiContent === 'string' ? JSON.parse(aiContent) : aiContent);
+
+        processedRows = processedRows.concat(aiProcessedRows);
+      } catch (err) {
+        // If formatting/parsing failed, return error per row for the AI ones
+        const failedRows = rowsRequiringAI.map((row) => ({ ...row, error: `Failed to parse processor result: ${err.message}` }));
+        processedRows = processedRows.concat(failedRows);
+      }
     }
 
     // Special handling for summary container response
