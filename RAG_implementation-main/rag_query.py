@@ -27,9 +27,12 @@ def retrieve(query):
     D, I = index.search(np.array(embedding), TOP_K)
 
     results = []
-    for idx in I[0]:
+    for idx_pos, idx in enumerate(I[0]):
         if idx < len(metadata):
-            results.append(metadata[idx])
+            item = metadata[idx].copy()
+            # Convert float32 to standard float for JSON serialization
+            item["similarity_score"] = float(D[0][idx_pos])
+            results.append(item)
 
     return results
 
