@@ -13,10 +13,10 @@ def load_json(path):
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"⚠️ File not found: {path}")
+        print(f"[WARN] File not found: {path}")
         return None
     except Exception as e:
-        print(f"❌ Error loading {path}: {e}")
+        print(f"[ERROR] Error loading {path}: {e}")
         return None
 
 def main():
@@ -26,8 +26,8 @@ def main():
     try:
         from sentence_transformers import SentenceTransformer, util
     except ImportError:
-        print("❌ 'sentence-transformers' library not found.")
-        print("   Please install it using: pip install sentence-transformers")
+        print("[ERROR] sentence-transformers library not found.")
+        print("Please install it using: pip install sentence-transformers")
         # Exit gracefully so we don't crash the whole server startup, just skip this step
         return
 
@@ -42,20 +42,20 @@ def main():
     global_data = load_json(global_path)
 
     if not smvoc_data or not global_data:
-        print("⚠️ Missing analytics data. Skipping semantic matching.")
+        print("[ERROR] Missing analytics data. Skipping semantic matching.")
         return
 
     smvoc_rows = smvoc_data.get('rows', [])
     global_rows = global_data.get('rows', [])
 
-    print(f"   Loaded {len(smvoc_rows)} SMVOC rows and {len(global_rows)} Global VOC rows.")
+    print(f"[INFO] Loaded {len(smvoc_rows)} SMVOC rows and {len(global_rows)} Global VOC rows.")
 
     # 2. Pre-process and Filter
     # Filter Global VOC for "Samsung Members" source only
     global_voc_targets = [row for row in global_rows if row.get('Source') == 'Samsung Members']
     
     if not global_voc_targets:
-        print("   No Global VOC rows with Source='Samsung Members' found.")
+        print("[WARN] No Global VOC rows with Source='Samsung Members' found.")
         return
 
     # Extract texts for embedding
@@ -82,7 +82,7 @@ def main():
             # actually we just need the row data later.
             global_indices.append(idx) 
 
-    print(f"   Embedding {len(smvoc_texts)} SMVOC items and {len(global_texts)} Global VOC items...")
+    print(f"[INFO] Embedding {len(smvoc_texts)} SMVOC items and {len(global_texts)} Global VOC items...")
 
     # 3. Load Model and Embed
     try:
@@ -94,14 +94,14 @@ def main():
         smvoc_embeddings = model.encode(smvoc_texts, convert_to_tensor=True, show_progress_bar=False)
         global_embeddings = model.encode(global_texts, convert_to_tensor=True, show_progress_bar=False)
         duration = time.time() - start_time
-        print(f"   Embeddings computed in {duration:.2f} seconds.")
+        print(f"[INFO] Embeddings computed in {duration:.2f} seconds.")
 
         # 4. Compute Cosine Similarity
         # specific_row_embedding vs all_global_embeddings
         cosine_scores = util.cos_sim(smvoc_embeddings, global_embeddings)
 
     except Exception as e:
-        print(f"❌ Error during embedding/similarity calculation: {e}")
+        print(f"[ERROR] Error during embedding/similarity calculation: {e}")
         return
 
     # 5. Extract Matches
@@ -233,7 +233,7 @@ def main():
             count += 1
 
     # 6. Save Matches
-    print(f"   Found {count} semantic matches.")
+    print(f"[INFO] Found {count} semantic matches.")
     
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(matches_map, f, indent=2)

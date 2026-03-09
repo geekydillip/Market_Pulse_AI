@@ -57,51 +57,218 @@
   </script>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen"
+  style="font-family: 'Inter', sans-serif;">
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen"
+    style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f172a 100%);transition:opacity 0.6s ease,visibility 0.6s ease;">
+    <style>
+      @keyframes brainPulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        50% {
+          transform: scale(1.18);
+          opacity: 0.75;
+        }
+
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes brainGlow {
+        0% {
+          box-shadow: 0 0 0px 0px rgba(99, 102, 241, 0);
+        }
+
+        50% {
+          box-shadow: 0 0 40px 15px rgba(99, 102, 241, 0.45);
+        }
+
+        100% {
+          box-shadow: 0 0 0px 0px rgba(99, 102, 241, 0);
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes loadBarMove {
+        0% {
+          width: 0%;
+        }
+
+        100% {
+          width: 100%;
+        }
+      }
+
+      #loading-brain-wrap {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: brainGlow 1.6s ease-in-out infinite;
+        margin-bottom: 28px;
+      }
+
+      #loading-brain-icon {
+        font-size: 52px;
+        color: #818cf8;
+        animation: brainPulse 1.6s ease-in-out infinite;
+      }
+
+      #loading-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: #f1f5f9;
+        animation: fadeInUp 0.7s ease both;
+        animation-delay: 0.15s;
+      }
+
+      #loading-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 400;
+        color: #64748b;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-top: 6px;
+        animation: fadeInUp 0.7s ease both;
+        animation-delay: 0.4s;
+      }
+
+      #loading-bar-bg {
+        margin-top: 36px;
+        width: 200px;
+        height: 3px;
+        background: rgba(99, 102, 241, 0.15);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+
+      #loading-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #818cf8);
+        border-radius: 99px;
+        animation: loadBarMove 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+    </style>
+    <div id="loading-brain-wrap">
+      <i id="loading-brain-icon" class="fa-solid fa-brain"></i>
+    </div>
+    <div id="loading-title">Market Pulse AI</div>
+    <div id="loading-subtitle">VOC Intelligence Dashboard</div>
+    <div id="loading-bar-bg">
+      <div id="loading-bar"></div>
+    </div>
+  </div>
+  <script>
+    // Show loading screen only on first load or refresh, not on in-tab navigation.
+    // sessionStorage is cleared on refresh/new tab, but persists across same-tab navigations.
+    (function () {
+      var screen = document.getElementById('loading-screen');
+      if (!screen) return;
+
+      if (sessionStorage.getItem('mpa_visited')) {
+        // Navigated here from another page — hide instantly, no animation
+        screen.style.display = 'none';
+      } else {
+        // First load or refresh — show for 2 seconds then fade out
+        sessionStorage.setItem('mpa_visited', '1');
+        window.addEventListener('DOMContentLoaded', function () {
+          setTimeout(function () {
+            screen.style.opacity = '0';
+            screen.style.visibility = 'hidden';
+            screen.style.pointerEvents = 'none';
+          }, 2000);
+        });
+      }
+    })();
+  </script>
   <div class="max-w-100% mx-auto px-6 py-6">
 
-    <!-- HEADER -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">MARKET PULSE AI DASHBOARD</h1>
-
-      <div class="flex gap-2">
-        <a href="aiprocessor.html"
-          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-          <i class="fa-solid fa-brain mr-2"></i>
-          AI PROCESSOR
-        </a>
-      </div>
-    </div>
-
-
-
-    <!-- CATEGORY BUTTONS -->
-    <section class="flex flex-wrap gap-3 mb-5 justify-center">
+    <!-- UNIFIED TOP BUTTON BAR -->
+    <section class="flex flex-wrap gap-3 mb-5">
       <a href="GLOBAL_VOC_PLM_Dashboard.html"
-        class="w-auto px-6 py-2 bg-gradient-to-r from-slate-600 to-emerald-600 hover:from-slate-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
-        <i class="fa-solid fa-globe mr-2"></i>
-        GLOBAL VOC PLM
+        class="group relative flex-1 min-w-[140px] px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:shadow-lg dark:hover:shadow-emerald-500/20 rounded-lg overflow-hidden shadow transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+        <div
+          class="absolute inset-0 bg-emerald-50 dark:bg-emerald-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <i
+          class="fa-solid fa-globe mr-2 text-emerald-600 dark:text-emerald-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide z-10">GLOBAL VOC
+          PLM</span>
       </a>
       <a href="BetaUT_Dashboard.html"
-        class="w-auto px-6 py-2 bg-gradient-to-r from-slate-700 to-teal-600 hover:from-slate-800 hover:to-teal-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
-        <i class="fa-solid fa-mobile-screen mr-2"></i>
-        BETA UT
+        class="group relative flex-1 min-w-[140px] px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:shadow-lg dark:hover:shadow-teal-500/20 rounded-lg overflow-hidden shadow transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+        <div
+          class="absolute inset-0 bg-teal-50 dark:bg-teal-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <i
+          class="fa-solid fa-mobile-screen mr-2 text-teal-600 dark:text-teal-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide z-10">BETA UT</span>
       </a>
       <a href="employee_ut_Dashboard.html"
-        class="w-auto px-6 py-2 bg-gradient-to-r from-slate-700 to-lime-600 hover:from-slate-800 hover:to-lime-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
-        <i class="fa-solid fa-trophy mr-2"></i>
-        EMPLOYEE UT
+        class="group relative flex-1 min-w-[140px] px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-lime-500 hover:shadow-lg dark:hover:shadow-lime-500/20 rounded-lg overflow-hidden shadow transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+        <div
+          class="absolute inset-0 bg-lime-50 dark:bg-lime-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <i
+          class="fa-solid fa-trophy mr-2 text-lime-600 dark:text-lime-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide z-10">EMPLOYEE
+          UT</span>
       </a>
       <a href="SMVOC_Dashboard.html"
-        class="w-auto px-6 py-2 bg-gradient-to-r from-slate-700 to-purple-600 hover:from-slate-800 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
-        <i class="fa-solid fa-comments mr-2"></i>
-        SAMSUNG MEMBERS VOC
+        class="group relative flex-1 min-w-[140px] px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:shadow-lg dark:hover:shadow-purple-500/20 rounded-lg overflow-hidden shadow transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+        <div
+          class="absolute inset-0 bg-purple-50 dark:bg-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <i
+          class="fa-solid fa-comments mr-2 text-purple-600 dark:text-purple-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span
+          class="font-bold text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wide z-10 whitespace-nowrap">SAMSUNG
+          MEMBERS VOC</span>
       </a>
       <button
-        class="w-auto px-6 py-2 bg-gradient-to-r from-slate-700 to-orange-600 hover:from-slate-800 hover:to-orange-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
-        <i class="fa-solid fa-question-circle mr-2"></i>
-        SERVICE ISSUE
+        class="group relative flex-1 min-w-[140px] px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:shadow-lg dark:hover:shadow-orange-500/20 rounded-lg overflow-hidden shadow transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+        <div
+          class="absolute inset-0 bg-orange-50 dark:bg-orange-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <i
+          class="fa-solid fa-question-circle mr-2 text-orange-600 dark:text-orange-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide z-10">SERVICE
+          ISSUE</span>
       </button>
+      <a href="aiprocessor.html"
+        class="group relative flex-1 min-w-[140px] px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:shadow-lg dark:hover:shadow-indigo-500/20 rounded-lg overflow-hidden shadow transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+        <div
+          class="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <i
+          class="fa-solid fa-brain mr-2 text-indigo-600 dark:text-indigo-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide z-10">AI
+          PROCESSOR</span>
+      </a>
     </section>
 
     <!-- CHARTS ROW -->
@@ -112,7 +279,7 @@
           <i class="fa-solid fa-mobile-screen mr-2 text-indigo-500"></i>
           Top 10 Models
         </h3>
-        <div id="top-models-chart" class="w-full h-64"></div>
+        <div id="top-models-chart" class="w-full h-44"></div>
       </div>
 
       <!-- Top 5 Sources Chart -->
@@ -121,7 +288,7 @@
           <i class="fa-solid fa-layer-group mr-2 text-emerald-500"></i>
           Top 5 Sources
         </h3>
-        <div id="top-sources-chart" class="w-full h-64"></div>
+        <div id="top-sources-chart" class="w-full h-44"></div>
       </div>
 
       <!-- Severity Wise Issue Chart -->
@@ -130,7 +297,7 @@
           <i class="fa-solid fa-triangle-exclamation mr-2 text-rose-500"></i>
           Severity Wise Issue
         </h3>
-        <div id="severity-chart" class="w-full h-64"></div>
+        <div id="severity-chart" class="w-full h-44"></div>
       </div>
     </section>
 
@@ -422,10 +589,7 @@
             type: 'bar',
             data: top10Models.map(m => m.count).reverse(),
             itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#6366f1' },
-                { offset: 1, color: '#a855f7' }
-              ]),
+              color: '#2F85F5',
               borderRadius: [0, 4, 4, 0]
             },
             label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
@@ -461,10 +625,7 @@
             type: 'bar',
             data: sourceData.map(d => d.value).reverse(),
             itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#3b82f6' },
-                { offset: 1, color: '#1d4ed8' }
-              ]),
+              color: '#2F85F5',
               borderRadius: [0, 4, 4, 0]
             },
             label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
@@ -500,7 +661,7 @@
             itemStyle: {
               color: function (params) {
                 // Low, Medium, High semantic colors
-                const colorList = ['#10b981', '#f59e0b', '#f43f5e'];
+                const colorList = ['#A1A1A1', '#FFF085', '#f43f5e'];
                 return colorList[params.dataIndex];
               },
               borderRadius: [0, 4, 4, 0]
