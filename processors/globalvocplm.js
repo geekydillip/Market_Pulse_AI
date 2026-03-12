@@ -10,8 +10,9 @@ function normalizeHeaders(rows) {
 
     // Model variants
     'model no.': 'Model No.',
-
-    // Case Code variants
+    'dev. mdl. name/item name': 'Model No.',
+    'dev mdl name': 'Model No.',
+    'device model': 'Model No.',
     'case code': 'Case Code',
     'plm code': 'Case Code',
     'plm code': 'Case Code',
@@ -87,15 +88,10 @@ function normalizeHeaders(rows) {
       out[tgt] = (found !== undefined && found !== null) ? found : '';
     }
 
-    // Extract Source from Title (Derived Field)
-    // Rule: Extract the FIRST value enclosed in square brackets [] from Title
-    const title = out['Title'] || '';
-    let source = 'Unknown';
-    if (title) {
-      const match = title.match(/^\[(.*?)\]/);
-      if (match && match[1]) {
-        source = match[1].trim();
-      }
+    // Source is extracted cleanly in Python now, so just ensure it's picked up if available
+    let source = out['Source'] || '';
+    if (!source) {
+      source = 'Unknown';
     }
     out['Source'] = source;
 

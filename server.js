@@ -1,4 +1,4 @@
-﻿/*
+/*
   Minimal Express init. Ensure this block appears BEFORE any app.get/app.post calls.
 */
 // added by vandana.ojha
@@ -836,7 +836,28 @@ async function processExcel(req, res) {
 
       // Use processor's readAndNormalizeExcel if available, else fallback to UTportal
       const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/UTportal').readAndNormalizeExcel;
-      rows = readAndNormalizeExcel(uploadedPath) || [];
+      
+      let finalExcelPath = uploadedPath;
+      
+      try {
+        if (processingType === 'global_voc_plm') {
+          logger.log('Running Python excel_cleaner.py...');
+          const cleanerStart = Date.now();
+          const pypath = path.join(__dirname, 'server', 'analytics', 'excel_cleaner.py');
+          const cp = require('child_process');
+          cp.execSync(`python "${pypath}" "${uploadedPath}"`, { stdio: 'inherit' });
+          logger.log(`✅ Excel Cleaner finished in ${Date.now() - cleanerStart}ms`);
+          
+          const cleanPath = uploadedPath.replace('.xlsx', '_cleaned.xlsx').replace('.xls', '_cleaned.xls');
+          if (fs.existsSync(cleanPath)) {
+            finalExcelPath = cleanPath;
+          }
+        }
+      } catch (err) {
+        logger.log(`⚠️ Excel cleaner script failed: ${err.message}. Proceeding with original file.`);
+      }
+
+      rows = readAndNormalizeExcel(finalExcelPath) || [];
 
       const conversionDuration = Date.now() - conversionStart;
       headers = processor.expectedHeaders || ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem'];
