@@ -321,7 +321,9 @@ ${originalPrompt}
         'Date': original['Date'] || '',
         'Status': original['Status'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
-        'Model No.': original['Model No.'] || '',
+        'Model No.': (original['Model No.'] && /\[OS Beta\]/i.test(String(original['Model No.'])))
+          ? (original['S/W Ver.'] && typeof original['S/W Ver.'] === 'string' && original['S/W Ver.'].length >= 5 ? 'SM-' + original['S/W Ver.'].substring(0, 5) : '')
+          : (original['Model No.'] || ''),
         'OS': original['OS'] || '',
         'CSC': original['CSC'] || '',
         'Category': original['Category'] || '',

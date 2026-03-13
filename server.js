@@ -1,8 +1,8 @@
-﻿/*
+/*
   Minimal Express init. Ensure this block appears BEFORE any app.get/app.post calls.
 */
 // added by vandana.ojha
-const { getRAGContext } = require("./ragClient");
+const { getRAGContext, getRAGContextBatch } = require("./ragClient");
 
 const path = require('path');
 const fs = require('fs');
@@ -434,55 +434,93 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
     // const prompt = processor.buildPrompt ? processor.buildPrompt(transformedRows) : JSON.stringify(transformedRows).slice(0, 1000);
 
     // added by vandana.ojha
-    let ragContexts = [];
-
-    for (const row of transformedRows) {
-      const queryText = `${row.Title || ""} ${row.Problem || row.content || ""}`;
-      console.log("Query:", queryText);   // ✅ ADD HERE
-      const ragMatches = await getRAGContext(queryText);
-      console.log("RAG Matches:", ragMatches);  // ✅ ADD HERE
-      ragContexts.push(ragMatches);
-    }
+    // Build one query string per row and send the whole chunk in one batch request.
+    // This replaces the old per-row child-process loop and eliminates repeated model loading.
+    const batchQueries = transformedRows.map(
+      r => `${r.Title || ""} ${r.Problem || r.content || ""}`
+    );
+    const ragTimerLabel = `RAG_Batch_Time_chunk${chunkId}`;
+    console.log(`[RAG] Sending batch of ${batchQueries.length} queries... (chunk ${chunkId})`);
+    console.time(ragTimerLabel);
+    let ragContexts = await getRAGContextBatch(batchQueries);
+    console.timeEnd(ragTimerLabel);
+    console.log(`[RAG] Received ${ragContexts.length} result sets. (chunk ${chunkId})`);
 
     // Evaluate RAG contexts for threshold-based auto-classification
     const autoClassifiedRows = [];
     const rowsRequiringAI = [];
     const SIMILARITY_THRESHOLD = 0.60;
 
+    // ── Per-row threshold analysis ─────────────────────────────────────────
+    console.log(`\n┌─── [Chunk ${chunkId}] RAG Threshold Analysis (threshold = ${(SIMILARITY_THRESHOLD * 100).toFixed(0)}%) ${'─'.repeat(20)}`);
+
     for (let i = 0; i < transformedRows.length; i++) {
       const row = transformedRows[i];
       const ragContext = ragContexts[i];
+      const rowLabel = `Row ${i + 1}${row.Title ? ` "${row.Title.substring(0, 40)}"` : ''}`;
 
       let autoClassified = false;
 
       if (ragContext && ragContext.length > 0) {
         const bestMatch = ragContext[0];
-        if (bestMatch.similarity_score && bestMatch.similarity_score >= SIMILARITY_THRESHOLD) {
-          // Auto-classify using best match
-          autoClassified = true;
+        const scorePercent = (bestMatch.similarity_score * 100).toFixed(1);
+        const passes = bestMatch.similarity_score >= SIMILARITY_THRESHOLD;
 
-          // Copy classification data
+        // ── 1. Per-row match % ──────────────────────────────────────────────
+        console.log(`│  ${rowLabel}`);
+        console.log(`│    Best match score : ${scorePercent}%  ${passes ? '✅ PASSES threshold' : '❌ BELOW threshold'}`);
+        console.log(`│    Matched module   : ${bestMatch.Module || '—'}  |  Issue Type: ${bestMatch['Issue Type'] || '—'}`);
+
+        if (passes) {
+          autoClassified = true;
+          // Use canonical hyphenated column names that match formatResponse() output
           row['Module'] = bestMatch['Module'] || '';
-          // Handle different keys for Sub Module
-          row['Sub Module'] = bestMatch['Sub Module'] || bestMatch['Sub-Module'] || '';
+          row['Sub-Module'] = bestMatch['Sub Module'] || bestMatch['Sub-Module'] || '';  // hyphen key ✅
           row['Issue Type'] = bestMatch['Issue Type'] || '';
-          row['AI_Confidence'] = bestMatch.similarity_score;
-          row['Auto_Classified'] = true;
+          row['Sub-Issue Type'] = bestMatch['Sub Issue Type'] || bestMatch['Sub-Issue Type'] || '';  // was missing ✅
+          row['Severity'] = bestMatch['Severity'] || '';                                  // was missing ✅
+          // NOTE: AI_Confidence / Auto_Classified intentionally NOT set on row —
+          // they were leaking into Excel as extra rogue columns.
 
           autoClassifiedRows.push(row);
-          console.log(`[Auto-Classified] Row matched with score ${bestMatch.similarity_score.toFixed(3)}: ${row.Title || row.Problem || ''}`);
+
+          // ── 2. Routing decision: BYPASS LLM ────────────────────────────
+          console.log(`│    ➡  BYPASS LLM  — auto-classified from RAG (${scorePercent}%)`);
+        } else {
+          // ── 2. Routing decision: SEND TO LLM ──────────────────────────
+          console.log(`│    ➡  → LLM       — score too low, needs AI classification`);
         }
+      } else {
+        // No RAG matches at all
+        console.log(`│  ${rowLabel}`);
+        console.log(`│    Best match score : no matches returned`);
+        console.log(`│    ➡  → LLM       — no RAG context, needs AI classification`);
       }
+
+      console.log(`│`);
 
       if (!autoClassified) {
         rowsRequiringAI.push(row);
       }
     }
 
+    // ── 3. Chunk summary ────────────────────────────────────────────────────
+    const totalRows = transformedRows.length;
+    const bypassCount = autoClassifiedRows.length;
+    const llmCount = rowsRequiringAI.length;
+    console.log(`│  ── Summary ──────────────────────────────────────────────────`);
+    console.log(`│  Total rows in chunk : ${totalRows}`);
+    console.log(`│  ✅ BYPASS LLM (RAG) : ${bypassCount} row(s)  (${((bypassCount / totalRows) * 100).toFixed(0)}%)`);
+    console.log(`│  🤖 → LLM required  : ${llmCount} row(s)  (${((llmCount / totalRows) * 100).toFixed(0)}%)`);
+    console.log(`└${'─'.repeat(70)}\n`);
+
     let processedRows = [...autoClassifiedRows];
 
     if (rowsRequiringAI.length > 0) {
       const prompt = processor.buildPrompt(rowsRequiringAI, ragContexts.filter((_, i) => !autoClassifiedRows.includes(transformedRows[i])));
+
+      // ── LLM call count for this chunk ──────────────────────────────────
+      console.log(`[Chunk ${chunkId}] 🤖 Calling LLM for ${rowsRequiringAI.length} row(s)...`);
 
       // Call AI (cached)
       const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId });
@@ -836,7 +874,28 @@ async function processExcel(req, res) {
 
       // Use processor's readAndNormalizeExcel if available, else fallback to UTportal
       const readAndNormalizeExcel = processor.readAndNormalizeExcel || require('./processors/UTportal').readAndNormalizeExcel;
-      rows = readAndNormalizeExcel(uploadedPath) || [];
+
+      let finalExcelPath = uploadedPath;
+
+      try {
+        if (['global_voc_plm', 'beta_ut', 'employee_ut', 'samsung_members_voc', 'samsungMembersVoc', 'beta_ut_voc'].includes(processingType)) {
+          logger.log('Running Python excel_cleaner.py...');
+          const cleanerStart = Date.now();
+          const pypath = path.join(__dirname, 'server', 'analytics', 'excel_cleaner.py');
+          const cp = require('child_process');
+          cp.execSync(`python "${pypath}" "${uploadedPath}"`, { stdio: 'inherit' });
+          logger.log(`✅ Excel Cleaner finished in ${Date.now() - cleanerStart}ms`);
+
+          const cleanPath = uploadedPath.replace('.xlsx', '_cleaned.xlsx').replace('.xls', '_cleaned.xls');
+          if (fs.existsSync(cleanPath)) {
+            finalExcelPath = cleanPath;
+          }
+        }
+      } catch (err) {
+        logger.log(`⚠️ Excel cleaner script failed: ${err.message}. Proceeding with original file.`);
+      }
+
+      rows = readAndNormalizeExcel(finalExcelPath) || [];
 
       const conversionDuration = Date.now() - conversionStart;
       headers = processor.expectedHeaders || ['Case Code', 'Model No.', 'S/W Ver.', 'Title', 'Problem'];

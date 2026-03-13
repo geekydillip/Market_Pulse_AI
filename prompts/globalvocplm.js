@@ -12,16 +12,10 @@ All values must be strings. All text must be in English. No extra keys, comments
 Instructions:
 
 1. TITLE:
-   - Extract a clean, concise title.
-   - Remove: IDs ([123]), usernames (@user), timestamps (3:45 PM), brackets ([Chrome]), non-English text, duplicates.
-   - Keep only the essential issue description.
-   - Output: One clear, natural-sentence.
+   - Translate all Non-English text to English.
 
 2. PROBLEM:
-   - Extract the full problem description.
-   - Remove same elements as Title.
-   - Keep only the core explanation of what is happening.
-   - Output: One clear, descriptive sentence.
+   - Translate all Non-English text to English.
 
 3. MODULE:
    - Identify product module from cleaned Title + Problem (e.g., Lock Screen, Camera, Battery, Network, Display, Settings, etc.).
@@ -92,9 +86,6 @@ Output:
     "Severity Reason": "This issue prevents users from using Chrome for browsing and messaging."
   }
 ]
-
-Now process this input:
-{INPUTDATA_JSON}
 
 Input Data:
 {INPUTDATA_JSON}`;
