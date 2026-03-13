@@ -304,8 +304,8 @@ const mergedRows = aiRows.map((aiRow, index) => {
   const original = originalRows[index] || {};
   return {
     'Case Code': original['Case Code'] || '',
-    'Model No.': (original['Model No.'] && original['Model No.'].startsWith('[OS Beta]'))
-      ? deriveModelNameFromSwVer(original['S/W Ver.'])
+    'Model No.': (original['Model No.'] && /\[OS Beta\]/i.test(String(original['Model No.'])))
+      ? (original['S/W Ver.'] && typeof original['S/W Ver.'] === 'string' && original['S/W Ver.'].length >= 5 ? 'SM-' + original['S/W Ver.'].trim().substring(0, 5) : '')
       : removeRegularFolderPrefix(original['Model No.'] || ''),
     'Progr.Stat.': original['Progr.Stat.'] || '',
     'S/W Ver.': original['S/W Ver.'] || '',

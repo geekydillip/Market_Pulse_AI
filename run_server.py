@@ -10,9 +10,56 @@ import time
 import requests
 import os
 import sys
+import atexit
 
 OLLAMA_CMD = "ollama"  # must be on PATH, or use full path like "/usr/local/bin/ollama"
 API_BASE = "http://localhost:11434"
+RAG_API_BASE = "http://127.0.0.1:8000"
+
+# Global reference so we can terminate on exit
+_rag_proc = None
+
+
+def start_rag_api():
+    """
+    Launch rag_api.py via uvicorn as a background process.
+    Registers an atexit handler to clean up the process on exit.
+    """
+    global _rag_proc
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rag_api.py")
+    print("[RAG API] Starting persistent RAG server on port 8000...")
+    _rag_proc = subprocess.Popen(
+        [sys.executable, script],
+        stdout=None,
+        stderr=None,
+    )
+
+    def _cleanup():
+        if _rag_proc and _rag_proc.poll() is None:
+            print("[RAG API] Shutting down...")
+            _rag_proc.terminate()
+
+    atexit.register(_cleanup)
+    return _rag_proc
+
+
+def wait_for_rag_api(timeout=60):
+    """
+    Poll the RAG API /health endpoint until it responds (model loaded) or times out.
+    """
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            r = requests.get(RAG_API_BASE + "/health", timeout=3)
+            if r.ok:
+                data = r.json()
+                print(f"[RAG API] Ready — {data.get('records', '?'):,} records in RAM.")
+                return True
+        except requests.RequestException:
+            pass
+        time.sleep(1)
+    return False
+
 
 def start_ollama_server():
     """
@@ -201,5 +248,14 @@ if __name__ == "__main__":
     print(f"Loading model {model} via API...")
     result = load_model_via_api(model, timeout=60)
     print("Load result:", result)
+
+    # Start the persistent FastAPI RAG server (loads model once into RAM)
+    start_rag_api()
+    print("[RAG API] Waiting for RAG server to load model into RAM (may take ~30s)...")
+    if not wait_for_rag_api(timeout=120):
+        print("[WARN] RAG API did not become ready in time — continuing anyway.")
+        print("       RAG-based classification will fall back to empty matches.")
+    else:
+        print("[RAG API] ✅ RAG server is ready!")
 
     run_server()

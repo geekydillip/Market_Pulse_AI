@@ -306,15 +306,20 @@ def clean_excel(file_path):
         header_row_idx = -1
         
         # Search for header row
+        is_content_based = False
         for idx, row in df.iterrows():
             row_vals = [str(val).lower().strip() for val in row.values if pd.notna(val)]
             row_str = ' | '.join(row_vals)
             if 'title' in row_str and 'problem' in row_str:
                 header_row_idx = idx
                 break
+            elif 'content' in row_str:
+                header_row_idx = idx
+                is_content_based = True
+                break
                 
         if header_row_idx == -1:
-            print("[excel_cleaner] ERROR: Could not locate header row containing Title and Problem.")
+            print("[excel_cleaner] ERROR: Could not locate header row containing Title and Problem (or Content).")
             sys.exit(1)
             
         print(f"[excel_cleaner] Header found at row {header_row_idx}")
@@ -325,9 +330,12 @@ def clean_excel(file_path):
         # Clean current headers for flexible matching
         current_headers = [str(c).lower().strip() for c in df.columns]
         
-        # Only Title and Problem are required for cleaning.
+        # Only Title and Problem are required for cleaning (or Content).
         # All other columns are treated as optional and passed through unchanged.
-        REQUIRED_HEADERS = ['title', 'problem']
+        if is_content_based:
+            REQUIRED_HEADERS = ['content']
+        else:
+            REQUIRED_HEADERS = ['title', 'problem']
 
         missing_headers = [h for h in REQUIRED_HEADERS if h not in current_headers]
 
@@ -340,6 +348,7 @@ def clean_excel(file_path):
         # Find exact column names (case-insensitive match)
         title_col = next((c for c in df.columns if str(c).lower().strip() == 'title'), None)
         problem_col = next((c for c in df.columns if str(c).lower().strip() == 'problem'), None)
+        content_col = next((c for c in df.columns if str(c).lower().strip() == 'content'), None)
         
         # Apply cleaning
         if title_col:
@@ -367,6 +376,10 @@ def clean_excel(file_path):
             # Additional rule: no blank text in problem
             # Just fill missing with ''
             df[problem_col] = df[problem_col].fillna('')
+            
+        if content_col:
+            df[content_col] = df[content_col].apply(clean_problem)
+            df[content_col] = df[content_col].fillna('')
             
         # Overwrite file with cleaned data
         output_path = file_path.replace('.xlsx', '_cleaned.xlsx').replace('.xls', '_cleaned.xls')
