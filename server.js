@@ -32,13 +32,14 @@ function estimateTokens(text) {
 
 // Security constants
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
-const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.csv'];
+const ALLOWED_FILE_TYPES = ['.xlsx', '.xls', '.csv', '.json'];
 const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel',
   'text/csv',
   'application/csv',
-  'text/plain'
+  'text/plain',
+  'application/json'
 ];
 
 // Input validation middleware
@@ -333,9 +334,13 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
 
     // Validate processing type
-    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut', 'beta_ut_voc']; // Supported processing types for Excel files
+    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut', 'beta_ut_voc', 'update_kb']; // Supported processing types for Excel files
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "employee_ut", "global_voc_plm", "beta_ut", "beta_ut_voc", "samsung_members_voc", or "clean".' });
+      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "employee_ut", "global_voc_plm", "beta_ut", "beta_ut_voc", "samsung_members_voc", "clean", or "update_kb".' });
+    }
+
+    if (processingType === 'update_kb') {
+      return processUpdateKB(req, res);
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();
@@ -344,7 +349,7 @@ app.post('/api/process', upload.single('file'), validateFileUpload, async (req, 
       // Excel and CSV files - both convert to JSON internally and output Excel
       return processExcel(req, res);
     } else {
-      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls) and CSV (.csv) files are supported' });
+      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls) and CSV (.csv) files are supported for this type' });
     }
 
   } catch (error) {
@@ -2438,6 +2443,102 @@ app.get('/api/module-details', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// Function to update Knowledge Base
+async function processUpdateKB(req, res) {
+  try {
+    const file = req.file;
+    const kbDir = path.join(__dirname, 'RAG_Data', 'knowledge_base');
+    
+    // Ensure kb directory exists
+    if (!fs.existsSync(kbDir)) {
+      fs.mkdirSync(kbDir, { recursive: true });
+    }
+    
+    // Copy the uploaded file to knowledge_base folder
+    const targetPath = path.join(kbDir, file.safeFilename || file.originalname);
+    fs.copyFileSync(file.path, targetPath);
+    
+    // Clean up uploaded file
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+    
+    const { spawn } = require('child_process');
+    
+    // Spawn python to build vector DB
+    const pythonProcess = spawn('python', [path.join(__dirname, 'RAG_Data', 'build_vector.py')]);
+    
+    let pythonOutput = '';
+    let pythonError = '';
+    
+    pythonProcess.stdout.on('data', (data) => {
+      pythonOutput += data.toString();
+      console.log(`[build_vector] ${data.toString().trim()}`);
+    });
+    
+    pythonProcess.stderr.on('data', (data) => {
+      pythonError += data.toString();
+      console.error(`[build_vector ERROR] ${data.toString().trim()}`);
+    });
+    
+    pythonProcess.on('close', async (code) => {
+      if (code === 0) {
+        // Trigger RAG API reload
+        try {
+          const reloadRes = await fetch('http://127.0.0.1:8000/reload', {
+            method: 'POST'
+          });
+          const reloadData = await reloadRes.json();
+          console.log('[RAG API RELOAD]', reloadData);
+          
+          let summary = { added: 0, duplicates: 0, total: 0 };
+          const summaryMatch = pythonOutput.match(/___SUMMARY___({.*})/);
+          if (summaryMatch) {
+            try {
+              summary = JSON.parse(summaryMatch[1]);
+            } catch (e) {}
+          }
+          
+          res.json({ 
+            success: true, 
+            message: 'Knowledge base updated and RAG API reloaded.', 
+            output: pythonOutput, 
+            downloads: [],
+            isUpdateKB: true,
+            summary: summary
+          });
+        } catch (fetchErr) {
+          console.error('Failed to call RAG API reload:', fetchErr);
+          
+          let summary = { added: 0, duplicates: 0, total: 0 };
+          const summaryMatch = pythonOutput.match(/___SUMMARY___({.*})/);
+          if (summaryMatch) {
+            try {
+              summary = JSON.parse(summaryMatch[1]);
+            } catch (e) {}
+          }
+          
+          res.json({ 
+            success: true, 
+            message: 'Knowledge base updated but failed to signal RAG API. Please restart server.', 
+            output: pythonOutput, 
+            warning: fetchErr.message, 
+            downloads: [],
+            isUpdateKB: true,
+            summary: summary
+          });
+        }
+      } else {
+        res.status(500).json({ success: false, error: `build_vector.py failed with code ${code}`, details: pythonError });
+      }
+    });
+
+  } catch (error) {
+    console.error('Update KB error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
 
 // Start server
 app.listen(PORT, () => {
