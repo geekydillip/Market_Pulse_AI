@@ -1,0 +1,3161 @@
+{
+  "last_updated": "2026-03-18T12:55:55.320583",
+  "version": "1.0",
+  "data_hash": "7652e77c93ea1e26f6116b9a55d3a267e800f46701098fd7e7126537d011a560",
+  "kpis": {
+    "Beta UT": {
+      "total": 458,
+      "High": 62,
+      "Medium": 381,
+      "Low": 15,
+      "open": 162,
+      "close": 2472,
+      "resolved": 296
+    },
+    "EMPLOYEE UT": {
+      "total": 176,
+      "High": 71,
+      "Medium": 105,
+      "Low": 0,
+      "open": 0,
+      "close": 1641,
+      "resolved": 176
+    },
+    "Global VOC PLM": {
+      "total": 1337,
+      "High": 220,
+      "Medium": 1082,
+      "Low": 35,
+      "open": 623,
+      "close": 0,
+      "resolved": 714
+    }
+  },
+  "status_kpis": {
+    "open": 785,
+    "close": 4113,
+    "resolved": 1186
+  },
+  "total_issues": 1971,
+  "high_issues_count": 353,
+  "top_modules": [
+    {
+      "label": "Display",
+      "value": 339
+    },
+    {
+      "label": "Settings",
+      "value": 329
+    },
+    {
+      "label": "System",
+      "value": 208
+    },
+    {
+      "label": "Network",
+      "value": 169
+    },
+    {
+      "label": "Camera",
+      "value": 168
+    },
+    {
+      "label": "Battery",
+      "value": 111
+    },
+    {
+      "label": "Touch",
+      "value": 82
+    },
+    {
+      "label": "Lock Screen",
+      "value": 69
+    },
+    {
+      "label": "Audio",
+      "value": 53
+    },
+    {
+      "label": "Call",
+      "value": 34
+    }
+  ],
+  "top_models": [
+    {
+      "label": "[Global VOC]SWA_Error_Report",
+      "value": 1347
+    },
+    {
+      "label": "S25 Ultra",
+      "value": 301
+    },
+    {
+      "label": "S25",
+      "value": 89
+    },
+    {
+      "label": "S25+",
+      "value": 46
+    },
+    {
+      "label": "S26",
+      "value": 25
+    },
+    {
+      "label": "S26+",
+      "value": 23
+    },
+    {
+      "label": "[3rd Party]3rd Party App Issue Management",
+      "value": 21
+    },
+    {
+      "label": "A57",
+      "value": 18
+    },
+    {
+      "label": "159)Calendar Reminder V12.7.06 Reminder",
+      "value": 15
+    },
+    {
+      "label": "S26 Ultra",
+      "value": 14
+    }
+  ],
+  "high_issues": [
+    {
+      "Model Number": "M3_SM-S948U",
+      "Case Code": "P251202-08065",
+      "Module Name": "Settings",
+      "Title": "IPService application crashed",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "M3_SM-S948U",
+      "Case Code": "P251202-08065",
+      "Module Name": "Settings",
+      "Title": "IPService application crashed",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S938B",
+      "Case Code": "P251224-09279",
+      "Module Name": "Settings",
+      "Title": "When favorites contact tab is clicked, the app crashes",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S938B",
+      "Case Code": "P251229-03649",
+      "Module Name": "Settings",
+      "Title": "GameHub crashes immediately",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S931B",
+      "Case Code": "P260102-07816",
+      "Module Name": "Settings",
+      "Title": "Phone app crashes",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S931B",
+      "Case Code": "P260107-04438",
+      "Module Name": "Settings",
+      "Title": "Device is not google play certified anymore unable to use any work apps",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S938B",
+      "Case Code": "P260107-04484",
+      "Module Name": "Settings",
+      "Title": "Banking app SBI REWARDZ isn't opening",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S938B",
+      "Case Code": "P260115-07797",
+      "Module Name": "Settings",
+      "Title": "Device became unresponsive after opening S Memo",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "159)Calendar Reminder V12.7.06 Reminder",
+      "Case Code": "P251229-06572",
+      "Module Name": "Settings",
+      "Title": "Reminder force close occurs everytime we switch to power saving mode in search page of reminder",
+      "Processor": "Beta"
+    },
+    {
+      "Model Number": "SM-S721U_NA_B4_VZW",
+      "Case Code": "P251226-03915",
+      "Module Name": "Settings",
+      "Title": "IMEI writing fail with CSC data error",
+      "Processor": "Beta"
+    }
+  ],
+  "model_module_matrix": {
+    "models": [
+      "[Global VOC]SWA_Error_Report",
+      "S25 Ultra",
+      "S25",
+      "S25+",
+      "S26",
+      "S26+",
+      "[3rd Party]3rd Party App Issue Management",
+      "A57",
+      "159)Calendar Reminder V12.7.06 Reminder",
+      "S26 Ultra"
+    ],
+    "modules": [
+      "Display",
+      "Settings",
+      "System",
+      "Network",
+      "Camera",
+      "Battery",
+      "Touch",
+      "Lock Screen",
+      "Audio",
+      "Call"
+    ],
+    "matrix": [
+      [
+        256,
+        159,
+        195,
+        153,
+        132,
+        83,
+        82,
+        17,
+        49,
+        6
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "source_model_summary": [
+    {
+      "source": "Beta UT",
+      "model": "SM-S938B",
+      "top_modules": [
+        "Settings",
+        "Lock Screen",
+        "Display",
+        "Call",
+        "Battery"
+      ],
+      "issue_count": 245,
+      "top_titles": [
+        "P251223-08063 : Dark mode appears to be grey at some places",
+        "P251229-03304 : Youtube notification is not blurred",
+        "P251223-08150 : Only one sim is seen on the home screen",
+        "P251224-09356 : Unable to make calls after update",
+        "P251231-06223 : Battery Icon Only Visible on White Notification Backgrounds"
+      ]
+    },
+    {
+      "source": "Beta UT",
+      "model": "SM-S931B",
+      "top_modules": [
+        "Lock Screen",
+        "Display",
+        "Settings",
+        "Phone",
+        "Camera"
+      ],
+      "issue_count": 77,
+      "top_titles": [
+        "P260115-07952 : Lockscreen not enabled after notification received",
+        "P260102-07829 : Notification background have shade inconsistency",
+        "P260102-07816 : Phone app crashes",
+        "P251229-03634 : Phone app keeps stopping",
+        "P260130-10060 : Camera shows inverted preview in Pro Mode"
+      ]
+    },
+    {
+      "source": "Beta UT",
+      "model": "[3rd Party]3rd Party App Issue Management",
+      "top_modules": [
+        "App",
+        "Settings",
+        "Payment",
+        "Display",
+        "Apps"
+      ],
+      "issue_count": 21,
+      "top_titles": [
+        "P251226-06568 : App is stuck at one screen after loading",
+        "P251230-05193 : Menu is not opening in pop-up view after selecting search bar in landscape mode",
+        "P251230-04607 : BHIM UPI payment app / Cant register",
+        "P251230-04600 : Game Screen layout is not correct",
+        "P251230-04572 : Navigation bar blinking when we scroll Paytm app and open feature then press back"
+      ]
+    },
+    {
+      "source": "Beta UT",
+      "model": "SM-S936B",
+      "top_modules": [
+        "Settings",
+        "Lock Screen",
+        "Performance",
+        "App",
+        "Launcher"
+      ],
+      "issue_count": 18,
+      "top_titles": [
+        "P251223-07636 : Phone title is missing when seen from recent tab",
+        "P260127-08198 : Clock and widget moved at the bottom of screen",
+        "P260115-07779 : Device working slow after update",
+        "P260116-10122 : App restore not working",
+        "P260120-05532 : Launcher crashes when trying to add work profile outlook calendar widget on home screen"
+      ]
+    },
+    {
+      "source": "Beta UT",
+      "model": "159)Calendar Reminder V12.7.06 Reminder",
+      "top_modules": [
+        "Settings",
+        "Telephony",
+        "Notifications"
+      ],
+      "issue_count": 15,
+      "top_titles": [
+        "P251230-08287 : Category selection option is coming if there are no categories in Manage Category, and unable to select categories",
+        "P251230-08287 : Category selection option is coming if there are no categories in Manage Category, and unable to select categories",
+        "P251223-06895 : Screenshot captured sound when Snooze button tapped on reminder pop-up"
+      ]
+    },
+    {
+      "source": "EMPLOYEE UT",
+      "model": "SM-S938BE_SWA_B4_DD",
+      "top_modules": [
+        "Settings",
+        "Display",
+        "System",
+        "Call",
+        "Lock Screen"
+      ],
+      "issue_count": 56,
+      "top_titles": [
+        "P260113-04694 : Wallpaper and style application crashed",
+        "P251230-02121 : Screen flickers in multi window mode",
+        "P260116-02037 : Reset detected",
+        "P260119-02052 : Call app ui not uniform as per oneui",
+        "P260116-03331 : lockscreen dump - timeout of app resume"
+      ]
+    },
+    {
+      "source": "EMPLOYEE UT",
+      "model": "SM-S936BE_SWA_B4_DD",
+      "top_modules": [
+        "Camera",
+        "Settings",
+        "Display",
+        "Battery",
+        "System"
+      ],
+      "issue_count": 28,
+      "top_titles": [
+        "P251203-02542 : Camera failed. Application crashed",
+        "P260119-02040 : Wallpaperandstyle application crashed",
+        "P260107-04725 : screenshot gets cropped when capturing the screen in lock screen",
+        "P260114-04573 : GooglePlayservices abused",
+        "P260116-02036 : Reset detected"
+      ]
+    },
+    {
+      "source": "EMPLOYEE UT",
+      "model": "SM-S942BE_SWA_DD",
+      "top_modules": [
+        "Settings",
+        "Display",
+        "Search",
+        "Network",
+        "Camera"
+      ],
+      "issue_count": 25,
+      "top_titles": [
+        "P260119-00943 : Bixby not opening",
+        "P260119-01946 : Google Discover (Home -1) page, swipe in landscape sluggish",
+        "P260116-03019 : Unrelated search results appearing in My Files",
+        "P260115-06258 : Smart Switch Connection Lost during Transfer",
+        "P251226-03045 : Gallery application crashed"
+      ]
+    },
+    {
+      "source": "EMPLOYEE UT",
+      "model": "SM-S947BE_SWA_DD",
+      "top_modules": [
+        "Settings",
+        "Call",
+        "Storage",
+        "Profile",
+        "Camera"
+      ],
+      "issue_count": 23,
+      "top_titles": [
+        "P260119-01077 : SamsungCloud application crashed",
+        "P260108-03709 : Delayed Call POP UP for SPAM calls",
+        "P260120-02205 : My Files app showing incorrect storage usage",
+        "P260119-02391 : Suggested images not displaying in profile card",
+        "P260116-03407 : Camera Switching the flash icon and timer from quick setting, it gets overlaps for some time"
+      ]
+    },
+    {
+      "source": "EMPLOYEE UT",
+      "model": "SM-A576BE_SWA_INS",
+      "top_modules": [
+        "Settings",
+        "Camera",
+        "Call",
+        "Network",
+        "Connectivity"
+      ],
+      "issue_count": 18,
+      "top_titles": [
+        "P260117-05821 : Umang app not working",
+        "P260117-05853 : Google Lens image scan ROI box overlapping in split screen",
+        "P260117-05851 : Call is disconnecting frequently",
+        "P260116-00460 : Mobile data not working",
+        "P251222-00557 : Unable to connect Watch 4 to device"
+      ]
+    },
+    {
+      "source": "Global VOC PLM",
+      "model": "[Global VOC]SWA_Error_Report",
+      "top_modules": [
+        "Display",
+        "System",
+        "Settings",
+        "Network",
+        "Camera"
+      ],
+      "issue_count": 1337,
+      "top_titles": [
+        "P210106-02635 : Screen turns black",
+        "P210122-03925 : Basic app anomaly",
+        "P211229-05432 : Call recording option is not shown in call settings",
+        "P210125-02157 : SIM card not recognized",
+        "P210208-03250 : Images are getting blur while capturing from rear camera"
+      ]
+    }
+  ],
+  "filtered_top_models": {
+    "beta_ut": [
+      {
+        "label": "S25 Ultra",
+        "value": 245
+      },
+      {
+        "label": "S25",
+        "value": 77
+      },
+      {
+        "label": "[3rd Party]3rd Party App Issue Management",
+        "value": 21
+      },
+      {
+        "label": "S25+",
+        "value": 18
+      },
+      {
+        "label": "159)Calendar Reminder V12.7.06 Reminder",
+        "value": 15
+      },
+      {
+        "label": "[Global VOC]SWA_Error_Report",
+        "value": 10
+      },
+      {
+        "label": "S24 FE",
+        "value": 9
+      },
+      {
+        "label": "M3_SM-S948U",
+        "value": 6
+      },
+      {
+        "label": "Q7_SM-F966B",
+        "value": 6
+      },
+      {
+        "label": "S24",
+        "value": 5
+      }
+    ],
+    "global_voc_plm": [
+      {
+        "label": "[Global VOC]SWA_Error_Report",
+        "value": 1337
+      }
+    ],
+    "samsung_members_voc": [
+      {
+        "label": "S25 Ultra",
+        "value": 273
+      },
+      {
+        "label": "S25",
+        "value": 85
+      },
+      {
+        "label": "S25+",
+        "value": 4
+      },
+      {
+        "label": "A35 5G",
+        "value": 4
+      },
+      {
+        "label": "A55 5G",
+        "value": 3
+      },
+      {
+        "label": "S24 Ultra",
+        "value": 3
+      },
+      {
+        "label": "F36 5G (Alt Variant)",
+        "value": 3
+      },
+      {
+        "label": "M52 5G",
+        "value": 2
+      },
+      {
+        "label": "SM-E225F",
+        "value": 2
+      },
+      {
+        "label": "S23",
+        "value": 2
+      }
+    ]
+  },
+  "filtered_top_modules": {
+    "beta_ut": [
+      {
+        "label": "Settings",
+        "value": 82
+      },
+      {
+        "label": "Display",
+        "value": 56
+      },
+      {
+        "label": "Lock Screen",
+        "value": 50
+      },
+      {
+        "label": "Battery",
+        "value": 23
+      },
+      {
+        "label": "Camera",
+        "value": 23
+      },
+      {
+        "label": "Call",
+        "value": 19
+      },
+      {
+        "label": "Network",
+        "value": 14
+      },
+      {
+        "label": "Phone",
+        "value": 11
+      },
+      {
+        "label": "Gallery",
+        "value": 11
+      },
+      {
+        "label": "Notification",
+        "value": 10
+      }
+    ],
+    "global_voc_plm": [
+      {
+        "label": "Display",
+        "value": 255
+      },
+      {
+        "label": "System",
+        "value": 195
+      },
+      {
+        "label": "Settings",
+        "value": 158
+      },
+      {
+        "label": "Network",
+        "value": 152
+      },
+      {
+        "label": "Camera",
+        "value": 131
+      },
+      {
+        "label": "Battery",
+        "value": 83
+      },
+      {
+        "label": "Touch",
+        "value": 82
+      },
+      {
+        "label": "Audio",
+        "value": 47
+      },
+      {
+        "label": "Lock screen",
+        "value": 25
+      },
+      {
+        "label": "Wearable",
+        "value": 21
+      }
+    ],
+    "samsung_members_voc": [
+      {
+        "label": "Camera",
+        "value": 62
+      },
+      {
+        "label": "System",
+        "value": 55
+      },
+      {
+        "label": "Connectivity",
+        "value": 36
+      },
+      {
+        "label": "Settings",
+        "value": 29
+      },
+      {
+        "label": "Battery",
+        "value": 27
+      },
+      {
+        "label": "Lock Screen",
+        "value": 25
+      },
+      {
+        "label": "Display",
+        "value": 18
+      },
+      {
+        "label": "Network",
+        "value": 18
+      },
+      {
+        "label": "Now Bar",
+        "value": 16
+      },
+      {
+        "label": "Security",
+        "value": 16
+      }
+    ]
+  },
+  "total_unique_models": 125,
+  "total_unique_modules": 220,
+  "employee_ut_top_models": [
+    {
+      "label": "S26 Ultra",
+      "count": 569,
+      "friendly_name": "S26 Ultra"
+    },
+    {
+      "label": "S25 Ultra",
+      "count": 475,
+      "friendly_name": "S25 Ultra"
+    },
+    {
+      "label": "S25+",
+      "count": 276,
+      "friendly_name": "S25+"
+    },
+    {
+      "label": "A57",
+      "count": 243,
+      "friendly_name": "A57"
+    },
+    {
+      "label": "S26+",
+      "count": 175,
+      "friendly_name": "S26+"
+    },
+    {
+      "label": "S25",
+      "count": 171,
+      "friendly_name": "S25"
+    },
+    {
+      "label": "S26",
+      "count": 134,
+      "friendly_name": "S26"
+    }
+  ],
+  "employee_ut_top_modules": [
+    {
+      "label": "Settings",
+      "count": 772
+    },
+    {
+      "label": "Network",
+      "count": 396
+    },
+    {
+      "label": "Battery",
+      "count": 162
+    },
+    {
+      "label": "Display",
+      "count": 145
+    },
+    {
+      "label": "Camera",
+      "count": 129
+    },
+    {
+      "label": "System",
+      "count": 99
+    },
+    {
+      "label": "Call",
+      "count": 58
+    },
+    {
+      "label": "Lock Screen",
+      "count": 54
+    },
+    {
+      "label": "Audio",
+      "count": 19
+    },
+    {
+      "label": "Connectivity",
+      "count": 18
+    },
+    {
+      "label": "App",
+      "count": 13
+    },
+    {
+      "label": "Notification",
+      "count": 12
+    },
+    {
+      "label": "System UI",
+      "count": 10
+    },
+    {
+      "label": "Keyboard",
+      "count": 9
+    },
+    {
+      "label": "Now bar",
+      "count": 7
+    },
+    {
+      "label": "Creative Studio",
+      "count": 6
+    },
+    {
+      "label": "Navigation",
+      "count": 6
+    },
+    {
+      "label": "Payment",
+      "count": 6
+    },
+    {
+      "label": "Health",
+      "count": 6
+    },
+    {
+      "label": "Messages",
+      "count": 6
+    },
+    {
+      "label": "Video Playback",
+      "count": 5
+    },
+    {
+      "label": "Now Bar",
+      "count": 5
+    },
+    {
+      "label": "Storage",
+      "count": 5
+    },
+    {
+      "label": "UI/UX",
+      "count": 5
+    },
+    {
+      "label": "Game",
+      "count": 5
+    },
+    {
+      "label": "Gallery",
+      "count": 4
+    },
+    {
+      "label": "Communication",
+      "count": 4
+    },
+    {
+      "label": "Messaging",
+      "count": 3
+    },
+    {
+      "label": "Notifications",
+      "count": 3
+    },
+    {
+      "label": "Home Screen",
+      "count": 3
+    },
+    {
+      "label": "Widget",
+      "count": 3
+    },
+    {
+      "label": "Search",
+      "count": 3
+    },
+    {
+      "label": "Security",
+      "count": 3
+    },
+    {
+      "label": "My Files",
+      "count": 2
+    },
+    {
+      "label": "App Store",
+      "count": 2
+    },
+    {
+      "label": "Sensor",
+      "count": 2
+    },
+    {
+      "label": "Bluetooth",
+      "count": 2
+    },
+    {
+      "label": "Bixby",
+      "count": 2
+    },
+    {
+      "label": "Video Call",
+      "count": 2
+    },
+    {
+      "label": "Contacts",
+      "count": 2
+    },
+    {
+      "label": "Smart Switch",
+      "count": 2
+    },
+    {
+      "label": "Email",
+      "count": 2
+    },
+    {
+      "label": "Home",
+      "count": 2
+    },
+    {
+      "label": "Clock",
+      "count": 2
+    },
+    {
+      "label": "Performance",
+      "count": 2
+    },
+    {
+      "label": "Phone",
+      "count": 2
+    },
+    {
+      "label": "Browser",
+      "count": 1
+    },
+    {
+      "label": "Data Transfer",
+      "count": 1
+    },
+    {
+      "label": "Calculator",
+      "count": 1
+    },
+    {
+      "label": "Application",
+      "count": 1
+    },
+    {
+      "label": "Playback",
+      "count": 1
+    },
+    {
+      "label": "Weather",
+      "count": 1
+    },
+    {
+      "label": "News",
+      "count": 1
+    },
+    {
+      "label": "Store",
+      "count": 1
+    },
+    {
+      "label": "Wallpaper",
+      "count": 1
+    },
+    {
+      "label": "Call Logs",
+      "count": 1
+    },
+    {
+      "label": "Dialer",
+      "count": 1
+    },
+    {
+      "label": "File Management",
+      "count": 1
+    },
+    {
+      "label": "Profile",
+      "count": 1
+    },
+    {
+      "label": "Files",
+      "count": 1
+    },
+    {
+      "label": "Call Screening",
+      "count": 1
+    },
+    {
+      "label": "Translation",
+      "count": 1
+    },
+    {
+      "label": "Volume Control",
+      "count": 1
+    },
+    {
+      "label": "App Installation",
+      "count": 1
+    },
+    {
+      "label": "Maps",
+      "count": 1
+    },
+    {
+      "label": "Now Brief",
+      "count": 1
+    },
+    {
+      "label": "Media",
+      "count": 1
+    },
+    {
+      "label": "Video Player",
+      "count": 1
+    },
+    {
+      "label": "Media Playback",
+      "count": 1
+    },
+    {
+      "label": "Editing",
+      "count": 1
+    },
+    {
+      "label": "Sleep",
+      "count": 1
+    },
+    {
+      "label": "Location",
+      "count": 1
+    },
+    {
+      "label": "Chat",
+      "count": 1
+    },
+    {
+      "label": "Call Screen",
+      "count": 1
+    },
+    {
+      "label": "Wearable",
+      "count": 1
+    },
+    {
+      "label": "Drawing",
+      "count": 1
+    },
+    {
+      "label": "Editor",
+      "count": 1
+    },
+    {
+      "label": "Heat",
+      "count": 1
+    },
+    {
+      "label": "Stopwatch",
+      "count": 1
+    }
+  ],
+  "employee_ut_top_titles_CaseCode": [
+    "P260119-00996 : YouTube application crashed",
+    "P260115-06258 : Smart Switch Connection Lost during Transfer",
+    "P260119-07220 : RoyalEnfield",
+    "P260119-02373 : Different Text color appear on Clock widget",
+    "P260117-05713 : Grok Imagine Tag Sluggish Issue",
+    "P260113-01805 : Reset detected",
+    "P260116-00467 : unable to receive call",
+    "P260119-05678 : One UI Home",
+    "P260117-05701 : No ringtone heard and no voice coming when call was connected",
+    "P260119-02104 : Bluetooth buds not showing for music share",
+    "P260117-05778 : M&S India app no response",
+    "P260117-05699 : Downloader flickering in Notification panel",
+    "P260107-03575 : System UI Empty space showing not quick panel tiles",
+    "P260120-02357 : Samsung Keyboard - Keyboard engine otp suggestion not working sometimes",
+    "P251126-10198 : Text overlapping in Now Brief",
+    "P251202-08192 : Creative Studio crash after image generation",
+    "P251229-03921 : Navigation bar blinking when scrolling and pressing back in Paytm app",
+    "P251223-09646 : Payzapp stuck at payment processing",
+    "P260116-07773 : health data sharing screen display is not proper",
+    "P260119-00923 : red dot from chat setting not disappering",
+    "P260107-01721 : Playing Shorts video stuck when switch to full screen after playing content in PIP in You Tube",
+    "P260117-04348 : Now Brief Reminder is showing blank after clicking on it",
+    "P260120-02188 : ExternalStorage Application not responding",
+    "P251127-02878 : Delete button display is not correct",
+    "P260109-08909 : BGMI game frames are stuttering and causing eye fatigue and headache",
+    "P251111-05260 : Gallery create share delete and more options are disabled when selecting an image or video",
+    "P260109-05070 : Android Auto / images not recieved on whatsapp while connected to android auto on group chat",
+    "P251121-06497 : Message app crashing on scrolling search results",
+    "P251103-09552 : Messages / 2 icons displaying in quick panel for 2 message notifications",
+    "P251212-02815 : One UI Home Widget text overlapping",
+    "P260109-08634 : AI generated image not applied in countdown widget",
+    "P260116-03019 : Unrelated search results appearing in My Files",
+    "P260106-05377 : Apps are not getting hide in secure folder",
+    "P260120-02193 : Non existing files still showing in recent activity in myfiles",
+    "P251113-06088 : NPS Application not available",
+    "P251217-05981 : Sensor Logging Application crashed",
+    "P260116-07445 : Not able to Setup Buds 3 in Bluetooth Settings",
+    "P251208-05375 : white screen comes in popup view",
+    "P251107-08090 : WhatsApp video call turned into half black screen",
+    "P251219-03941 : Contacts screen overlap while scroll in ringtone picker",
+    "P260109-08629 : Smart Switch Unable to transfer data from iPhone",
+    "P251218-03618 : Email application crashed",
+    "P251226-05885 : Semantic search wrong result",
+    "P251119-05268 : Clock two alarm clock notification for 6 am",
+    "P260108-06510 : device feels sluggish",
+    "P260107-03970 : Call still rining after accept the call",
+    "P260119-01140 : Browser Address Bar Long Press Popup Cutting From the left on Popup View",
+    "P260115-06251 : Smart Switch Data Transfer",
+    "P251219-03815 : Operator symbol not displaying in dark mode in calculator",
+    "P251230-03162 : YouTube application crashed",
+    "P260102-07825 : JioHotstar playing content gets paused when switching to PIP mode",
+    "P260105-06697 : Weather application crashed",
+    "P260106-01564 : Samsung News shows webpage not available when opening news",
+    "P260102-07888 : Google Play Store says device not certified in playstore",
+    "P260116-02092 : Wallpaper force close in multiwindow with landscape rotation",
+    "P260107-02072 : Contact name displaying in call logs after removing contact",
+    "P260109-08698 : Phone dialer memory off spec",
+    "P260114-03799 : Unnecessary duplicates files creating when open any file under Studio folder in My files",
+    "P260119-02391 : Suggested images not displaying in profile card",
+    "P260112-05614 : My Files / Search Not Searching Inside PDF File",
+    "P260107-04086 : Hindi language selected but English text sent to Hindi TTS",
+    "P260107-04093 : Chat Translate wrongs translation is showing and losing context awareness",
+    "P251231-05943 : Two different Volume icon displays while playing video",
+    "P251104-04725 : Not able to install any app from play store",
+    "P251107-08089 : Google maps stops responding in screen-in mode",
+    "P251105-01611 : Wrong Information in Now Brief",
+    "P251107-08093 : video streaming stops playing in picture in picture mode in jio hotstar",
+    "P251110-01804 : App crashed on tapping on stickers option on video player",
+    "P251112-02170 : Netflix PIP issue",
+    "P251128-04779 : Force Close When Changing Playback Speed During Video Editing",
+    "P251215-06984 : Incorrect sleep nap detected in Samsung Health",
+    "P251205-07602 : Map My India app stop updating current location when run in background",
+    "P251205-07580 : Chat screen is not showing in Uber",
+    "P251209-09796 : Record time icon not showing in call screen while recording",
+    "P251126-09396 : Unable to add Galaxy Watch 4 via Wearable App as it is not responding after TnC screen",
+    "P251118-09411 : Drawing not visible in creative studio after hit back and cancel",
+    "P251126-06644 : Editor options not displaying while selecting long text in Gmail",
+    "P251114-08950 : Device temperature seems high using Android Auto",
+    "P260119-02727 : Lap option not displaying in stopwatch in landscape view"
+  ],
+  "global_voc_plm_top_models": [
+    {
+      "label": "[Global VOC]SWA_Error_Report",
+      "count": 1337,
+      "friendly_name": "[Global VOC]SWA_Error_Report"
+    }
+  ],
+  "global_voc_plm_top_modules": [
+    {
+      "label": "Display",
+      "count": 255
+    },
+    {
+      "label": "System",
+      "count": 195
+    },
+    {
+      "label": "Settings",
+      "count": 158
+    },
+    {
+      "label": "Network",
+      "count": 152
+    },
+    {
+      "label": "Camera",
+      "count": 131
+    },
+    {
+      "label": "Battery",
+      "count": 83
+    },
+    {
+      "label": "Touch",
+      "count": 82
+    },
+    {
+      "label": "Audio",
+      "count": 47
+    },
+    {
+      "label": "Lock screen",
+      "count": 25
+    },
+    {
+      "label": "Wearable",
+      "count": 21
+    },
+    {
+      "label": "Security",
+      "count": 19
+    },
+    {
+      "label": "Biometrics",
+      "count": 17
+    },
+    {
+      "label": "Lock Screen",
+      "count": 17
+    },
+    {
+      "label": "Heat",
+      "count": 16
+    },
+    {
+      "label": "Sound",
+      "count": 11
+    },
+    {
+      "label": "Connectivity",
+      "count": 11
+    },
+    {
+      "label": "Gallery",
+      "count": 8
+    },
+    {
+      "label": "Notification",
+      "count": 7
+    },
+    {
+      "label": "Homescreen",
+      "count": 7
+    },
+    {
+      "label": "Power",
+      "count": 6
+    },
+    {
+      "label": "Call",
+      "count": 6
+    },
+    {
+      "label": "Wallpaper",
+      "count": 5
+    },
+    {
+      "label": "Notes",
+      "count": 4
+    },
+    {
+      "label": "Notification Panel",
+      "count": 4
+    },
+    {
+      "label": "Wallet",
+      "count": 4
+    },
+    {
+      "label": "Product",
+      "count": 4
+    },
+    {
+      "label": "Clock",
+      "count": 3
+    },
+    {
+      "label": "Game",
+      "count": 3
+    },
+    {
+      "label": "Weather",
+      "count": 3
+    },
+    {
+      "label": "Performance",
+      "count": 3
+    },
+    {
+      "label": "Input",
+      "count": 3
+    },
+    {
+      "label": "Media",
+      "count": 2
+    },
+    {
+      "label": "UI/UX",
+      "count": 2
+    },
+    {
+      "label": "Keyboard",
+      "count": 2
+    },
+    {
+      "label": "Communication",
+      "count": 2
+    },
+    {
+      "label": "Location",
+      "count": 2
+    },
+    {
+      "label": "Storage",
+      "count": 2
+    },
+    {
+      "label": "Phone",
+      "count": 2
+    },
+    {
+      "label": "Health",
+      "count": 2
+    },
+    {
+      "label": "Physical Structure",
+      "count": 1
+    },
+    {
+      "label": "Quality Control",
+      "count": 1
+    },
+    {
+      "label": "Accessory",
+      "count": 1
+    },
+    {
+      "label": "Widget",
+      "count": 1
+    },
+    {
+      "label": "Boot",
+      "count": 1
+    },
+    {
+      "label": "Power Management",
+      "count": 1
+    },
+    {
+      "label": "Quick Panel",
+      "count": 1
+    },
+    {
+      "label": "Contact",
+      "count": 1
+    },
+    {
+      "label": "Torch",
+      "count": 1
+    },
+    {
+      "label": "3rd party app",
+      "count": 1
+    },
+    {
+      "label": "Messaging",
+      "count": 1
+    }
+  ],
+  "global_voc_plm_top_titles_CaseCode": [
+    "P210106-02635 : Screen turns black",
+    "P210122-03925 : Basic app anomaly",
+    "P211229-05432 : Call recording option is not shown in call settings",
+    "P210125-02157 : SIM card not recognized",
+    "P210208-03250 : Images are getting blur while capturing from rear camera",
+    "P210126-04971 : Handset auto charging shows charging logo then boots normally",
+    "P210129-00761 : Cannot turn on power",
+    "P210208-01461 : Receiver sound keeps playing",
+    "P250702-05063 : Lag in lock screen animation observed.",
+    "P240403-02192 : Watch rear cover sensor is getting imprinted on wrist",
+    "P250113-07206 : Fingerprint sensor unable to register",
+    "P220420-02601 : Fingerprint sensor not working",
+    "P250320-08093 : Unable to Configure Screen Password",
+    "P210708-03578 : Device maximum temperature reached to 53'C within 10-15 mins of usage",
+    "P210312-03877 : Speaker volume automatically go low while playing a video on YouTube",
+    "P210305-06430 : Device not connecting via USB",
+    "P250523-05632 : On performing remaster, the picture becomes very dull",
+    "P250707-07821 : Bluetooth connected icon not shown in notification panel.",
+    "P251027-07802 : Google voice typing option showing on homescreen",
+    "P250507-03998 : Device automatically turns off when playing songs on YouTube",
+    "P250506-04429 : Instead of default call background, solid blue background comes up",
+    "P250922-05687 : Clock not adjusting as per the set wallpaper.",
+    "P250813-07706 : Record the voice using BLUETOOTH MIC option Missing in samsung notes",
+    "P250225-04261 : Unable to access mobile data icon from notification panel intermittently",
+    "P251215-09698 : Unable to activate UPI Lite in Samsung Wallet.",
+    "P211011-03372 : Rear case not fixed properly",
+    "P260128-04696 : Unable to see am/pm in time display under 12 hours format",
+    "P251028-08388 : Game open in mini window mode",
+    "P250630-07031 : Weather app showing updated time, 30mins ahead of current time.",
+    "P250617-06176 : Device is getting hang or sluggish during normal usage",
+    "P250822-00550 : Letter getting doble like hhello whenever typing with samsung keyboard",
+    "P260312-08959 : Unable to play Go Pro video in device",
+    "P260305-01488 : Many jitters and micro stutters in the animations across the UI",
+    "P260226-08981 : Ai features are not working in keyboard",
+    "P251219-07555 : Whatsapp Call of Device B not going on Hold",
+    "P251202-03664 : Documentación y datos de dispositivo/aplicación (Tkt 00337153)",
+    "P251229-04520 : USB storage not showing any files",
+    "P251003-03625 : Voicemail call history is not showing calllogs while ON-Device Voicemail feature is on",
+    "P251124-09362 : Samsung Health auto-pause workout tracking is not working properly",
+    "P220516-02200 : Right Side Handle Joint Detached Automatically",
+    "P210820-01840 : MLC Test is getting failed",
+    "P230918-04835 : FOLD 5 SLIM S PEN CASE - Color fading issue",
+    "P250927-03171 : Widgets on lock screen chenges its color automatically.",
+    "P250923-05627 : Hang on Samsung Logo",
+    "P250722-06776 : Phone auto off while insert any sim card",
+    "P251027-09045 : Microphone icon appears after closing an application",
+    "P251215-05913 : Contact app widget editing options not working",
+    "P260202-07788 : Torch Icon UI Glitch – Incorrect Brightness Behavior in Lockscreen",
+    "P260206-04963 : Unable to open secure Folder's WhatsApp business on homescreen",
+    "P260218-01869 : unable to send photo in samsung message app cause MMS is not working."
+  ],
+  "beta_ut_top_models": [
+    {
+      "label": "S25 Ultra",
+      "count": 1121,
+      "friendly_name": "S25 Ultra"
+    },
+    {
+      "label": "S25",
+      "count": 388,
+      "friendly_name": "S25"
+    },
+    {
+      "label": "03)Bixby 4.0 Server for Mobile",
+      "count": 230,
+      "friendly_name": "03)Bixby 4.0 Server for Mobile"
+    },
+    {
+      "label": "M3_SM-S948U",
+      "count": 131,
+      "friendly_name": "M3_SM-S948U"
+    },
+    {
+      "label": "SM-X936B_EUR_B4_XX",
+      "count": 103,
+      "friendly_name": "SM-X936B_EUR_B4_XX"
+    },
+    {
+      "label": "S25",
+      "count": 101,
+      "friendly_name": "S25"
+    },
+    {
+      "label": "S25+",
+      "count": 100,
+      "friendly_name": "S25+"
+    },
+    {
+      "label": "S24",
+      "count": 69,
+      "friendly_name": "S24"
+    },
+    {
+      "label": "Z Fold5",
+      "count": 68,
+      "friendly_name": "SM-F946U_NA_B4_VZW"
+    },
+    {
+      "label": "Z Flip5",
+      "count": 56,
+      "friendly_name": "SM-F731U_NA_B4_VZW"
+    },
+    {
+      "label": "M33 5G",
+      "count": 50,
+      "friendly_name": "M33 5G"
+    },
+    {
+      "label": "[3rd Party]3rd Party App Issue Management",
+      "count": 47,
+      "friendly_name": "[3rd Party]3rd Party App Issue Management"
+    },
+    {
+      "label": "A57",
+      "count": 45,
+      "friendly_name": "A57"
+    },
+    {
+      "label": "S26",
+      "count": 45,
+      "friendly_name": "S26"
+    },
+    {
+      "label": "S24 Ultra",
+      "count": 42,
+      "friendly_name": "SM-S928U_NA_B4_VZW"
+    },
+    {
+      "label": "SM-M076B_SWA_INS",
+      "count": 32,
+      "friendly_name": "SM-M076B_SWA_INS"
+    },
+    {
+      "label": "Z Fold7",
+      "count": 30,
+      "friendly_name": "Z Fold7"
+    },
+    {
+      "label": "[Global VOC]SWA_Error_Report_Old",
+      "count": 24,
+      "friendly_name": "[Global VOC]SWA_Error_Report_Old"
+    },
+    {
+      "label": "Z Fold4",
+      "count": 22,
+      "friendly_name": "SM-F936U_NA_B4_VZW"
+    },
+    {
+      "label": "[3rd Party]Once FC/ANR issue",
+      "count": 21,
+      "friendly_name": "[3rd Party]Once FC/ANR issue"
+    },
+    {
+      "label": "159)Calendar Reminder V12.7.06 Reminder",
+      "count": 20,
+      "friendly_name": "159)Calendar Reminder V12.7.06 Reminder"
+    },
+    {
+      "label": "S24 FE",
+      "count": 13,
+      "friendly_name": "SM-S721U_NA_B4_VZW"
+    },
+    {
+      "label": "Z Flip7 FE",
+      "count": 12,
+      "friendly_name": "Z Flip7 FE"
+    },
+    {
+      "label": "[Global VOC]SWA_Error_Report",
+      "count": 12,
+      "friendly_name": "[Global VOC]SWA_Error_Report"
+    },
+    {
+      "label": "S23 FE",
+      "count": 11,
+      "friendly_name": "SM-S711U_NA_B4_VZW"
+    },
+    {
+      "label": "S24 Ultra",
+      "count": 11,
+      "friendly_name": "S24 Ultra"
+    },
+    {
+      "label": "S25 Ultra",
+      "count": 10,
+      "friendly_name": "S25 Ultra"
+    },
+    {
+      "label": "126)SWA Localization Apps [SRI-N] GalaxyWidget v4.0.02.x",
+      "count": 10,
+      "friendly_name": "126)SWA Localization Apps [SRI-N] GalaxyWidget v4.0.02.x"
+    },
+    {
+      "label": "SM-A376U_NA_CHA",
+      "count": 9,
+      "friendly_name": "SM-A376U_NA_CHA"
+    },
+    {
+      "label": "Q7_SM-F966B",
+      "count": 8,
+      "friendly_name": "Q7_SM-F966B"
+    },
+    {
+      "label": "SM-E076B_SWA_INS",
+      "count": 8,
+      "friendly_name": "SM-E076B_SWA_INS"
+    },
+    {
+      "label": "[MR]SM-G556B_SWA_INS",
+      "count": 8,
+      "friendly_name": "[MR]SM-G556B_SWA_INS"
+    },
+    {
+      "label": "SM-X828U_NA_B4_VZW",
+      "count": 7,
+      "friendly_name": "SM-X828U_NA_B4_VZW"
+    },
+    {
+      "label": "S23 Ultra",
+      "count": 7,
+      "friendly_name": "SM-S918U_NA_B4_VZW"
+    },
+    {
+      "label": "A36 5G",
+      "count": 7,
+      "friendly_name": "A36 5G"
+    },
+    {
+      "label": "SM-A376U_NA_CCT",
+      "count": 7,
+      "friendly_name": "SM-A376U_NA_CCT"
+    },
+    {
+      "label": "S23 FE",
+      "count": 7,
+      "friendly_name": "S23 FE"
+    },
+    {
+      "label": "A57",
+      "count": 7,
+      "friendly_name": "SM-A576W_NA_XAC"
+    },
+    {
+      "label": "A17 5G",
+      "count": 7,
+      "friendly_name": "A17 5G"
+    },
+    {
+      "label": "221)Clock V12.5.50",
+      "count": 6,
+      "friendly_name": "221)Clock V12.5.50"
+    },
+    {
+      "label": "SM-A376E_SWA_INS",
+      "count": 6,
+      "friendly_name": "SM-A376E_SWA_INS"
+    },
+    {
+      "label": "SM-A376U_NA_AIO",
+      "count": 6,
+      "friendly_name": "SM-A376U_NA_AIO"
+    },
+    {
+      "label": "166)Samsung Pass V2.99(V5.2.07.X)",
+      "count": 5,
+      "friendly_name": "166)Samsung Pass V2.99(V5.2.07.X)"
+    },
+    {
+      "label": "S24",
+      "count": 5,
+      "friendly_name": "SM-S921U_NA_B4_VZW"
+    },
+    {
+      "label": "147)Messages V5.0 SEP_17_BOS_8.5_Appup",
+      "count": 4,
+      "friendly_name": "147)Messages V5.0 SEP_17_BOS_8.5_Appup"
+    },
+    {
+      "label": "Tab S10 Ultra 5G",
+      "count": 4,
+      "friendly_name": "Tab S10 Ultra 5G"
+    },
+    {
+      "label": "122)Samsung Wallet Global V6.4.0X (DE)",
+      "count": 4,
+      "friendly_name": "122)Samsung Wallet Global V6.4.0X (DE)"
+    },
+    {
+      "label": "S24",
+      "count": 4,
+      "friendly_name": "SM-S921U_NA_B4_CCT"
+    },
+    {
+      "label": "A56 5G",
+      "count": 4,
+      "friendly_name": "A56 5G"
+    },
+    {
+      "label": "M06 5G",
+      "count": 4,
+      "friendly_name": "M06 5G"
+    },
+    {
+      "label": "01)Samsung Notes V4.0-4.1",
+      "count": 4,
+      "friendly_name": "01)Samsung Notes V4.0-4.1"
+    },
+    {
+      "label": "S26+",
+      "count": 4,
+      "friendly_name": "S26+"
+    },
+    {
+      "label": "30)Samsung Wallet MINI_IN V5.6.4",
+      "count": 4,
+      "friendly_name": "30)Samsung Wallet MINI_IN V5.6.4"
+    },
+    {
+      "label": "S24 FE",
+      "count": 3,
+      "friendly_name": "S24 FE"
+    },
+    {
+      "label": "04)Email V6.0 MS Outlook",
+      "count": 3,
+      "friendly_name": "04)Email V6.0 MS Outlook"
+    },
+    {
+      "label": "S24+",
+      "count": 3,
+      "friendly_name": "SM-S926U_NA_B4_BST"
+    },
+    {
+      "label": "S25 FE",
+      "count": 2,
+      "friendly_name": "SM-S731U_NA_B4_VZW"
+    },
+    {
+      "label": "S24 FE",
+      "count": 2,
+      "friendly_name": "SM-S721U_NA_B4_CCT"
+    },
+    {
+      "label": "[MR][One UI 8.0]SM-E566B_SWA_16_INS",
+      "count": 2,
+      "friendly_name": "[MR][One UI 8.0]SM-E566B_SWA_16_INS"
+    },
+    {
+      "label": "127)Samsung Wallet Global V6.4.0X (IN)",
+      "count": 2,
+      "friendly_name": "127)Samsung Wallet Global V6.4.0X (IN)"
+    },
+    {
+      "label": "A54 5G",
+      "count": 2,
+      "friendly_name": "SM-A546V_NA_B4_VZW"
+    },
+    {
+      "label": "02)Messages V5.0 SEP 10",
+      "count": 2,
+      "friendly_name": "02)Messages V5.0 SEP 10"
+    },
+    {
+      "label": "SM-X826B_EUR_B4_XX",
+      "count": 2,
+      "friendly_name": "SM-X826B_EUR_B4_XX"
+    },
+    {
+      "label": "M33 5G",
+      "count": 2,
+      "friendly_name": "M33 5G"
+    },
+    {
+      "label": "S24",
+      "count": 2,
+      "friendly_name": "S24"
+    },
+    {
+      "label": "58)My Files V4.15.4.00.x_OneUI8.x Stable",
+      "count": 2,
+      "friendly_name": "58)My Files V4.15.4.00.x_OneUI8.x Stable"
+    },
+    {
+      "label": "SM-F766U_NA_B4_VZW",
+      "count": 2,
+      "friendly_name": "SM-F766U_NA_B4_VZW"
+    },
+    {
+      "label": "219)Galaxy Store Client V4.0 2026 3¿ù ¸®´º¾ó ¾÷µ¥ÀÌÆ®",
+      "count": 2,
+      "friendly_name": "219)Galaxy Store Client V4.0 2026 3¿ù ¸®´º¾ó ¾÷µ¥ÀÌÆ®"
+    },
+    {
+      "label": "M56 5G",
+      "count": 2,
+      "friendly_name": "M56 5G"
+    },
+    {
+      "label": "169)Samsung Wallet Global V6.4.4X (IN)",
+      "count": 2,
+      "friendly_name": "169)Samsung Wallet Global V6.4.4X (IN)"
+    },
+    {
+      "label": "88)Contacts & Phone V3.0 ONEUI8.5",
+      "count": 2,
+      "friendly_name": "88)Contacts & Phone V3.0 ONEUI8.5"
+    },
+    {
+      "label": "[»ç¾÷ÀÚ][SQE] Global Network Issues",
+      "count": 2,
+      "friendly_name": "[»ç¾÷ÀÚ][SQE] Global Network Issues"
+    },
+    {
+      "label": "[MR][One UI 7.0]SM-A236V_NA_15_VZW",
+      "count": 2,
+      "friendly_name": "[MR][One UI 7.0]SM-A236V_NA_15_VZW"
+    },
+    {
+      "label": "15)Auto Blocker 1.3.10.X for One UI 8.5",
+      "count": 2,
+      "friendly_name": "15)Auto Blocker 1.3.10.X for One UI 8.5"
+    },
+    {
+      "label": "A17 5G",
+      "count": 2,
+      "friendly_name": "A17 5G"
+    },
+    {
+      "label": "S25 FE",
+      "count": 2,
+      "friendly_name": "SM-S731U1_NA_B4_XAA"
+    },
+    {
+      "label": "S24 FE",
+      "count": 2,
+      "friendly_name": "SM-S721U_NA_B4_CHA"
+    },
+    {
+      "label": "[App/SVC][2026] Photo editor",
+      "count": 2,
+      "friendly_name": "[App/SVC][2026] Photo editor"
+    },
+    {
+      "label": "64)My Files V4.15.4.05.x_OneUI8.5_STABLE",
+      "count": 2,
+      "friendly_name": "64)My Files V4.15.4.05.x_OneUI8.5_STABLE"
+    },
+    {
+      "label": "S24+",
+      "count": 2,
+      "friendly_name": "SM-S926U_NA_B4_VZW"
+    },
+    {
+      "label": "SM-S376V_NA_TFN",
+      "count": 2,
+      "friendly_name": "SM-S376V_NA_TFN"
+    },
+    {
+      "label": "209)Bixby Language Core Product V1.0 '25_ASR_enIN_4_Mobile",
+      "count": 2,
+      "friendly_name": "209)Bixby Language Core Product V1.0 '25_ASR_enIN_4_Mobile"
+    },
+    {
+      "label": "99)Gallery V6.3 OneUI8.5",
+      "count": 1,
+      "friendly_name": "99)Gallery V6.3 OneUI8.5"
+    },
+    {
+      "label": "434)Photo/Video Editor V2.0_8.0 PE OneUI 8.0(B OS) V1 update(3.7.12)",
+      "count": 1,
+      "friendly_name": "434)Photo/Video Editor V2.0_8.0 PE OneUI 8.0(B OS) V1 update(3.7.12)"
+    },
+    {
+      "label": "S23+",
+      "count": 1,
+      "friendly_name": "S23+"
+    },
+    {
+      "label": "[½ÃÀåÇ°Áú ´ëÀÀ][Voice Recorder]",
+      "count": 1,
+      "friendly_name": "[½ÃÀåÇ°Áú ´ëÀÀ][Voice Recorder]"
+    },
+    {
+      "label": "15)Good Lock OneUI8.X(B OS) VOC",
+      "count": 1,
+      "friendly_name": "15)Good Lock OneUI8.X(B OS) VOC"
+    },
+    {
+      "label": "SM-A376B_EUR_XX",
+      "count": 1,
+      "friendly_name": "SM-A376B_EUR_XX"
+    },
+    {
+      "label": "[+1 SW][One UI 8.5]SM-S948U_+1 SW",
+      "count": 1,
+      "friendly_name": "[+1 SW][One UI 8.5]SM-S948U_+1 SW"
+    },
+    {
+      "label": "B7_SM-F766B",
+      "count": 1,
+      "friendly_name": "B7_SM-F766B"
+    },
+    {
+      "label": "43)Tips v2.0 Tips 8.5.00 One UI 8.x APP UPDATE",
+      "count": 1,
+      "friendly_name": "43)Tips v2.0 Tips 8.5.00 One UI 8.x APP UPDATE"
+    },
+    {
+      "label": "[MR][One UI 8.0][2026 1Q MR] SM-L325U_NA_USA",
+      "count": 1,
+      "friendly_name": "[MR][One UI 8.0][2026 1Q MR] SM-L325U_NA_USA"
+    },
+    {
+      "label": "[MR][One UI 6.1]MI-X300_NA_N11",
+      "count": 1,
+      "friendly_name": "[MR][One UI 6.1]MI-X300_NA_N11"
+    },
+    {
+      "label": "[Á¤±â °³¼±]Calculator",
+      "count": 1,
+      "friendly_name": "[Á¤±â °³¼±]Calculator"
+    },
+    {
+      "label": "445)Knox Configure V1.57 KC Client",
+      "count": 1,
+      "friendly_name": "445)Knox Configure V1.57 KC Client"
+    },
+    {
+      "label": "230)Bixby Language Core Product V1.0 '25_TTS_enIN_2_Mobile_Human-like",
+      "count": 1,
+      "friendly_name": "230)Bixby Language Core Product V1.0 '25_TTS_enIN_2_Mobile_Human-like"
+    },
+    {
+      "label": "[MR][One UI 8.0]SM-A566E_SWA_16_INS",
+      "count": 1,
+      "friendly_name": "[MR][One UI 8.0]SM-A566E_SWA_16_INS"
+    },
+    {
+      "label": "S24 Ultra",
+      "count": 1,
+      "friendly_name": "SM-S928U_NA_B4_CHA"
+    },
+    {
+      "label": "A57",
+      "count": 1,
+      "friendly_name": "A57"
+    },
+    {
+      "label": "149)Calendar Reminder V12.7.05 Calendar",
+      "count": 1,
+      "friendly_name": "149)Calendar Reminder V12.7.05 Calendar"
+    },
+    {
+      "label": "158)Calendar Reminder V12.7.06 Calendar",
+      "count": 1,
+      "friendly_name": "158)Calendar Reminder V12.7.06 Calendar"
+    }
+  ],
+  "beta_ut_top_modules": [
+    {
+      "label": "Settings",
+      "count": 541
+    },
+    {
+      "label": "Camera",
+      "count": 289
+    },
+    {
+      "label": "Display",
+      "count": 222
+    },
+    {
+      "label": "Battery",
+      "count": 200
+    },
+    {
+      "label": "Lock Screen",
+      "count": 175
+    },
+    {
+      "label": "Call",
+      "count": 138
+    },
+    {
+      "label": "Network",
+      "count": 132
+    },
+    {
+      "label": "Connectivity",
+      "count": 82
+    },
+    {
+      "label": "Gallery",
+      "count": 58
+    },
+    {
+      "label": "Bixby",
+      "count": 46
+    },
+    {
+      "label": "Telephony",
+      "count": 39
+    },
+    {
+      "label": "System",
+      "count": 38
+    },
+    {
+      "label": "App",
+      "count": 38
+    },
+    {
+      "label": "Lock",
+      "count": 37
+    },
+    {
+      "label": "Audio",
+      "count": 34
+    },
+    {
+      "label": "Security",
+      "count": 32
+    },
+    {
+      "label": "Notification",
+      "count": 31
+    },
+    {
+      "label": "Multimedia",
+      "count": 31
+    },
+    {
+      "label": "Performance",
+      "count": 30
+    },
+    {
+      "label": "Keyboard",
+      "count": 26
+    },
+    {
+      "label": "Phone",
+      "count": 26
+    },
+    {
+      "label": "Play Store",
+      "count": 21
+    },
+    {
+      "label": "Home",
+      "count": 20
+    },
+    {
+      "label": "Wallet",
+      "count": 19
+    },
+    {
+      "label": "Sound",
+      "count": 19
+    },
+    {
+      "label": "Calendar",
+      "count": 16
+    },
+    {
+      "label": "Contact",
+      "count": 16
+    },
+    {
+      "label": "Notifications",
+      "count": 16
+    },
+    {
+      "label": "Now bar",
+      "count": 15
+    },
+    {
+      "label": "Launcher",
+      "count": 14
+    },
+    {
+      "label": "Messaging",
+      "count": 14
+    },
+    {
+      "label": "Health",
+      "count": 13
+    },
+    {
+      "label": "Downloads",
+      "count": 12
+    },
+    {
+      "label": "Navigation",
+      "count": 12
+    },
+    {
+      "label": "Widget",
+      "count": 11
+    },
+    {
+      "label": "Quick Panel",
+      "count": 10
+    },
+    {
+      "label": "Editor",
+      "count": 10
+    },
+    {
+      "label": "Secure Folder",
+      "count": 9
+    },
+    {
+      "label": "Bluetooth",
+      "count": 9
+    },
+    {
+      "label": "Notes",
+      "count": 9
+    },
+    {
+      "label": "Payment",
+      "count": 9
+    },
+    {
+      "label": "Voice Assistant",
+      "count": 8
+    },
+    {
+      "label": "Application",
+      "count": 8
+    },
+    {
+      "label": "Contacts",
+      "count": 8
+    },
+    {
+      "label": "Storage",
+      "count": 8
+    },
+    {
+      "label": "Quick panel",
+      "count": 8
+    },
+    {
+      "label": "Apps",
+      "count": 7
+    },
+    {
+      "label": "Voice Recorder",
+      "count": 7
+    },
+    {
+      "label": "Homescreen",
+      "count": 7
+    },
+    {
+      "label": "Photo Editor",
+      "count": 7
+    },
+    {
+      "label": "Touch",
+      "count": 7
+    },
+    {
+      "label": "Weather",
+      "count": 7
+    },
+    {
+      "label": "Files",
+      "count": 7
+    },
+    {
+      "label": "News",
+      "count": 7
+    },
+    {
+      "label": "Dialer",
+      "count": 7
+    },
+    {
+      "label": "Communication",
+      "count": 7
+    },
+    {
+      "label": "Installation",
+      "count": 7
+    },
+    {
+      "label": "Search",
+      "count": 6
+    },
+    {
+      "label": "Power",
+      "count": 6
+    },
+    {
+      "label": "Clock",
+      "count": 6
+    },
+    {
+      "label": "Testing",
+      "count": 6
+    },
+    {
+      "label": "Now Bar",
+      "count": 6
+    },
+    {
+      "label": "Default Setup",
+      "count": 6
+    },
+    {
+      "label": "Wearables",
+      "count": 5
+    },
+    {
+      "label": "Android Auto",
+      "count": 5
+    },
+    {
+      "label": "Browser",
+      "count": 5
+    },
+    {
+      "label": "Device Care",
+      "count": 5
+    },
+    {
+      "label": "Video Playback",
+      "count": 5
+    },
+    {
+      "label": "Wallpaper",
+      "count": 5
+    },
+    {
+      "label": "My files",
+      "count": 5
+    },
+    {
+      "label": "Email",
+      "count": 5
+    },
+    {
+      "label": "Studio",
+      "count": 5
+    },
+    {
+      "label": "Home and Lock",
+      "count": 4
+    },
+    {
+      "label": "Drawing Assist",
+      "count": 4
+    },
+    {
+      "label": "Music",
+      "count": 4
+    },
+    {
+      "label": "Game",
+      "count": 4
+    },
+    {
+      "label": "Sound & Vibration",
+      "count": 4
+    },
+    {
+      "label": "Wearable",
+      "count": 4
+    },
+    {
+      "label": "Power Management",
+      "count": 4
+    },
+    {
+      "label": "S Pen",
+      "count": 4
+    },
+    {
+      "label": "Members",
+      "count": 4
+    },
+    {
+      "label": "Quick panel and noti Fw",
+      "count": 4
+    },
+    {
+      "label": "App Store",
+      "count": 4
+    },
+    {
+      "label": "My Files",
+      "count": 4
+    },
+    {
+      "label": "Message",
+      "count": 3
+    },
+    {
+      "label": "Messages",
+      "count": 3
+    },
+    {
+      "label": "Health Part",
+      "count": 3
+    },
+    {
+      "label": "Playback",
+      "count": 3
+    },
+    {
+      "label": "Calculator",
+      "count": 3
+    },
+    {
+      "label": "Edge",
+      "count": 3
+    },
+    {
+      "label": "S pen and Capture",
+      "count": 3
+    },
+    {
+      "label": "Dex Home",
+      "count": 3
+    },
+    {
+      "label": "File Management",
+      "count": 3
+    },
+    {
+      "label": "UI/UX",
+      "count": 3
+    },
+    {
+      "label": "Media Player",
+      "count": 3
+    },
+    {
+      "label": "S/W Upgrade",
+      "count": 3
+    },
+    {
+      "label": "Smart View",
+      "count": 3
+    },
+    {
+      "label": "Software",
+      "count": 3
+    },
+    {
+      "label": "Reminders",
+      "count": 2
+    },
+    {
+      "label": "Home Screen",
+      "count": 2
+    },
+    {
+      "label": "Control Panel",
+      "count": 2
+    },
+    {
+      "label": "Bank Rewards",
+      "count": 2
+    },
+    {
+      "label": "File Transfer",
+      "count": 2
+    },
+    {
+      "label": "App Updates",
+      "count": 2
+    },
+    {
+      "label": "Game Hub",
+      "count": 2
+    },
+    {
+      "label": "Launchers",
+      "count": 2
+    },
+    {
+      "label": "Call Logs",
+      "count": 2
+    },
+    {
+      "label": "Input Device",
+      "count": 2
+    },
+    {
+      "label": "Galaxy Store",
+      "count": 2
+    },
+    {
+      "label": "Media",
+      "count": 2
+    },
+    {
+      "label": "Clock & Calculator",
+      "count": 2
+    },
+    {
+      "label": "Launch",
+      "count": 2
+    },
+    {
+      "label": "Semantic Core",
+      "count": 2
+    },
+    {
+      "label": "Device Security",
+      "count": 2
+    },
+    {
+      "label": "Messenger",
+      "count": 2
+    },
+    {
+      "label": "IMEI",
+      "count": 2
+    },
+    {
+      "label": "Samsung Wallet",
+      "count": 2
+    },
+    {
+      "label": "Power Saving",
+      "count": 2
+    },
+    {
+      "label": "Printer",
+      "count": 2
+    },
+    {
+      "label": "InCall UI",
+      "count": 2
+    },
+    {
+      "label": "Quick Share",
+      "count": 2
+    },
+    {
+      "label": "Disney Plus",
+      "count": 2
+    },
+    {
+      "label": "Samsung Account",
+      "count": 2
+    },
+    {
+      "label": "Location",
+      "count": 2
+    },
+    {
+      "label": "Desktop",
+      "count": 2
+    },
+    {
+      "label": "Samsung DEX",
+      "count": 2
+    },
+    {
+      "label": "Media Playback",
+      "count": 2
+    },
+    {
+      "label": "Multi window",
+      "count": 2
+    },
+    {
+      "label": "NFC",
+      "count": 2
+    },
+    {
+      "label": "Banking",
+      "count": 2
+    },
+    {
+      "label": "Creative Studio",
+      "count": 1
+    },
+    {
+      "label": "Now Brief",
+      "count": 1
+    },
+    {
+      "label": "Cover Screen",
+      "count": 1
+    },
+    {
+      "label": "Multi-window and Flex mode",
+      "count": 1
+    },
+    {
+      "label": "Amazon App",
+      "count": 1
+    },
+    {
+      "label": "Platform Innovation",
+      "count": 1
+    },
+    {
+      "label": "ACP",
+      "count": 1
+    },
+    {
+      "label": "Video Editor",
+      "count": 1
+    },
+    {
+      "label": "Keypad",
+      "count": 1
+    },
+    {
+      "label": "GalaxyStore",
+      "count": 1
+    },
+    {
+      "label": "S Pen & Capture",
+      "count": 1
+    },
+    {
+      "label": "Features",
+      "count": 1
+    },
+    {
+      "label": "Cloud",
+      "count": 1
+    },
+    {
+      "label": "SmartHome",
+      "count": 1
+    },
+    {
+      "label": "Capture",
+      "count": 1
+    },
+    {
+      "label": "DEX Home",
+      "count": 1
+    },
+    {
+      "label": "System UI",
+      "count": 1
+    },
+    {
+      "label": "Samsung Keyboard",
+      "count": 1
+    },
+    {
+      "label": "Samsung Internet",
+      "count": 1
+    },
+    {
+      "label": "Samsung News",
+      "count": 1
+    },
+    {
+      "label": "Device Management",
+      "count": 1
+    },
+    {
+      "label": "S Finder",
+      "count": 1
+    },
+    {
+      "label": "AI Core",
+      "count": 1
+    },
+    {
+      "label": "DEX",
+      "count": 1
+    },
+    {
+      "label": "Clipboard",
+      "count": 1
+    },
+    {
+      "label": "AI Assistant",
+      "count": 1
+    },
+    {
+      "label": "Accessibility",
+      "count": 1
+    },
+    {
+      "label": "Smart Suggestion",
+      "count": 1
+    },
+    {
+      "label": "Applications",
+      "count": 1
+    },
+    {
+      "label": "Autofill",
+      "count": 1
+    },
+    {
+      "label": "Call History",
+      "count": 1
+    },
+    {
+      "label": "Social Media",
+      "count": 1
+    },
+    {
+      "label": "Taskbar",
+      "count": 1
+    },
+    {
+      "label": "Internet",
+      "count": 1
+    },
+    {
+      "label": "Update",
+      "count": 1
+    },
+    {
+      "label": "Boot",
+      "count": 1
+    },
+    {
+      "label": "App Launch",
+      "count": 1
+    },
+    {
+      "label": "Recent",
+      "count": 1
+    },
+    {
+      "label": "Now",
+      "count": 1
+    },
+    {
+      "label": "Banking App",
+      "count": 1
+    },
+    {
+      "label": "Login",
+      "count": 1
+    },
+    {
+      "label": "Video",
+      "count": 1
+    },
+    {
+      "label": "Bank",
+      "count": 1
+    },
+    {
+      "label": "Wallpaper & Services",
+      "count": 1
+    },
+    {
+      "label": "Input",
+      "count": 1
+    },
+    {
+      "label": "Note",
+      "count": 1
+    },
+    {
+      "label": "AI",
+      "count": 1
+    },
+    {
+      "label": "Voice Input",
+      "count": 1
+    },
+    {
+      "label": "Navigation Bar",
+      "count": 1
+    },
+    {
+      "label": "Status Bar",
+      "count": 1
+    },
+    {
+      "label": "Multi-Window",
+      "count": 1
+    },
+    {
+      "label": "Widgets",
+      "count": 1
+    },
+    {
+      "label": "Watch",
+      "count": 1
+    },
+    {
+      "label": "App Installation",
+      "count": 1
+    },
+    {
+      "label": "SmartThings",
+      "count": 1
+    },
+    {
+      "label": "S Health",
+      "count": 1
+    },
+    {
+      "label": "Voice",
+      "count": 1
+    },
+    {
+      "label": "AI Generator",
+      "count": 1
+    },
+    {
+      "label": "Heating",
+      "count": 1
+    }
+  ],
+  "beta_ut_top_titles_CaseCode": [
+    "P251128-05433 : Unable to turn off Dark mode from quick panel when High Contrast theme is applied",
+    "P251202-08777 : Camera failed. Application crashed",
+    "P251128-05794 : In Now Brief Text is not visible in Data usage when theme is applied",
+    "P251126-06412 : Creativestudio abused",
+    "P251205-02501 : Clock editing menu is not visible",
+    "P251223-07691 : Call vibration sync with ringtone is not working",
+    "P251202-08196 : Network",
+    "P260108-05483 : Switching audio between laptop and mobile is not seamless",
+    "P251223-07840 : Gallery app predictive back animation stutters",
+    "P251231-05917 : Provide two different schedules for same date and question",
+    "P251205-07391 : Unable to make a call",
+    "P251229-03723 : Play system updates temporarily unavailable",
+    "P251229-03422 : Samsung News app not working properly",
+    "P251231-06749 : Clock position is shown wrong in preview",
+    "P251224-09253 : Bixby not working with Buds 3 pro",
+    "P251223-07515 : The Play Protect certification seems to be lost after upgrading to One UI 8.5 BETA",
+    "P251223-08086 : Quick Panel Notification content hides while expanding the notification",
+    "P251230-08336 : Collage image not coming after end story",
+    "P251224-09247 : Delay observed in launching the app",
+    "P251229-03652 : Number row does not appear after enabling \"Number key\" in setting",
+    "P251223-04483 : Phone app crashes when tap on contact cards",
+    "P251224-07888 : GooglePlayStore Application crashed",
+    "P251231-05499 : CP Crash observed during overnight aging",
+    "P251229-03725 : Samsung wallet app crash frequently",
+    "P260105-06753 : No audio coming via connected earbuds",
+    "P260129-06066 : The font in the calendar widget is too small",
+    "P251231-04993 : Flickering occurs when selecting contacts from group",
+    "P251229-03715 : Phone app notifications shows with different background than other apps",
+    "P251205-04612 : Now brief News article not opening",
+    "P251229-03321 : No gradient effect found in app launcher",
+    "P251229-03329 : Samsung Message app running at older version",
+    "P251224-09358 : Step counter not updating in S Health app",
+    "P251224-06826 : AndroidSystemIntelligence application crashed",
+    "P251229-03572 : Navigation Bar Cannot use touch gesture to swipe from one app to another",
+    "P251229-03562 : The routine widget palet color looks diluted and looks gray",
+    "P260112-09226 : Quick panel icons disappears",
+    "P260112-09250 : Photo editor freezes when you are trying to save picture",
+    "P251224-09342 : Private albums option removed after update causing data loss",
+    "P260105-08156 : Device keeps connecting to bluetooth device when select speaker mode",
+    "P251231-05140 : Notes application not available after FOTA",
+    "P251230-07769 : App is not working and gives error pop-up",
+    "P251231-06997 : didn't give the exact process",
+    "P251231-06962 : PianoHopLite application crashed",
+    "P251229-03737 : Double tap on a fav contact, results in application crash",
+    "P251223-07607 : Duplicated files are shown in My Files",
+    "P251230-06143 : Smart View screen is not opening when Nearby devices screen is already opened",
+    "P251231-06977 : OMC app not as per home and app layout",
+    "P251229-06973 : Search categories 'Yesterday, Interviews, Other recordings' are not working in Voice Recorder",
+    "P260204-07903 : Unable to rotate homescreen when home up enabled",
+    "P251224-09268 : Unable to find the best face icon",
+    "P251224-09257 : Accidental touch protection not working properly",
+    "P251224-09335 : Lag and animation lag observed while switching between saved locations in weather app",
+    "P251224-09315 : Duplicate files are seen in My Files",
+    "P260102-07856 : Samsung News app is not working",
+    "P251229-03713 : After call disconnects, dialer keeps running for 1-3 seconds",
+    "P251226-06327 : Text 'Lower hand' appears cropped during WhatsApp video call",
+    "P251229-03819 : Packageinstaller application crashed",
+    "P251230-08078 : Says didn't find any web series on screen",
+    "P251231-05122 : Sleep current over discharging during AOD",
+    "P251229-03677 : Clock app haptic feedback is not available",
+    "P251230-08533 : Deep comparison test fail",
+    "P260209-07034 : Google Sports does not appear as an option in the Live Notifications list",
+    "P251231-05142 : Keep screen on while viewing not working in Default Setup",
+    "P260203-05088 : Running coach infinite loading screen during running",
+    "P251224-09286 : Android Auto fails to load maps on the car screen",
+    "P260119-08203 : Sluggish observed during chrome app usage",
+    "P251224-09288 : Photos getting auto deleted in optimise now",
+    "P260112-08407 : Video showing only black screen",
+    "P251231-06749 : Clock position is shown wrong in preview after FOTA.",
+    "P251229-05847 : My file force close occur in the device",
+    "P251230-06137 : Copy icon overlaps meeting info text in portrait mode in Email app",
+    "P251231-05970 : Edit and delete option overlap with play icon.",
+    "P251229-06709 : Blur effect not applied completely in Home screen preview when set no thumbnail live wallpaper as home & lock screen wallpaper",
+    "P251231-06742 : Force close occurs while generating contents in Drawing assist icon.",
+    "P251229-03671 : Music play on 3x-5x playback speed when play from widget",
+    "P260108-06018 : Free Fire is now locked at 60 FPS after 8.5 update",
+    "P251229-03548 : Recent apps & brightness vibration feedback missing",
+    "P260115-07906 : Google wallet is not working on Samsung Galaxy watch 7 and 8",
+    "P251229-05895 : Booting image and power off vibration is different from last confirmed OS",
+    "P250624-03957 : S Pen to test option not working",
+    "P251229-03686 : People category missing in collections",
+    "P251231-05970 : Edit and delete option overlap with play icon",
+    "P260128-07689 : two application continuously showing for update in Galaxy app store which is already updated through play store",
+    "P251231-04776 : My Files settings pop-up appears blank when selecting content",
+    "P251230-05182 : Message keeps stopping pop-up occurs in message search page in DEX mode",
+    "P251230-05628 : Scroll up air view not available in message app to scroll the thread",
+    "P251230-07678 : Not able to connect any watch and buds with this device",
+    "P260119-08273 : Sluggish observed during video play in VLC browser",
+    "P260107-04318 : Loss of glow effect while pressing the number",
+    "P251204-09716 : Edge Panel is disappearing for around 5 minutes after every reboot",
+    "P251224-04829 : Add to samsung wallet capsule is not coming for membership card",
+    "P251231-05467 : Recent screen not showing app icons in Dex Home Mirrored Mode",
+    "P251231-06132 : SD card option is not visible in Edit home menu after inserting SD Card",
+    "P251231-06977 : OMC app is not as per home & app layout document",
+    "P260127-06601 : The closing animation for the media player is very laggy",
+    "P251231-04635 : FUS&VAB PIT Compare result is fail after upgrade",
+    "P251231-06885 : Can't connect pop up not appearing in phone, when permission is denied on TV.",
+    "P251231-06548 : CSC Diff as compared to A076B (AYL8)",
+    "P251223-04651 : CRASH_com.samsung.android.app.reminder",
+    "P250721-05169 : Application icons occasionally fail to render, displaying as blank spaces",
+    "P260109-10383 : Wifi toggle button on control panel takes time to get highlighted",
+    "P251229-03734 : Bank rewards not opening and throwing error",
+    "P260105-00602 : Quick Share File transfer status shows failed, but transfer is in progress on another device",
+    "P260116-10077 : New version of Bgmi 4.2 update not showing",
+    "P260112-08424 : Games section didn't show any games",
+    "P260105-08205 : Terminal app installed automatically & crash when open",
+    "P251229-03712 : All Recordings keep scrolling automatic till it reaches to your selected call log",
+    "P260107-04426 : S Pen is always being detected as \"inserted\" even when it's not inside the phone",
+    "P251231-04675 : Galaxy Store crashes",
+    "P251231-05204 : Mediapicker WM task background CPU overload",
+    "P251224-07494 : Reset and resume displaying in stopwach and notification panel and now bar displaying Cancel and resume",
+    "P251226-06689 : Not able to use application, stuck on splash screen",
+    "P251226-03372 : SamsungSemanticCore application crashed",
+    "P251231-04771 : Appprotection crashes",
+    "P251231-04502 : White layer appears on screen during FB Messenger video call",
+    "P251230-08798 : CSC Feature difference with A076B",
+    "P251230-08619 : Company ID card is not appearing on cover screen after PIN verification",
+    "P260119-08623 : Adaptive power saving doesn't work",
+    "P260128-07674 : I Print app of Brother Printer not working",
+    "P251230-06327 : Call button grid overlaps during call in multi-window mode",
+    "P251230-06183 : Receiving UI not proper while receiving story content via Quick Share",
+    "P251230-07365 : Disney Plus crashes during ACT script",
+    "P251230-06801 : UI not proper in Samsung account settings",
+    "P260212-07849 : Applications are unable to access precise location",
+    "P251223-08920 : Taskbar recent app icons getting enlarged and flickers when opening wallpaper and style screen in desktop view",
+    "P251223-07799 : Unable to Exit samsung dex by using Bixby voice command",
+    "P251229-06588 : Playing content get paused when switch to PIP mode while playing any content in JioHotstar",
+    "P250625-07452 : Multi window While using Instagram and you tube app glitch for a sec",
+    "P250626-01357 : NFC is not working",
+    "P251230-04546 : icici banking app not working",
+    "P251202-08192 : Creative studio crash after image generation",
+    "P251203-09261 : Now Brief Options not visible while turn On/Off youtube insights",
+    "P251230-08619 : Company ID card is not appearing on cover screen after PIN verification",
+    "P251230-06359 : Multi-Window Split view Mode selected images get deselected when switching to IMO app",
+    "P251230-07533 : Unable to configure Amazon Pay UPI in Amazon app",
+    "P251231-04794 : Network mode is not getting restored to 5G after Turn off Routine",
+    "P251230-07769 : App is not working and gives error pop-up",
+    "P251231-04703 : 360 video shifts upward when toggling unfolded/folded states in Video Editor",
+    "P251231-05675 : Keypad screen blank after denying call logs permission and opening phone app",
+    "P251231-05817 : GalaxyStore application crashed",
+    "P251231-05133 : AI Select closed toast popup does not appear while selecting home button in S Pen & Capture",
+    "P251231-05221 : Confirm supported and applied Features for SM-A546V_NA_B4_VZW",
+    "P251231-06983 : Phone always force close occur after backup & restore data with Samsung Cloud.",
+    "P251231-05097 : SmartHome Agent E2E is fail for Smart thing find capsule, Bixby unable to process the request",
+    "P251231-05133 : AI Select closed toast popup does not appear while selecting home button",
+    "P251231-05467 : Recent screen is not showing app icons and new app launch is not visible on recent screen",
+    "P251230-05892 : System UI crashes during ACT script",
+    "P251231-03209 : Samsung Keyboard Hindi translate prediction is not correct",
+    "P251230-07908 : Samsung Internet fails to open websites when mobile data is enabled",
+    "P251230-07455 : Samsung News pop-up appears after enabling L1 developer setting",
+    "P251226-07783 : MS COBO1 Profile creation is unsuccessful until device reboot via QR code",
+    "P251226-07940 : S Finder The Play Store and Galaxy Store cards are not appearing",
+    "P251229-03817 : SamsungAICore Application not responding",
+    "P251229-04886 : wireless dex showing connected but no dex reflecting in screen",
+    "P251230-05405 : Copied images not displayed in clipboard",
+    "P251229-06662 : Talk to Gemini hands-free",
+    "P251229-06547 : Image and screen descriptions function not working",
+    "P251223-08877 : Personal data intelligence isn't responding",
+    "P251223-08881 : KnoxTeams / Application not responding",
+    "P251223-08880 : Save login info. pop-up of Samsung Pass is not coming when we login in amazonaws.com /quora.com website",
+    "P251224-08092 : All and Delete buttons flicker on the Call history selection screen",
+    "P251229-04394 : Instagram unnecessary black space in story",
+    "P251226-06593 : Taskbar not appearing and screen blinking observed when turn on/off taskbar",
+    "P251224-09151 : Exception observed in Samsung Internet after overnight automation",
+    "P251229-03723 : Play system updates temporarily unavailable",
+    "P251223-06170 : Booting image not same between devices",
+    "P251223-07042 : Something went wrong when tapping on Pinterest after downloading from Test banner",
+    "P251223-08823 : flickering occur when open recent in app opened state",
+    "P251223-08325 : Now brief does not load",
+    "P250613-07961 : The HDFC Bank app is automatically closing",
+    "P250613-07322 : Unable to login to IRCTC app",
+    "P251223-08874 : VideoPlayer / Application not responding",
+    "P251229-03734 : Bank rewards not opening and throwing error",
+    "P250618-01046 : Color palette is not getting updated upon change of wallpaper",
+    "P251223-04978 : Blank space observe when tap on enter text",
+    "P250703-05335 : S-Pen menu clashes, and unable to write in that block",
+    "P250627-05949 : Galaxy AI object remover is not working",
+    "P250710-07035 : Voice input functionality is not working in Gemini",
+    "P250715-01582 : Navigation Bar Display flickers & mic and keyboard icon display",
+    "P250801-05285 : Status Bar Elements does not adjust its color accordingly",
+    "P250702-07160 : Blank space while opening instagram in multi window",
+    "P250805-01500 : Unable to add 4th contact in widget",
+    "P250807-02379 : Incoming Call not showing on watch",
+    "P250903-06668 : Unable to install any app from Play store",
+    "P250812-05153 : SmartThings is lagging and the remote is totally unresponsive",
+    "P250915-00429 : Snoaring detection is not happening",
+    "P260218-02370 : Wake up phrase is not working",
+    "P260225-09520 : While trying to generate 3d cartoon only blazer is generating",
+    "P251223-07656 : Device heating was observed"
+  ],
+  "samsung_members_voc_top_models": [
+    {
+      "label": "S25 Ultra",
+      "count": 273,
+      "friendly_name": "S25 Ultra"
+    },
+    {
+      "label": "S25",
+      "count": 85,
+      "friendly_name": "S25"
+    },
+    {
+      "label": "S25+",
+      "count": 4,
+      "friendly_name": "S25+"
+    },
+    {
+      "label": "A35 5G",
+      "count": 4,
+      "friendly_name": "A35 5G"
+    },
+    {
+      "label": "A55 5G",
+      "count": 3,
+      "friendly_name": "A55 5G"
+    },
+    {
+      "label": "S24 Ultra",
+      "count": 3,
+      "friendly_name": "S24 Ultra"
+    },
+    {
+      "label": "F36 5G (Alt Variant)",
+      "count": 3,
+      "friendly_name": "F36 5G (Alt Variant)"
+    },
+    {
+      "label": "M52 5G",
+      "count": 2,
+      "friendly_name": "M52 5G"
+    },
+    {
+      "label": "SM-E225F",
+      "count": 2,
+      "friendly_name": "SM-E225F"
+    },
+    {
+      "label": "S23",
+      "count": 2,
+      "friendly_name": "S23"
+    },
+    {
+      "label": "A56 5G",
+      "count": 2,
+      "friendly_name": "A56 5G"
+    },
+    {
+      "label": "S23 Ultra",
+      "count": 2,
+      "friendly_name": "S23 Ultra"
+    },
+    {
+      "label": "F15 5G",
+      "count": 2,
+      "friendly_name": "F15 5G"
+    },
+    {
+      "label": "A36 5G",
+      "count": 1,
+      "friendly_name": "A36 5G"
+    },
+    {
+      "label": "M35 5G",
+      "count": 1,
+      "friendly_name": "M35 5G"
+    },
+    {
+      "label": "S24",
+      "count": 1,
+      "friendly_name": "S24"
+    },
+    {
+      "label": "M34 5G",
+      "count": 1,
+      "friendly_name": "M34 5G"
+    },
+    {
+      "label": "A17 5G",
+      "count": 1,
+      "friendly_name": "A17 5G"
+    },
+    {
+      "label": "SM-A217F",
+      "count": 1,
+      "friendly_name": "SM-A217F"
+    },
+    {
+      "label": "A16 5G",
+      "count": 1,
+      "friendly_name": "A16 5G"
+    },
+    {
+      "label": "SM-M025F",
+      "count": 1,
+      "friendly_name": "SM-M025F"
+    }
+  ],
+  "samsung_members_voc_top_modules": [
+    {
+      "label": "Camera",
+      "count": 62
+    },
+    {
+      "label": "System",
+      "count": 55
+    },
+    {
+      "label": "Connectivity",
+      "count": 36
+    },
+    {
+      "label": "Settings",
+      "count": 29
+    },
+    {
+      "label": "Battery",
+      "count": 27
+    },
+    {
+      "label": "Lock Screen",
+      "count": 25
+    },
+    {
+      "label": "Display",
+      "count": 18
+    },
+    {
+      "label": "Network",
+      "count": 18
+    },
+    {
+      "label": "Now Bar",
+      "count": 16
+    },
+    {
+      "label": "Security",
+      "count": 16
+    },
+    {
+      "label": "UI/UX",
+      "count": 16
+    },
+    {
+      "label": "Messaging",
+      "count": 13
+    },
+    {
+      "label": "Heating",
+      "count": 11
+    },
+    {
+      "label": "Audio",
+      "count": 9
+    },
+    {
+      "label": "Performance",
+      "count": 6
+    },
+    {
+      "label": "UI",
+      "count": 5
+    },
+    {
+      "label": "Media",
+      "count": 4
+    },
+    {
+      "label": "User Trial",
+      "count": 4
+    },
+    {
+      "label": "Communication",
+      "count": 3
+    },
+    {
+      "label": "Home and Lock",
+      "count": 2
+    },
+    {
+      "label": "Notification",
+      "count": 2
+    },
+    {
+      "label": "Support",
+      "count": 2
+    },
+    {
+      "label": "AI",
+      "count": 2
+    },
+    {
+      "label": "Health",
+      "count": 1
+    },
+    {
+      "label": "Payment",
+      "count": 1
+    },
+    {
+      "label": "Voice",
+      "count": 1
+    },
+    {
+      "label": "Charging",
+      "count": 1
+    },
+    {
+      "label": "Call",
+      "count": 1
+    },
+    {
+      "label": "Application",
+      "count": 1
+    },
+    {
+      "label": "Home",
+      "count": 1
+    },
+    {
+      "label": "Lock",
+      "count": 1
+    }
+  ],
+  "samsung_members_voc_top_titles_CaseCode": []
+}
