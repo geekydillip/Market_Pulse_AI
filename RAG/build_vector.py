@@ -7,9 +7,8 @@ from sentence_transformers import SentenceTransformer
 
 # ==============================
 # CONFIG
-# ==============================
-KNOWLEDGE_BASE_FOLDER = "RAG_implementation-main/knowledge_base"
-VECTOR_DB_FOLDER = "RAG_implementation-main/vector_db"
+KNOWLEDGE_BASE_FOLDER = "RAG_Data/knowledge_base"
+VECTOR_DB_FOLDER = "RAG_Data/vector_db"
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 
 os.makedirs(VECTOR_DB_FOLDER, exist_ok=True)
@@ -57,7 +56,7 @@ def load_all_json(folder):
         if f.endswith(".json")
     ]
 
-    print(f"📂 Found {len(files)} JSON files")
+    print(f"Found {len(files)} JSON files")
 
     for file in files:
 
@@ -87,6 +86,8 @@ data = load_all_json(KNOWLEDGE_BASE_FOLDER)
 
 documents = []
 metadata = []
+seen_texts = set()
+duplicates_skipped = 0
 
 # ==============================
 # BUILD DOCUMENTS
@@ -138,6 +139,13 @@ Problem: {problem}
 SubModule: {submodule}
 IssueType: {issue_type}
 """.strip()
+    
+    # Check for duplicates using a simple hash or just the string itself
+    if combined_text in seen_texts:
+        duplicates_skipped += 1
+        continue
+    seen_texts.add(combined_text)
+
     # combined_text = f"{title} {text_body}".strip()
 
     # modified by vandana 12.03.2026
@@ -157,8 +165,17 @@ IssueType: {issue_type}
     "Sub Issue Type": issue_subtype,
     "Severity": severity
 })
-
 print("Total documents:", len(documents))
+
+if len(documents) == 0:
+    print("No documents found. Skipping index creation.")
+    summary = {
+        "added": 0,
+        "duplicates": duplicates_skipped,
+        "total": duplicates_skipped
+    }
+    print(f"___SUMMARY___{json.dumps(summary)}")
+    exit(0)
 
 # ==============================
 # LOAD MODEL
@@ -198,5 +215,12 @@ faiss.write_index(index, INDEX_FILE)
 
 with open(METADATA_FILE, "w", encoding="utf-8") as f:
     json.dump(metadata, f, indent=2)
-
 print("Vector DB created successfully")
+
+# Print summary for node.js to capture
+summary = {
+    "added": len(documents),
+    "duplicates": duplicates_skipped,
+    "total": len(documents) + duplicates_skipped
+}
+print(f"___SUMMARY___{json.dumps(summary)}")

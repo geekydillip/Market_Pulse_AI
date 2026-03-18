@@ -18,8 +18,8 @@ app = FastAPI(title="MarketPulse RAG API", version="1.0.0")
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
-INDEX_FILE = os.path.join(BASE_DIR, "RAG_implementation-main", "vector_db", "index.faiss")
-META_FILE  = os.path.join(BASE_DIR, "RAG_implementation-main", "vector_db", "metadata.json")
+INDEX_FILE = os.path.join(BASE_DIR, "RAG_Data", "vector_db", "index.faiss")
+META_FILE  = os.path.join(BASE_DIR, "RAG_Data", "vector_db", "metadata.json")
 
 TOP_K               = 3
 SIMILARITY_THRESHOLD = 0.60
@@ -95,6 +95,16 @@ def retrieve_batch(req: QueryBatch):
 def health():
     return {"status": "ok", "records": len(_metadata)}
 
+@app.post("/reload")
+def reload_index():
+    global _index, _metadata
+    try:
+        _index = faiss.read_index(INDEX_FILE)
+        with open(META_FILE, "r", encoding="utf-8") as f:
+            _metadata = json.load(f)
+        return {"status": "ok", "message": "Index and metadata reloaded successfully", "records": len(_metadata)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # ─── Direct execution ─────────────────────────────────────────────────────────
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
   - **Samsung Members VOC**: Samsung Member feedback analysis for VOC data
   - **PLM Issues**: Product Lifecycle Management issue processing
   - **Clean**: Generic data cleaning without AI processing
+  - **Update Knowledge Base**: Upload processed data through the portal to rebuild the RAG vector database.
 - **Processing Options**:
   - **VOC Analysis**: Specialized for Voice of Customer data (module identification, severity classification, problem summarization)
   - **Generic Data Cleaning**: Basic data cleansing (trimming, date normalization, number conversion)
@@ -40,6 +41,7 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
   - Chunked processing for large files (adaptive sizing based on file size)
   - Keep-alive HTTP connections for Ollama
   - Automatic file cleanup and validation
+  - **Universal Excel Cleaner**: Automated preprocessing of Excel files applying title and problem field validation across all data processors.
 - **Advanced Analytics & Semantic Matching**:
   - **Centralized Analytics**: Unified data aggregation engine for holistic performance tracking across all data sources
   - **Semantic Matching**: Intelligent cross-referencing between SMVOC and Global VOC data using NLP
@@ -260,11 +262,15 @@ Each dashboard provides:
 
 **Parameters**:
 - `file`: File (required) - Excel or JSON file to process
-- `processingType`: string (required) - 'voc' or 'clean'
+- `processingType`: string (required) - 'voc', 'clean', or 'update_kb'
 - `model`: string (required) - Ollama model to use
 - `sessionId`: string (optional) - Session ID for progress tracking
 
-**Description**: Uploads and processes files using AI, returns processed data and download links.
+**Description**: Uploads and processes files using AI, updates Knowledge Base, returns processed data and download links.
+
+### `FastAPI RAG Endpoints` (Port 8000)
+- `POST /retrieve`: Batch processes semantic search queries against the FAISS index.
+- `POST /reload`: Synchronously reloads the FAISS index and metadata without interrupting the server.
 
 ### `/api/progress/:sessionId` - Progress Stream
 
@@ -511,14 +517,15 @@ Market Pulse AI/
 │   ├── samsung_members_plm/           # Samsung PLM processed data
 │   └── samsung_members_voc/           # Samsung VOC processed data
 ├── uploads/                           # Temporary file storage (auto-cleaned)
-├── RAG_implementation-main/           # RAG system with vector database
-│   ├── build_vector                   # Python script for building vector index
+├── RAG/                               # RAG system with vector database
+│   ├── build_vector.py                # Python script for building vector index
 │   ├── knowledge_base/                # Structured JSON files for semantic search
 │   │   ├── module_guidelines.json     # Module categorization guidelines
 │   │   └── *.json                     # Processed VOC data files
 │   └── vector_db/                     # FAISS vector database
 │       ├── index.faiss                # FAISS vector index file
 │       └── metadata.json              # Document metadata for retrieval
+├── rag_api.py                         # FastAPI persistent RAG backend server
 └── __pycache__/                       # Python cache files
 ```
 
@@ -565,9 +572,11 @@ To ensure data consistency, the system implements a unified **Model Name Mapping
 
 ### RAG Implementation & Vector Database
 The platform includes a sophisticated Retrieval-Augmented Generation (RAG) system for enhanced semantic search and knowledge retrieval:
+- **FastAPI RAG Server**: A persistent backend API (`rag_api.py`) providing fast, batch-processed vector searches, significantly improving performance over per-row checks.
+- **Smart Routing Thresholds**: Dynamic query routing based on semantic similarity. Matches >60% rely entirely on the RAG context bypassing LLM evaluation; <40% are handled by the LLM alone; and scores between 40-60% use a combined RAG+LLM approach.
 - **Vector Database**: FAISS-based vector store for efficient similarity search across processed documents
 - **Embedding Model**: Sentence Transformers (`all-MiniLM-L6-v2`) for generating semantic embeddings
-- **Knowledge Base**: Structured JSON files containing processed VOC data with metadata
+- **Knowledge Base Updating**: Dedicated UI portal for users to upload processed JSON data to enrich the RAG knowledge pool and dynamically reload the FAISS index.
 - **Chunking Strategy**: Adaptive text chunking (200 tokens with 50-token overlap) for optimal retrieval
 - **Semantic Search**: Cosine similarity-based document retrieval for related issue identification
 - **Build Process**: Automated vector index creation and metadata management via `build_vector` script
@@ -645,6 +654,12 @@ Deterministic automated cleaning without AI:
   - **UI/UX Polishing**: Refined the visual aesthetics including color palette updates (blue accents), display of the current date on critical issues tables, and aligned layout for file processors.
   - **Cross-Referencing**: Expanded PLM similarity mappings within the SMVOC dashboard table to highlight similar PLM problems directly.
   - **Code Quality & Bug Fixes**: Corrected `modelName.json` parsing logic addressing object-string casting issues, eliminated encoding junk characters in the SSE response stream, and resolved system path errors in automated cache generation scripts.
+
+- **v1.9.0** - (March 2026) Scalability & RAG Enhancements
+  - **Knowledge Base UI**: Added frontend capabilities to seamlessly upload and append processed data to the RAG knowledge base.
+  - **Universal Excel Cleaner**: Extended `excel_cleaner.py` integration to standardize Excel extraction across Beta UT, Samsung PLM, and all related modules.
+  - **Persistent RAG API**: Deployed a dedicated FastAPI server (`rag_api.py`) for efficient, batch-processed vector database lookups.
+  - **Adaptive RAG Thresholding**: Implemented dynamic context retrieval logic ensuring highly confident RAG matches bypass redundant LLM queries.
 
 - **v1.7.0** - (February 2026) Semantic Matching & Centralized Analytics
   - **Semantic Matcher**: Implemented NLP-based issue cross-referencing between SMVOC and Global VOC.

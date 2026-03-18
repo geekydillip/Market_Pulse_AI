@@ -169,7 +169,8 @@
       class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
       <div class="mb-4">
         <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">File Upload</h2>
-        <p class="text-slate-600 dark:text-slate-400">Upload multiple Excel (.xlsx, .xls) or CSV (.csv) files for
+        <p class="text-slate-600 dark:text-slate-400">Upload multiple Excel (.xlsx, .xls), CSV (.csv) or JSON (.json)
+          files for
           processing</p>
       </div>
 
@@ -177,12 +178,12 @@
       <div
         class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
         id="dropZone">
-        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.json" multiple hidden>
         <div class="mb-4">
           <i class="fa-solid fa-cloud-upload-alt text-4xl text-slate-400 dark:text-slate-500 mb-4"></i>
           <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">Drop files here or click to browse
           </h3>
-          <p class="text-slate-600 dark:text-slate-400">Supported formats: .xlsx, .xls, .csv (Max 200MB each)</p>
+          <p class="text-slate-600 dark:text-slate-400">Supported formats: .xlsx, .xls, .csv, .json (Max 200MB each)</p>
         </div>
       </div>
 
@@ -341,6 +342,19 @@
         <span
           class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide text-center z-10 w-full">BETA
           UT VOC</span>
+      </button>
+
+      <button
+        class="processing-btn group relative flex flex-col items-center justify-center gap-3 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden transition-all hover:border-teal-500 hover:shadow-lg dark:hover:shadow-teal-500/20 flex-1 min-w-[160px] snap-center cursor-pointer"
+        data-type="update_kb">
+        <div
+          class="absolute inset-0 bg-teal-50 dark:bg-teal-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <i
+          class="fa-solid fa-database text-3xl text-teal-600 dark:text-teal-400 z-10 transition-transform group-hover:scale-110"></i>
+        <span
+          class="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide text-center z-10 w-full">UPDATE
+          RAG DB</span>
       </button>
     </div>
 
@@ -551,7 +565,8 @@
           'qings': 'QINGS',
           'qi': 'Quality Index',
           'blogger_issues': 'Blogger Issues',
-          'plm_issues': 'PLM Issues'
+          'plm_issues': 'PLM Issues',
+          'update_kb': 'Update Knowledge Base'
         };
         processingTypeDisplayEl.textContent = typeLabels[selectedProcessingType] || selectedProcessingType;
       } else {
@@ -885,7 +900,24 @@
 
           const result = await response.json();
 
-          if (result.success && result.downloads && result.downloads.length > 0) {
+          if (result.success && result.isUpdateKB) {
+            // Mark as completed
+            queueItem.status = 'completed';
+            queueItem.downloads = [];
+
+            // Show popup
+            const { added, duplicates } = result.summary || { added: 0, duplicates: 0 };
+            alert(`Update Complete!\n\nRows Added: ${added}\nRows Duplicated (Skipped): ${duplicates}`);
+
+            // Update UI to show completed status
+            updateQueueDisplay();
+
+            // Process next file in queue
+            const nextItem = fileQueue.find(item => item.status === 'queued');
+            if (nextItem) {
+              setTimeout(() => startProcessing(), 1000);
+            }
+          } else if (result.success && result.downloads && result.downloads.length > 0) {
             // Mark as completed
             queueItem.status = 'completed';
             queueItem.downloads = result.downloads;
