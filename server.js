@@ -750,6 +750,65 @@ app.post('/api/cancel/:sessionId', (req, res) => {
   }
 });
 
+// POST /api/pause/:sessionId -> marks a session as paused
+app.post('/api/pause/:sessionId', (req, res) => {
+  const session = activeSessions.get(req.params.sessionId);
+  if (session) {
+    session.paused = true;
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ success: false, error: 'Session not found' });
+  }
+});
+
+// POST /api/resume/:sessionId -> unpauses a session
+app.post('/api/resume/:sessionId', (req, res) => {
+  const session = activeSessions.get(req.params.sessionId);
+  if (session) {
+    session.paused = false;
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ success: false, error: 'Session not found' });
+  }
+});
+
+// GET /api/status/:sessionId -> returns session state
+app.get('/api/status/:sessionId', (req, res) => {
+  const session = activeSessions.get(req.params.sessionId);
+  if (session) {
+    res.json({
+      success: true,
+      status: session.status,
+      error: session.error,
+      result: session.result
+    });
+  } else {
+    res.status(404).json({ success: false, error: 'Session not found' });
+  }
+});
+
+const activeLoggers = new Set();
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
+process.stdout.write = function(chunk, encoding, callback) {
+  activeLoggers.forEach(logger => {
+    if (logger.logStream) {
+       logger.logStream.write(chunk);
+    }
+  });
+  return originalStdoutWrite(chunk, encoding, callback);
+};
+
+process.stderr.write = function(chunk, encoding, callback) {
+  activeLoggers.forEach(logger => {
+    if (logger.logStream) {
+       logger.logStream.write(chunk);
+    }
+  });
+  return originalStderrWrite(chunk, encoding, callback);
+};
+
 // LogManager class for structured logging with file persistence
 class LogManager {
   constructor(sessionId, filename, processorType) {
@@ -775,6 +834,8 @@ class LogManager {
       // Create write stream
       this.logStream = fs.createWriteStream(this.logPath, { flags: 'a' });
 
+      activeLoggers.add(this);
+
       // Write metadata header
       this.writeToFile('='.repeat(80));
       this.writeToFile('MarketPulse AI - Processing Log');
@@ -797,14 +858,8 @@ class LogManager {
   }
 
   log(message) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${message}`;
-
-    // Write to console
+    // Write to console and have it automatically picked up by log stream
     console.log(message);
-
-    // Write to file
-    this.writeToFile(logMessage);
   }
 
   close() {
@@ -817,6 +872,8 @@ class LogManager {
       this.writeToFile(`Completed: ${endTime.toISOString()}`);
       this.writeToFile(`Total Duration: ${duration} seconds`);
       this.writeToFile('='.repeat(80));
+
+      activeLoggers.delete(this);
 
       this.logStream.end();
       this.logStream = null;
@@ -850,9 +907,13 @@ async function processExcel(req, res) {
     const model = req.body.model || 'qwen3:4b-instruct';
     const sessionId = req.body.sessionId || 'default';
 
-    // Initialize session tracking for cancellation
+    // Initialize session tracking for cancellation and pause
     activeSessions.set(sessionId, {
       cancelled: false,
+      paused: false,
+      status: 'processing',
+      result: null,
+      error: null,
       startTime: Date.now(),
       abortController: new AbortController(),
       activeRequests: new Set()
@@ -926,7 +987,8 @@ async function processExcel(req, res) {
           const cleanerStart = Date.now();
           const pypath = path.join(__dirname, 'server', 'analytics', 'excel_cleaner.py');
           const cp = require('child_process');
-          cp.execSync(`python "${pypath}" "${uploadedPath}"`, { stdio: 'inherit' });
+          const output = cp.execSync(`python "${pypath}" "${uploadedPath}"`, { encoding: 'utf-8' });
+          if (output) process.stdout.write(output);
           logger.log(`✅ Excel Cleaner finished in ${Date.now() - cleanerStart}ms`);
 
           const cleanPath = uploadedPath.replace('.xlsx', '_cleaned.xlsx').replace('.xls', '_cleaned.xls');
@@ -1001,6 +1063,12 @@ async function processExcel(req, res) {
     // Initialize monotonically increasing completion counter
     let completedChunks = 0;
 
+    // Prepare Temp Storage for Crash Recovery
+    const tempDirPath = path.join(__dirname, 'temp', `${fileNameBase}_${processingType}`);
+    if (!fs.existsSync(tempDirPath)) {
+      fs.mkdirSync(tempDirPath, { recursive: true });
+    }
+
     // Send initial progress (0%)
     sendProgress(sessionId, {
       type: 'progress',
@@ -1018,14 +1086,47 @@ async function processExcel(req, res) {
       const chunkRows = rows.slice(startIdx, endIdx);
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
-        // Check for cancellation before processing
+        const chunkFilePath = path.join(tempDirPath, `chunk_${i}.json`);
+
+        // Yield if paused
         const session = activeSessions.get(sessionId);
+        while (session && session.paused && !session.cancelled) {
+          await new Promise(r => setTimeout(r, 1000));
+        }
+
+        // Check for cancellation before processing
         if (session && session.cancelled) {
           console.log(`Session ${sessionId} cancelled, skipping chunk ${i}`);
           return { chunkId: i, status: 'cancelled', processedRows: [] };
         }
 
+        // 1. Try to load from temp storage first
+        if (fs.existsSync(chunkFilePath)) {
+          try {
+            const cachedData = JSON.parse(fs.readFileSync(chunkFilePath, 'utf8'));
+            if (cachedData && cachedData.status === 'ok') {
+              completedChunks++;
+              const percent = Math.round((completedChunks / numberOfChunks) * 100);
+              logger.log(`Chunk ${completedChunks}/${numberOfChunks} restored from temp (${percent}%)`);
+              
+              const message = percent < 90 ? `Restoring Data[BUSY] ${percent}% complete` : `Finalizing output[BUSY] ${percent}% complete`;
+              sendProgress(sessionId, { type: 'progress', percent, message, chunksCompleted: completedChunks, totalChunks: numberOfChunks });
+              return cachedData;
+            }
+          } catch (e) {
+            console.warn(`[Resume] Failed to parse temp chunk ${i}, reprocessing...`);
+          }
+        }
+
+        // 2. Process chunk if not cached
         const result = await processChunk(chunk, processingType, model, i, sessionId);
+
+        // Save successfully processed chunk to temp
+        if (result && result.status === 'ok') {
+          try {
+            fs.writeFileSync(chunkFilePath, JSON.stringify(result, null, 2));
+          } catch (e) {}
+        }
 
         // Check for cancellation after processing
         if (session && session.cancelled) {
@@ -1248,17 +1349,40 @@ async function processExcel(req, res) {
     logger.log(`Total processing time: ${((Date.now() - tStart) / 1000).toFixed(2)} seconds`);
     logger.close();
 
-    res.json({
+    try {
+      if (fs.existsSync(tempDirPath)) {
+        fs.rmSync(tempDirPath, { recursive: true, force: true });
+        console.log(`[Temp] Cleaned up temporary directory ${tempDirPath}`);
+      }
+    } catch (e) {
+      console.warn('[Temp] Failed to clean up temp directory:', e.message);
+    }
+
+    const resultObj = {
       success: true,
       total_processing_time_ms: Date.now() - tStart,
       processedRows: schemaMergedRows,
       downloads: [{ url: `/downloads/${processingType}/${processedExcelFilename}`, filename: processedExcelFilename },
       { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }]
-    });
+    };
+
+    const session = activeSessions.get(sessionId);
+    if (session) {
+      session.status = 'completed';
+      session.result = resultObj;
+    }
+
+    res.json(resultObj);
   } catch (error) {
     console.error('Excel processing error:', error);
     // Original uploaded file is intentionally kept in the uploads folder.
     // try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) { }
+    const session = activeSessions.get(sessionId);
+    if (session) {
+      session.status = 'failed';
+      session.error = error.message || 'Processing failed';
+    }
+
     res.status(500).json({
       success: false,
       error: error.message || 'Processing failed'
@@ -2541,8 +2665,10 @@ async function processUpdateKB(req, res) {
 }
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log('\nCentralized Dashboard is running!');
   console.log(`Open your browser and go to: http://localhost:${PORT}`);
   console.log('Make sure Ollama is running (qwen3:4b-instruct)\n');
 });
+// Disable timeout for long-running AI processing tasks
+server.setTimeout(0);

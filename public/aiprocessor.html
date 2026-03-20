@@ -371,6 +371,7 @@
     let currentEventSource = null;
     let processingStartTime = null;
     let isProcessingActive = false; // Flag to prevent multiple simultaneous processing sessions
+    let statusPollingInterval = null;
 
     // Processing metrics for ETC calculation
     const EST_ALPHA = 0.30;
@@ -618,6 +619,14 @@
           status.className += ' text-blue-600 dark:text-blue-400';
           status.textContent = 'Processing...';
           break;
+        case 'paused':
+          status.className += ' text-amber-600 dark:text-amber-400';
+          status.textContent = 'Paused';
+          break;
+        case 'disconnected':
+          status.className += ' text-orange-600 dark:text-orange-400';
+          status.textContent = 'Disconnected...';
+          break;
         case 'completed':
           status.className += ' text-green-600 dark:text-green-400';
           status.textContent = 'Completed';
@@ -639,7 +648,21 @@
         removeBtn.textContent = 'Remove';
         removeBtn.onclick = () => removeFromQueue(item.id);
         actions.appendChild(removeBtn);
-      } else if (item.status === 'processing') {
+      } else if (item.status === 'processing' || item.status === 'paused' || item.status === 'disconnected') {
+        if (item.status === 'processing') {
+          const pauseBtn = document.createElement('button');
+          pauseBtn.className = 'px-3 py-1 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded transition-colors';
+          pauseBtn.textContent = 'Pause';
+          pauseBtn.onclick = () => pauseProcessingForFile(item.id);
+          actions.appendChild(pauseBtn);
+        } else {
+          const resumeBtn = document.createElement('button');
+          resumeBtn.className = 'px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors';
+          resumeBtn.textContent = item.status === 'disconnected' ? 'Resume Connection' : 'Resume';
+          resumeBtn.onclick = () => resumeProcessingForFile(item.id);
+          actions.appendChild(resumeBtn);
+        }
+
         const stopBtn = document.createElement('button');
         stopBtn.className = 'px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors';
         stopBtn.textContent = 'Stop';
@@ -665,7 +688,7 @@
 
       // Progress section (for processing files)
       let progressSection = null;
-      if (item.status === 'processing') {
+      if (item.status === 'processing' || item.status === 'paused' || item.status === 'disconnected') {
         progressSection = document.createElement('div');
         progressSection.className = 'mt-2';
 
@@ -784,7 +807,7 @@
           data.models.forEach(model => {
             const option = document.createElement('option');
             option.value = model;
-            option.textContent = model;
+            option.textContent = model === 'qwen3:4b-instruct' ? 'local Ai' : model;
             modelSelect.appendChild(option);
           });
 
@@ -833,11 +856,16 @@
         await processFile(processingItem, selectedProcessingType, selectedModel);
       } catch (error) {
         console.error('Processing error:', error);
-        processingItem.status = 'failed';
+        if (processingItem.status === 'processing' || processingItem.status === 'paused') {
+          processingItem.status = 'disconnected';
+        } else {
+          processingItem.status = 'failed';
+        }
         updateQueueDisplay();
       } finally {
-        // Reset processing flag when done
-        isProcessingActive = false;
+        if (processingItem.status === 'completed' || processingItem.status === 'failed') {
+          isProcessingActive = false;
+        }
       }
     }
 
@@ -1007,14 +1035,94 @@
       }
     }
 
+    async function pauseProcessingForFile(fileId) {
+      if (!currentSessionId) return;
+      const queueItem = fileQueue.find(item => item.id === fileId);
+      if (!queueItem || queueItem.status !== 'processing') return;
+
+      try {
+        await fetch(`/api/pause/${currentSessionId}`, { method: 'POST' });
+        queueItem.status = 'paused';
+        updateQueueDisplay();
+      } catch (e) {
+        console.error('Failed to pause:', e);
+      }
+    }
+
+    async function resumeProcessingForFile(fileId) {
+      if (!currentSessionId) return;
+      const queueItem = fileQueue.find(item => item.id === fileId);
+      if (!queueItem || (queueItem.status !== 'paused' && queueItem.status !== 'disconnected')) return;
+
+      try {
+        if (queueItem.status === 'paused') {
+          await fetch(`/api/resume/${currentSessionId}`, { method: 'POST' });
+        }
+        
+        queueItem.status = 'processing';
+        updateQueueDisplay();
+
+        if (!currentEventSource || currentEventSource.readyState === EventSource.CLOSED) {
+          currentEventSource = new EventSource(`/api/progress/${currentSessionId}`);
+          currentEventSource.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === 'progress') updateProgress(data.percent, data.message, queueItem);
+            } catch (e) {}
+          };
+        }
+
+        startStatusPolling(queueItem);
+
+      } catch (e) {
+        console.error('Failed to resume:', e);
+      }
+    }
+
+    function startStatusPolling(queueItem) {
+      if (statusPollingInterval) clearInterval(statusPollingInterval);
+      
+      statusPollingInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/status/${currentSessionId}`);
+          const data = await res.json();
+          if (data.success) {
+            if (data.status === 'completed') {
+              clearInterval(statusPollingInterval);
+              queueItem.status = 'completed';
+              queueItem.downloads = data.result?.downloads || [];
+              if (currentEventSource) {
+                 currentEventSource.close();
+                 currentEventSource = null;
+              }
+              isProcessingActive = false;
+              updateQueueDisplay();
+              
+              const nextItem = fileQueue.find(item => item.status === 'queued');
+              if (nextItem) setTimeout(() => startProcessing(), 1000);
+            } else if (data.status === 'failed') {
+              clearInterval(statusPollingInterval);
+              queueItem.status = 'failed';
+              if (currentEventSource) {
+                 currentEventSource.close();
+                 currentEventSource = null;
+              }
+              isProcessingActive = false;
+              updateQueueDisplay();
+            }
+          }
+        } catch (e) {
+           // still disconnected
+        }
+      }, 2000);
+    }
+
     async function stopProcessingForFile(fileId) {
       const queueItem = fileQueue.find(item => item.id === fileId);
-      if (!queueItem || queueItem.status !== 'processing') {
+      if (!queueItem || (queueItem.status !== 'processing' && queueItem.status !== 'paused' && queueItem.status !== 'disconnected')) {
         return;
       }
 
-      // For now, use the global stop processing function
-      // In a more advanced implementation, we could stop individual files
       await stopProcessing();
     }
 

@@ -709,11 +709,14 @@
         updateGlobalKPIs(analyticsData);
         initGlobalCharts(analyticsData);
 
-        // Filter for High severity and take top 10 (most recent first)
+        // Filter for Active statuses (show all data)
+        const activeStatuses = ['open', 'resolve - not released', 'resolve - app update', 'resolve - duplicated'];
         const criticalIssues = analyticsData.rows
-          .filter(item => (item.Severity || '').toLowerCase() === 'high')
-          .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0))
-          .slice(0, 10);
+          .filter(item => {
+            const status = (item['Progr.Stat.'] || '').toLowerCase();
+            return activeStatuses.some(s => status.includes(s));
+          })
+          .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
 
         // Store and compute fields into global array
         globalTableData = criticalIssues.map(item => {

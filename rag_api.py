@@ -18,8 +18,8 @@ app = FastAPI(title="MarketPulse RAG API", version="1.0.0")
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
-INDEX_FILE = os.path.join(BASE_DIR, "RAG_Data", "vector_db", "index.faiss")
-META_FILE  = os.path.join(BASE_DIR, "RAG_Data", "vector_db", "metadata.json")
+INDEX_FILE = os.path.join(BASE_DIR, "RAG", "vector_db", "index.faiss")
+META_FILE  = os.path.join(BASE_DIR, "RAG", "vector_db", "metadata.json")
 
 TOP_K               = 3
 SIMILARITY_THRESHOLD = 0.60

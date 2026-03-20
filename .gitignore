@@ -33,3 +33,4 @@ RAG_implementation-main/knowledge_base
 
 # Log files
 *.log
+temp/
