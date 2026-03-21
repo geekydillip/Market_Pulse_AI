@@ -192,88 +192,86 @@ module.exports = {
   // added by vandana.ojha
   buildPrompt(rows, ragContexts = []) {
 
-  let ragSection = "";
+    // Build RAG context string — injected into {RAG_CONTEXT} placeholder in the prompt template.
+    // Includes all fields that RAG provides: Module, Sub-Module, Issue Type, Sub-Issue Type.
+    let ragSection = "";
+    let hasAnyContext = false;
 
-  rows.forEach((row, index) => {
-    const matches = ragContexts[index] || [];
-
-    if (matches.length > 0) {
-
-      ragSection += `\n\n### Similar Historical Issues\n`;
-
-      matches.forEach((m, i) => {
-
-        ragSection += `
-Issue ${i + 1}
-Title: ${m.Title || ""}
-Problem: ${m.Problem || ""}
-Content: ${m.Content || ""}
-Module: ${m.Module || ""}
-Sub Module: ${m["Sub Module"] || ""}
-Issue Type: ${m["Issue Type"] || ""}
+    rows.forEach((row, index) => {
+      const matches = ragContexts[index] || [];
+      if (matches.length > 0) {
+        hasAnyContext = true;
+        ragSection += `\n### Row ${index + 1} — Historical Similar Issues\n`;
+        matches.forEach((m, i) => {
+          ragSection += `Issue ${i + 1}:
+  Content: ${m.Content || m.Title || ""}
+  Problem: ${m.Problem || m.Content || m.Title || ""}
+  Module: ${m.Module || ""}
+  Sub-Module: ${m["Sub Module"] || ""}
+  Issue Type: ${m["Issue Type"] || ""}
+  Sub-Issue Type: ${m["Sub Issue Type"] || ""}
+  Frequency: ${m.frequency || 1} similar issue(s) in history
 `;
-      });
+        });
+      }
+    });
+
+    if (!ragSection) {
+      ragSection = "No historical matches found. Use fallback definitions.";
     }
-  });
 
-  const aiInputRows = rows.map(row => ({
-    content: row.content || ''
-  }));
+    // /no_think disables qwen3 chain-of-thought reasoning (~200-500 hidden tokens per call).
+    // ON  when RAG context present — classification is guided, LLM only needs to format + write insight.
+    // OFF when RAG absent          — LLM must reason everything from scratch, thinking helps quality.
+    const thinkPrefix = hasAnyContext ? '/no_think\n' : '';
 
-  const originalPrompt = promptTemplate.replace(
-    '{INPUTDATA_JSON}',
-    JSON.stringify(aiInputRows)
-  );
+    // Build input rows — only send content field as that's what this processor classifies from
+    const aiInputRows = rows.map(row => ({
+      content: row.content || ''
+    }));
 
-  return `
-${ragSection}
-
-Use the above issues only as reference.
-Do NOT copy them blindly.
-
-${originalPrompt}
-`;
-
+    // Inject both placeholders into the prompt template
+    return thinkPrefix + promptTemplate
+      .replace('{RAG_CONTEXT}', ragSection)
+      .replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows));
   },
   
 
   formatResponse(aiResult, originalRows) {
     let aiRows;
 
-    // Handle different response formats: object, JSON string, or raw text
     if (typeof aiResult === 'object' && aiResult !== null) {
       aiRows = aiResult;
     } else if (typeof aiResult === 'string') {
-      const text = aiResult.trim();
+      let text = aiResult.trim();
 
-      // First try to parse as complete JSON
+      // ── JSON repair: fix ["key":"val"] → [{"key":"val"}] ──────────────
+      if (/^\[\s*"/.test(text)) {
+        text = text.replace(/\[\s*"/g, '[{"').replace(/,\s*\n\s*"/g, ',\n{"').replace(/"\s*,\s*"/g, '","');
+      }
+      // ──────────────────────────────────────────────────────────────────
+
       try {
         aiRows = JSON.parse(text);
       } catch (e) {
-        // If that fails, try to extract JSON array from text
         const firstBracket = text.indexOf('[');
         const lastBracket = text.lastIndexOf(']');
         if (firstBracket !== -1 && lastBracket > firstBracket) {
-          const jsonStr = text.substring(firstBracket, lastBracket + 1);
           try {
-            aiRows = JSON.parse(jsonStr);
+            aiRows = JSON.parse(text.substring(firstBracket, lastBracket + 1));
           } catch (e2) {
-            // If JSON parsing fails, return array with error info
             return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
           }
         } else {
-          // Last resort: return array with error info
           return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
         }
       }
     } else {
-      // Fallback for unexpected types - return array
       return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
     }
 
     // Handle different response formats: unwrap objects containing arrays
     if (!Array.isArray(aiRows) && typeof aiRows === 'object') {
-      // Check for common wrapper keys that contain the actual array
       const possibleKeys = ['data', 'result', 'response', 'output', 'items', 'records'];
       for (const key of possibleKeys) {
         if (aiRows[key] && Array.isArray(aiRows[key])) {
@@ -281,15 +279,10 @@ ${originalPrompt}
           break;
         }
       }
-
-      // If still not an array, check if it's a single result object and wrap it
       if (!Array.isArray(aiRows)) {
-        // Check if this object has the expected fields for a single result
         const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
         const hasExpectedFields = expectedFields.some(field => aiRows.hasOwnProperty(field));
-
         if (hasExpectedFields) {
-          // Wrap single object in array
           aiRows = [aiRows];
         } else {
           return [{ error: `AI response is not an array and doesn't contain expected fields: ${typeof aiRows} - ${Object.keys(aiRows).slice(0, 5).join(', ')}...` }];
@@ -297,27 +290,41 @@ ${originalPrompt}
       }
     }
 
-    // Ensure aiRows is an array
     if (!Array.isArray(aiRows)) {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
-    // Validate that AI response contains expected fields per new prompt format
+    // ── Row count mismatch guard ───────────────────────────────────────
+    // BetaUTVoc uses content as its key field (not Title/Problem)
+    const normalise = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 80);
+
+    let resolvedAiRows;
+    if (aiRows.length === originalRows.length) {
+      resolvedAiRows = aiRows;
+    } else {
+      console.warn(`[BetaUTVoc formatResponse] Row count mismatch: AI=${aiRows.length} vs input=${originalRows.length}. Using fuzzy match.`);
+      resolvedAiRows = originalRows.map((origRow) => {
+        // BetaUTVoc does not send content back in AI output — match by index position
+        // within the available AI rows (best effort when counts differ)
+        const origIdx = originalRows.indexOf(origRow);
+        return aiRows[origIdx] || {
+          Module: '', 'Sub-Module': '', 'Issue Type': '', 'Sub-Issue Type': '', 'AI Insight': ''
+        };
+      });
+    }
+    // ──────────────────────────────────────────────────────────────────
+
     const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
 
-    // Merge AI results with original core identifiers (preserving original Excel fields + AI fields)
-    const mergedRows = aiRows.map((aiRow, index) => {
-      if (!aiRow) aiRow = {};   // modified by vandana 
+    const mergedRows = resolvedAiRows.map((aiRow, index) => {
+      if (!aiRow) aiRow = {};
       const original = originalRows[index] || {};
-
-      // Validate AI row has expected fields
       const isValidAiRow = expectedFields.every(field => aiRow.hasOwnProperty(field));
       if (!isValidAiRow) {
         console.warn(`AI row ${index} missing expected fields. Available:`, Object.keys(aiRow));
       }
-
       return {
-        'No': original['No'] || original['S/N'] || '',  // Preserve original No column data
+        'No': original['No'] || original['S/N'] || '',
         'Date': original['Date'] || '',
         'Status': original['Status'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
@@ -329,11 +336,11 @@ ${originalPrompt}
         'Category': original['Category'] || '',
         'Application Name': original['Application Name'] || '',
         'Application Type': original['Application Type'] || '',
-        'content': original['content'] || '',  // Reuse from input (already cleaned)
+        'content': original['content'] || '',
         'Main Type': original['Main Type'] || '',
         'Sub Type': original['Sub Type'] || '',
         'Module': aiRow['Module'] || '',
-        'Sub-Module': aiRow['Sub-Module'] || aiRow['Sub Module'] || '',  // modified by vandana.ojha
+        'Sub-Module': aiRow['Sub-Module'] || aiRow['Sub Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
         'AI Insight': aiRow['AI Insight'] || ''
@@ -357,4 +364,5 @@ ${originalPrompt}
 
   // Excel reading function used by server.js
   readAndNormalizeExcel: readAndNormalizeExcel
-};
+}
+;
