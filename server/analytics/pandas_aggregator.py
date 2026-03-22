@@ -4,6 +4,10 @@ import json
 import math
 from pathlib import Path
 from datetime import date, datetime
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from sklearn.cluster import AgglomerativeClustering
+
 
 # Load model name mappings
 def load_model_name_mappings():
@@ -274,6 +278,73 @@ def time_series(df: pd.DataFrame, date_column: str) -> list:
     # Group by date and count
     return df_copy.groupby(df_copy[date_column].dt.date).size().sort_index().reset_index(name='count').rename(columns={date_column: 'date'}).to_dict('records')
 
+def cluster_insights(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cluster similar 'AI Insight' statements and replace them with a single representative statement
+    per cluster to avoid UI clutter. Only clusters within the same Module and Sub-Module.
+    """
+    if 'AI Insight' not in df.columns or df.empty:
+        return df
+
+    group_cols = []
+    for col in ['Module', 'Sub-Module']:
+        if col in df.columns:
+            group_cols.append(col)
+
+    if not group_cols:
+        return df
+
+    try:
+        import sys
+        sys.stderr.write("Loading SentenceTransformer model for clustering...\n")
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+    except Exception as e:
+        import sys
+        sys.stderr.write(f"Warning: Failed to load sentence-transformers model: {e}\n")
+        return df
+
+    def process_group(group):
+        insights = group['AI Insight'].dropna()
+        if len(insights.unique()) < 2:
+            return group
+
+        unique_insights = insights.unique().tolist()
+        embeddings = model.encode(unique_insights)
+        
+        # threshold=0.15 means ~85% cosine similarity
+        clustering = AgglomerativeClustering(
+            n_clusters=None,
+            distance_threshold=0.15,
+            metric='cosine',
+            linkage='average'
+        )
+        labels = clustering.fit_predict(embeddings)
+        
+        insight_counts = insights.value_counts()
+        label_to_insights = {}
+        for i, label in enumerate(labels):
+            if label not in label_to_insights:
+                label_to_insights[label] = []
+            label_to_insights[label].append(unique_insights[i])
+            
+        rep_map = {}
+        for label, group_insights in label_to_insights.items():
+            if len(group_insights) == 1:
+                rep_map[label] = group_insights[0]
+            else:
+                best_insight = max(group_insights, key=lambda x: insight_counts.get(x, 0))
+                rep_map[label] = best_insight
+                
+        insight_to_rep = {unique_insights[i]: rep_map[labels[i]] for i in range(len(unique_insights))}
+        group['AI Insight'] = group['AI Insight'].map(lambda x: insight_to_rep.get(x, x) if pd.notna(x) else x)
+        return group
+
+    import sys
+    sys.stderr.write("Starting AI Insight clustering...\n")
+    df = df.groupby(group_cols, group_keys=False).apply(process_group)
+    sys.stderr.write("AI Insight clustering complete.\n")
+    return df
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
@@ -289,7 +360,11 @@ if __name__ == "__main__":
         # Apply model name transformation for OS Beta entries
         df = transform_model_names(df)
 
+        # Apply semantic clustering on AI Insight
+        df = cluster_insights(df)
+
         kpis = compute_kpis(df)
+
         top_models = group_by_column(df, 'Model No.')
         
         # Apply server-side model name mapping to top_models
