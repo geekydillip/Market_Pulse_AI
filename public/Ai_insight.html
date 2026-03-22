@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Insight – BERT VOC Similarity</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = { darkMode: 'class' };
+    (function () {
+      document.documentElement.classList.toggle(
+        'dark', window.matchMedia('(prefers-color-scheme: dark)').matches
+      );
+    })();
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    @keyframes spin-slow {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+      }
+
+      50% {
+        box-shadow: 0 0 28px 8px rgba(99, 102, 241, 0.35);
+      }
+    }
+
+    @keyframes dot-bounce {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+      }
+
+      40% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .spin-slow {
+      animation: spin-slow 3s linear infinite;
+    }
+
+    .pulse-glow {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .fade-in {
+      animation: fade-in 0.4s ease both;
+    }
+
+    .dot {
+      animation: dot-bounce 1.4s ease-in-out infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: .16s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: .32s;
+    }
+
+    .score-bar {
+      height: 6px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #6366f1, #818cf8);
+      transition: width .7s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tr.result-row {
+      transition: background .15s;
+    }
+
+    tr.result-row:hover {
+      background: rgba(99, 102, 241, .05);
+    }
+
+    .stage-wait {
+      color: #94a3b8;
+      background: #f1f5f9;
+    }
+
+    .stage-active {
+      color: #6366f1;
+      background: #eef2ff;
+    }
+
+    .stage-done {
+      color: #22c55e;
+      background: #f0fdf4;
+    }
+
+    .dark .stage-wait {
+      color: #94a3b8;
+      background: #1e293b;
+    }
+
+    .dark .stage-active {
+      color: #818cf8;
+      background: #1e1b4b;
+    }
+
+    .dark .stage-done {
+      color: #4ade80;
+      background: #052e16;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen">
+
+  <!-- ══════════════════ HEADER ══════════════════ -->
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700
+                 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+    <div class="flex items-center gap-3">
+      <button onclick="window.close()" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium
+               text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700
+               hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">
+        <i class="fa-solid fa-xmark"></i> Close
+      </button>
+      <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+      <div class="flex items-center gap-2">
+        <div class="relative w-9 h-9 flex-shrink-0">
+          <div class="absolute inset-0 rounded-full bg-indigo-100 dark:bg-indigo-900/60 pulse-glow"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <i class="fa-solid fa-brain text-indigo-600 dark:text-indigo-400 text-base"></i>
+          </div>
+        </div>
+        <div>
+          <h1 class="text-base font-bold leading-tight flex items-center gap-1.5">
+            AI Insight
+            <span class="text-[10px] font-semibold px-1.5 py-0.5
+                         bg-indigo-100 dark:bg-indigo-900/60
+                         text-indigo-600 dark:text-indigo-300 rounded-full">
+              BERT · Offline
+            </span>
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-tight">Similar VOC Analysis</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="header-stats" class="hidden flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+      <span><i class="fa-solid fa-database mr-1 text-slate-400"></i><span id="stat-total">0</span> issues</span>
+      <span><i class="fa-solid fa-layer-group mr-1 text-indigo-400"></i><span id="stat-groups">0</span> groups</span>
+      <span class="text-green-500 font-semibold">
+        <i class="fa-solid fa-circle-check mr-1"></i>BERT complete
+      </span>
+    </div>
+  </header>
+
+  <!-- ══════════════════ LOADING PAGE ══════════════════ -->
+  <div id="loading-page" class="min-h-[calc(100vh-65px)] flex items-center justify-center px-6 py-10">
+    <div class="w-full max-w-lg">
+
+      <!-- Animated brain icon -->
+      <div class="flex justify-center mb-8">
+        <div class="relative w-24 h-24">
+          <svg class="absolute inset-0 spin-slow" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="url(#rg)" stroke-width="4" stroke-dasharray="72 216"
+              stroke-linecap="round" />
+            <defs>
+              <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6366f1" />
+                <stop offset="100%" stop-color="#818cf8" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center rounded-full
+                      bg-indigo-50 dark:bg-indigo-950/60 pulse-glow">
+            <i class="fa-solid fa-brain text-indigo-500 text-4xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold mb-1">Running BERT Analysis</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Using locally-installed <code class="text-indigo-600 dark:text-indigo-400">all-MiniLM-L6-v2</code> — no
+          internet required
+        </p>
+      </div>
+
+      <!-- Stage cards -->
+      <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700
+                  shadow-lg p-6 mb-6 space-y-5">
+
+        <!-- Stage 1 -->
+        <div class="flex items-start gap-4">
+          <div id="icon-1"
+            class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center stage-wait transition-all">
+            <i id="iico-1" class="fa-solid fa-server text-sm"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Connecting to Local BERT Server</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="desc-1">
+              RAG API · all-MiniLM-L6-v2 via run_server.py
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 dark:border-slate-700"></div>
+
+        <!-- Stage 2 -->
+        <div class="flex items-start gap-4">
+          <div id="icon-2"
+            class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center stage-wait transition-all">
+            <i id="iico-2" class="fa-solid fa-file-code text-sm"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Loading VOC Analytics Data</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="desc-2">
+              global_voc_plm/analytics.json
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 dark:border-slate-700"></div>
+
+        <!-- Stage 3 -->
+        <div class="flex items-start gap-4">
+          <div id="icon-3"
+            class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center stage-wait transition-all">
+            <i id="iico-3" class="fa-solid fa-vector-square text-sm"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Generating BERT Embeddings</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="desc-3">
+              Encoding all issue titles into 384-dim vectors
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 dark:border-slate-700"></div>
+
+        <!-- Stage 4 -->
+        <div class="flex items-start gap-4">
+          <div id="icon-4"
+            class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center stage-wait transition-all">
+            <i id="iico-4" class="fa-solid fa-chart-network text-sm"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Computing Cosine Similarity</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="desc-4">
+              Ranking groups by Similar VOC (Count)
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Status text -->
+      <div class="text-center">
+        <p id="status-txt" class="text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
+          <span id="status-msg">Connecting to BERT server</span>
+          <span class="flex gap-1">
+            <span class="dot inline-block w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+            <span class="dot inline-block w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+            <span class="dot inline-block w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+          </span>
+        </p>
+      </div>
+
+    </div>
+  </div><!-- /loading-page -->
+
+  <!-- ══════════════════ ERROR PAGE ══════════════════ -->
+  <div id="error-page" class="hidden min-h-[calc(100vh-65px)] flex items-center justify-center px-6">
+    <div class="text-center max-w-sm">
+      <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-red-50 dark:bg-red-950/50
+                  flex items-center justify-center">
+        <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i>
+      </div>
+      <h2 class="text-lg font-bold mb-2">Analysis Failed</h2>
+      <p id="error-msg" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40
+                               border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 mb-2"></p>
+      <p class="text-xs text-slate-400 mb-5">
+        Make sure <code class="text-indigo-500">run_server.py</code> is running — it starts both the dashboard on
+        <strong>port 3001</strong> and the BERT AI service in the background.
+      </p>
+      <button onclick="location.reload()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700
+               text-white text-sm font-semibold rounded-lg transition-colors">
+        <i class="fa-solid fa-rotate"></i> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ RESULTS PAGE ══════════════════ -->
+  <div id="results-page" class="hidden max-w-7xl mx-auto px-6 py-6 fade-in">
+
+    <!-- Info banner -->
+    <div class="mb-5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200
+                dark:border-indigo-800 rounded-xl px-5 py-4 flex items-start gap-4">
+      <div
+        class="w-9 h-9 flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/60 rounded-lg flex items-center justify-center mt-0.5">
+        <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400"></i>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-indigo-800 dark:text-indigo-300 mb-0.5">
+          Offline BERT Semantic Similarity
+        </p>
+        <p class="text-xs text-indigo-700 dark:text-indigo-400 leading-relaxed">
+          Results computed by the local <strong>all-MiniLM-L6-v2</strong> sentence transformer
+          already running on your machine — <strong>no internet or CDN required</strong>.
+          For each <strong>Model + Module</strong> group, the AI picks the most-reported VOC
+          and counts all titles with cosine similarity ≥ 0.50.
+        </p>
+      </div>
+    </div>
+
+    <!-- Summary pills -->
+    <div id="summary-pills" class="flex flex-wrap gap-2 mb-4 text-xs"></div>
+
+    <!-- Table card -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200
+                dark:border-slate-700 overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-700
+                  flex items-center justify-between flex-wrap gap-3">
+        <h2 class="text-sm font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-table text-indigo-500"></i> Similarity Results
+        </h2>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input id="search-box" type="text" placeholder="Filter model / module…"
+            oninput="filterTable(this.value)" class="pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-600
+                   bg-slate-50 dark:bg-slate-700 rounded-lg focus:outline-none
+                   focus:ring-2 focus:ring-indigo-400 w-60">
+        </div>
+      </div>
+
+      <div class="overflow-x-auto overflow-y-auto max-h-[580px]">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-700">
+            <tr class="divide-x divide-slate-200 dark:divide-slate-700">
+              <th class="px-4 py-3 text-center text-xs font-bold text-slate-600 dark:text-slate-400 uppercase w-12">#
+              </th>
+              <th onclick="sortBy('model')"
+                class="px-4 py-3 text-left text-xs font-bold text-slate-600 dark:text-slate-400 uppercase cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 select-none transition-colors">
+                <div class="flex items-center gap-1">Model No. <i id="si-model"
+                    class="fa-solid fa-sort text-slate-400"></i></div>
+              </th>
+              <th onclick="sortBy('module')"
+                class="px-4 py-3 text-left text-xs font-bold text-slate-600 dark:text-slate-400 uppercase cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 select-none transition-colors">
+                <div class="flex items-center gap-1">Module <i id="si-module"
+                    class="fa-solid fa-sort text-slate-400"></i></div>
+              </th>
+              <th onclick="sortBy('voc')"
+                class="px-4 py-3 text-left text-xs font-bold text-slate-600 dark:text-slate-400 uppercase cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 select-none transition-colors">
+                <div class="flex items-center gap-1">VOC <i id="si-voc" class="fa-solid fa-sort text-slate-400"></i>
+                </div>
+              </th>
+              <th onclick="sortBy('count')"
+                class="px-4 py-3 text-center text-xs font-bold text-slate-600 dark:text-slate-400 uppercase cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 select-none transition-colors w-44">
+                <div class="flex items-center justify-center gap-1">
+                  Similar VOC (Count) <i id="si-count" class="fa-solid fa-sort-down text-indigo-500"></i>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="results-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+        </table>
+        <p id="no-results" class="hidden text-center py-8 text-sm text-slate-400">No matching rows found.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       CLIENT LOGIC  — calls local BERT API, no CDN model
+  ══════════════════════════════════════════════════════════ -->
+  <script>
+    // Always call via the same port 3001 — server.js proxies to Python internally
+    const API_ENDPOINT = '/api/ai-insight';
+
+    let allResults = [];
+    let filteredResults = [];
+    let sortCol = 'count';
+    let sortAsc = false;
+
+    /* ── Stage helpers ── */
+    function stageActive(n, desc) {
+      const ic = document.getElementById(`icon-${n}`);
+      const ii = document.getElementById(`iico-${n}`);
+      const d = document.getElementById(`desc-${n}`);
+      if (ic) ic.className = ic.className.replace(/stage-\w+/, 'stage-active');
+      if (ii) { ii.className = ii.className.replace(/fa-[\w-]+\s*(text-sm)?/, ''); ii.className += ' fa-spinner fa-spin text-sm'; }
+      if (d && desc) d.textContent = desc;
+    }
+
+    function stageDone(n, desc) {
+      const ic = document.getElementById(`icon-${n}`);
+      const ii = document.getElementById(`iico-${n}`);
+      const d = document.getElementById(`desc-${n}`);
+      if (ic) ic.className = ic.className.replace(/stage-\w+/, 'stage-done');
+      if (ii) ii.className = 'fa-solid fa-circle-check text-sm';
+      if (d && desc) d.textContent = desc;
+    }
+
+    function setStatus(msg) {
+      const el = document.getElementById('status-msg');
+      if (el) el.textContent = msg;
+    }
+
+    /* ── Main ── */
+    async function run() {
+      try {
+
+        /* Stage 1: Check server is alive */
+        stageActive(1);
+        setStatus('Connecting to local BERT server…');
+        const health = await fetch('/health', { signal: AbortSignal.timeout(5000) });
+        if (!health.ok) throw new Error('Server health check failed');
+        stageDone(1, 'Server ready on port 3001');
+
+        /* Stage 2 + 3 + 4 are done server-side in one call */
+        stageActive(2);
+        setStatus('Sending request to BERT server…');
+
+        // Brief artificial delay so user sees the stages light up
+        await new Promise(r => setTimeout(r, 300));
+        stageDone(2, 'Request sent');
+
+        stageActive(3);
+        setStatus('BERT encoding titles & computing similarity…');
+
+        /* One API call — server does everything offline */
+        const resp = await fetch(API_ENDPOINT, { signal: AbortSignal.timeout(60000) });
+        if (!resp.ok) throw new Error(`Server error: HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        stageDone(3, `${data.total_issues} titles encoded into 384-dim BERT vectors`);
+
+        stageActive(4);
+        setStatus('Finalising results…');
+        await new Promise(r => setTimeout(r, 200));
+        stageDone(4, `${data.total_groups} groups ranked by Similar VOC (Count)`);
+
+        /* Update header */
+        document.getElementById('stat-total').textContent = data.total_issues?.toLocaleString() ?? '';
+        document.getElementById('stat-groups').textContent = data.total_groups?.toLocaleString() ?? '';
+        document.getElementById('header-stats').classList.remove('hidden');
+
+        /* Show results */
+        allResults = data.results || [];
+        filteredResults = [...allResults];
+
+        setStatus('Analysis complete!');
+        await new Promise(r => setTimeout(r, 350));
+
+        document.getElementById('loading-page').classList.add('hidden');
+        document.getElementById('results-page').classList.remove('hidden');
+
+        renderSummaryPills(data);
+        renderTable();
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loading-page').classList.add('hidden');
+        document.getElementById('error-msg').textContent = err.message;
+        document.getElementById('error-page').classList.remove('hidden');
+      }
+    }
+
+    /* ── Render ── */
+    const MODULE_COLORS = {
+      'Display': 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+      'Battery': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+      'Network': 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+      'Touch': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
+      'Camera': 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
+      'Audio': 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300',
+      'System': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+      'Biometrics': 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300',
+    };
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('results-tbody');
+      const noRes = document.getElementById('no-results');
+      tbody.innerHTML = '';
+      if (!filteredResults.length) { noRes.classList.remove('hidden'); return; }
+      noRes.classList.add('hidden');
+
+      const max = Math.max(...filteredResults.map(r => r.count), 1);
+
+      filteredResults.forEach((item, idx) => {
+        const barW = Math.round((item.count / max) * 100);
+        const modCls = MODULE_COLORS[item.module]
+          || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+        const tr = document.createElement('tr');
+        tr.className = 'result-row divide-x divide-slate-100 dark:divide-slate-700';
+        tr.innerHTML = `
+          <td class="px-4 py-3 text-xs text-slate-500 text-center font-medium">${idx + 1}</td>
+          <td class="px-4 py-3">
+            <span class="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">${esc(item.model)}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium ${modCls}">${esc(item.module)}</span>
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 max-w-xs" title="${esc(item.voc)}">
+            <span class="line-clamp-2">${esc(item.voc)}</span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <div class="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden" style="height:6px">
+                <div class="score-bar" style="width:${barW}%"></div>
+              </div>
+              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 w-6 text-right">${item.count}</span>
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderSummaryPills(data) {
+      const top = allResults[0];
+      const mf = {};
+      allResults.forEach(r => mf[r.module] = (mf[r.module] || 0) + r.count);
+      const topMod = Object.entries(mf).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+
+      document.getElementById('summary-pills').innerHTML = `
+        <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full font-medium">
+          <i class="fa-solid fa-layer-group mr-1"></i>${data.total_groups} groups
+        </span>
+        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-medium">
+          <i class="fa-solid fa-database mr-1"></i>${data.total_issues?.toLocaleString()} issues
+        </span>
+        <span class="px-3 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 rounded-full font-medium">
+          <i class="fa-solid fa-fire mr-1"></i>Top module: ${esc(topMod)}
+        </span>
+        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full font-medium">
+          <i class="fa-solid fa-arrow-up mr-1"></i>Max similar: ${top?.count ?? 0}
+        </span>
+        <span class="px-3 py-1 bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 rounded-full font-medium">
+          <i class="fa-solid fa-server mr-1"></i>Local · all-MiniLM-L6-v2
+        </span>
+        <span class="px-3 py-1 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full font-medium">
+          <i class="fa-solid fa-shield mr-1"></i>Threshold: ${data.threshold ?? 0.70}
+        </span>`;
+    }
+
+    function filterTable(q) {
+      q = q.toLowerCase().trim();
+      filteredResults = q
+        ? allResults.filter(r =>
+          r.model.toLowerCase().includes(q) ||
+          r.module.toLowerCase().includes(q))
+        : [...allResults];
+      renderTable();
+    }
+
+    function sortBy(col) {
+      if (sortCol === col) sortAsc = !sortAsc;
+      else { sortCol = col; sortAsc = col !== 'count'; }
+      ['model', 'module', 'voc', 'count'].forEach(c => {
+        const el = document.getElementById(`si-${c}`);
+        if (el) el.className = 'fa-solid fa-sort text-slate-400';
+      });
+      const a = document.getElementById(`si-${col}`);
+      if (a) a.className = `fa-solid ${sortAsc ? 'fa-sort-up' : 'fa-sort-down'} text-indigo-500`;
+      filteredResults.sort((a, b) => {
+        const va = col === 'count' ? a[col] : (a[col] || '').toLowerCase();
+        const vb = col === 'count' ? b[col] : (b[col] || '').toLowerCase();
+        return va < vb ? (sortAsc ? -1 : 1) : va > vb ? (sortAsc ? 1 : -1) : 0;
+      });
+      renderTable();
+    }
+
+    /* Boot */
+    run();
+  </script>
+</body>
+
+</html>

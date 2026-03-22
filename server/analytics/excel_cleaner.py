@@ -355,7 +355,7 @@ def clean_excel(file_path):
                 else:
                     extracted_sources.append(None)
                 
-                # Model No. extraction logic
+                # Model No. extraction logic from Title
                 model_match = re.search(r'(SM-[A-Z0-9]+)', t, re.IGNORECASE)
                 if model_match:
                     extracted_models.append(model_match.group(1).upper())
@@ -364,6 +364,20 @@ def clean_excel(file_path):
         else:
             extracted_sources = [None] * len(df)
             extracted_models = [None] * len(df)
+
+        # Fallback: if no model found in Title, try deriving from S/W Ver. column
+        # e.g. "S928BXX5AY87" -> "SM-S928B" (SM- + first 5 chars)
+        sw_ver_col = next((c for c in df.columns if str(c).lower().strip() == 's/w ver.'), None)
+        if sw_ver_col:
+            sw_vers = df[sw_ver_col].fillna("").astype(str).tolist()
+            for i, (extracted_model, sw_ver) in enumerate(zip(extracted_models, sw_vers)):
+                if extracted_model is None and sw_ver and len(sw_ver.strip()) >= 5:
+                    sw_ver_clean = sw_ver.strip()
+                    # S/W Ver looks like "S928BXX5AY87" - first 5 chars are the model identifier
+                    # But validate it looks like a valid model prefix (letter + digits + letters)
+                    candidate = sw_ver_clean[:5]
+                    if re.match(r'^[A-Z][0-9]{3}[A-Z]$', candidate, re.IGNORECASE):
+                        extracted_models[i] = 'SM-' + candidate.upper()
 
         # Determine Source from Occurr. Type if available as fallback
         fallback_sources = []

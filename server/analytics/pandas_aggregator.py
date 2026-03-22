@@ -42,23 +42,25 @@ def derive_model_name_from_sw_ver(sw_ver):
     Derive model name from S/W Ver. for OS Beta entries
     Example: "S911BXXU8ZYHB" -> "SM-S911B"
     """
-    if not sw_ver or not isinstance(sw_ver, str) or len(sw_ver) < 5:
+    if pd.isna(sw_ver) or not isinstance(sw_ver, str) or len(sw_ver) < 5:
         return sw_ver  # Return original if invalid
     return 'SM-' + sw_ver[:5]
 
 def transform_model_names(df):
     """
-    Transform Model No. column for OS Beta entries using S/W Ver.
+    Transform Model No. column for OS Beta and Global VOC entries using S/W Ver.
     Also remove [Regular Folder] prefix from model names.
     """
     if 'Model No.' in df.columns:
-        # Apply transformation where Model No. starts with "[OS Beta]"
+        # Apply transformation where Model No. starts with "[OS Beta]" or "[Global VOC]"
         if 'S/W Ver.' in df.columns:
-            mask_os_beta = df['Model No.'].astype(str).str.startswith('[OS Beta]')
-            df.loc[mask_os_beta, 'Model No.'] = df.loc[mask_os_beta, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+            mask_os_beta = df['Model No.'].astype(str).str.startswith('[OS Beta]').fillna(False)
+            mask_global_voc = df['Model No.'].astype(str).str.startswith('[Global VOC]').fillna(False)
+            mask_to_transform = mask_os_beta | mask_global_voc
+            df.loc[mask_to_transform, 'Model No.'] = df.loc[mask_to_transform, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
         
         # Remove [Regular Folder] prefix from model names
-        mask_regular_folder = df['Model No.'].astype(str).str.startswith('[Regular Folder]')
+        mask_regular_folder = df['Model No.'].astype(str).str.startswith('[Regular Folder]').fillna(False)
         if mask_regular_folder.any():
             df.loc[mask_regular_folder, 'Model No.'] = df.loc[mask_regular_folder, 'Model No.'].str.replace(r'^\[Regular Folder\]', '', regex=True)
     return df
@@ -333,9 +335,10 @@ if __name__ == "__main__":
             print(json.dumps(response))
 
     except Exception as e:
-        error_msg = str(e)
+        import traceback
+        error_msg = traceback.format_exc()
         if save_json:
-            print(f"Error saving analytics: {error_msg}")
+            print(f"Error saving analytics:\n{error_msg}")
         else:
             print(json.dumps({"error": error_msg}))
         sys.exit(1)

@@ -2664,6 +2664,21 @@ async function processUpdateKB(req, res) {
   }
 }
 
+// GET /api/ai-insight -> forwards to python RAG API
+app.get('/api/ai-insight', async (req, res) => {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/ai-insight');
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `RAG API error: HTTP ${response.status}` });
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('AI Insight proxy error:', error);
+    res.status(500).json({ error: 'Failed to connect to BERT AI service: ' + error.message });
+  }
+});
+
 // Start server
 const server = app.listen(PORT, () => {
   console.log('\nCentralized Dashboard is running!');
