@@ -22,26 +22,6 @@ INDEX_FILE    = os.path.join(VECTOR_DB_FOLDER, "index.faiss")
 METADATA_FILE = os.path.join(VECTOR_DB_FOLDER, "metadata.json")
 
 # ==============================
-# MODULE NAME NORMALISATION
-# Inconsistent casing splits identical modules into separate vector clusters,
-# reducing retrieval accuracy. Define canonical names here.
-# ==============================
-MODULE_NORMALISE = {
-    "lock screen":        "Lock Screen",
-    "Lock screen":        "Lock Screen",
-    "Notification Panel": "Notification",
-    "Sound":              "Audio",
-    "Quick  Panel":       "Quick Panel",   # double-space variant
-    "3rd party app":      "3rd Party App",
-    "Heat":               "Heating",
-    "Touch":              "Display",
-}
-
-def normalise_module(raw):
-    m = str(raw or "").strip()
-    return MODULE_NORMALISE.get(m, m)
-
-# ==============================
 # TEXT CLEANING
 # DO NOT lowercase — rag_server applies identical cleaning without lowercasing,
 # keeping query and document embeddings in the same space.

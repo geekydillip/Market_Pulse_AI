@@ -255,12 +255,6 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
   const sessionId = opts.sessionId;
 
-  // Dynamic num_predict: 200 tokens per row + 30% buffer, minimum 512, maximum 4096.
-  // This prevents truncation on large chunks while avoiding wasted budget on small ones.
-  // Formula: each row outputs ~150 tokens of JSON, 200 gives comfortable headroom.
-  const numRows = opts.numRows || 1;
-  const dynamicNumPredict = Math.min(4096, Math.max(512, Math.ceil(numRows * 200 * 1.3)));
-
   const callStart = Date.now();
 
   return new Promise((resolve, reject) => {
@@ -2645,5 +2639,4 @@ app.listen(PORT, () => {
   console.log('\nCentralized Dashboard is running!');
   console.log(`Open your browser and go to: http://localhost:${PORT}`);
   console.log('Make sure Ollama is running (qwen3:4b-instruct)\n');
-})
-  ;
+});
