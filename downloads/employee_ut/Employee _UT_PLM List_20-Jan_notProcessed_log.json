@@ -1,0 +1,91 @@
+{
+  "total_processing_time_ms": 39168,
+  "total_processing_time_seconds": "39.168",
+  "number_of_input_rows": 20,
+  "number_of_chunks": 20,
+  "number_of_output_rows": 20,
+  "failed_row_details": [],
+  "added_columns": [],
+  "chunks_processing_time": [
+    {
+      "chunk_id": 0,
+      "time_ms": 2716
+    },
+    {
+      "chunk_id": 1,
+      "time_ms": 7245
+    },
+    {
+      "chunk_id": 2,
+      "time_ms": 4215
+    },
+    {
+      "chunk_id": 3,
+      "time_ms": 5763
+    },
+    {
+      "chunk_id": 4,
+      "time_ms": 6032
+    },
+    {
+      "chunk_id": 5,
+      "time_ms": 6189
+    },
+    {
+      "chunk_id": 6,
+      "time_ms": 7077
+    },
+    {
+      "chunk_id": 7,
+      "time_ms": 7502
+    },
+    {
+      "chunk_id": 8,
+      "time_ms": 8110
+    },
+    {
+      "chunk_id": 9,
+      "time_ms": 8412
+    },
+    {
+      "chunk_id": 10,
+      "time_ms": 7392
+    },
+    {
+      "chunk_id": 11,
+      "time_ms": 7347
+    },
+    {
+      "chunk_id": 12,
+      "time_ms": 7534
+    },
+    {
+      "chunk_id": 13,
+      "time_ms": 7762
+    },
+    {
+      "chunk_id": 14,
+      "time_ms": 8520
+    },
+    {
+      "chunk_id": 15,
+      "time_ms": 8456
+    },
+    {
+      "chunk_id": 16,
+      "time_ms": 9211
+    },
+    {
+      "chunk_id": 17,
+      "time_ms": 9365
+    },
+    {
+      "chunk_id": 18,
+      "time_ms": 8667
+    },
+    {
+      "chunk_id": 19,
+      "time_ms": 8310
+    }
+  ]
+}
