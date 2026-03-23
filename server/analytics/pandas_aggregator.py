@@ -5,6 +5,10 @@ import json
 import math
 from pathlib import Path
 from datetime import date, datetime
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from sklearn.cluster import AgglomerativeClustering
+
 
 # pandas_aggregator.py lives at:  <project_root>/server/analytics/pandas_aggregator.py
 # extract_criticality.py lives at: <project_root>/server/analytics/extract_criticality.py
@@ -56,6 +60,12 @@ def sanitize_nan(obj):
 def derive_model_name_from_sw_ver(sw_ver):
     if not sw_ver or not isinstance(sw_ver, str) or len(sw_ver) < 5:
         return sw_ver
+    """
+    Derive model name from S/W Ver. for OS Beta entries
+    Example: "S911BXXU8ZYHB" -> "SM-S911B"
+    """
+    if pd.isna(sw_ver) or not isinstance(sw_ver, str) or len(sw_ver) < 5:
+        return sw_ver  # Return original if invalid
     return 'SM-' + sw_ver[:5]
 
 
@@ -72,6 +82,22 @@ def transform_model_names(df):
                 df.loc[mask2, 'Model No.']
                   .str.replace(r'^\[Regular Folder\]', '', regex=True)
             )
+    """
+    Transform Model No. column for OS Beta and Global VOC entries using S/W Ver.
+    Also remove [Regular Folder] prefix from model names.
+    """
+    if 'Model No.' in df.columns:
+        # Apply transformation where Model No. starts with "[OS Beta]" or "[Global VOC]"
+        if 'S/W Ver.' in df.columns:
+            mask_os_beta = df['Model No.'].astype(str).str.startswith('[OS Beta]').fillna(False)
+            mask_global_voc = df['Model No.'].astype(str).str.startswith('[Global VOC]').fillna(False)
+            mask_to_transform = mask_os_beta | mask_global_voc
+            df.loc[mask_to_transform, 'Model No.'] = df.loc[mask_to_transform, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
+        
+        # Remove [Regular Folder] prefix from model names
+        mask_regular_folder = df['Model No.'].astype(str).str.startswith('[Regular Folder]').fillna(False)
+        if mask_regular_folder.any():
+            df.loc[mask_regular_folder, 'Model No.'] = df.loc[mask_regular_folder, 'Model No.'].str.replace(r'^\[Regular Folder\]', '', regex=True)
     return df
 
 
@@ -290,6 +316,78 @@ def time_series(df: pd.DataFrame, date_column: str) -> list:
 
 # Folders inside ./downloads/ to always skip
 _SKIP_FOLDERS = {'__dashboard_cache__', '__pycache__'}
+def cluster_insights(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cluster similar 'AI Insight' statements and replace them with a single representative statement
+    per cluster to avoid UI clutter. Only clusters within the same Module and Sub-Module.
+    """
+    if 'AI Insight' not in df.columns or df.empty:
+        return df
+
+    group_cols = []
+    for col in ['Module', 'Sub-Module']:
+        if col in df.columns:
+            group_cols.append(col)
+
+    if not group_cols:
+        return df
+
+    try:
+        import sys
+        sys.stderr.write("Loading SentenceTransformer model for clustering...\n")
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+    except Exception as e:
+        import sys
+        sys.stderr.write(f"Warning: Failed to load sentence-transformers model: {e}\n")
+        return df
+
+    def process_group(group):
+        insights = group['AI Insight'].dropna()
+        if len(insights.unique()) < 2:
+            return group
+
+        unique_insights = insights.unique().tolist()
+        embeddings = model.encode(unique_insights)
+        
+        # threshold=0.15 means ~85% cosine similarity
+        clustering = AgglomerativeClustering(
+            n_clusters=None,
+            distance_threshold=0.15,
+            metric='cosine',
+            linkage='average'
+        )
+        labels = clustering.fit_predict(embeddings)
+        
+        insight_counts = insights.value_counts()
+        label_to_insights = {}
+        for i, label in enumerate(labels):
+            if label not in label_to_insights:
+                label_to_insights[label] = []
+            label_to_insights[label].append(unique_insights[i])
+            
+        rep_map = {}
+        for label, group_insights in label_to_insights.items():
+            if len(group_insights) == 1:
+                rep_map[label] = group_insights[0]
+            else:
+                best_insight = max(group_insights, key=lambda x: insight_counts.get(x, 0))
+                rep_map[label] = best_insight
+                
+        insight_to_rep = {unique_insights[i]: rep_map[labels[i]] for i in range(len(unique_insights))}
+        group['AI Insight'] = group['AI Insight'].map(lambda x: insight_to_rep.get(x, x) if pd.notna(x) else x)
+        return group
+
+    import sys
+    sys.stderr.write("Starting AI Insight clustering...\n")
+    df = df.groupby(group_cols, group_keys=False).apply(process_group)
+    sys.stderr.write("AI Insight clustering complete.\n")
+    return df
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print(json.dumps({"error": "Module name required"}))
+        sys.exit(1)
 
 
 def _process_folder(folder_path: str, save_to_file: bool = True) -> bool:
@@ -315,6 +413,11 @@ def _process_folder(folder_path: str, save_to_file: bool = True) -> bool:
         df = transform_model_names(df)
 
         kpis       = compute_kpis(df, excel_paths=excel_paths)
+        # Apply semantic clustering on AI Insight
+        df = cluster_insights(df)
+
+        kpis = compute_kpis(df)
+
         top_models = group_by_column(df, 'Model No.')
         for m in top_models:
             m['friendly_name'] = map_model_name(m['label'])
@@ -361,6 +464,10 @@ def _process_folder(folder_path: str, save_to_file: bool = True) -> bool:
     except Exception as e:
         if save_to_file:
             sys.stderr.write(f"  [ERROR] {folder_name}/ — {e}\n")
+        import traceback
+        error_msg = traceback.format_exc()
+        if save_json:
+            print(f"Error saving analytics:\n{error_msg}")
         else:
             print(json.dumps({"error": str(e)}))
         return False

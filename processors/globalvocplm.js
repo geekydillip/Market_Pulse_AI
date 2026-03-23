@@ -36,6 +36,7 @@ function normalizeHeaders(rows) {
 
     // Source (usually calculated, but if present)
     'source': 'Source',
+    'occurr. type': 'Source',
 
     // Additional columns from your Excel file to preserve
     'reg. by id': 'Reg. by ID',
@@ -161,6 +162,19 @@ function deriveModelNameFromSwVer(swVer) {
     return '';
   }
   return 'SM-' + swVer.substring(0, 5);
+}
+
+function extractModelFromTitle(title) {
+  if (!title || typeof title !== 'string') return null;
+  const smMatch = title.match(/SM-[a-zA-Z0-9]+/i);
+  if (smMatch) {
+    return smMatch[0].toUpperCase();
+  }
+  const patternMatch = title.match(/[a-zA-Z]\d{3}[a-zA-Z]/i);
+  if (patternMatch) {
+    return 'SM-' + patternMatch[0].toUpperCase();
+  }
+  return null;
 }
 
 // normalizeRows - now just calls the shared function
@@ -372,11 +386,16 @@ module.exports = {
       const original = originalRows[index] || {};
 
       return {
+      const titleText = original['Title'] || aiRow['Title'] || '';
+      const extractedModel = extractModelFromTitle(titleText);
+
+      // Create the base merged row
+      const baseRow = {
         'Case Code': original['Case Code'] || '',
         'Source': original['Source'] || '',
-        'Model No.': (original['Model No.'] && /\[OS Beta\]/i.test(String(original['Model No.'])))
+        'Model No.': extractedModel || ((original['Model No.'] && /\[OS Beta\]/i.test(String(original['Model No.'])))
           ? (original['S/W Ver.'] && typeof original['S/W Ver.'] === 'string' && original['S/W Ver.'].length >= 5 ? 'SM-' + original['S/W Ver.'].trim().substring(0, 5) : '')
-          : (original['Model No.'] || ''),
+          : (original['Model No.'] || '')),
         'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
         'Title': aiRow['Title'] || '',

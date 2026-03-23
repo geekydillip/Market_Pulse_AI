@@ -87,6 +87,10 @@
         "name": "A3 (2016)",
         "chipset": "Exynos 7578"
     },
+    "SM-A315F": {
+        "name": "A31",
+        "chipset": "Helio P65"
+    },
     "SM-A320F": {
         "name": "A3 (2017)",
         "chipset": "Exynos 7870"
@@ -271,7 +275,15 @@
         "name": "F04",
         "chipset": "Helio P35"
     },
+    "SM-F415F": {
+        "name": "F41",
+        "chipset": "Exynos 9611"
+    },
     "SM-F122B": {
+        "name": "F12",
+        "chipset": "Exynos 850"
+    },
+    "SM-F127G": {
         "name": "F12",
         "chipset": "Exynos 850"
     },
@@ -283,7 +295,7 @@
         "name": "F14 5G",
         "chipset": "Exynos 1330"
     },
-    "SM-F222B": {
+    "SM-E225F": {
         "name": "F22",
         "chipset": "Helio G80"
     },
@@ -311,7 +323,7 @@
         "name": "F52 5G",
         "chipset": "Snapdragon 750G"
     },
-    "SM-F621B": {
+    "SM-E625F": {
         "name": "F62",
         "chipset": "Exynos 9825"
     },
@@ -527,6 +539,10 @@
         "name": "M06 5G",
         "chipset": "Dimensity 6100+"
     },
+    "SM-M025F": {
+        "name": "M02",
+        "chipset": "Snapdragon 450"
+    },
     "SM-M105F": {
         "name": "M10",
         "chipset": "Exynos 7870"
@@ -567,9 +583,13 @@
         "name": "M31",
         "chipset": "Exynos 9611"
     },
-    "SM-M326B": {
+    "SM-M325F": {
         "name": "M32",
-        "chipset": "Helio G80"
+        "chipset": "Mediatek MT6769V"
+    },
+    "SM-M326B": {
+        "name": "M32 5G",
+        "chipset": "Dimensity 700"
     },
     "SM-M336B": {
         "name": "M33 5G",
@@ -578,6 +598,10 @@
     "SM-M346B": {
         "name": "M34 5G",
         "chipset": "Exynos 1280"
+    },
+    "SM-M317F": {
+        "name": "M31s",
+        "chipset": "Exynos 9611"
     },
     "SM-M356B": {
         "name": "M35 5G",

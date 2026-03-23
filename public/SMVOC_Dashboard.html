@@ -423,7 +423,11 @@
         const friendlyModelNames = Array.from(data.models)
           .map(modelNo => applyModelNameMapping(modelNo))
           .sort();
-        const modelNamesDisplay = [...new Set(friendlyModelNames)].join(', ');
+        const uniqueModelNames = [...new Set(friendlyModelNames)];
+        let modelNamesDisplay = uniqueModelNames.slice(0, 10).join(', ');
+        if (uniqueModelNames.length > 10) {
+          modelNamesDisplay += `<br><span class="text-xs text-slate-500 font-medium mt-1 inline-block">(+${uniqueModelNames.length - 10} more)</span>`;
+        }
 
         // Find matching Global VOC PLM cases
         // Use Pre-Calculated Semantic Matches (fuzzy matching from server)
