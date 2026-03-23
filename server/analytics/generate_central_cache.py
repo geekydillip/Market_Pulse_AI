@@ -156,6 +156,9 @@ def run_aggregator_directly():
         base_path = "./downloads"
         data = ca.load_all_excels(base_path)
         kpis, status_kpis = ca.compute_central_kpis(data)
+        # added by vandana 22.03.2026
+        severity_distribution = ca.compute_merged_severity(kpis)
+        # till here
         top_modules = ca.compute_top_modules(data)
         top_models = ca.compute_top_models(data)
         high_issues = ca.compute_high_issues(data)
@@ -177,7 +180,12 @@ def run_aggregator_directly():
 
         # Compute total issues and high issues counts
         total_issues = sum(kpis[source]['total'] for source in kpis)
-        high_issues_count = sum(kpis[source]['High'] for source in kpis)
+        
+        # NEW: Handle nested 'High' dictionary if present
+        def get_high_total(h):
+            return h['total'] if isinstance(h, dict) else h
+        
+        high_issues_count = sum(get_high_total(kpis[source]['High']) for source in kpis)
 
         response = {
             "kpis": kpis,
@@ -231,6 +239,13 @@ def generate_central_cache():
     status_kpis = base_data.get("status_kpis", {})
     total_issues = base_data.get("total_issues", 0)
     high_issues_count = base_data.get("high_issues_count", 0)
+    
+    # Optional: Re-calculate if needed from nested kpis
+    # (Just to be safe if run_aggregator_directly returns nested structure)
+    if not isinstance(high_issues_count, (int, float)):
+        def get_high_total(h):
+            return h['total'] if isinstance(h, dict) else h
+        high_issues_count = sum(get_high_total(kpis.get(s, {}).get('High', 0)) for s in kpis)
     top_modules = base_data.get("top_modules", [])
     top_models = base_data.get("top_models", [])
     high_issues = base_data.get("high_issues", [])

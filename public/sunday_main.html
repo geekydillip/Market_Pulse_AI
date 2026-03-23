@@ -95,10 +95,8 @@
 
     /* ── Chart grids ──── */
     .chart-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
-    .chart-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
-    @media(max-width:1200px){.chart-grid-4{grid-template-columns:repeat(2,1fr);}}
-    @media(max-width:700px){.chart-grid-4{grid-template-columns:1fr;}}
-    @media(max-width:1000px){.chart-grid{grid-template-columns:1fr;}}
+    .chart-grid-lower{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+    @media(max-width:1000px){.chart-grid,.chart-grid-lower{grid-template-columns:1fr;}}
     .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:17px 19px 15px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .2s;}
     .chart-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.08);}
     .chart-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
@@ -113,6 +111,15 @@
     .chart-card-title{font-size:12.5px;font-weight:600;color:var(--text);}
     .chart-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:var(--surface2);color:var(--text3);border:1px solid var(--border);}
 
+    /* ── Module rank bars ──── */
+    .module-bar-list{display:flex;flex-direction:column;gap:8px;}
+    .module-bar-row{display:flex;align-items:center;gap:7px;}
+    .module-rank{width:16px;height:16px;border-radius:4px;flex-shrink:0;background:var(--surface3);color:var(--text3);font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;}
+    .module-name{font-size:11.5px;color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .module-bar-wrap{width:72px;background:var(--surface3);border-radius:3px;height:6px;overflow:hidden;flex-shrink:0;}
+    .module-bar-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1);}
+    .module-bar-val{font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--text3);min-width:24px;text-align:right;}
+
     /* ── Status legend ──── */
     .status-legend{display:flex;flex-direction:column;gap:9px;margin-top:6px;}
     .sl-row{display:flex;align-items:center;gap:8px;}
@@ -120,6 +127,14 @@
     .sl-label{font-size:12px;color:var(--text2);flex:1;}
     .sl-val{font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);}
     .sl-pct{font-size:10.5px;color:var(--text3);min-width:32px;text-align:right;}
+
+    /* ── Resolution list ──── */
+    .res-list{display:flex;flex-direction:column;gap:7px;}
+    .res-row{display:flex;align-items:center;gap:7px;}
+    .res-name{font-size:11px;color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .res-bar-wrap{width:60px;background:var(--surface3);border-radius:3px;height:6px;overflow:hidden;flex-shrink:0;}
+    .res-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#6366f1,#818cf8);transition:width .7s cubic-bezier(.4,0,.2,1);}
+    .res-val{font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--text3);min-width:22px;text-align:right;}
 
     /* ── Table ──── */
     .table-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);}
@@ -187,23 +202,6 @@
     .modal-stat-val.red{color:#f43f5e;}
     .modal-stat-lbl{font-size:11px;color:var(--text3);}
 
-    /* ── Pagination ──── */
-    .pagination-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap;gap:8px;}
-    .pagination-info{font-size:11.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
-    .pagination-info strong{color:var(--text);}
-    .pagination-controls{display:flex;align-items:center;gap:4px;}
-    .pg-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;font-family:'Sora',sans-serif;}
-    .pg-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.06);}
-    .pg-btn:disabled{opacity:.35;cursor:not-allowed;}
-    .pg-btn.active{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:700;}
-    .pg-ellipsis{font-size:12px;color:var(--text3);padding:0 4px;}
-    .issue-modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;}
-    .issue-modal-box{background:var(--surface);border-radius:16px;width:90%;max-width:860px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.22);overflow:hidden;}
-    .issue-modal-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);flex-shrink:0;}
-    .issue-modal-title{font-size:14px;font-weight:700;color:var(--text);}
-    .issue-modal-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;}
-    .issue-modal-close:hover{background:var(--surface3);color:var(--text);}
-    .issue-modal-body{overflow-y:auto;flex:1;}
     /* ── Scrollbar ──── */
     ::-webkit-scrollbar{width:5px;height:5px;}
     ::-webkit-scrollbar-track{background:transparent;}
@@ -314,9 +312,9 @@
       </div>
     </div>
 
-    <!-- ── ALL 4 CHARTS IN ONE ROW ─── -->
+    <!-- ── ROW 1 CHARTS: Top Models, Top Sources, Severity ─── -->
     <div class="section-label">Analytics Overview</div>
-    <div class="chart-grid-4">
+    <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-card-header">
           <div class="chart-card-header-left">
@@ -343,9 +341,26 @@
             <span class="chart-card-title">Severity Distribution</span>
           </div>
         </div>
-        <div id="severity-chart" style="width:100%;height:160px;"></div>
-        <div id="severity-breakdown"></div>
+        <div id="severity-chart" style="width:100%;height:200px;"></div>
       </div>
+    </div>
+
+    <!-- ── ROW 2 CHARTS: Top Modules + Status Breakdown + Resolution ─── -->
+    <div class="chart-grid-lower">
+
+      <!-- Top Modules bar list -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-header-left">
+            <div class="chart-icon violet"><i class="fa-solid fa-cubes"></i></div>
+            <span class="chart-card-title">Top Modules by Issue Count</span>
+          </div>
+          <span class="chart-badge" id="modules-badge">—</span>
+        </div>
+        <div id="top-modules-chart" style="width:100%;height:200px;"></div>
+      </div>
+
+      <!-- Status breakdown -->
       <div class="chart-card">
         <div class="chart-card-header">
           <div class="chart-card-header-left">
@@ -356,6 +371,18 @@
         <div id="status-donut-chart" style="width:100%;height:130px;"></div>
         <div class="status-legend" id="status-legend"></div>
       </div>
+
+      <!-- Resolution breakdown -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-header-left">
+            <div class="chart-icon amber"><i class="fa-solid fa-list-check"></i></div>
+            <span class="chart-card-title">Resolution Breakdown</span>
+          </div>
+        </div>
+        <div class="res-list" id="resolution-list"></div>
+      </div>
+
     </div>
 
     <!-- ── CRITICAL ISSUES TABLE ──────────────────────────── -->
@@ -400,7 +427,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th style="width:40px">SL.</th>
+              <th style="width:48px">SL.</th>
               <th class="sortable" onclick="sortTable('source')">Source <i id="sort-icon-source" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
               <th class="sortable" onclick="sortTable('model')">Model No. <i id="sort-icon-model" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
               <th class="sortable" onclick="sortTable('chipset')">Chipset <i id="sort-icon-chipset" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
@@ -414,40 +441,10 @@
           </tbody>
         </table>
       </div>
-
-      <!-- PAGINATION BAR -->
-      <div class="pagination-bar" id="table-pagination" style="display:none;">
-        <span class="pagination-info" id="pagination-info">Showing <strong id="pg-from">1</strong>–<strong id="pg-to">10</strong> of <strong id="pg-total">0</strong> issues</span>
-        <div class="pagination-controls" id="pg-controls"></div>
-      </div>
-    </div>
-
-    <!-- ISSUE DRILL-DOWN MODAL -->
-    <div id="issue-drill-modal" style="display:none;" class="issue-modal-overlay" onclick="if(event.target===this)closeIssueDrillModal()">
-      <div class="issue-modal-box">
-        <div class="issue-modal-head">
-          <span class="issue-modal-title" id="issue-drill-title">Issues</span>
-          <button class="issue-modal-close" onclick="closeIssueDrillModal()">✕</button>
-        </div>
-        <div class="issue-modal-body">
-          <table class="data-table" style="min-width:600px;">
-            <thead>
-              <tr>
-                <th style="width:40px">SL.</th>
-                <th>PLM Code</th>
-                <th>Model No.</th>
-                <th>Title</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="issue-drill-body"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
   </main>
 
-  <!-- ── DETAILS MODAL ─────────── -->
+  <!-- ── DETAILS MODAL (structure preserved, design updated) ─────────── -->
   <div id="details-modal" class="fixed inset-0 z-50 hidden" style="font-family:'Sora',sans-serif;">
     <div class="fixed inset-0" style="background:rgba(0,0,0,.5);backdrop-filter:blur(4px);" onclick="closeDetailsModal()"></div>
     <div class="modal-inner">
@@ -490,6 +487,9 @@
     </div>
   </div>
 
+
+
+  <!-- ── ALL JAVASCRIPT — DATA LOGIC COMPLETELY UNTOUCHED ──────────── -->
   <script>
     // Global state
     let dashboardData = { kpis: {}, topModels: [], topModules: [] };
@@ -566,26 +566,12 @@
       }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // FIX 1: updateGlobalKPIs
-    // OLD: const high = kpis.severity_distribution?.High || 0;
-    // NEW: reads from new {Severe:{total}, Moderate:{total}, Deferred:{total}}
-    //      format produced by pandas_aggregator.py, with fallback to old flat
-    //      format so it works whether analytics.json is old or new.
-    // ─────────────────────────────────────────────────────────────────────
     function updateGlobalKPIs(analyticsData) {
       const kpis = analyticsData.kpis || {};
       const total    = kpis.total_rows || 0;
+      const high     = kpis.severity_distribution?.High || 0;
       const open     = kpis.open_issues || 0;
       const resolved = kpis.resolved_issues || 0;
-
-      // NEW: support both old flat format (High: 82) and new object format
-      // (Severe: {total:39, open:11, resolve:28, close:0})
-      const sevDist = kpis.severity_distribution || {};
-      const high = (sevDist.Severe && typeof sevDist.Severe === 'object')
-        ? (sevDist.Severe.total || 0)
-        : (sevDist.High || 0);
-
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
       set('total-issues',    total.toLocaleString());
       set('high-issues',     high.toLocaleString());
@@ -606,7 +592,6 @@
       const colors = getChartColors();
       const kpis = analyticsData.kpis || {};
 
-      // ── 1. Top Models chart ──────────────────────────────────────────
       const modelsDom = document.getElementById('top-models-chart');
       if (modelsDom) {
         const modelsChart = echarts.init(modelsDom);
@@ -632,7 +617,6 @@
         window.addEventListener('resize', () => modelsChart.resize());
       }
 
-      // ── 2. Top Sources chart ─────────────────────────────────────────
       const sourcesDom = document.getElementById('top-sources-chart');
       if (sourcesDom) {
         const sourcesChart = echarts.init(sourcesDom);
@@ -660,33 +644,12 @@
         window.addEventListener('resize', () => sourcesChart.resize());
       }
 
-      // ── 3. Severity Distribution chart ───────────────────────────────
-      // FIX 2: support new {Severe:{total}, Moderate:{total}, Deferred:{total}}
-      // format from pandas_aggregator.py, with fallback to old flat {High, Medium, Low}
       const severityDom = document.getElementById('severity-chart');
       if (severityDom) {
         const severityChart = echarts.init(severityDom);
-        const sevDist = kpis.severity_distribution || {};
-
-        // Detect format: new format has object values, old format has plain numbers
-        window._lastSevDist = sevDist;
-        const isNewFormat = sevDist.Severe && typeof sevDist.Severe === 'object';
-
-        let sevCategories, sevValues, sevColors;
-        if (isNewFormat) {
-          sevCategories = ['Deferred', 'Moderate', 'Severe'];
-          sevColors     = ['#94a3b8',  '#f59e0b',   '#f43f5e'];
-          sevValues     = sevCategories.map(cat =>
-            sevDist[cat] && typeof sevDist[cat] === 'object'
-              ? (sevDist[cat].total || 0)
-              : (sevDist[cat] || 0)
-          );
-        } else {
-          sevCategories = ['Low', 'Medium', 'High'];
-          sevColors     = ['#94a3b8', '#f59e0b', '#f43f5e'];
-          sevValues     = sevCategories.map(cat => sevDist[cat] || 0);
-        }
-
+        const sevDist = analyticsData.kpis.severity_distribution || {};
+        const sevCategories = ['Low', 'Medium', 'High'];
+        const sevValues = sevCategories.map(cat => sevDist[cat] || 0);
         severityChart.setOption({
           tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
           grid: { left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true },
@@ -702,77 +665,55 @@
             name: 'Issues', type: 'bar',
             data: sevValues,
             itemStyle: {
-              color: function (params) { return sevColors[params.dataIndex]; },
+              color: function (params) {
+                return ['#94a3b8', '#f59e0b', '#f43f5e'][params.dataIndex];
+              },
               borderRadius: [0, 4, 4, 0]
             },
-            label: {
-              show: true, position: 'right', fontSize: 10,
-              color: function(params) { return sevColors[params.dataIndex]; },
-              fontWeight: '600'
-            }
+            label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
           }]
         });
         window.addEventListener('resize', () => severityChart.resize());
+      }
 
-        // ── Severity tier breakdown (Open / Resolve / Close per tier) ──────
-        // Renders dynamically from severity_distribution data.
-        // Only shows tiers that are objects with breakdown data (new format).
-        // Skips Deferred as it is not actionable.
-        const breakdownEl = document.getElementById('severity-breakdown');
-        if (breakdownEl && isNewFormat) {
-          const tierDefs = [
-            { key: 'Severe',   color: '#f43f5e', bg: 'rgba(244,63,94,.06)',   border: 'rgba(244,63,94,.15)'  },
-            { key: 'Moderate', color: '#f59e0b', bg: 'rgba(245,158,11,.06)',  border: 'rgba(245,158,11,.15)' },
-          ];
-          const statusDots = {
-            open:    { label: 'Open',    color: '#f59e0b' },
-            resolve: { label: 'Resolve', color: '#10b981' },
-            close:   { label: 'Close',   color: '#6366f1' },
-          };
-
-          const cards = tierDefs.map(tier => {
-            const d = sevDist[tier.key] || {};
-            const tot = d.total || 0;
-            if (tot === 0) return '';
-            const rows = Object.entries(statusDots).map(([key, st]) => {
-              const val = d[key] || 0;
-              const pct = tot > 0 ? ((val / tot) * 100).toFixed(0) : '0';
-              const clickable = val > 0 ? `cursor:pointer;` : '';
-              const onclick   = val > 0 ? `onclick="openIssueDrillModal('${tier.key}','${key}')"` : '';
-              return `<div ${onclick} style="display:flex;align-items:center;gap:7px;margin-bottom:5px;${clickable}border-radius:6px;padding:2px 4px;transition:background .12s;" onmouseenter="if(${val}>0)this.style.background='var(--surface3)'" onmouseleave="this.style.background=''">
-                <span style="width:7px;height:7px;border-radius:50%;background:${st.color};flex-shrink:0;display:inline-block;"></span>
-                <span style="font-size:11.5px;color:var(--text2);flex:1;">${st.label}</span>
-                <span style="font-size:11.5px;font-weight:600;color:var(--text);min-width:22px;text-align:right;">${val}</span>
-                <span style="font-size:10.5px;color:var(--text3);min-width:30px;text-align:right;">${pct}%</span>
-                ${val > 0 ? `<i class="fa-solid fa-chevron-right" style="font-size:9px;color:var(--text3);opacity:.5;"></i>` : ''}
-              </div>`;
-            }).join('');
-            return `<div style="background:${tier.bg};border:1px solid ${tier.border};border-radius:10px;padding:11px 13px;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
-                <span style="width:9px;height:9px;border-radius:50%;background:${tier.color};flex-shrink:0;display:inline-block;"></span>
-                <span style="font-size:12px;font-weight:600;color:var(--text);">${tier.key} (${tot})</span>
-              </div>
-              ${rows}
-            </div>`;
-          }).join('');
-
-          breakdownEl.innerHTML = `
-            <div style="height:1px;background:var(--border);margin:12px 0 10px;"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${cards}</div>`;
-        }
+      // ── 4. Top Modules chart ──────────────────────────────────────────
+      const modulesDom = document.getElementById('top-modules-chart');
+      if (modulesDom) {
+        const modulesChart = echarts.init(modulesDom);
+        const topMods = (analyticsData.top_modules || []).slice(0, 8);
+        const modsBadge = document.getElementById('modules-badge');
+        if (modsBadge) modsBadge.textContent = 'Top ' + topMods.length;
+        modulesChart.setOption({
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          grid: { left: '3%', right: '8%', bottom: '3%', top: '5%', containLabel: true },
+          xAxis: { type: 'value', show: false, splitLine: { show: false } },
+          yAxis: {
+            type: 'category',
+            data: topMods.map(m => m.label || m.name || m.module || m[0]).reverse(),
+            axisLabel: { color: colors.textPrimary, fontSize: 10 },
+            axisLine: { show: false }, axisTick: { show: false }
+          },
+          series: [{
+            type: 'bar',
+            data: topMods.map(m => m.count || m.value || m[1]).reverse(),
+            itemStyle: {
+              borderRadius: [0, 4, 4, 0],
+              color: function(p) {
+                const c = ['#6366f1','#8b5cf6','#a78bfa','#818cf8','#6366f1','#7c3aed','#4f46e5','#6366f1'];
+                return c[p.dataIndex % c.length];
+              }
+            },
+            label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
+          }]
+        });
+        window.addEventListener('resize', () => modulesChart.resize());
       }
 
       // ── 5. Status donut + legend ─────────────────────────────────────
-      // FIX 3: use kpis.close_issues directly instead of deriving by subtraction
-      // OLD: const closedN = total - openN - resolvedN;  ← wrong with new format
-      // NEW: read close_issues from kpis (set by pandas_aggregator.py), fallback to subtraction
-      const total     = kpis.total_rows || 1;
-      const openN     = kpis.open_issues || 0;
+      const total = kpis.total_rows || 1;
+      const openN = kpis.open_issues || 0;
       const resolvedN = kpis.resolved_issues || 0;
-      const closedN   = kpis.close_issues != null
-        ? kpis.close_issues
-        : Math.max(total - openN - resolvedN, 0);
-
+      const closedN = total - openN - resolvedN;
       const statusDom = document.getElementById('status-donut-chart');
       if (statusDom) {
         const statusChart = echarts.init(statusDom);
@@ -782,9 +723,9 @@
           series: [{
             type: 'pie', radius: ['50%', '80%'], center: ['50%', '50%'],
             data: [
-              { value: openN,                  name: 'Open',    itemStyle: { color: '#f59e0b' } },
-              { value: resolvedN,              name: 'Resolved', itemStyle: { color: '#10b981' } },
-              { value: Math.max(closedN, 0),   name: 'Closed',  itemStyle: { color: '#6366f1' } },
+              { value: openN,     name: 'Open',     itemStyle: { color: '#f59e0b' } },
+              { value: resolvedN, name: 'Resolved',  itemStyle: { color: '#10b981' } },
+              { value: Math.max(closedN, 0), name: 'Closed', itemStyle: { color: '#6366f1' } },
             ],
             label: { show: false }, emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,.15)' } }
           }]
@@ -794,9 +735,9 @@
       const legendEl = document.getElementById('status-legend');
       if (legendEl) {
         const items = [
-          { label:'Open',     val: openN,                 color: '#f59e0b' },
-          { label:'Resolved', val: resolvedN,             color: '#10b981' },
-          { label:'Closed',   val: Math.max(closedN, 0), color: '#6366f1' },
+          { label:'Open', val:openN, color:'#f59e0b' },
+          { label:'Resolved', val:resolvedN, color:'#10b981' },
+          { label:'Closed', val:Math.max(closedN,0), color:'#6366f1' },
         ];
         legendEl.innerHTML = items.map(it => {
           const pct = total > 0 ? ((it.val/total)*100).toFixed(1) : '0.0';
@@ -809,183 +750,117 @@
         }).join('');
       }
 
-
-    }
-
-    // ── Pagination state ─────────────────────────────────────────────────
-    const PAGE_SIZE = 10;
-    let tablePage = 1;
-    let allTableRows = []; // full filtered+sorted dataset (Open+Resolve only, no Close)
-
-    // ── Map a raw row from analytics.json → display object ───────────────
-    function mapRow(item) {
-      const modelNumber = item['Model No.'] || 'N/A';
-      const modelStr = modelNumber.trim();
-      let chipset = 'N/A';
-      if (modelNameMapping[modelStr] && modelNameMapping[modelStr].chipset) {
-        chipset = modelNameMapping[modelStr].chipset;
-      } else {
-        const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
-        if (match) {
-          const baseModel = match[1];
-          for (const [mapKey, mappingData] of Object.entries(modelNameMapping)) {
-            if (typeof mappingData === 'object' && mapKey.startsWith(baseModel) && mappingData.chipset) {
-              chipset = mappingData.chipset; break;
-            }
-          }
-        }
+      // ── 6. Resolution breakdown list ─────────────────────────────────
+      const resList = document.getElementById('resolution-list');
+      if (resList && kpis.resolution_distribution) {
+        const resData = Object.entries(kpis.resolution_distribution)
+          .sort((a,b) => b[1]-a[1]).slice(0,7);
+        const maxRes = resData[0]?.[1] || 1;
+        resList.innerHTML = resData.map(([name, val]) => {
+          const pct = Math.round((val/maxRes)*100);
+          const shortName = name.length > 28 ? name.slice(0,27) + '…' : name;
+          return '<div class="res-row">' +
+            '<span class="res-name" title="' + name + '">' + shortName + '</span>' +
+            '<div class="res-bar-wrap"><div class="res-bar-fill" style="width:' + pct + '%"></div></div>' +
+            '<span class="res-val">' + val + '</span>' +
+          '</div>';
+        }).join('');
+      } else if (resList) {
+        // Fallback: derive from status
+        const fallback = [
+          { name: 'Resolved', val: resolvedN },
+          { name: 'Open', val: openN },
+          { name: 'Closed', val: Math.max(closedN,0) },
+        ];
+        const maxF = Math.max(...fallback.map(f=>f.val), 1);
+        resList.innerHTML = fallback.map(f => {
+          const pct = Math.round((f.val/maxF)*100);
+          return '<div class="res-row">' +
+            '<span class="res-name">' + f.name + '</span>' +
+            '<div class="res-bar-wrap"><div class="res-bar-fill" style="width:' + pct + '%"></div></div>' +
+            '<span class="res-val">' + f.val + '</span>' +
+          '</div>';
+        }).join('');
       }
-      const status = item['Progr.Stat.'] || 'N/A';
-      let statusColorClass = 'status-default';
-      if (status.toLowerCase().startsWith('open')) statusColorClass = 'status-open';
-      else if (status.toLowerCase().startsWith('resolve')) statusColorClass = 'status-resolved';
-      return {
-        source:          item['Source'] || 'N/A',
-        model:           modelNumber !== 'N/A' ? modelNumber : applyModelNameMapping(modelNumber),
-        chipset,
-        plm:             item['Case Code'] || 'N/A',
-        title:           item['Title'] || 'No Title Available',
-        status,
-        statusColorClass,
-        _raw:            item   // keep raw for drill-down
-      };
     }
 
     async function createModelSummaryTable() {
       const tbody = document.getElementById('model-summary-table-body');
       if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text3)"><i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px"></i>Loading data…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)"><i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px"></i>Loading data…</td></tr>';
       try {
         const response = await fetch('/downloads/global_voc_PLM/analytics.json');
-        if (!response.ok) throw new Error('HTTP ' + response.status);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const analyticsData = await response.json();
         if (!analyticsData.rows || !Array.isArray(analyticsData.rows)) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Error: Invalid data format</td></tr>';
           return;
         }
-        window._lastAnalyticsRows = analyticsData.rows || [];
+        tbody.innerHTML = '';
         updateGlobalKPIs(analyticsData);
         initGlobalCharts(analyticsData);
-
-        // Filter: EXCLUDE Close — keep Open and all Resolve variants
-        const filtered = analyticsData.rows.filter(item => {
-          const st = (item['Progr.Stat.'] || '').toLowerCase();
-          return st.startsWith('open') || st.startsWith('resolve');
+        const criticalIssues = analyticsData.rows
+          .filter(item => (item.Severity || '').toLowerCase() === 'high')
+          .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0))
+          .slice(0, 10);
+        globalTableData = criticalIssues.map(item => {
+          const modelNumber = item['Model No.'] || 'N/A';
+          const modelStr = modelNumber.trim();
+          const friendlyName = applyModelNameMapping(modelNumber);
+          let chipset = 'N/A';
+          if (modelNameMapping[modelStr] && modelNameMapping[modelStr].chipset) {
+            chipset = modelNameMapping[modelStr].chipset;
+          } else {
+            const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
+            if (match) {
+              const baseModel = match[1];
+              for (const [mapKey, mappingData] of Object.entries(modelNameMapping)) {
+                if (typeof mappingData === 'object' && mapKey.startsWith(baseModel) && mappingData.chipset) {
+                  chipset = mappingData.chipset; break;
+                }
+              }
+            }
+          }
+          const source = item['Source'] || 'N/A';
+          const plmCode = item['Case Code'] || 'N/A';
+          const title = item['Title'] || 'No Title Available';
+          const status = item['Progr.Stat.'] || 'N/A';
+          let statusColorClass = 'status-default';
+          if (status.toLowerCase().includes('open')) statusColorClass = 'status-open';
+          else if (status.toLowerCase().includes('resolve') || status.toLowerCase().includes('close')) statusColorClass = 'status-resolved';
+          let modelDisplay = modelNumber !== 'N/A' ? modelNumber : friendlyName;
+          return { source, model: modelDisplay, chipset, plm: plmCode, title, status, statusColorClass };
         });
-
-        // Map all rows, sort Open first then Resolve
-        allTableRows = filtered
-          .map(mapRow)
-          .sort((a, b) => {
-            const rank = s => s.toLowerCase().startsWith('open') ? 0 : 1;
-            return rank(a.status) - rank(b.status);
-          });
-
-        masterTableData = [...allTableRows];
-        globalTableData = [...allTableRows];
-        tablePage = 1;
-        populateFilterOptions();
         renderTable();
         updateTimestamp();
       } catch (error) {
         console.error('Failed to load global_voc_PLM/analytics.json:', error);
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Failed to load table data.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Failed to load table data.</td></tr>`;
       }
     }
 
     function renderTable() {
+      // Sync master data and populate filter dropdowns
+      masterTableData = [...globalTableData];
+      populateFilterOptions();
+
       const tbody = document.getElementById('model-summary-table-body');
       if (!tbody) return;
       tbody.innerHTML = '';
-
-      const data = globalTableData;
-      const totalRows = data.length;
-      const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
-      if (tablePage > totalPages) tablePage = totalPages;
-
-      const start = (tablePage - 1) * PAGE_SIZE;
-      const end   = Math.min(start + PAGE_SIZE, totalRows);
-      const pageRows = data.slice(start, end);
-
-      if (pageRows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text3)">No issues found.</td></tr>';
-      } else {
-        pageRows.forEach((item, idx) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML =
-            '<td><span class="sl-num">' + (start + idx + 1) + '</span></td>' +
-            '<td>' + item.source + '</td>' +
-            '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + item.model + '</td>' +
-            '<td>' + item.chipset + '</td>' +
-            '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + item.plm + '</td>' +
-            '<td class="title-cell" title="' + item.title + '">' + item.title + '</td>' +
-            '<td><span class="status-pill ' + item.statusColorClass + '">' + item.status + '</span></td>';
-          tbody.appendChild(tr);
-        });
-      }
-
-      // Update pagination bar
-      const pgBar  = document.getElementById('table-pagination');
-      const pgFrom = document.getElementById('pg-from');
-      const pgTo   = document.getElementById('pg-to');
-      const pgTot  = document.getElementById('pg-total');
-      if (pgBar) {
-        pgBar.style.display = totalRows > 0 ? 'flex' : 'none';
-        if (pgFrom) pgFrom.textContent = totalRows > 0 ? start + 1 : 0;
-        if (pgTo)   pgTo.textContent   = end;
-        if (pgTot)  pgTot.textContent  = totalRows;
-        renderPaginationControls(totalPages);
-      }
-    }
-
-    function renderPaginationControls(totalPages) {
-      const ctrl = document.getElementById('pg-controls');
-      if (!ctrl) return;
-      ctrl.innerHTML = '';
-
-      const btn = (label, page, disabled, active, isIcon) => {
-        const b = document.createElement('button');
-        b.className = 'pg-btn' + (active ? ' active' : '');
-        b.disabled  = disabled;
-        b.innerHTML = isIcon ? '<i class="fa-solid ' + label + '"></i>' : label;
-        b.title     = isIcon ? label : '';
-        if (!disabled) b.onclick = () => { tablePage = page; renderTable(); };
-        return b;
-      };
-
-      // Prev
-      ctrl.appendChild(btn('fa-chevron-left',  tablePage - 1, tablePage <= 1,          false, true));
-
-      // Page number pills with ellipsis
-      const pages = [];
-      if (totalPages <= 7) {
-        for (let i = 1; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        if (tablePage > 3) { const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e); }
-        for (let i = Math.max(2, tablePage-1); i <= Math.min(totalPages-1, tablePage+1); i++) pages.push(i);
-        if (tablePage < totalPages - 2) { const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e); }
-        pages.push(totalPages);
-      }
-      // Rebuild with ellipsis inline
-      ctrl.innerHTML = '';
-      ctrl.appendChild(btn('fa-chevron-left', tablePage - 1, tablePage <= 1, false, true));
-      if (totalPages > 7 && tablePage > 3) {
-        ctrl.appendChild(btn('1', 1, false, false, false));
-        const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e);
-        for (let i = Math.max(2, tablePage-1); i <= Math.min(totalPages-1, tablePage+1); i++)
-          ctrl.appendChild(btn(String(i), i, false, i === tablePage, false));
-        if (tablePage < totalPages - 2) { const e2 = document.createElement('span'); e2.className='pg-ellipsis'; e2.textContent='…'; ctrl.appendChild(e2); }
-        ctrl.appendChild(btn(String(totalPages), totalPages, false, totalPages === tablePage, false));
-      } else {
-        for (let i = 1; i <= Math.min(totalPages, 7); i++)
-          ctrl.appendChild(btn(String(i), i, false, i === tablePage, false));
-        if (totalPages > 7) {
-          const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e);
-          ctrl.appendChild(btn(String(totalPages), totalPages, false, totalPages === tablePage, false));
-        }
-      }
-      ctrl.appendChild(btn('fa-chevron-right', tablePage + 1, tablePage >= totalPages, false, true));
+      let serialNumber = 1;
+      globalTableData.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="sl-num">${serialNumber++}</span></td>
+          <td>${item.source}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${item.model}</td>
+          <td>${item.chipset}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${item.plm}</td>
+          <td class="title-cell" title="${item.title}">${item.title}</td>
+          <td><span class="status-pill ${item.statusColorClass}">${item.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function sortTable(column) {
@@ -996,15 +871,16 @@
         isAscending = true;
       }
       ['source','model','chipset','plm','title','status'].forEach(col => {
-        const icon = document.getElementById('sort-icon-' + col);
+        const icon = document.getElementById(`sort-icon-${col}`);
         if (icon) { icon.className = 'fa-solid fa-sort'; icon.style.color = ''; icon.style.opacity = '.4'; }
       });
-      const currentIcon = document.getElementById('sort-icon-' + column);
+      const currentIcon = document.getElementById(`sort-icon-${column}`);
       if (currentIcon) {
-        currentIcon.className = 'fa-solid ' + (isAscending ? 'fa-sort-up' : 'fa-sort-down');
+        currentIcon.className = `fa-solid ${isAscending ? 'fa-sort-up' : 'fa-sort-down'}`;
         currentIcon.style.color = '#6366f1';
         currentIcon.style.opacity = '1';
       }
+      // Sort both master and globalTableData so filter re-apply preserves order
       const sorter = (a, b) => {
         let valA = a[column] ? a[column].toString().toLowerCase() : '';
         let valB = b[column] ? b[column].toString().toLowerCase() : '';
@@ -1014,60 +890,8 @@
       };
       globalTableData.sort(sorter);
       masterTableData.sort(sorter);
-      tablePage = 1;
-      renderTable();
-    }
-
-    // ── Severity breakdown click → drill-down modal ───────────────────────
-    // Called when user clicks Open/Resolve count in the severity breakdown cards
-    function openIssueDrillModal(tier, statusKey) {
-      const sevDist = (window._lastSevDist) || {};
-      const d = sevDist[tier] || {};
-      const count = d[statusKey] || 0;
-      const statusLabel = statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
-      const title = tier + ' — ' + statusLabel + ' (' + count + ')';
-
-      document.getElementById('issue-drill-title').textContent = title;
-      const tbody = document.getElementById('issue-drill-body');
-      tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text3)"><i class="fa-solid fa-circle-notch fa-spin"></i></td></tr>';
-      document.getElementById('issue-drill-modal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-
-      // Filter allTableRows + raw rows from analytics by tier score and status
-      // We use masterTableData (which has all open+resolve rows) and filter by status
-      const statusFilter = statusKey.toLowerCase(); // 'open' or 'resolve'
-      const matchedRows = (window._lastAnalyticsRows || []).filter(item => {
-        const st = (item['Progr.Stat.'] || '').toLowerCase();
-        if (statusFilter === 'open')    return st.startsWith('open');
-        if (statusFilter === 'resolve') return st.startsWith('resolve');
-        if (statusFilter === 'close')   return st.startsWith('close');
-        return false;
-      });
-
-      tbody.innerHTML = '';
-      if (matchedRows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text3)">No issues found.</td></tr>';
-        return;
-      }
-      matchedRows.forEach((item, idx) => {
-        const status = item['Progr.Stat.'] || 'N/A';
-        let cls = 'status-default';
-        if (status.toLowerCase().startsWith('open'))    cls = 'status-open';
-        if (status.toLowerCase().startsWith('resolve')) cls = 'status-resolved';
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td><span class="sl-num">' + (idx+1) + '</span></td>' +
-          '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + (item['Case Code']||'N/A') + '</td>' +
-          '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + (item['Model No.']||'N/A') + '</td>' +
-          '<td class="title-cell">' + (item['Title']||'N/A') + '</td>' +
-          '<td><span class="status-pill ' + cls + '">' + status + '</span></td>';
-        tbody.appendChild(tr);
-      });
-    }
-
-    function closeIssueDrillModal() {
-      document.getElementById('issue-drill-modal').style.display = 'none';
-      document.body.style.overflow = '';
+      // Re-apply active filters so sorted result respects current filters
+      applyTableFilters();
     }
 
     function updateTimestamp() {
@@ -1107,7 +931,7 @@
           <td>${model.label}</td>
           <td>${topModule}</td>
           <td>${sourceDisplayName}</td>
-          <td style="font-family:JetBrains Mono,monospace">${issueCount}</td>
+          <td style="font-family:'JetBrains Mono',monospace">${issueCount}</td>
           <td><span class="status-pill ${severity==='high'||severity==='critical'?'status-open':severity==='medium'?'':'status-default'}">${severityText}</span></td>
           <td><span class="status-pill ${severity==='high'||severity==='critical'?'status-open':'status-default'}">${riskText}</span></td>
         `;
@@ -1142,8 +966,10 @@
     }
 
     // ── TABLE FILTER SYSTEM ───────────────────────────────────────────────
+    // masterTableData holds the full unfiltered dataset after load
     let masterTableData = [];
 
+    // Populate dropdown options from the full dataset
     function populateFilterOptions() {
       function fillSelect(id, field) {
         const el = document.getElementById(id);
@@ -1156,6 +982,7 @@
           o.value = v; o.textContent = v;
           el.appendChild(o);
         });
+        // Restore selection if still available
         if (current) {
           for (const opt of el.options) {
             if (opt.value === current) { opt.selected = true; break; }
@@ -1175,7 +1002,6 @@
       const status  = document.getElementById('f-status')?.value  || '';
       const q       = (document.getElementById('f-search')?.value || '').trim().toLowerCase();
 
-      tablePage = 1;
       const filtered = masterTableData.filter(d => {
         if (src     && d.source  !== src)     return false;
         if (model   && d.model   !== model)   return false;
@@ -1188,12 +1014,14 @@
         return true;
       });
 
+      // Update active filter visual state
       const selIds = ['f-source','f-model','f-chipset','f-status'];
       selIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.toggle('f-active', !!el.value);
       });
 
+      // Build chips
       const chipDefs = [
         { id: 'f-source',  label: 'Source',  val: src },
         { id: 'f-model',   label: 'Model',   val: model },
@@ -1219,6 +1047,7 @@
         chipsEl.innerHTML = '';
       }
 
+      // Result bar
       const resultBar = document.getElementById('filter-result-bar');
       const hasFilters = activeChips.length > 0;
       resultBar.style.display = hasFilters ? 'flex' : 'none';
@@ -1231,14 +1060,34 @@
             : 'showing all records';
       }
 
+      // Render filtered rows
       renderFilteredTable(filtered);
     }
 
     function renderFilteredTable(data) {
-      // Set globalTableData to the filtered set then re-render with pagination
-      globalTableData = data;
-      tablePage = 1;
-      renderTable();
+      const tbody = document.getElementById('model-summary-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (data.length === 0) {
+        const tr = document.createElement('tr');
+        tr.className = 'no-results-row';
+        tr.innerHTML = `<td colspan="7"><i class="fa-solid fa-filter-circle-xmark" style="margin-right:8px;opacity:.4"></i>No records match the applied filters</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      data.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="sl-num">${idx + 1}</span></td>
+          <td>${item.source}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${item.model}</td>
+          <td>${item.chipset}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${item.plm}</td>
+          <td class="title-cell" title="${item.title}">${item.title}</td>
+          <td><span class="status-pill ${item.statusColorClass}">${item.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function clearSingleFilter(id) {
@@ -1259,6 +1108,7 @@
       applyTableFilters();
     }
   </script>
+
 
   <script>
     // ── Live clock ────────────────────────────────────────────────────────

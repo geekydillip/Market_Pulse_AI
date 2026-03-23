@@ -3500,8 +3500,7 @@
     "frequency": 1
   },
   {
-    "Title": "Ghost touch observed intermittently in idle condition",
-    "Problem": "Ghost touch is observed intermittently when the phone is in idle condition after playing a YouTube video, and it does not occur in SQE sample devices. The issue resolves after folding and unfolding the device.",
+    "Title": "ghost touch observed intermittently in idle condition",
     "Module": "Touch",
     "Sub Module": "Touch",
     "Issue Type": "Performance",
@@ -3680,8 +3679,7 @@
     "frequency": 1
   },
   {
-    "Title": "Unable to open notification history",
-    "Problem": "Cx not able to open the notification history",
+    "Title": "unable to open notification history",
     "Module": "Notification Panel",
     "Sub Module": "Settings",
     "Issue Type": "Functional",
@@ -4180,8 +4178,7 @@
     "frequency": 1
   },
   {
-    "Title": "Flight mode not getting enabled or disabled in notification bar",
-    "Problem": "Flight mode is not getting enabled or disabled in the notification bar, even though it can be turned on and off in device settings. Network connectivity does not restore after turning off flight mode, and the issue started after a software update.",
+    "Title": "flight mode not getting enabled or disabled in notification bar",
     "Module": "Notification Panel",
     "Sub Module": "Flight mode",
     "Issue Type": "Functional",
@@ -7140,8 +7137,7 @@
     "frequency": 1
   },
   {
-    "Title": "Notifications bar not pulling down when on other apps",
-    "Problem": "The notifications bar does not pull down when the user is on other apps.",
+    "Title": "notifications bar not pulling down when on other apps",
     "Module": "Notification Panel",
     "Sub Module": "Notifications",
     "Issue Type": "Functional",
@@ -7420,8 +7416,7 @@
     "frequency": 1
   },
   {
-    "Title": "Unable to access Mobile data icon from notification panel intermittently",
-    "Problem": "The mobile data icon from the notification panel cannot be accessed intermittently when trying to access it after keeping the device idle.",
+    "Title": "unable to access mobile data icon from notification panel intermittently",
     "Module": "Notification Panel",
     "Sub Module": "Data",
     "Issue Type": "Functional",
@@ -7960,8 +7955,7 @@
     "frequency": 1
   },
   {
-    "Title": "Wifi and Hotspot not turning on",
-    "Problem": "My Wi-Fi is not turning on. The same applies to my hotspot.",
+    "Title": "wifi and hotspot not turning on",
     "Module": "Notification Panel",
     "Sub Module": "Wifi",
     "Issue Type": "Functional",
@@ -8530,8 +8524,7 @@
     "frequency": 1
   },
   {
-    "Title": "Cannot turn on mobile data after UI 8 update",
-    "Problem": "I cannot turn on the mobile data after the UI 8 update.",
+    "Title": "cannot turn on mobile data after ui 8 update",
     "Module": "Notification Panel",
     "Sub Module": "Mobile Data",
     "Issue Type": "Functional",

@@ -151,6 +151,48 @@ const upload = multer({
 // simple health route (optional)
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// ─── OS Bug Dashboard Live Data ──────────────────────────────────────────── update by vandana 21.03.2026
+// GET /api/os-bug-data
+// Reads OneUI80.xlsx and OneUI85.xlsx from downloads/trend_off/,
+// converts them to JSON, adds an "OS" field to every row, and returns
+// the merged array. Missing files are skipped silently.
+app.get('/api/os-bug-data', (req, res) => {
+  try {
+    const trendOffDir = path.join(__dirname, 'downloads', 'trend_off');
+    const files = [
+      { file: 'OneUI80.xlsx', os: 'OneUI 8.0' },
+      { file: 'OneUI85.xlsx', os: 'OneUI 8.5' }
+    ];
+
+    const combined = [];
+
+    for (const { file, os } of files) {
+      const filePath = path.join(trendOffDir, file);
+      if (!fs.existsSync(filePath)) {
+        console.warn(`[os-bug-data] File not found, skipping: ${filePath}`);
+        continue;
+      }
+
+      const workbook = xlsx.readFile(filePath);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      // Convert sheet to JSON; raw:false gives formatted values for dates etc.
+      const rows = xlsx.utils.sheet_to_json(sheet, { raw: false, defval: null });
+
+      // Tag every row with its OS version
+      rows.forEach(row => { row['OS'] = os; });
+      combined.push(...rows);
+    }
+
+    console.log(`[os-bug-data] Serving ${combined.length} total bug records`);
+    res.json(combined);
+  } catch (err) {
+    console.error('[os-bug-data] Error reading Excel files:', err);
+    res.status(500).json({ error: 'Failed to read OS bug data: ' + err.message });
+  }
+});
+// ───────────────────────────────────────────────────────────────────────────
 
 
 // Mapping of frontend processingType to processor filenames
@@ -212,12 +254,6 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
   const sessionId = opts.sessionId;
-
-  // Dynamic num_predict: 200 tokens per row + 30% buffer, minimum 512, maximum 4096.
-  // This prevents truncation on large chunks while avoiding wasted budget on small ones.
-  // Formula: each row outputs ~150 tokens of JSON, 200 gives comfortable headroom.
-  const numRows = opts.numRows || 1;
-  const dynamicNumPredict = Math.min(4096, Math.max(512, Math.ceil(numRows * 400 * 1.3)));
 
   const callStart = Date.now();
 
@@ -2507,39 +2543,39 @@ async function processUpdateKB(req, res) {
   try {
     const file = req.file;
     const kbDir = path.join(__dirname, 'RAG_Data', 'knowledge_base');
-    
+
     // Ensure kb directory exists
     if (!fs.existsSync(kbDir)) {
       fs.mkdirSync(kbDir, { recursive: true });
     }
-    
+
     // Copy the uploaded file to knowledge_base folder
     const targetPath = path.join(kbDir, file.safeFilename || file.originalname);
     fs.copyFileSync(file.path, targetPath);
-    
+
     // Clean up uploaded file
     if (fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
     }
-    
+
     const { spawn } = require('child_process');
-    
+
     // Spawn python to build vector DB
     const pythonProcess = spawn('python', [path.join(__dirname, 'RAG_Data', 'build_vector.py')]);
-    
+
     let pythonOutput = '';
     let pythonError = '';
-    
+
     pythonProcess.stdout.on('data', (data) => {
       pythonOutput += data.toString();
       console.log(`[build_vector] ${data.toString().trim()}`);
     });
-    
+
     pythonProcess.stderr.on('data', (data) => {
       pythonError += data.toString();
       console.error(`[build_vector ERROR] ${data.toString().trim()}`);
     });
-    
+
     pythonProcess.on('close', async (code) => {
       if (code === 0) {
         // Trigger RAG API reload
@@ -2549,39 +2585,39 @@ async function processUpdateKB(req, res) {
           });
           const reloadData = await reloadRes.json();
           console.log('[RAG API RELOAD]', reloadData);
-          
+
           let summary = { added: 0, duplicates: 0, total: 0 };
           const summaryMatch = pythonOutput.match(/___SUMMARY___({.*})/);
           if (summaryMatch) {
             try {
               summary = JSON.parse(summaryMatch[1]);
-            } catch (e) {}
+            } catch (e) { }
           }
-          
-          res.json({ 
-            success: true, 
-            message: 'Knowledge base updated and RAG API reloaded.', 
-            output: pythonOutput, 
+
+          res.json({
+            success: true,
+            message: 'Knowledge base updated and RAG API reloaded.',
+            output: pythonOutput,
             downloads: [],
             isUpdateKB: true,
             summary: summary
           });
         } catch (fetchErr) {
           console.error('Failed to call RAG API reload:', fetchErr);
-          
+
           let summary = { added: 0, duplicates: 0, total: 0 };
           const summaryMatch = pythonOutput.match(/___SUMMARY___({.*})/);
           if (summaryMatch) {
             try {
               summary = JSON.parse(summaryMatch[1]);
-            } catch (e) {}
+            } catch (e) { }
           }
-          
-          res.json({ 
-            success: true, 
-            message: 'Knowledge base updated but failed to signal RAG API. Please restart server.', 
-            output: pythonOutput, 
-            warning: fetchErr.message, 
+
+          res.json({
+            success: true,
+            message: 'Knowledge base updated but failed to signal RAG API. Please restart server.',
+            output: pythonOutput,
+            warning: fetchErr.message,
             downloads: [],
             isUpdateKB: true,
             summary: summary
@@ -2603,5 +2639,4 @@ app.listen(PORT, () => {
   console.log('\nCentralized Dashboard is running!');
   console.log(`Open your browser and go to: http://localhost:${PORT}`);
   console.log('Make sure Ollama is running (qwen3:4b-instruct)\n');
-})
-;
+});
