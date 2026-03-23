@@ -2,7 +2,16 @@ import pandas as pd
 import os
 import json
 import math
+import numpy as np
 from pathlib import Path
+from typing import Optional
+
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
 
 # Load model name mapping from modelName.json
 _MODEL_NAME_MAPPING = None
@@ -138,6 +147,144 @@ def transform_model_names(df):
             df.loc[mask_regular_folder, 'Model No.'] = df.loc[mask_regular_folder, 'Model No.'].str.replace(r'^\[Regular Folder\]', '', regex=True)
     return df
 
+# ===========================================================================
+#  CRITICALITY SCORING CONFIG (from dummy_test)
+# ===========================================================================
+
+TIER_THRESHOLDS = {
+    'Severe':   70,
+    'Moderate': 45,
+}
+
+ISSUE_TYPE_RANK = {
+    'System': 10, 'Crash': 10, 'App Crash': 10, 'Security': 9, 'Connectivity': 9,
+    'Functional': 8, 'Battery': 7, 'Heat': 6, 'Performance': 6, 'Compatibility': 4,
+    'UI/UX': 3, 'Usability': 2, 'UI': 2, 'Other Issue': 1,
+}
+
+SUB_ISSUE_TYPE_RANK = {
+    'App Crash': 10, 'CP Crash': 10, 'Power Off': 10, 'Restart': 9, 'No network': 9,
+    '5G Compatibility': 9, 'Not Working': 8, 'Feature Missing': 7, 'Battery Drain': 6,
+    'Heating Issue': 6, 'Weak Signal': 5, 'Compatibility Issue': 5, 'Slow/Lag': 4,
+    'Slow/Lag Performance Issue': 4, 'Performance': 4, 'Performance Issue': 4,
+    'Poor Quality': 3, 'UI Issue': 2, 'Display distortion': 2, 'Other': 1,
+}
+
+MAX_SIMILAR_BUGS = 20
+TITLE_SIMILARITY_THRESHOLD = 0.25
+
+SCHEMA1_WEIGHTS = {'priority': 0.25, 'frequency': 0.25, 'issue_type': 0.20, 'status': 0.15, 'similar': 0.15}
+SCHEMA1_PRIORITY_RANK = {'A': 3, 'B': 2, 'C': 1}
+SCHEMA1_FREQUENCY_RANK = {'Always': 3, 'Sometimes': 2, 'Once': 1}
+SCHEMA1_STATUS_RANK = {'Open': 3, 'Resolve - Not Released': 2, 'Resolve - App Update': 1, 'Resolve - Released': 1, 'Close': 0}
+SCHEMA1_EXCLUDED_STATUSES = {'Resolve - Unnecessary', 'Resolve - Duplicated'}
+
+SCHEMA2_WEIGHTS = {'severity': 0.35, 'issue_type': 0.25, 'sub_issue': 0.15, 'resolve': 0.10, 'similar': 0.15}
+SCHEMA2_SEVERITY_RANK = {'High': 3, 'Medium': 2, 'Low': 1}
+SCHEMA2_RESOLVE_RANK = {
+    'Issue Fixed(Source changes)': 4, 'Issue Fixed(Except Source changes)': 4,
+    'App Update via App Store': 3, 'Not reproduced': 1, 'Insufficient Defect Info.': 1,
+    'Request to 3rd Party(Non Samsung Issue)': 1, 'Duplicated issue(Cause side)': 1,
+}
+SCHEMA2_EXCLUDED_STATUSES = {'Resolve - Unnecessary', 'Maintain current status', 'Not problem'}
+SCHEMA2_EXCLUDED_RESOLVE = {'Maintain current status', 'Not problem'}
+
+# ===========================================================================
+#  CRITICALITY SCORING HELPERS
+# ===========================================================================
+
+def _detect_schema(df: pd.DataFrame) -> str:
+    cols = set(df.columns)
+    if 'Priority' in cols and 'Occurr. Freq.' in cols:
+        return 'schema1'
+    elif 'Resolve' in cols:
+        return 'schema2'
+    return 'unknown'
+
+def _normalise_weights(w: dict) -> dict:
+    total = sum(w.values())
+    return {k: v / total for k, v in w.items()} if total > 0 else w
+
+def _rel(value, rank_map: dict, default_rank: int = 1) -> float:
+    val_str = str(value)
+    rank = rank_map.get(val_str, default_rank)
+    max_rank = max(rank_map.values()) if rank_map else 1
+    return float(rank) / max_rank
+
+def _assign_tier(score: float) -> str:
+    if score >= TIER_THRESHOLDS['Severe']: return 'Severe'
+    if score >= TIER_THRESHOLDS['Moderate']: return 'Moderate'
+    return 'Low'
+
+def _compute_similar_bug_counts(df: pd.DataFrame) -> pd.Series:
+    n = len(df)
+    idx = df.index
+    combo_col = df.get('Issue Type', pd.Series()).astype(str) + '||' + df.get('Sub-Issue Type', pd.Series()).astype(str)
+    combo_counts = (combo_col.map(combo_col.value_counts().to_dict()).fillna(1).astype(int) - 1).clip(lower=0)
+
+    if SKLEARN_AVAILABLE and n > 1:
+        try:
+            titles = df['Title'].fillna('').astype(str).tolist()
+            tfidf = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), min_df=1)
+            mat = tfidf.fit_transform(titles)
+            sim_matrix = cosine_similarity(mat)
+            np.fill_diagonal(sim_matrix, 0)
+            title_sim_counts = pd.Series((sim_matrix >= TITLE_SIMILARITY_THRESHOLD).sum(axis=1), index=idx, dtype=int)
+        except Exception: title_sim_counts = pd.Series(0, index=idx, dtype=int)
+    else: title_sim_counts = pd.Series(0, index=idx, dtype=int)
+
+    combined = combo_counts.values + title_sim_counts.values
+    return pd.Series(np.clip(combined, 0, MAX_SIMILAR_BUGS) / MAX_SIMILAR_BUGS, index=idx)
+
+def get_high_severity_breakdown(df: pd.DataFrame) -> dict:
+    if 'Severity' not in df.columns:
+        return {"total": 0, "severe": 0, "moderate": 0, "deferred": 0}
+    
+    high_df = df[df['Severity'] == 'High'].copy()
+    total_high = len(high_df)
+    if total_high == 0:
+        return {"total": 0, "severe": 0, "moderate": 0, "deferred": 0}
+
+    schema = _detect_schema(high_df)
+    if schema == 'unknown':
+        return {"total": total_high, "severe": 0, "moderate": 0, "deferred": total_high}
+
+    if schema == 'schema1':
+        excl_mask = high_df['Progr.Stat.'].isin(SCHEMA1_EXCLUDED_STATUSES)
+    else:  # schema2
+        excl_mask = (high_df['Progr.Stat.'].isin(SCHEMA2_EXCLUDED_STATUSES) | 
+                     high_df.get('Resolve', pd.Series()).isin(SCHEMA2_EXCLUDED_RESOLVE))
+    
+    excluded_df = high_df[excl_mask].copy()
+    active_df = high_df[~excl_mask].copy()
+
+    if len(active_df) == 0:
+        return {"total": total_high, "severe": 0, "moderate": 0, "deferred": total_high}
+
+    sim_scores = _compute_similar_bug_counts(active_df)
+    if schema == 'schema1':
+        w = _normalise_weights(SCHEMA1_WEIGHTS)
+        s_p = active_df['Priority'].apply(lambda v: _rel(v, SCHEMA1_PRIORITY_RANK)).astype(float)
+        s_f = active_df['Occurr. Freq.'].apply(lambda v: _rel(v, SCHEMA1_FREQUENCY_RANK)).astype(float)
+        s_i = active_df['Issue Type'].apply(lambda v: _rel(v, ISSUE_TYPE_RANK)).astype(float)
+        s_s = active_df['Progr.Stat.'].astype(str).apply(lambda v: _rel(v, SCHEMA1_STATUS_RANK, 0)).astype(float)
+        active_df['score'] = (s_p * w['priority'] + s_f * w['frequency'] + s_i * w['issue_type'] + s_s * w['status'] + sim_scores.astype(float) * w['similar']) * 100
+    else:
+        w = _normalise_weights(SCHEMA2_WEIGHTS)
+        s_sv = active_df['Severity'].astype(str).apply(lambda v: _rel(v, SCHEMA2_SEVERITY_RANK)).astype(float)
+        s_i = active_df['Issue Type'].astype(str).apply(lambda v: _rel(v, ISSUE_TYPE_RANK)).astype(float)
+        s_si = active_df.get('Sub-Issue Type', pd.Series()).astype(str).apply(lambda v: _rel(v, SUB_ISSUE_TYPE_RANK)).astype(float)
+        s_r = active_df.get('Resolve', pd.Series()).fillna('').astype(str).apply(lambda v: _rel(v, SCHEMA2_RESOLVE_RANK)).astype(float)
+        active_df['score'] = (s_sv * w['severity'] + s_i * w['issue_type'] + s_si * w['sub_issue'] + s_r * w['resolve'] + sim_scores.astype(float) * w['similar']) * 100
+
+    active_df['tier'] = active_df['score'].apply(_assign_tier)
+    severe = int((active_df['tier'] == 'Severe').sum())
+    moderate = int((active_df['tier'] == 'Moderate').sum())
+    low = int((active_df['tier'] == 'Low').sum())
+    deferred = low + len(excluded_df)
+
+    return {"total": total_high, "severe": severe, "moderate": moderate, "deferred": deferred}
+
 def load_all_excels(base_path: str) -> dict:
     """
     Load all Excel files from subfolders under base_path, grouped by folder.
@@ -263,11 +410,15 @@ def compute_central_kpis(data: dict) -> dict:
             total = len(combined_open_resolve)
 
             # Compute severity counts from Open+Resolve issues only
+            # NEW: Integrated nested breakdown for High
             severity_counts = {'High': 0, 'Medium': 0, 'Low': 0}
             if 'Severity' in combined_open_resolve.columns:
                 severity_series = combined_open_resolve['Severity'].value_counts()
                 for severity in severity_counts.keys():
                     severity_counts[severity] = int(severity_series.get(severity, 0))
+                
+                if severity_counts['High'] > 0:
+                    severity_counts['High'] = get_high_severity_breakdown(combined_open_resolve)
 
             # Compute status counts for this source (from ALL issues for accurate KPIs)
             status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
@@ -293,6 +444,36 @@ def compute_central_kpis(data: dict) -> dict:
             total_status_counts["Resolve"] += status_counts["Resolve"]
 
     return kpis, total_status_counts
+
+
+
+# added by vandana 22.03.2026
+def compute_merged_severity(kpis: dict) -> dict:
+    """
+    Merge severity tiers across all sources into one dict for main dashboard.
+    Maps central_aggregator's {High:{severe,moderate,deferred}} format
+    into the {Severe, Moderate, Deferred} format main.html expects.
+    """
+    severe = moderate = deferred = 0
+
+    for source_data in kpis.values():
+        h = source_data.get('High', {})
+        if isinstance(h, dict):
+            severe   += h.get('severe',   0)
+            moderate += h.get('moderate', 0)
+            deferred += h.get('deferred', 0)
+        # Medium and Low from all sources go into Deferred
+        deferred += int(source_data.get('Medium', 0))
+        deferred += int(source_data.get('Low',    0))
+
+    return {
+        "Severe":   {"total": severe,   "open": 0, "resolve": 0, "close": 0},
+        "Moderate": {"total": moderate, "open": 0, "resolve": 0, "close": 0},
+        "Deferred": {"total": deferred, "open": 0, "resolve": 0, "close": 0},
+    }
+# till here
+
+
 
 def compute_top_modules(data: dict) -> list:
     """

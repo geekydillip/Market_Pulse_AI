@@ -213,57 +213,53 @@ module.exports = {
 
   // added by vandana.ojha
   buildPrompt(rows, ragContexts = []) {
-  
-    // ----------------------------
-    // Build RAG Section
-    // ----------------------------
+
+    // Build RAG context string — injected into {RAG_CONTEXT} placeholder in the prompt template.
+    // Includes all fields that RAG provides: Module, Sub-Module, Issue Type, Sub-Issue Type, Severity.
     let ragSection = "";
-  
+    let hasAnyContext = false;
+
     rows.forEach((row, index) => {
       const matches = ragContexts[index] || [];
-  
+      
       if (matches.length > 0) {
-        ragSection += `\n\n### Historical Similar Issues for Row ${index + 1}\n`;
-  
+        hasAnyContext = true;
+        ragSection += `\n### Row ${index + 1} — Historical Similar Issues\n`;
         matches.forEach((m, i) => {
-          ragSection += `
-  Issue ${i + 1}:
+          ragSection += `Issue ${i + 1}:
   Title: ${m.Title || ""}
+  Problem: ${m.Problem || m.Title || ""}
   Module: ${m.Module || ""}
-  Sub Module: ${m["Sub Module"] || ""}
+  Sub-Module: ${m["Sub Module"] || ""}
   Issue Type: ${m["Issue Type"] || ""}
-  `;
+  Sub-Issue Type: ${m["Sub Issue Type"] || ""}
+  Severity: ${m.Severity || ""}
+  Frequency: ${m.frequency || 1} similar issue(s) in history
+`;
         });
       }
     });
-  
-    // ----------------------------
-    // Original AI Input (IMPORTANT)
-    // ----------------------------
+
+    if (!ragSection) {
+      ragSection = "No historical matches found. Use fallback definitions.";
+    }
+
+    // /no_think disables qwen3 chain-of-thought reasoning (~200-500 hidden tokens per call).
+    // ON  when RAG context present — classification is guided, LLM only needs to format + write summary.
+    // OFF when RAG absent          — LLM must reason everything from scratch, thinking helps quality.
+    const thinkPrefix = hasAnyContext ? '/no_think\n' : '';
+
+    // Build input rows — only send fields the LLM needs to generate outputs for
     const aiInputRows = rows.map(row => ({
       Title: row.Title || '',
       Problem: row.Problem || ''
     }));
-  
-    const originalPrompt = promptTemplate.replace(
-      '{INPUTDATA_JSON}',
-      JSON.stringify(aiInputRows, null, 2)
-    );
-  
-    // ----------------------------
-    // Final Prompt
-    // ----------------------------
-    return `
-  ${ragSection}
-  
-  Use above historical issues as contextual reference.
-  If strong similarity exists, align classification.
-  If clearly different, classify independently.
-  
-  ${originalPrompt}
-  `;
+
+    // Inject both placeholders into the prompt template
+    return thinkPrefix + promptTemplate
+      .replace('{RAG_CONTEXT}', ragSection)
+      .replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
   },
-  // till here
 
   /**
    * Normalize frequency values to lowercase for consistent comparison
@@ -277,34 +273,59 @@ module.exports = {
   formatResponse(aiResult, originalRows) {
     let aiRows;
 
-    // Handle different response formats: object, JSON string, or raw text
+    // Field order must match the OUTPUT spec in prompts/globalvocplm.js exactly.
+    const FIELD_ORDER = ['Title', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'];
+
+    function repairPositionalJson(text) {
+      const objects = text.match(/\{([^{}]+)\}/g);
+      if (!objects) return null;
+      if (/\"[^\"]+\"\s*:/.test(text)) return null;
+      try {
+        const result = objects.map(obj => {
+          const values = [...obj.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map(m => m[1]);
+          const row = {};
+          values.forEach((v, i) => { if (i < FIELD_ORDER.length) row[FIELD_ORDER[i]] = v; });
+          return row;
+        });
+        return result.length > 0 ? result : null;
+      } catch (e) { return null; }
+    }
+
     if (typeof aiResult === 'object' && aiResult !== null) {
       aiRows = aiResult;
     } else if (typeof aiResult === 'string') {
-      const text = aiResult.trim();
+      let text = aiResult.trim();
 
-      // First try to parse as complete JSON
-      try {
-        aiRows = JSON.parse(text);
-      } catch (e) {
-        // If that fails, try to extract JSON array from text
-        const firstBracket = text.indexOf('[');
-        const lastBracket = text.lastIndexOf(']');
-        if (firstBracket !== -1 && lastBracket > firstBracket) {
-          const jsonStr = text.substring(firstBracket, lastBracket + 1);
-          try {
-            aiRows = JSON.parse(jsonStr);
-          } catch (e2) {
-            // If JSON parsing fails, return array with error info
-            return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
+      // ── Repair 1: missing { brace — ["key":"val"] → [{"key":"val"}] ──
+      if (/^\[\s*"/.test(text)) {
+        text = text
+          .replace(/\[\s*"/g, '[{"')
+          .replace(/,\s*\n\s*"/g, ',\n{"')
+          .replace(/"\s*,\s*"/g, '","');
+      }
+
+      // ── Repair 2: positional values — [{"val1","val2"}] → [{"Title":"val1",...}]
+      const positional = repairPositionalJson(text);
+      if (positional) { aiRows = positional; }
+      else {
+        try {
+          aiRows = JSON.parse(text);
+        } catch (e) {
+          const firstBracket = text.indexOf('[');
+          const lastBracket = text.lastIndexOf(']');
+          if (firstBracket !== -1 && lastBracket > firstBracket) {
+            const jsonStr = text.substring(firstBracket, lastBracket + 1);
+            try {
+              aiRows = JSON.parse(jsonStr);
+            } catch (e2) {
+              return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
+            }
+          } else {
+            return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
           }
-        } else {
-          // Last resort: return array with error info
-          return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
         }
       }
     } else {
-      // Fallback for unexpected types - return array
       return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
     }
 
@@ -313,10 +334,58 @@ module.exports = {
       return [{ error: `AI response is not an array: ${typeof aiRows}` }];
     }
 
-    // Merge AI results with original core identifiers and apply priority rules
-    const mergedRows = aiRows.map((aiRow, index) => {
+    // ── Row count mismatch guard ───────────────────────────────────────────
+    // The LLM occasionally skips rows it cannot classify, returning fewer
+    // objects than it received. Mapping purely by array index then causes
+    // every subsequent row to shift, producing blank or mismatched output.
+    //
+    // Strategy: if counts match, map by index (fast path).
+    // If counts differ, attempt to match each AI row to its original row
+    // by comparing normalised Title/Problem text. Rows with no match are
+    // written out with empty AI fields rather than shifted incorrectly.
+    // ──────────────────────────────────────────────────────────────────────
+    const normalise = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 60);
+
+    let resolvedAiRows;
+    if (aiRows.length === originalRows.length) {
+      // Fast path — counts match, trust index alignment
+      resolvedAiRows = aiRows;
+    } else {
+      // Slow path — counts differ, match by title/problem similarity
+      console.warn(`[formatResponse] Row count mismatch: AI returned ${aiRows.length} rows for ${originalRows.length} input rows. Attempting fuzzy match.`);
+      resolvedAiRows = originalRows.map((origRow) => {
+        const origTitle   = normalise(origRow.Title);
+        const origProblem = normalise(origRow.Problem);
+
+        // Find the AI row whose Title or Problem best matches this original row
+        const match = aiRows.find(ai => {
+          const aiTitle   = normalise(ai.Title);
+          const aiProblem = normalise(ai.Problem);
+          return (aiTitle && origTitle && aiTitle === origTitle) ||
+                 (aiProblem && origProblem && aiProblem === origProblem) ||
+                 (aiTitle && origTitle && origTitle.startsWith(aiTitle.substring(0, 30)));
+        });
+
+        // Return matched AI row, or a placeholder so the original row is preserved
+        return match || {
+          Title: origRow.Title || '',
+          Problem: origRow.Problem || '',
+          Module: '',
+          'Sub-Module': '',
+          'Issue Type': '',
+          'Sub-Issue Type': '',
+          'Ai Summary': '',
+          Severity: '',
+          'Severity Reason': ''
+        };
+      });
+    }
+
+    // Merge AI results with original core identifiers
+    const mergedRows = resolvedAiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
 
+      return {
       const titleText = original['Title'] || aiRow['Title'] || '';
       const extractedModel = extractModelFromTitle(titleText);
 
@@ -329,20 +398,18 @@ module.exports = {
           : (original['Model No.'] || '')),
         'Progr.Stat.': original['Progr.Stat.'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
-        'Title': aiRow['Title'] || '',  // From AI (cleaned)
+        'Title': aiRow['Title'] || '',
         'Priority': original['Priority'] || '',
         'Occurr. Freq.': original['Occurr. Freq.'] || '',
-        'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+        'Problem': aiRow['Problem'] || '',
         'Module': aiRow['Module'] || '',
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
+        'Ai Summary': aiRow['Ai Summary'] || '',
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
-
-      return baseRow;
     });
 
     return mergedRows;
@@ -362,4 +429,5 @@ module.exports = {
 
   // Excel reading function used by server.js
   readAndNormalizeExcel: readAndNormalizeExcel
-};
+}
+;

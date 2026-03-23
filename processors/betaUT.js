@@ -205,102 +205,121 @@ module.exports = {
   // },
 
 
-
-// added by vandana.ojha
-buildPrompt(rows, ragContexts = []) {
-
-  // ----------------------------
-  // Build RAG Section
-  // ----------------------------
+buildPrompt(rows, ragContexts = []) 
+{
+  // Build RAG context string — injected into {RAG_CONTEXT} placeholder in the prompt template.
+  // Includes all fields that RAG provides: Module, Sub-Module, Issue Type, Sub-Issue Type, Severity.
   let ragSection = "";
+  let hasAnyContext = false;
 
   rows.forEach((row, index) => {
     const matches = ragContexts[index] || [];
-
+    
     if (matches.length > 0) {
-      ragSection += `\n\n### Historical Similar Issues for Row ${index + 1}\n`;
-
+      hasAnyContext = true;
+      ragSection += `\n### Row ${index + 1} — Historical Similar Issues\n`;
       matches.forEach((m, i) => {
-        ragSection += `
-Issue ${i + 1}:
-Title: ${m.Title || ""}
-Module: ${m.Module || ""}
-Sub Module: ${m["Sub Module"] || ""}
-Issue Type: ${m["Issue Type"] || ""}
+        ragSection += `Issue ${i + 1}:
+  Title: ${m.Title || ""}
+  Problem: ${m.Problem || m.Title || ""}
+  Module: ${m.Module || ""}
+  Sub-Module: ${m["Sub Module"] || ""}
+  Issue Type: ${m["Issue Type"] || ""}
+  Sub-Issue Type: ${m["Sub Issue Type"] || ""}
+  Severity: ${m.Severity || ""}
+  Frequency: ${m.frequency || 1} similar issue(s) in history
 `;
       });
     }
   });
 
-  // ----------------------------
-  // Original AI Input (IMPORTANT)
-  // ----------------------------
+  if (!ragSection) {
+    ragSection = "No historical matches found. Use fallback definitions.";
+  }
+
+  // /no_think disables qwen3 chain-of-thought reasoning (~200-500 hidden tokens per call).
+  // ON  when RAG context present — classification is guided, LLM only needs to format + write summary.
+  // OFF when RAG absent          — LLM must reason everything from scratch, thinking helps quality.
+  const thinkPrefix = hasAnyContext ? '/no_think\n' : '';
+
+  // Build input rows — only send fields the LLM needs to generate outputs for
   const aiInputRows = rows.map(row => ({
     Title: row.Title || '',
     Problem: row.Problem || ''
   }));
 
-  const originalPrompt = promptTemplate.replace(
-    '{INPUTDATA_JSON}',
-    JSON.stringify(aiInputRows, null, 2)
-  );
-
-  // ----------------------------
-  // Final Prompt
-  // ----------------------------
-  return `
-${ragSection}
-
-Use above historical issues as contextual reference.
-If strong similarity exists, align classification.
-If clearly different, classify independently.
-
-${originalPrompt}
-`;
+  // Inject both placeholders into the prompt template
+  return thinkPrefix + promptTemplate
+    .replace('{RAG_CONTEXT}', ragSection)
+    .replace('{INPUTDATA_JSON}', JSON.stringify(aiInputRows, null, 2));
 },
 
 
 formatResponse(aiResult, originalRows) {
 let aiRows;
 
-// Handle different response formats: object, JSON string, or raw text
 if (typeof aiResult === 'object' && aiResult !== null) {
   aiRows = aiResult;
 } else if (typeof aiResult === 'string') {
-  const text = aiResult.trim();
+  let text = aiResult.trim();
 
-  // First try to parse as complete JSON
+  // ── JSON repair: fix ["key":"val"] → [{"key":"val"}] ──────────────
+  if (/^\[\s*"/.test(text)) {
+    text = text.replace(/\[\s*"/g, '[{"').replace(/,\s*\n\s*"/g, ',\n{"').replace(/"\s*,\s*"/g, '","');
+  }
+  // ──────────────────────────────────────────────────────────────────
+
   try {
     aiRows = JSON.parse(text);
   } catch (e) {
-    // If that fails, try to extract JSON array from text
     const firstBracket = text.indexOf('[');
     const lastBracket = text.lastIndexOf(']');
     if (firstBracket !== -1 && lastBracket > firstBracket) {
-      const jsonStr = text.substring(firstBracket, lastBracket + 1);
       try {
-        aiRows = JSON.parse(jsonStr);
+        aiRows = JSON.parse(text.substring(firstBracket, lastBracket + 1));
       } catch (e2) {
-        // If JSON parsing fails, return array with error info
         return [{ error: `Failed to parse AI response: ${text.substring(0, 200)}...` }];
       }
     } else {
-      // Last resort: return array with error info
       return [{ error: `Invalid AI response format: ${text.substring(0, 200)}...` }];
     }
   }
 } else {
-  // Fallback for unexpected types - return array
   return [{ error: `Unexpected AI response type: ${typeof aiResult}` }];
 }
 
-// Ensure aiRows is an array
 if (!Array.isArray(aiRows)) {
   return [{ error: `AI response is not an array: ${typeof aiRows}` }];
 }
 
-// Merge AI results with original core identifiers
-const mergedRows = aiRows.map((aiRow, index) => {
+// ── Row count mismatch guard ───────────────────────────────────────
+// The LLM occasionally skips rows it cannot classify, returning fewer
+// objects than it received. Mapping purely by array index then causes
+// every subsequent row to shift, producing blank or mismatched output.
+// When counts differ, match AI rows back to originals by Title/Problem.
+const normalise = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 60);
+
+let resolvedAiRows;
+if (aiRows.length === originalRows.length) {
+  resolvedAiRows = aiRows;
+} else {
+  console.warn(`[betaUT formatResponse] Row count mismatch: AI=${aiRows.length} vs input=${originalRows.length}. Using fuzzy match.`);
+  resolvedAiRows = originalRows.map((origRow) => {
+    const origTitle   = normalise(origRow.Title);
+    const origProblem = normalise(origRow.Problem);
+    const match = aiRows.find(ai => {
+      const aiTitle   = normalise(ai.Title);
+      const aiProblem = normalise(ai.Problem);
+      return (aiTitle && origTitle && aiTitle === origTitle) ||
+             (aiProblem && origProblem && aiProblem === origProblem) ||
+             (aiTitle && origTitle && origTitle.startsWith(aiTitle.substring(0, 30)));
+    });
+    return match || { Title: '', Problem: '', Module: '', 'Sub-Module': '', 'Issue Type': '', 'Sub-Issue Type': '', 'Ai Summary': '', Severity: '', 'Severity Reason': '' };
+  });
+}
+// ──────────────────────────────────────────────────────────────────
+
+const mergedRows = resolvedAiRows.map((aiRow, index) => {
   const original = originalRows[index] || {};
   return {
     'Case Code': original['Case Code'] || '',
@@ -309,14 +328,14 @@ const mergedRows = aiRows.map((aiRow, index) => {
       : removeRegularFolderPrefix(original['Model No.'] || ''),
     'Progr.Stat.': original['Progr.Stat.'] || '',
     'S/W Ver.': original['S/W Ver.'] || '',
-    'Title': aiRow['Title'] || '',  // From AI (cleaned)
-    'Problem': aiRow['Problem'] || '',  // From AI (cleaned)
+    'Title': aiRow['Title'] || '',
+    'Problem': aiRow['Problem'] || '',
     'Resolve': original['Resolve'] || '',
     'Module': aiRow['Module'] || '',
     'Sub-Module': aiRow['Sub-Module'] || '',
     'Issue Type': aiRow['Issue Type'] || '',
     'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-    'Ai Summary': aiRow['Ai Summary'] || '',  // From prompt template
+    'Ai Summary': aiRow['Ai Summary'] || '',
     'Severity': aiRow['Severity'] || '',
     'Severity Reason': aiRow['Severity Reason'] || ''
   };
@@ -339,4 +358,5 @@ getColumnWidths(finalHeaders) {
 
 // Excel reading function used by server.js
 readAndNormalizeExcel: readAndNormalizeExcel
-};
+}
+;
