@@ -14,7 +14,7 @@ import atexit
 
 OLLAMA_CMD = "ollama"  # must be on PATH, or use full path like "/usr/local/bin/ollama"
 API_BASE = "http://localhost:11434"
-RAG_API_BASE = "http://127.0.0.1:8000"
+RAG_API_BASE = "http://127.0.0.1:5000"
 
 # Global reference so we can terminate on exit
 _rag_proc = None
@@ -22,12 +22,19 @@ _rag_proc = None
 
 def start_rag_api():
     """
-    Launch rag_api.py via uvicorn as a background process.
-    Registers an atexit handler to clean up the process on exit.
+    Launch rag_server.py (FastAPI + uvicorn) as a background process on port 5000.
+    Registers an atexit handler to clean it up when run_server.py exits.
     """
     global _rag_proc
-    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rag_api.py")
-    print("[RAG API] Starting persistent RAG server on port 8000...")
+    # script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rag_server.py")
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "RAG", "rag_server.py")
+
+    if not os.path.exists(script):
+        print(f"[RAG API] ERROR: rag_server.py not found at {script}")
+        print("[RAG API] RAG classification will be unavailable.")
+        return None
+
+    print("[RAG API] Starting persistent RAG server (rag_server.py) on port 5000...")
     _rag_proc = subprocess.Popen(
         [sys.executable, script],
         stdout=None,
@@ -36,16 +43,21 @@ def start_rag_api():
 
     def _cleanup():
         if _rag_proc and _rag_proc.poll() is None:
-            print("[RAG API] Shutting down...")
+            print("[RAG API] Shutting down RAG server...")
             _rag_proc.terminate()
+            try:
+                _rag_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                _rag_proc.kill()
 
     atexit.register(_cleanup)
     return _rag_proc
 
 
-def wait_for_rag_api(timeout=60):
+def wait_for_rag_api(timeout=120):
     """
     Poll the RAG API /health endpoint until it responds (model loaded) or times out.
+    rag_server.py returns { "status": "ok", "entries": N }
     """
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -53,7 +65,8 @@ def wait_for_rag_api(timeout=60):
             r = requests.get(RAG_API_BASE + "/health", timeout=3)
             if r.ok:
                 data = r.json()
-                print(f"[RAG API] Ready — {data.get('records', '?'):,} records in RAM.")
+                entries = data.get('entries', data.get('records', '?'))
+                print(f"[RAG API] Ready — {entries:,} records in RAM." if isinstance(entries, int) else f"[RAG API] Ready — {entries} records in RAM.")
                 return True
         except requests.RequestException:
             pass
@@ -249,7 +262,7 @@ if __name__ == "__main__":
     result = load_model_via_api(model, timeout=60)
     print("Load result:", result)
 
-    # Start the persistent FastAPI RAG server (loads model once into RAM)
+    # Start the persistent FastAPI RAG server on port 5000 (loads embedding model once into RAM)
     start_rag_api()
     print("[RAG API] Waiting for RAG server to load model into RAM (may take ~30s)...")
     if not wait_for_rag_api(timeout=120):
@@ -259,3 +272,4 @@ if __name__ == "__main__":
         print("[RAG API] ✅ RAG server is ready!")
 
     run_server()
+

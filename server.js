@@ -4,6 +4,8 @@
 // added by vandana.ojha
 const { getRAGContextBatch, getRAGContext } = require("./ragClient");
 
+// const raCache= new Map()
+
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -149,6 +151,48 @@ const upload = multer({
 // simple health route (optional)
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// ─── OS Bug Dashboard Live Data ──────────────────────────────────────────── update by vandana 21.03.2026
+// GET /api/os-bug-data
+// Reads OneUI80.xlsx and OneUI85.xlsx from downloads/trend_off/,
+// converts them to JSON, adds an "OS" field to every row, and returns
+// the merged array. Missing files are skipped silently.
+app.get('/api/os-bug-data', (req, res) => {
+  try {
+    const trendOffDir = path.join(__dirname, 'downloads', 'trend_off');
+    const files = [
+      { file: 'OneUI80.xlsx', os: 'OneUI 8.0' },
+      { file: 'OneUI85.xlsx', os: 'OneUI 8.5' }
+    ];
+
+    const combined = [];
+
+    for (const { file, os } of files) {
+      const filePath = path.join(trendOffDir, file);
+      if (!fs.existsSync(filePath)) {
+        console.warn(`[os-bug-data] File not found, skipping: ${filePath}`);
+        continue;
+      }
+
+      const workbook = xlsx.readFile(filePath);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      // Convert sheet to JSON; raw:false gives formatted values for dates etc.
+      const rows = xlsx.utils.sheet_to_json(sheet, { raw: false, defval: null });
+
+      // Tag every row with its OS version
+      rows.forEach(row => { row['OS'] = os; });
+      combined.push(...rows);
+    }
+
+    console.log(`[os-bug-data] Serving ${combined.length} total bug records`);
+    res.json(combined);
+  } catch (err) {
+    console.error('[os-bug-data] Error reading Excel files:', err);
+    res.status(500).json({ error: 'Failed to read OS bug data: ' + err.message });
+  }
+});
+// ───────────────────────────────────────────────────────────────────────────
 
 
 // Mapping of frontend processingType to processor filenames
@@ -170,7 +214,7 @@ let aiRequestTimes = [];
 /**
  * Simple concurrency limiter to run tasks with a limit
  */
-async function runTasksWithLimit(tasks, limit = 4) {
+async function runTasksWithLimit(tasks, limit = 8) {
   const results = [];
   const executing = new Set();
 
@@ -211,6 +255,12 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
   const sessionId = opts.sessionId;
 
+  // Dynamic num_predict: 200 tokens per row + 30% buffer, minimum 512, maximum 4096.
+  // This prevents truncation on large chunks while avoiding wasted budget on small ones.
+  // Formula: each row outputs ~150 tokens of JSON, 200 gives comfortable headroom.
+  const numRows = opts.numRows || 1;
+  const dynamicNumPredict = Math.min(4096, Math.max(512, Math.ceil(numRows * 200 * 1.3)));
+
   const callStart = Date.now();
 
   return new Promise((resolve, reject) => {
@@ -236,8 +286,8 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
           stream: false,
           options: {
             temperature: 0.1,
-            num_ctx: DEFAULT_TOKEN_LIMIT,   // full model context window (32768)
-            num_predict: 16384               // max output tokens — prevents truncated JSON
+            num_ctx: DEFAULT_TOKEN_LIMIT,
+            num_predict: dynamicNumPredict  // scales with chunk size — never truncates
           }
         }
         : {
@@ -247,7 +297,7 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
           options: {
             temperature: 0.1,
             num_ctx: DEFAULT_TOKEN_LIMIT,
-            num_predict: 16384
+            num_predict: dynamicNumPredict
           }
         };
       const data = JSON.stringify(payload);
@@ -279,7 +329,17 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
           if (!raw) return reject(new Error(`Empty response from Ollama (status ${res.statusCode})`));
           try {
             const json = JSON.parse(raw);
-            const out = json.response ?? json; // prefer response field if present
+            const out = json.response ?? json;
+
+            // ── Diagnostic: tokens/sec and think mode detection ──────────
+            const elapsedSec = (Date.now() - callStart) / 1000;
+            const evalTokens = json.eval_count || 0;
+            const promptTokens = json.prompt_eval_count || 0;
+            const tokensPerSec = evalTokens > 0 ? (evalTokens / elapsedSec).toFixed(1) : '?';
+            const thinkActive = typeof out === 'string' && out.includes('<think>');
+            console.log(`[Ollama] ⏱  ${elapsedSec.toFixed(1)}s  |  prompt=${promptTokens} tok  |  output=${evalTokens} tok  |  speed=${tokensPerSec} tok/s  |  think_mode=${thinkActive ? '🔴 ON (no_think NOT working)' : '🟢 OFF (no_think working)'}`);
+            // ─────────────────────────────────────────────────────────────
+
             aiRequestTimes.push(Date.now() - callStart);
             aiRequestCount++;
             return resolve(out);
@@ -394,7 +454,9 @@ const progressClients = new Map();
 const activeSessions = new Map(); // sessionId -> { cancelled, startTime, abortController, activeRequests }
 
 // Process a single chunk
-async function processChunk(chunk, processingType, model, chunkId, sessionId) {
+// precomputedRagContexts: array of RAG results pre-fetched upfront for all rows in this chunk.
+// When provided, skips the per-chunk RAG HTTP call entirely.
+async function processChunk(chunk, processingType, model, chunkId, sessionId, precomputedRagContexts = null) {
   const startTime = Date.now();
   let processedRows = null;
 
@@ -456,16 +518,24 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
     // Transform data if needed
     const transformedRows = processor.transform ? processor.transform(chunk.rows) : chunk.rows;
 
-    // ── Batch RAG: send all row queries in one request ─────────────────────
-    const batchQueries = transformedRows.map(
-      r => `${r.Title || ""} ${r.Problem || r.content || ""}`
-    );
-    const ragTimerLabel = `RAG_Batch_Time_chunk${chunkId}`;
-    console.log(`[RAG] Sending batch of ${batchQueries.length} queries... (chunk ${chunkId})`);
-    console.time(ragTimerLabel);
-    let ragContexts = await getRAGContextBatch(batchQueries);
-    console.timeEnd(ragTimerLabel);
-    console.log(`[RAG] Received ${ragContexts.length} result sets. (chunk ${chunkId})`);
+    // ── RAG contexts: use pre-fetched batch if available, otherwise fetch now (fallback) ──
+    let ragContexts;
+    if (precomputedRagContexts) {
+      // Fast path: RAG was already fetched upfront for the full file in one HTTP call
+      ragContexts = precomputedRagContexts;
+      console.log(`[RAG] Using pre-fetched contexts for chunk ${chunkId} (${ragContexts.length} rows — 0 HTTP calls)`);
+    } else {
+      // Fallback path: fetch RAG now (used if processChunk is called without upfront batch)
+      const batchQueries = transformedRows.map(
+        r => `${r.Title || ""} ${r.Problem || r.content || ""}`
+      );
+      const ragTimerLabel = `RAG_Batch_Time_chunk${chunkId}`;
+      console.log(`[RAG] Fallback fetch for chunk ${chunkId} (${batchQueries.length} queries)...`);
+      console.time(ragTimerLabel);
+      ragContexts = await getRAGContextBatch(batchQueries);
+      console.timeEnd(ragTimerLabel);
+      console.log(`[RAG] Received ${ragContexts.length} result sets. (chunk ${chunkId})`);
+    }
 
     // ── Per-row threshold analysis ─────────────────────────────────────────
     const autoClassifiedRows = [];
@@ -490,9 +560,9 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
         const passesUpper = scoreVal >= SIMILARITY_THRESHOLD;
         const passesLower = scoreVal >= LOWER_THRESHOLD;
 
-        console.log(`│  ${rowLabel}`);
-        console.log(`│    Best match score : ${scorePercent}%  ${passesUpper ? '✅ PASSES upper threshold' : (passesLower ? '⚠️ BETWEEN thresholds' : '❌ BELOW lower threshold')}`);
-        console.log(`│    Matched module   : ${bestMatch.Module || '—'}  |  Issue Type: ${bestMatch['Issue Type'] || '—'}`);
+        // console.log(`│  ${rowLabel}`);
+        // console.log(`│    Best match score : ${scorePercent}%  ${passesUpper ? '✅ PASSES upper threshold' : (passesLower ? '⚠️ BETWEEN thresholds' : '❌ BELOW lower threshold')}`);
+        // console.log(`│    Matched module   : ${bestMatch.Module || '—'}  |  Issue Type: ${bestMatch['Issue Type'] || '—'}`);
 
         if (passesUpper) {
           autoClassified = true;
@@ -506,25 +576,25 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
           // they would leak into Excel as extra rogue columns.
 
           autoClassifiedRows.push(row);
-          console.log(`│    ➡  BYPASS LLM  — auto-classified from RAG (${scorePercent}%)`);
+          // console.log(`│    ➡  BYPASS LLM  — auto-classified from RAG (${scorePercent}%)`);
         } else if (passesLower) {
-          console.log(`│    ➡  → LLM       — score between upper and lower, needs AI classification WITH RAG`);
+          // console.log(`│    ➡  → LLM       — score between upper and lower, needs AI classification WITH RAG`);
           rowsRequiringAI.push(row);
           ragContextsForAI.push(ragContext);
         } else {
-          console.log(`│    ➡  → LLM       — score too low, needs AI classification WITHOUT RAG`);
+          // console.log(`│    ➡  → LLM       — score too low, needs AI classification WITHOUT RAG`);
           rowsRequiringAI.push(row);
           ragContextsForAI.push([]); // Send NO context
         }
       } else {
-        console.log(`│  ${rowLabel}`);
-        console.log(`│    Best match score : no matches returned`);
-        console.log(`│    ➡  → LLM       — no RAG context, needs AI classification WITHOUT RAG`);
+        // console.log(`│  ${rowLabel}`);
+        // console.log(`│    Best match score : no matches returned`);
+        // console.log(`│    ➡  → LLM       — no RAG context, needs AI classification WITHOUT RAG`);
         rowsRequiringAI.push(row);
         ragContextsForAI.push([]); // Send NO context
       }
 
-      console.log(`│`);
+      // console.log(`│`);
     }
 
     // ── Chunk summary ──────────────────────────────────────────────────────
@@ -557,17 +627,25 @@ async function processChunk(chunk, processingType, model, chunkId, sessionId) {
       const inputTokenCount = estimateTokens(dataOnlyPrompt);
       const fullPromptTokenCount = estimateTokens(prompt);
       const ragTokenCount = fullPromptTokenCount > inputTokenCount ? fullPromptTokenCount - inputTokenCount : 0;
+      const predictBudget = Math.min(4096, Math.max(512, Math.ceil(rowsRequiringAI.length * 200 * 1.3)));
       console.log('\n=== Token Details ===');
       console.log(`1. Default Token Limit            : ${DEFAULT_TOKEN_LIMIT}`);
       console.log(`2. Input token count (Data+Prompt): ${inputTokenCount}`);
       console.log(`3. RAG context input token count  : ${ragTokenCount}`);
+      console.log(`4. num_predict (output budget)    : ${predictBudget}  (${rowsRequiringAI.length} rows x 200 x 1.3)`);
       console.log('=====================\n');
+
+      // ── Diagnostic: confirm /no_think prefix ──────────────────────────
+      const promptPrefix = prompt.substring(0, 30).replace(/\n/g, '\\n');
+      const noThinkActive = prompt.startsWith('/no_think');
+      console.log(`[Prompt] First 30 chars: "${promptPrefix}"  |  /no_think=${noThinkActive ? '🟢 YES' : '🔴 NO — processor files not updated'}`);
+      // ──────────────────────────────────────────────────────────────────
 
       // ── LLM call count for this chunk ──────────────────────────────────
       console.log(`[Chunk ${chunkId}] 🤖 Calling LLM for ${rowsRequiringAI.length} row(s)...`);
 
-      // Call AI (cached)
-      const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId });
+      // Call AI (cached) — pass numRows so num_predict scales correctly with chunk size
+      const result = await callOllamaCached(prompt, model, { timeoutMs: false, sessionId, numRows: rowsRequiringAI.length });
 
       let aiContent = result;
 
@@ -986,7 +1064,7 @@ async function processExcel(req, res) {
     const numberOfInputRows = rows.length;
     const ROWSCOUNT = rows.length || 0;
 
-    // Get chunk size from request or default to 5
+    // Get chunk size from request or default to 5 (was 1 — batching rows reduces LLM round-trips)
     const chunkSize = parseInt(req.body.chunkSize) || 1;
     const numberOfChunks = Math.max(1, Math.ceil(ROWSCOUNT / chunkSize));
 
@@ -997,6 +1075,22 @@ async function processExcel(req, res) {
     logger.log(`  - Parallel Limit: 4 concurrent chunks`);
     logger.log('Starting AI processing...');
     logger.log('');
+
+    // ── PRE-FETCH ALL RAG CONTEXTS IN ONE BATCH CALL ────────────────────────
+    // This replaces N per-chunk RAG HTTP calls with a single request covering
+    // the entire file. For 100 rows this cuts RAG round-trips from 100 → 1.
+    let allRagContexts = [];
+    if (processingType !== 'clean') {
+      const ragTimerLabel = 'RAG_Prefetch_All';
+      const allQueries = rows.map(r => `${r.Title || ""} ${r.Problem || r.content || ""}`);
+      console.log(`[RAG] Pre-fetching RAG for all ${allQueries.length} rows in one batch call...`);
+      console.time(ragTimerLabel);
+      allRagContexts = await getRAGContextBatch(allQueries);
+      console.timeEnd(ragTimerLabel);
+      console.log(`[RAG] Pre-fetch complete — ${allRagContexts.length} result sets received`);
+      logger.log(`[RAG] Pre-fetched ${allRagContexts.length} RAG contexts in one HTTP call`);
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     // Initialize monotonically increasing completion counter
     let completedChunks = 0;
@@ -1016,6 +1110,11 @@ async function processExcel(req, res) {
       const startIdx = i * chunkSize;
       const endIdx = Math.min(startIdx + chunkSize, rows.length);
       const chunkRows = rows.slice(startIdx, endIdx);
+      // Slice the already-fetched RAG contexts for exactly this chunk's rows
+      const chunkRagContexts = allRagContexts.length > 0
+        ? allRagContexts.slice(startIdx, endIdx)
+        : null;
+
       const chunk = { file_name: originalName, chunk_id: i, row_indices: [startIdx, endIdx - 1], headers, rows: chunkRows };
       tasks.push(async () => {
         // Check for cancellation before processing
@@ -1025,7 +1124,8 @@ async function processExcel(req, res) {
           return { chunkId: i, status: 'cancelled', processedRows: [] };
         }
 
-        const result = await processChunk(chunk, processingType, model, i, sessionId);
+        // Pass pre-fetched RAG contexts — no RAG HTTP call happens inside processChunk
+        const result = await processChunk(chunk, processingType, model, i, sessionId, chunkRagContexts);
 
         // Check for cancellation after processing
         if (session && session.cancelled) {
@@ -2449,81 +2549,81 @@ async function processUpdateKB(req, res) {
   try {
     const file = req.file;
     const kbDir = path.join(__dirname, 'RAG_Data', 'knowledge_base');
-    
+
     // Ensure kb directory exists
     if (!fs.existsSync(kbDir)) {
       fs.mkdirSync(kbDir, { recursive: true });
     }
-    
+
     // Copy the uploaded file to knowledge_base folder
     const targetPath = path.join(kbDir, file.safeFilename || file.originalname);
     fs.copyFileSync(file.path, targetPath);
-    
+
     // Clean up uploaded file
     if (fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
     }
-    
+
     const { spawn } = require('child_process');
-    
+
     // Spawn python to build vector DB
     const pythonProcess = spawn('python', [path.join(__dirname, 'RAG_Data', 'build_vector.py')]);
-    
+
     let pythonOutput = '';
     let pythonError = '';
-    
+
     pythonProcess.stdout.on('data', (data) => {
       pythonOutput += data.toString();
       console.log(`[build_vector] ${data.toString().trim()}`);
     });
-    
+
     pythonProcess.stderr.on('data', (data) => {
       pythonError += data.toString();
       console.error(`[build_vector ERROR] ${data.toString().trim()}`);
     });
-    
+
     pythonProcess.on('close', async (code) => {
       if (code === 0) {
         // Trigger RAG API reload
         try {
-          const reloadRes = await fetch('http://127.0.0.1:8000/reload', {
+          const reloadRes = await fetch('http://127.0.0.1:5000/reload', {
             method: 'POST'
           });
           const reloadData = await reloadRes.json();
           console.log('[RAG API RELOAD]', reloadData);
-          
+
           let summary = { added: 0, duplicates: 0, total: 0 };
           const summaryMatch = pythonOutput.match(/___SUMMARY___({.*})/);
           if (summaryMatch) {
             try {
               summary = JSON.parse(summaryMatch[1]);
-            } catch (e) {}
+            } catch (e) { }
           }
-          
-          res.json({ 
-            success: true, 
-            message: 'Knowledge base updated and RAG API reloaded.', 
-            output: pythonOutput, 
+
+          res.json({
+            success: true,
+            message: 'Knowledge base updated and RAG API reloaded.',
+            output: pythonOutput,
             downloads: [],
             isUpdateKB: true,
             summary: summary
           });
         } catch (fetchErr) {
           console.error('Failed to call RAG API reload:', fetchErr);
-          
+
           let summary = { added: 0, duplicates: 0, total: 0 };
           const summaryMatch = pythonOutput.match(/___SUMMARY___({.*})/);
           if (summaryMatch) {
             try {
               summary = JSON.parse(summaryMatch[1]);
-            } catch (e) {}
+            } catch (e) { }
           }
-          
-          res.json({ 
-            success: true, 
-            message: 'Knowledge base updated but failed to signal RAG API. Please restart server.', 
-            output: pythonOutput, 
-            warning: fetchErr.message, 
+
+          res.json({
+            success: true,
+            message: 'Knowledge base updated but failed to signal RAG API. Please restart server.',
+            output: pythonOutput,
+            warning: fetchErr.message,
             downloads: [],
             isUpdateKB: true,
             summary: summary
@@ -2545,4 +2645,5 @@ app.listen(PORT, () => {
   console.log('\nCentralized Dashboard is running!');
   console.log(`Open your browser and go to: http://localhost:${PORT}`);
   console.log('Make sure Ollama is running (qwen3:4b-instruct)\n');
-});
+})
+  ;
