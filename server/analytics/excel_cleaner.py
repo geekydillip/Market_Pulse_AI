@@ -5,29 +5,9 @@ import re
 
 def clean_title(title_val):
     if pd.isna(title_val):
-        return "", ""
+        return ""
     
     title_str = str(title_val).strip()
-    source = "Unknown"
-    
-    # Extract all bracketed tokens (supporting both [ and { as openers)
-    all_brackets = re.findall(r'[\[{](.*?)[\]}]', title_str)
-    
-    # Priority rule: if any bracket contains "Market Issue", use that as Source
-    market_issue_match = next(
-        (b.strip() for b in all_brackets if re.search(r'market\s*issue', b, re.IGNORECASE)),
-        None
-    )
-    if market_issue_match:
-        # Normalize to "Market Issue" regardless of date suffixes like "Market Issue-26DO-23"
-        source = re.sub(r'[-–]\s*\w+$', '', market_issue_match).strip()
-        if not re.search(r'market\s*issue', source, re.IGNORECASE):
-            source = "Market Issue"
-        else:
-            source = "Market Issue"
-    elif all_brackets:
-        # Fallback: use first bracket as source
-        source = all_brackets[0].strip()
     
     # Remove all bracketed items e.g. [CS], [EWP], [SM-F415F_SWA], [Display]
     cleaned = re.sub(r'[\[{].*?[\]}]', '', title_str)
@@ -44,7 +24,7 @@ def clean_title(title_val):
     # Clean up double spaces or trailing spaces
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
     
-    return source, cleaned
+    return cleaned
 
 
 def clean_problem(problem_val):
@@ -349,26 +329,95 @@ def clean_excel(file_path):
         title_col = next((c for c in df.columns if str(c).lower().strip() == 'title'), None)
         problem_col = next((c for c in df.columns if str(c).lower().strip() == 'problem'), None)
         content_col = next((c for c in df.columns if str(c).lower().strip() == 'content'), None)
+        occurr_type_col = next((c for c in df.columns if str(c).lower().strip() == 'occurr. type'), None)
         
+        # Extract properties from Title if available
+        extracted_sources = []
+        extracted_models = []
+        if title_col:
+            titles = df[title_col].fillna("").astype(str).tolist()
+            for t in titles:
+                t_upper = t.upper()
+                
+                # Source extraction logic
+                if any(x in t_upper for x in ['[CS]', '[MARKET ISSUES]', '서남아 SIEL', 'SIEL 서남아', '[MARKET]']):
+                    extracted_sources.append('Market Issues')
+                elif 'RDM' in t_upper:
+                    extracted_sources.append('RDM')
+                elif 'QI' in t_upper:
+                    extracted_sources.append('QI')
+                elif 'SAMSUNG MEMBERS' in t_upper or 'SAMUSNG MEMBERS' in t_upper:
+                    extracted_sources.append('Samsung Members')
+                elif 'BIG DATA' in t_upper:
+                    extracted_sources.append('Big Data')
+                elif 'VOC' in t_upper:
+                    extracted_sources.append('VOC')
+                else:
+                    extracted_sources.append(None)
+                
+                # Model No. extraction logic from Title
+                model_match = re.search(r'(SM-[A-Z0-9]+)', t, re.IGNORECASE)
+                if model_match:
+                    extracted_models.append(model_match.group(1).upper())
+                else:
+                    extracted_models.append(None)
+        else:
+            extracted_sources = [None] * len(df)
+            extracted_models = [None] * len(df)
+
+        # Fallback: if no model found in Title, try deriving from S/W Ver. column
+        # e.g. "S928BXX5AY87" -> "SM-S928B" (SM- + first 5 chars)
+        sw_ver_col = next((c for c in df.columns if str(c).lower().strip() == 's/w ver.'), None)
+        if sw_ver_col:
+            sw_vers = df[sw_ver_col].fillna("").astype(str).tolist()
+            for i, (extracted_model, sw_ver) in enumerate(zip(extracted_models, sw_vers)):
+                if extracted_model is None and sw_ver and len(sw_ver.strip()) >= 5:
+                    sw_ver_clean = sw_ver.strip()
+                    # S/W Ver looks like "S928BXX5AY87" - first 5 chars are the model identifier
+                    # But validate it looks like a valid model prefix (letter + digits + letters)
+                    candidate = sw_ver_clean[:5]
+                    if re.match(r'^[A-Z][0-9]{3}[A-Z]$', candidate, re.IGNORECASE):
+                        extracted_models[i] = 'SM-' + candidate.upper()
+
+        # Determine Source from Occurr. Type if available as fallback
+        fallback_sources = []
+        if occurr_type_col:
+            fallback_sources = df[occurr_type_col].fillna("Unknown").tolist()
+            fallback_sources = [str(s).strip() if str(s).strip() else "Unknown" for s in fallback_sources]
+        else:
+            fallback_sources = ["Unknown"] * len(df)
+            
+        final_sources = [ext if ext else flb for ext, flb in zip(extracted_sources, fallback_sources)]
+
+        # Place Source column
+        source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
+        if source_col:
+            df[source_col] = final_sources
+        else:
+            if title_col:
+                title_idx = df.columns.get_loc(title_col)
+                df.insert(title_idx, 'Source', final_sources)
+            else:
+                df['Source'] = final_sources
+
+        # Replace 'Dev. Mdl. Name/Item Name' data with extracted Model No.
+        dev_mdl_col = next((c for c in df.columns if 'dev. mdl. name' in str(c).lower() or 'item name' in str(c).lower()), None)
+        if dev_mdl_col:
+            existing_models = df[dev_mdl_col].fillna("").astype(str).tolist()
+            final_models = [ext if ext else exm for ext, exm in zip(extracted_models, existing_models)]
+            df[dev_mdl_col] = final_models
+        else:
+            final_models = [ext if ext else "" for ext in extracted_models]
+            df['Dev. Mdl. Name/Item Name'] = final_models
+
         # Apply cleaning
         if title_col:
-            sources = []
             cleaned_titles = []
             for val in df[title_col]:
-                src, cln = clean_title(val)
-                sources.append(src)
+                cln = clean_title(val)
                 cleaned_titles.append(cln)
                 
             df[title_col] = cleaned_titles
-            
-            # Map Source to column
-            source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
-            if source_col:
-                df[source_col] = sources
-            else:
-                # Insert Source column near Title
-                title_idx = df.columns.get_loc(title_col)
-                df.insert(title_idx, 'Source', sources)
                 
         if problem_col:
             df[problem_col] = df[problem_col].apply(clean_problem)
