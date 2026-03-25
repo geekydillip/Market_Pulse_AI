@@ -264,12 +264,12 @@ if __name__ == "__main__":
 
     # Start the persistent FastAPI RAG server on port 5000 (loads embedding model once into RAM)
     start_rag_api()
-    print("[RAG API] Waiting for RAG server to load model into RAM (may take ~30s)...")
-    if not wait_for_rag_api(timeout=120):
+    print("[RAG API] Waiting for RAG server to load models into RAM (may take ~2-3 minutes on CPU)...")
+    if not wait_for_rag_api(timeout=400):
         print("[WARN] RAG API did not become ready in time — continuing anyway.")
-        print("       RAG-based classification will fall back to empty matches.")
+        print("[OK] RAG-based classification will fall back to empty matches.")
     else:
-        print("[RAG API] ✅ RAG server is ready!")
+        print("[RAG API] RAG server is ready!")
 
     run_server()
 

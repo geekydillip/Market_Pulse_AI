@@ -25,6 +25,7 @@ yarn-error.log*
 .env.production.local
 
 #Folders
+downloads/
 uploads/
 temp/
 logs/
@@ -32,4 +33,3 @@ RAG_implementation-main/knowledge_base
 
 # Log files
 *.log
-temp/

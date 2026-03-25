@@ -254,6 +254,7 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
   const port = opts.port || DEFAULT_OLLAMA_PORT;
   const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : 5 * 60 * 1000;
   const sessionId = opts.sessionId;
+  const dynamicNumPredict = opts.numPredict || 8192;
 
   const callStart = Date.now();
 
@@ -955,6 +956,7 @@ class LogManager {
 
 // Excel processing with chunking
 async function processExcel(req, res) {
+  let sessionId = req?.body?.sessionId || 'default';
   try {
     console.log('Starting Excel processing...');
     const tStart = Date.now();
@@ -977,7 +979,6 @@ async function processExcel(req, res) {
     // Use the requested processing type for Excel
     const processingType = req.body.processingType || 'clean';
     const model = req.body.model || 'qwen3:4b-instruct';
-    const sessionId = req.body.sessionId || 'default';
 
     // Initialize session tracking for cancellation and pause
     activeSessions.set(sessionId, {
@@ -1193,8 +1194,6 @@ async function processExcel(req, res) {
           return { chunkId: i, status: 'cancelled', processedRows: [] };
         }
 
-        // Pass pre-fetched RAG contexts — no RAG HTTP call happens inside processChunk
-        const result = await processChunk(chunk, processingType, model, i, sessionId, chunkRagContexts);
         // 1. Try to load from temp storage first
         if (fs.existsSync(chunkFilePath)) {
           try {
@@ -1214,7 +1213,8 @@ async function processExcel(req, res) {
         }
 
         // 2. Process chunk if not cached
-        const result = await processChunk(chunk, processingType, model, i, sessionId);
+        // Pass pre-fetched RAG contexts — no RAG HTTP call happens inside processChunk
+        const result = await processChunk(chunk, processingType, model, i, sessionId, chunkRagContexts);
 
         // Save successfully processed chunk to temp
         if (result && result.status === 'ok') {
@@ -2760,18 +2760,23 @@ async function processUpdateKB(req, res) {
 }
 
 // GET /api/ai-insight -> forwards to python RAG API
-app.get('/api/ai-insight', async (req, res) => {
-  try {
-    const response = await fetch('http://127.0.0.1:8000/ai-insight');
-    if (!response.ok) {
-      return res.status(response.status).json({ error: `RAG API error: HTTP ${response.status}` });
+app.get('/api/ai-insight', (req, res) => {
+  const http = require('http');
+  const request = http.get('http://127.0.0.1:5000/ai-insight', (response) => {
+    if (response.statusCode !== 200) {
+      return res.status(response.statusCode).json({ error: `RAG API error: HTTP ${response.statusCode}` });
     }
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    response.pipe(res);
+  });
+
+  // Specifically disable the timeout for this outgoing request to Python
+  request.setTimeout(0);
+
+  request.on('error', (error) => {
     console.error('AI Insight proxy error:', error);
     res.status(500).json({ error: 'Failed to connect to BERT AI service: ' + error.message });
-  }
+  });
 });
 
 // Start server
@@ -2780,5 +2785,4 @@ const server = app.listen(PORT, () => {
   console.log(`Open your browser and go to: http://localhost:${PORT}`);
   console.log('Make sure Ollama is running (qwen3:4b-instruct)\n');
 });
-// Disable timeout for long-running AI processing tasks
-server.setTimeout(0);
+server.setTimeout(0); // Disable HTTP timeout for long-running AI proxy requests

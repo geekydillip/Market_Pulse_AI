@@ -48,8 +48,11 @@ SIMILARITY_THRESHOLD = 0.38
 
 # ── Load model and index once at startup ──────────────────────────────────────
 
-print("Loading embedding model: BAAI/bge-m3 ...")
-embed_model = SentenceTransformer("BAAI/bge-m3")
+print("Loading RAG model: BAAI/bge-m3 ...")
+embed_model_rag = SentenceTransformer("BAAI/bge-m3")
+
+print("Loading AI Insight model: all-MiniLM-L6-v2 ...")
+embed_model_insight = SentenceTransformer("all-MiniLM-L6-v2")
 
 print("Loading FAISS index...")
 faiss_index = faiss.read_index(INDEX_FILE)
@@ -97,7 +100,7 @@ def _run_search(queries: list[str]) -> list[list[dict]]:
     # Normalise queries to match document encoding in build_vector.py
     normalised = [_normalise_query(q) for q in queries]
 
-    embeddings = embed_model.encode(
+    embeddings = embed_model_rag.encode(
         normalised,
         normalize_embeddings=True,   # cosine similarity via IndexFlatIP
         convert_to_numpy=True,
@@ -177,6 +180,154 @@ async def reload_index():
 @app.get("/health")
 async def health():
     return {"status": "ok", "entries": len(metadata)}
+
+
+# ─── /ai-insight endpoint ─────────────────────────────────────────────────────
+
+import os
+from pathlib import Path
+
+AI_INSIGHT_THRESHOLD = 0.78   # cosine similarity threshold for MiniLM
+
+_ai_insight_cache = None
+_ai_insight_mtime = 0
+
+@app.get("/ai-insight")
+async def ai_insight():
+    global _ai_insight_cache, _ai_insight_mtime
+    """
+    Runs BERT semantic similarity on analytics.json using the
+    already-loaded BAAI/bge-m3 model.
+
+    For each unique (Model No. + Module) group:
+      - Picks the most-reported issue title as the representative VOC
+      - Computes cosine similarity between that VOC and every other title
+      - Counts how many exceed AI_INSIGHT_THRESHOLD => Similar VOC (Count)
+
+    Returns a JSON list sorted by count descending.
+    """
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    analytics_path = Path(BASE_DIR) / "downloads" / "samsung_members_voc" / "analytics.json"
+
+    # 1. Load analytics data
+    try:
+        mtime = os.path.getmtime(analytics_path)
+        if _ai_insight_cache is not None and mtime == _ai_insight_mtime:
+            return JSONResponse(content=_ai_insight_cache)
+            
+        with open(analytics_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return JSONResponse(status_code=404, content={"error": f"analytics.json not found at {analytics_path}"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+    rows = []
+    for r in data.get("rows", []):
+        title = r.get("Title") or r.get("content") or r.get("Content") or ""
+        model = r.get("Model No.") or r.get("model") or ""
+        module = r.get("Module") or r.get("module") or ""
+        
+        if title and model and module:
+            mapped_row = r.copy()
+            mapped_row["Title"] = title
+            mapped_row["Model No."] = model
+            mapped_row["Module"] = module
+            rows.append(mapped_row)
+
+    if not rows:
+        return JSONResponse(status_code=400, content={"error": "No valid rows found in analytics.json"})
+
+    titles = [r["Title"] for r in rows]
+
+    # 2. Encode all titles using the in-RAM MiniLM model
+    # Offload encoding to a thread so we don't block the async loop
+    embeddings = await asyncio.to_thread(
+        embed_model_insight.encode,
+        titles,
+        normalize_embeddings=True,
+        show_progress_bar=False,
+        batch_size=32
+    )
+    embeddings = np.array(embeddings, dtype="float32")
+
+    # 3. Group by Model No. + Module
+    groups: dict[str, dict] = {}
+    for idx, row in enumerate(rows):
+        key = f"{row['Model No.']}|||{row['Module']}"
+        if key not in groups:
+            groups[key] = {
+                "model":      row["Model No."],
+                "module":     row["Module"],
+                "title_freq": {},
+                "title_idx":  {},
+            }
+        t = row["Title"].strip().lower()
+        groups[key]["title_freq"][t] = groups[key]["title_freq"].get(t, 0) + 1
+        groups[key]["title_idx"].setdefault(t, idx)
+
+    # 4. For each group pick rep VOC and count similarities
+    results = []
+
+    for g in groups.values():
+        # Representative VOC = most frequent title in the group
+        rep_title = max(g["title_freq"], key=g["title_freq"].get)
+        rep_idx   = g["title_idx"][rep_title]
+        rep_vec   = embeddings[rep_idx]                        # shape (1024,)
+
+        # Cosine similarity against all titles (embeddings already normalised)
+        scores = embeddings @ rep_vec                          # shape (n,)
+
+        # Find similar titles (excluding self)
+        similar_indices = np.where(scores >= AI_INSIGHT_THRESHOLD)[0]
+        similar_items = []
+        for i in similar_indices:
+            if i != rep_idx:
+                m = rows[i]["Model No."].strip()
+                mod = rows[i]["Module"].strip()
+                # Restrict matches to ONLY the exact same Model and Module
+                if m == g["model"] and mod == g["module"]:
+                    similar_items.append((m, rows[i]["Title"].strip()))
+
+        similar_count = len(similar_items)
+
+        # Deduplicate and count occurrences of each (model, title) pair
+        item_counts = {}
+        for m, t in similar_items:
+            key = f"{m.lower()}|||{t.lower()}"
+            if key not in item_counts:
+                item_counts[key] = {"model": m, "display": t, "count": 1}
+            else:
+                item_counts[key]["count"] += 1
+
+        # Format as list of objects for the table modal
+        unique_similar_titles = []
+        for t_info in sorted(item_counts.values(), key=lambda x: x["count"], reverse=True):
+            unique_similar_titles.append({
+                "model": t_info['model'],
+                "voc": t_info['display'],
+                "count": t_info['count']
+            })
+
+        voc_display = rep_title.capitalize()
+
+        results.append({
+            "model":  g["model"],
+            "module": g["module"],
+            "voc":    voc_display,
+            "count":  similar_count,
+            "similar_titles": unique_similar_titles
+        })
+
+    results.sort(key=lambda x: x["count"], reverse=True)
+
+    return {
+        "total_issues": len(rows),
+        "total_groups": len(results),
+        "threshold":    AI_INSIGHT_THRESHOLD,
+        "model_name":   "BAAI/bge-m3",
+        "results":      results,
+    }
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

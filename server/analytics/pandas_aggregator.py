@@ -58,8 +58,6 @@ def sanitize_nan(obj):
 
 
 def derive_model_name_from_sw_ver(sw_ver):
-    if not sw_ver or not isinstance(sw_ver, str) or len(sw_ver) < 5:
-        return sw_ver
     """
     Derive model name from S/W Ver. for OS Beta entries
     Example: "S911BXXU8ZYHB" -> "SM-S911B"

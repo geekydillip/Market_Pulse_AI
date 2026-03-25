@@ -807,7 +807,7 @@
           data.models.forEach(model => {
             const option = document.createElement('option');
             option.value = model;
-            option.textContent = model === 'qwen3:4b-instruct' ? 'local Ai' : model;
+            option.textContent = model === 'qwen3:4b-instruct' ? 'Offline AI Model' : model;
             modelSelect.appendChild(option);
           });
 
@@ -1058,7 +1058,7 @@
         if (queueItem.status === 'paused') {
           await fetch(`/api/resume/${currentSessionId}`, { method: 'POST' });
         }
-        
+
         queueItem.status = 'processing';
         updateQueueDisplay();
 
@@ -1068,7 +1068,7 @@
             try {
               const data = JSON.parse(event.data);
               if (data.type === 'progress') updateProgress(data.percent, data.message, queueItem);
-            } catch (e) {}
+            } catch (e) { }
           };
         }
 
@@ -1081,7 +1081,7 @@
 
     function startStatusPolling(queueItem) {
       if (statusPollingInterval) clearInterval(statusPollingInterval);
-      
+
       statusPollingInterval = setInterval(async () => {
         try {
           const res = await fetch(`/api/status/${currentSessionId}`);
@@ -1092,27 +1092,27 @@
               queueItem.status = 'completed';
               queueItem.downloads = data.result?.downloads || [];
               if (currentEventSource) {
-                 currentEventSource.close();
-                 currentEventSource = null;
+                currentEventSource.close();
+                currentEventSource = null;
               }
               isProcessingActive = false;
               updateQueueDisplay();
-              
+
               const nextItem = fileQueue.find(item => item.status === 'queued');
               if (nextItem) setTimeout(() => startProcessing(), 1000);
             } else if (data.status === 'failed') {
               clearInterval(statusPollingInterval);
               queueItem.status = 'failed';
               if (currentEventSource) {
-                 currentEventSource.close();
-                 currentEventSource = null;
+                currentEventSource.close();
+                currentEventSource = null;
               }
               isProcessingActive = false;
               updateQueueDisplay();
             }
           }
         } catch (e) {
-           // still disconnected
+          // still disconnected
         }
       }, 2000);
     }
@@ -1172,17 +1172,18 @@
     }
 
     function formatProcessingDuration(milliseconds) {
-      if (milliseconds < 1000) return '< 1s';
+      if (milliseconds < 1000) return '00:00:00';
 
       const totalSeconds = Math.floor(milliseconds / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = totalSeconds % 60;
 
-      if (minutes > 0) {
-        return `${minutes}m ${seconds}s`;
-      } else {
-        return `${seconds}s`;
-      }
+      const hh = hours.toString().padStart(2, '0');
+      const mm = minutes.toString().padStart(2, '0');
+      const ss = seconds.toString().padStart(2, '0');
+
+      return `${hh}:${mm}:${ss}`;
     }
 
     // Auto-start processing when files are added and type is selected

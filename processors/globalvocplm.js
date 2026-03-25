@@ -385,12 +385,11 @@ module.exports = {
     const mergedRows = resolvedAiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
 
-      return {
       const titleText = original['Title'] || aiRow['Title'] || '';
       const extractedModel = extractModelFromTitle(titleText);
 
       // Create the base merged row
-      const baseRow = {
+      return {
         'Case Code': original['Case Code'] || '',
         'Source': original['Source'] || '',
         'Model No.': extractedModel || ((original['Model No.'] && /\[OS Beta\]/i.test(String(original['Model No.'])))

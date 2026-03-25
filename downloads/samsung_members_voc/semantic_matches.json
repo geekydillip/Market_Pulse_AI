@@ -1,1 +1,1388 @@
-{}
+{
+  "A16 5G|Camera|camera not working": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.8517
+    }
+  ],
+  "S24|Settings|modes and routines prompts are randomly working. 1. set a routine do not disturb function to work when camera is open. it fails several time then again i have to set this routine. it works for sometime then it again fails. 2. set a routine to auto rotate when an app is opened. it fails several time then again i have to set this routine. it works for sometime then it again fails. i have cleared cache and data several times but of no use.": [
+    {
+      "code": "P260206-07421",
+      "title": "Modes and routines prompts are randomly working",
+      "subModule": "Now Bar",
+      "similarity": 0.7689
+    }
+  ],
+  "S24 FE|Notification|youtube subscription notifications appearing as blank cards in notification panel (one ui 8.0) after updating to one ui 8.0 and using the latest version of the youtube app, youtube subscription notifications appear in the notification panel as blank notification cards. these notifications only display the youtube icon and the time (e.g., 1:02 pm, 1:11 pm, 2:00 pm) but no notification text, title, or content. when long-pressing these blank notifications, the system redirects to the youtube \u201csubscriptions\u201d notification category, confirming that these are subscription alerts. however, the content fails to render in the notification shade. multiple blank youtube notifications stack in the notification panel. no text/content is visible, only the app icon and timestamp. clearing youtube data, reinstalling the app, resetting notification settings does not fix the issue. the issue does not occur when using an older version of the youtube app.": [
+    {
+      "code": "P260203-08374",
+      "title": "Multiple blank YouTube notifications stack in the notification panel",
+      "subModule": "YouTube",
+      "similarity": 0.787
+    }
+  ],
+  "S24 Ultra|Security|i am not able to open secure folder i do all basic steps like reset all settings and all kindly resolve my concern as soon as possible.": [
+    {
+      "code": "P251111-04593",
+      "title": "Unable to open app present in secure folder from notification panel.",
+      "subModule": "Secure Folder",
+      "similarity": 0.6624
+    },
+    {
+      "code": "P260206-07112",
+      "title": "not able to open secure folder in device",
+      "subModule": "Secure Folder",
+      "similarity": 0.8204
+    }
+  ],
+  "S23 FE|Camera|my camera app is not opening it is showing warning and camera failed": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.7036
+    }
+  ],
+  "A15 5G|Security|fingerprint not working properly": [
+    {
+      "code": "P260224-07350",
+      "title": "Fingerprint is not getting activated",
+      "subModule": "Biometrics",
+      "similarity": 0.698
+    }
+  ],
+  "S23 FE|Camera|camera shows camera falied please fix it": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.7467
+    }
+  ],
+  "S25 Ultra|Battery|facing a battery drain very fast did not understand why after 3 months of buying this facing issues regular daily basis i observed battery draining if there is any bug please fix it": [
+    {
+      "code": "P260225-08695",
+      "title": "Customer face battery drain issue",
+      "subModule": "3rd-Party App",
+      "similarity": 0.6895
+    }
+  ],
+  "A06 5G|Camera|not working my camera": [
+    {
+      "code": "P260305-01316",
+      "title": "Camera keeps stopping and popping up",
+      "subModule": "Camera",
+      "similarity": 0.6676
+    }
+  ],
+  "S22|System|device is hang for 5-10secs for 2weeks. kindly check": [
+    {
+      "code": "P260225-08139",
+      "title": "Device Getting hang and UI system is Not responding",
+      "subModule": "Settings",
+      "similarity": 0.7169
+    }
+  ],
+  "A56 5G|UI/UX|after updating to my samsung galaxy a56 to one ui 8 . the animation of app of opening and closing get worst very worst . it feels too fast . the battery backup also get worst . .. how samsung you are give 15k price range animation in 40k smartphone.": [
+    {
+      "code": "P260213-07421",
+      "title": "App opening and closing animations are very fast and not smooth",
+      "subModule": "Settings",
+      "similarity": 0.6864
+    }
+  ],
+  "Z Fold4|Camera|unable to use the front camera": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.8125
+    }
+  ],
+  "S24 Ultra|Display|display resolution drastically changes other than set parameters. sending below is the image of unknown resolution which i got.": [
+    {
+      "code": "P260211-05620",
+      "title": "Display resolution changes abruptly to any resolution",
+      "subModule": "Settings",
+      "similarity": 0.7324
+    }
+  ],
+  "M35 5G|Lock Screen|i have my dynamic clock on my lock screen. it works well. but after a few days , not periodic, i see that my clock on my lock screen repositioning itself to the vertices centre all by itself from my preferredspot . and thus has happened many names no matter how many times i replace it to my preferred position.i will be attaching screenshot shots that consists of the preferred spot and the repositioned centered clock along with this. my device model being sm-m356b/ds. and also to let you know that my device doesn't support good lock application. thank you and hoping this issue to be resolved.": [
+    {
+      "code": "P260206-07992",
+      "title": "Dynamic Clock on Lock Screen Repositioning Itself to Center",
+      "subModule": "Clock",
+      "similarity": 0.7653
+    }
+  ],
+  "M35 5G|Lock Screen|i have my dynamic clock on my lock screen. it works well. but after a few days , not periodic, i see that my clock on my lock screen repositioning itself to the vertices centre all by itself from my preferredspot . and thus has happened many names no matter how many times i replace it to my preferred position.i will be attaching screenshot shots that consists of the preferred spot and the repositioned centered clock along with this. my device model being sm-m356b/ds. and also to let you know that my device doesn't support good lock application. thank you and hoping this issue to be resolved. resending this issue request since the previous request didn't have my files attached. now they are.": [
+    {
+      "code": "P260206-07992",
+      "title": "Dynamic Clock on Lock Screen Repositioning Itself to Center",
+      "subModule": "Clock",
+      "similarity": 0.6796
+    }
+  ],
+  "S24|Media|i experience lag in youtube shorts when i open youtube from the recent apps. the same issue also occurs when i lock the screen during playback and then unlock my phone. i am using a samsung s24 (256 gb, snapdragon variant).": [
+    {
+      "code": "P251117-08518",
+      "title": "YouTube video frame drop and lag while playing shorts and normal video",
+      "subModule": "YouTube",
+      "similarity": 0.7395
+    }
+  ],
+  "S24|Now Bar|google sports live notification on now bar is not showing. now bar is working for other application but not working for google sports live matches. i have turned on all settings required for live notification but its not showing": [
+    {
+      "code": "P260306-07736",
+      "title": "Not able to see sports from Google option in Now Bar settings",
+      "subModule": "Now Bar",
+      "similarity": 0.7427
+    }
+  ],
+  "S24|Now Bar|here is the screen recording and screenshot of live notification setting and google sports live match is not showing on now bar": [
+    {
+      "code": "P260306-07736",
+      "title": "Not able to see sports from Google option in Now Bar settings",
+      "subModule": "Now Bar",
+      "similarity": 0.7266
+    }
+  ],
+  "A16 5G|Camera|couldn't open camera": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7011
+    }
+  ],
+  "A56 5G|UI/UX|after the recent update, the app open and close animations have become too fast and are not smooth anymore. the animation feels abrupt and uncomfortable compared to before. i am also facing battery drain issues after the update. the battery is draining faster than normal usage. please fix the animation smoothness and battery drain issue": [
+    {
+      "code": "P260213-07421",
+      "title": "App opening and closing animations are very fast and not smooth",
+      "subModule": "Settings",
+      "similarity": 0.8254
+    }
+  ],
+  "A35 5G|Battery|why is the battery backup so low? please increase the battery backup. the battery backup is getting exhausted quickly and is not even lasting for a day. samsung galaxy a35 5g": [
+    {
+      "code": "P260310-08287",
+      "title": "Battery Backup Is not good in device",
+      "subModule": "3rd-Party App",
+      "similarity": 0.722
+    }
+  ],
+  "M55 5G|Display|when eye comfort shield is on, any screenshots taken also have a yellowish tinge. this is reproducible every single time - check two screenshots with and without eye comfort shield.": [
+    {
+      "code": "P250925-06847",
+      "title": "Eye comfort shield makes the whole display look brown",
+      "subModule": "Settings",
+      "similarity": 0.6612
+    }
+  ],
+  "S24|Now Bar|google sports live matches are not showing on nowbar. i have turned on all the settings required for live notification but it's not showing.": [
+    {
+      "code": "P260306-07736",
+      "title": "Not able to see sports from Google option in Now Bar settings",
+      "subModule": "Now Bar",
+      "similarity": 0.7507
+    }
+  ],
+  "A16 5G|Camera|whem i am goi g to open my phone camera it is showing cannot open the camera and flash light is also not turnjng on but front camera is okk": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.6941
+    }
+  ],
+  "A34 5G|System|google play is still in july 2025 now it is february 2026 i have not got any update": [
+    {
+      "code": "P260209-10284",
+      "title": "Google Play not updating",
+      "subModule": "Google app",
+      "similarity": 0.7109
+    }
+  ],
+  "S24|Media|refer to your reply, my phone is updated to latest software but i still encountered the same issue on youtube of video lag. it is requested that the issue be checked and resolved.": [
+    {
+      "code": "P251117-08518",
+      "title": "YouTube video frame drop and lag while playing shorts and normal video",
+      "subModule": "YouTube",
+      "similarity": 0.6897
+    },
+    {
+      "code": "P260219-05672",
+      "title": "Framedrop and lag while playing video on YouTube",
+      "subModule": "YouTube",
+      "similarity": 0.6856
+    }
+  ],
+  "S22|System|incorrectly restarts and froze. i receive notifications like system ui isn't responding.": [
+    {
+      "code": "P260119-10038",
+      "title": "System UI isn't responding",
+      "subModule": "Settings",
+      "similarity": 0.7279
+    }
+  ],
+  "A16 5G|Camera|rear camera not working": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7461
+    }
+  ],
+  "S23 FE|Camera|my camera is not working it shows camera failed. please do something asap": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.8479
+    }
+  ],
+  "Z Fold4|Camera|front camera not working": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.8804
+    }
+  ],
+  "A56 5G|UI/UX|i am facing two issues on my device. firstly, the app opening and closing animations are very fast and not smooth. the transitions feel unnatural and slightly laggy. i have already checked that the \u201creduce animations\u201d option is turned off and restarted the device, but the issue still persists. secondly, i am also experiencing unusual battery drain. the battery percentage drops faster than normal even with regular usage. kindly investigate both issues and assist with a resolution.": [
+    {
+      "code": "P260213-07421",
+      "title": "App opening and closing animations are very fast and not smooth",
+      "subModule": "Settings",
+      "similarity": 0.7428
+    }
+  ],
+  "S24 Ultra|Display|display resolution changes abruptly.": [
+    {
+      "code": "P260211-05620",
+      "title": "Display resolution changes abruptly to any resolution",
+      "subModule": "Settings",
+      "similarity": 0.9131
+    }
+  ],
+  "S24 Ultra|Display|display resolution changes abruptly to any resolution. i have attached image and the background log has been sent kindly check at your end attaching the file again": [
+    {
+      "code": "P260211-05620",
+      "title": "Display resolution changes abruptly to any resolution",
+      "subModule": "Settings",
+      "similarity": 0.6872
+    }
+  ],
+  "A36 5G|Display|my device is samsung galaxy a36 and there is an issue with it. when i try to set a live wallpaper its showing only lock screen and call background, there isn't any home screen option. i can't set live wallpaper on home screen through gallery app or galaxy theme app. i tried restarting the phone, resetting all the settings and all... still not useful. i hope u guys reply fast fix this issue": [
+    {
+      "code": "P260213-06751",
+      "title": "Can't set live wallpaper on home screen through gallery app or Galaxy theme app",
+      "subModule": "Gallery",
+      "similarity": 0.8192
+    }
+  ],
+  "S24|Camera|picture quality issue and night picture quality problem": [
+    {
+      "code": "P260115-07053",
+      "title": "Night mode image quality is not good",
+      "subModule": "Camera",
+      "similarity": 0.8571
+    }
+  ],
+  "A56 5G|UI/UX|the animation issue is occurring continuously . i am recording and reporting it immediately as requested. please escalate this case as it has been ongoing for over a month i am facing two issues on my device. firstly, the app opening and closing animations are very fast and not smooth. the transitions feel unnatural and slightly laggy. i have already checked that the \u201creduce animations\u201d option is turned off and restarted the device, but the issue still persists. secondly, i am also experiencing unusual battery drain. the battery percentage drops faster than normal even with regular usage. kindly investigate both issues and assist with a resolution.": [
+    {
+      "code": "P260213-07421",
+      "title": "App opening and closing animations are very fast and not smooth",
+      "subModule": "Settings",
+      "similarity": 0.6947
+    }
+  ],
+  "A56 5G|UI/UX|the animation issue is occurring continuously (24/7). i am recording and reporting it immediately as requested. please escalate this case as it has been ongoing for over a month i am facing two issues on my device. firstly, the app opening and closing animations are very fast and not smooth. the transitions feel unnatural and slightly laggy. i have already checked that the \u201creduce animations\u201d option is turned off and restarted the device, but the issue still persists. secondly, i am also experiencing unusual battery drain. the battery percentage drops faster than normal even with regular usage. kindly investigate both issues and assist with a resolution.": [
+    {
+      "code": "P260213-07421",
+      "title": "App opening and closing animations are very fast and not smooth",
+      "subModule": "Settings",
+      "similarity": 0.6675
+    }
+  ],
+  "S23 FE|Connectivity|i connect to the wifi but wifi calling wont be working i tried all the things": [
+    {
+      "code": "P260226-05663",
+      "title": "Wifi calling not working properly",
+      "subModule": "Network",
+      "similarity": 0.7158
+    }
+  ],
+  "S24|Wallet|i was facing this problem from february 3 i have called the samsung wallet customer care on february 8 that they told 10 or 12 the wallet upi lite will work because the server was down they were working for it but still i have not able to use it i have deposited amount in upi lite i have an emergency needed my amount was stuck in upi lite. kindly try to make a refund or resolve the problem. i want a call request in my mother tongue tamil": [
+    {
+      "code": "P251215-09698",
+      "title": "Unable to activate UPI Lite in Samsung Wallet",
+      "subModule": "Wallet",
+      "similarity": 0.762
+    }
+  ],
+  "S24|Camera|night photography quality is very low . very noice and low deatails.": [
+    {
+      "code": "P260115-07053",
+      "title": "Night mode image quality is not good",
+      "subModule": "Camera",
+      "similarity": 0.7302
+    }
+  ],
+  "S23 Ultra|Settings|hai, contacts sync now option is in grey mode and got disabled in accounts option. for some account like facebook, whatsapp, telegram. please provide a solution,": [
+    {
+      "code": "P260217-02208",
+      "title": "Sync Now option is in grey mode and got disabled in accounts option.",
+      "subModule": "Accounts",
+      "similarity": 0.8055
+    }
+  ],
+  "S25|Settings|not working samsung pass": [
+    {
+      "code": "P250929-08041",
+      "title": "Samsung Pass shortcut not available on Samsung keyboard",
+      "subModule": "Keyboard",
+      "similarity": 0.6683
+    }
+  ],
+  "S23 FE|Camera|camera is not working even other apps that use camera are also not working. it all started once when my storage aas full, but since last three weeks i have cleared the storage and now have 15gb available still camera not working.": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.6993
+    }
+  ],
+  "S24 Ultra|Performance|this device lagging sometimes and i restarted phone but this problem doesn't fixed. fix it": [
+    {
+      "code": "P250512-07542",
+      "title": "Multiple issue observed in the device (lag and performance issues)",
+      "subModule": "Settings",
+      "similarity": 0.6561
+    }
+  ],
+  "S24|Lock Screen|dear team, previous issue was solved successfully, but i have disovered some new issue with my phone today. in animation section, there is a face recognition circular ring type animation on lock screen, which is appearing when i try to edit lock screen, but when i am unlocking, there is no animation present. attaching video for your reference. system logs are also attached. thanks": [
+    {
+      "code": "P260217-01794",
+      "title": "Face Recognition Circular Ring animation not working on lock screen",
+      "subModule": "Settings",
+      "similarity": 0.8232
+    }
+  ],
+  "S22|System|system ui not responding processor not responding this type of error and slow and late provessing speed": [
+    {
+      "code": "P260119-10038",
+      "title": "System UI isn't responding",
+      "subModule": "Settings",
+      "similarity": 0.6707
+    }
+  ],
+  "S24 Ultra|Security|secure folder doesn't open": [
+    {
+      "code": "P260206-07112",
+      "title": "not able to open secure folder in device",
+      "subModule": "Secure Folder",
+      "similarity": 0.6783
+    }
+  ],
+  "S22|Calendar|hello samsung support team, i would like to report a bug regarding the calendar app inside secure folder. on my device, the calendar app in secure folder is showing yesterday\u2019s date, while the normal calendar app outside secure folder is correctly showing today\u2019s date. both are on the same phone and time settings are correct. device model: galaxy s22 (sm-s901e) software version: one ui 8 kindly look into this issue and provide a fix in the upcoming update. thank you.": [
+    {
+      "code": "P260218-01895",
+      "title": "Calendar app in Secure Folder showing yesterday's date",
+      "subModule": "Calendar",
+      "similarity": 0.8291
+    }
+  ],
+  "A17 5G|Lock Screen|as advised short video clip attached. post putting in right pin the mobile after a pause again shows screen locked.": [
+    {
+      "code": "P260218-02525",
+      "title": "After entering correct PIN, screen locks again after a pause",
+      "subModule": "Settings",
+      "similarity": 0.696
+    }
+  ],
+  "A16 5G|Camera|camera could not open": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.6609
+    }
+  ],
+  "A54 5G|Messaging|i am unable to send photo in samsung message app cause mms is not working. i tried and tried but i could not fixed it cause photo was uploaded successfully without any issues and after sending mms is unable to send the photo to the intended recipient and i am facing this problem since starting but i am getting the photo from recipient whenever he or she send me": [
+    {
+      "code": "P260218-01869",
+      "title": "Unable to send photo in Samsung Message app due to MMS not working",
+      "subModule": "Samsung Message",
+      "similarity": 0.9307
+    }
+  ],
+  "S25 Ultra|Battery|battery drain": [
+    {
+      "code": "P260225-08695",
+      "title": "Customer face battery drain issue",
+      "subModule": "3rd-Party App",
+      "similarity": 0.6503
+    }
+  ],
+  "S24 Ultra|Camera|front camera dont work properly": [
+    {
+      "code": "P260303-09067",
+      "title": "Front camera does not properly adjust the exposure",
+      "subModule": "Camera",
+      "similarity": 0.6666
+    }
+  ],
+  "S25 Ultra|Security|in secure folder my paytm app cannot be open now please solve my problem": [
+    {
+      "code": "P260219-05257",
+      "title": "Paytm App not opening inside the secure folder",
+      "subModule": "Secure Folder",
+      "similarity": 0.8813
+    }
+  ],
+  "S25 Ultra|Security|in secure folder my paytm app cannotbe open now please solve my problem i will attach the error video screenshot please look it": [
+    {
+      "code": "P260219-05257",
+      "title": "Paytm App not opening inside the secure folder",
+      "subModule": "Secure Folder",
+      "similarity": 0.8572
+    }
+  ],
+  "S23 Ultra|Camera|on taking pictures from 200mp lens the photos become error after few minutes and can't open": [
+    {
+      "code": "P260123-07479",
+      "title": "Photos from 200MP and 50MP camera lenses can't open and show error",
+      "subModule": "Camera",
+      "similarity": 0.8154
+    }
+  ],
+  "Z Fold4|Camera|front camera not not working": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.8911
+    }
+  ],
+  "A16 5G|Camera|camera isaues": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.6665
+    }
+  ],
+  "S22 Ultra|Settings|recent files doesn't show all apps. example if i interact with lets say chatgpt, google map and then go to recent apps, it won't show that app. when i open again, it will be back to where i started. this issue persists for many aaps": [
+    {
+      "code": "P260311-08351",
+      "title": "Recent Files doesn't show all apps",
+      "subModule": "Recent Files",
+      "similarity": 0.8927
+    }
+  ],
+  "A05|System|google play system update not showing on my a05 everyone receive gogle play system update and my device not showing and this update can fix lag problem": [
+    {
+      "code": "P260220-04087",
+      "title": "Google Play update is not updating",
+      "subModule": "Google app",
+      "similarity": 0.6783
+    }
+  ],
+  "S23 FE|Camera|camera is not working.while opening camera icon black screen displays.": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.8191
+    }
+  ],
+  "S23 FE|Camera|camera is not working.": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.9027
+    }
+  ],
+  "A35 5G|System|my samsung device is frequenty restarting by it self while every possible thing like auto restart is off and after that restart i open members app it shows me that my device is automated restart and suggest me to send log files i every time shared it but problem is still not solved please help me accordingly if any app that is a reason of it then tell me or is any other reason like hacked my phone then also tell me": [
+    {
+      "code": "P251216-04932",
+      "title": "Device restarts automatically.",
+      "subModule": "Settings",
+      "similarity": 0.6703
+    }
+  ],
+  "S23 Ultra|Battery|battery drain very fast screen on time only 5 hour with normal usage in samsung s23 ultra": [
+    {
+      "code": "P260206-08491",
+      "title": "Battery drains abnormally fast even during basic usage",
+      "subModule": "System",
+      "similarity": 0.653
+    }
+  ],
+  "SM-M135FU|Settings|when i try to open sound and vibration section , it shows that the application is not responding. i have attached screenshot of what it is showing when i click the option to change ringtone.": [
+    {
+      "code": "P260225-10325",
+      "title": "Application is not responding popup occurs while opening sound & vibration setting",
+      "subModule": "Settings",
+      "similarity": 0.7583
+    }
+  ],
+  "S21 FE(QC)|Settings|bixby wake up is not working and i also cannot improve my bixby wake up voice": [
+    {
+      "code": "P260225-10212",
+      "title": "Bixby wake up is not working",
+      "subModule": "Bixby",
+      "similarity": 0.8823
+    }
+  ],
+  "S24|Battery|my smartphone has been switching off automatically. on 22nd the issue occurred twice consecutively, which is concerning. earlier as well, the phone used to switch off on its own occasionally, but the problem now seems to be happening more frequently.": [
+    {
+      "code": "P260226-09068",
+      "title": "phone getting switch off automatically",
+      "subModule": "System",
+      "similarity": 0.7516
+    }
+  ],
+  "S23 Ultra|Battery|battery drain too fast": [
+    {
+      "code": "P250604-08401",
+      "title": "Battery drain observed.",
+      "subModule": "System",
+      "similarity": 0.6884
+    },
+    {
+      "code": "P260206-08491",
+      "title": "Battery drains abnormally fast even during basic usage",
+      "subModule": "System",
+      "similarity": 0.6691
+    }
+  ],
+  "S24 FE|Settings|ai features are not working for me after update typically ai assist it's going into scanning for update window as soon as i select it": [
+    {
+      "code": "P260226-08981",
+      "title": "Ai features are not working in keyboard",
+      "subModule": "Keyboard",
+      "similarity": 0.6788
+    }
+  ],
+  "Tab A9+|Display|notification panel has been shifted to this grey gradient rather than being blur with respect to the back ground. this issue has been giving me very dull and bad experience after update of path one ui 8 . hope solution in reply .": [
+    {
+      "code": "P260312-07880",
+      "title": "Notification panel has been shifted to this grey gradient rather than being blur",
+      "subModule": "Settings",
+      "similarity": 0.8563
+    }
+  ],
+  "S24|Lock Screen|hey team, its already been more than a week since i raised my issue and provided you with all the proofs needed, but no solution has been provided yet. i'd also like to add one more thing to the issue. as told, no animation is visible on lock screen for face unlock, but i have set up face lock on whatsapp as well, and animation is working there perfectly. issue is with lock screen only. hoping for a solution soon.": [
+    {
+      "code": "P260217-01794",
+      "title": "Face Recognition Circular Ring animation not working on lock screen",
+      "subModule": "Settings",
+      "similarity": 0.6689
+    }
+  ],
+  "A35 5G|Lock Screen|after the recent lockstar app update, i am facing issues with the lockstar app on my samsung galaxy a35 5g. the lock screen clock style does not apply correctly. when i try to edit or set a clock style, a different style appears while editing, but another style shows on the actual lock screen. the same issue occurs with always on display. clock styles are not applying properly there either. additionally, the brightness behavior on aod is inconsistent after the update.": [
+    {
+      "code": "P260227-06345",
+      "title": "lock screen clock style does not apply correctly",
+      "subModule": "Settings",
+      "similarity": 0.7006
+    }
+  ],
+  "A35 5G|Lock Screen|after the recent lockstar update, i am facing issues with the lockstar app on my samsung galaxy a35 5g. the lock screen clock style does not apply correctly. when i try to edit or set a clock style, a different style appears while editing, but another style shows on the actual lock screen. the same issue occurs with always on display. clock styles are not applying properly there either. additionally, the brightness behavior on the aod is inconsistent after the update.": [
+    {
+      "code": "P260227-06345",
+      "title": "lock screen clock style does not apply correctly",
+      "subModule": "Settings",
+      "similarity": 0.6945
+    }
+  ],
+  "S24|Camera|the camera quality is not good. the pixel is breaking. after taking the picture if zoom it fully pixel is breaking. i attached picture for reference. please resolve asap.": [
+    {
+      "code": "P251008-03933",
+      "title": "Pixel distortion visible when zoomed in.",
+      "subModule": "Camera",
+      "similarity": 0.654
+    }
+  ],
+  "SM-M146B|Lock Screen|dear samsung support team, i am using a samsung galaxy m14 5g and i am facing an issue with the lock screen clock color customization. whenever i switch from the pre-built clock colors to a custom color (for example, black or dark shades), the lock screen clock becomes nearly invisible. however, the lock screen widgets remain clearly visible and function normally. this makes the clock difficult to read and limits customization options. i have checked lock screen settings and tried restarting the device, but the issue still persists. it appears to be a software-related problem in one ui. i kindly request you to look into this issue and provide a fix through a software update or guide me with a solution. thank you for your support. regards, harrup singh": [
+    {
+      "code": "P260227-06025",
+      "title": "Lock screen color customization issue",
+      "subModule": "Settings",
+      "similarity": 0.7054
+    }
+  ],
+  "S24|UI/UX|when i use swipe gesture the transition/animation doesn't work when i open/close any application.but when i switch to buttons the animation is very smooth.i found this bug after the latest january security patch update.": [
+    {
+      "code": "P260305-09965",
+      "title": "Swipe gesture apps skip animation",
+      "subModule": "Settings",
+      "similarity": 0.7912
+    }
+  ],
+  "S25 Ultra|Settings|after pentastic updated , air command menu is showing default even i changed in pentastic , even i tried clear cache , clear data and force stop , still it is showing same default one": [
+    {
+      "code": "P260305-01551",
+      "title": "After Pentastic(Goodlock) updated, air command menu is showing default",
+      "subModule": "Settings",
+      "similarity": 0.8038
+    }
+  ],
+  "S25 Ultra|Display|i am writing to report an issue observed with my device's display s25 ultra. it has been noted that the screen occasionally dims unexpectedly during youtube video playback. this dimming is particularly noticeable in the area where the video content is actively being displayed. we appreciate your attention to this matter. thank you for your time and consideration in addressing this potential bug. see the video for details.": [
+    {
+      "code": "P260311-09153",
+      "title": "Youtube Video appears dim while playing",
+      "subModule": "Video Playback",
+      "similarity": 0.722
+    }
+  ],
+  "A16 5G|Camera|my front camera has not working. it's saying that,\"could not open the camera\" asap, try to solve my camera problem.": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7669
+    }
+  ],
+  "A16 5G|Camera|camera not open why": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7072
+    }
+  ],
+  "A16 5G|Camera|couldn't camera open": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.6714
+    }
+  ],
+  "S23 Ultra|Camera|in normal photo mode in camera, when i switch to 10x zoom on s23 ultra, a blue or greenish tint is applied on the photo. there is a big difference in colours of 9.9x and 10x zoom. the output is unlikable and is not worth sharing with anyone.": [
+    {
+      "code": "P260302-04491",
+      "title": "When switch to 10x zoom ,a blue or greenish tint is applied on the photo.",
+      "subModule": "Camera",
+      "similarity": 0.7876
+    }
+  ],
+  "S23|Display|when i choose the home screen and app screen layout the . rotate to landscape mode is getting turned off and greyed out .but when i choose the layout to app screen . the ladscape mode is abke to turn on": [
+    {
+      "code": "P260303-08921",
+      "title": "Rotate to landscape mode is getting greyed out on home screen layout",
+      "subModule": "Settings",
+      "similarity": 0.8613
+    }
+  ],
+  "A35 5G|System|after the device was bought within 1 or 2 months it started the sudden froze and restart problem, it got resolved after update but then again started showing up. maybe like between intervals of 5-6 days it occurs.": [
+    {
+      "code": "P251216-05238",
+      "title": "Device freezes and restarts.",
+      "subModule": "Settings",
+      "similarity": 0.6714
+    }
+  ],
+  "A35 5G|Lock Screen|suddenly i saw \ud83d\ude14my lock screen clock stuck default clock setting . i trying to change but i can't do.": [
+    {
+      "code": "P260227-06345",
+      "title": "lock screen clock style does not apply correctly",
+      "subModule": "Settings",
+      "similarity": 0.6745
+    }
+  ],
+  "S24|UI/UX|when i switch to gesture the apps skips animation and when i switch back to buttons it open smoothly.": [
+    {
+      "code": "P260305-09965",
+      "title": "Swipe gesture apps skip animation",
+      "subModule": "Settings",
+      "similarity": 0.763
+    }
+  ],
+  "S22 Ultra|System|my phone is still re starting on its own and also hangs. i am awaiting your response to my previous querry. i was told that your team is looking into it. still no reply. please truthfully tell me the problem": [
+    {
+      "code": "P260311-08277",
+      "title": "Phone is hanging a lot",
+      "subModule": "Settings",
+      "similarity": 0.6754
+    }
+  ],
+  "S24|Media|i have raised this issue multiple time. while watching youtube either shorts or videos sometime video/shorts starts lagging. giving laggy experience.": [
+    {
+      "code": "P251117-08518",
+      "title": "YouTube video frame drop and lag while playing shorts and normal video",
+      "subModule": "YouTube",
+      "similarity": 0.8108
+    },
+    {
+      "code": "P260219-05672",
+      "title": "Framedrop and lag while playing video on YouTube",
+      "subModule": "YouTube",
+      "similarity": 0.6907
+    }
+  ],
+  "S23 FE|Camera|camera was not work warning and failed": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.7399
+    }
+  ],
+  "S24|Now Bar|now bar is not showing live sports scores": [
+    {
+      "code": "P260306-07736",
+      "title": "Not able to see sports from Google option in Now Bar settings",
+      "subModule": "Now Bar",
+      "similarity": 0.6709
+    }
+  ],
+  "S24 FE|Settings|samsung pay and secure folder not working after updating to oneui 8": [
+    {
+      "code": "P260309-09556",
+      "title": "Can't open Samsung Pay and Secure Folder after updating to One UI 8",
+      "subModule": "Secure Folder",
+      "similarity": 0.8456
+    }
+  ],
+  "S24 FE|Settings|can't open samsung pay and secure folder after updating to one ui 8": [
+    {
+      "code": "P260309-09556",
+      "title": "Can't open Samsung Pay and Secure Folder after updating to One UI 8",
+      "subModule": "Secure Folder",
+      "similarity": 0.9703
+    }
+  ],
+  "S26 Ultra|System|not able to update google play system update getting error ss attached phn s26u": [
+    {
+      "code": "P260310-07385",
+      "title": "Unable to update Google Play system update getting error",
+      "subModule": "Google app",
+      "similarity": 0.8482
+    }
+  ],
+  "A35 5G|System|my mobile was automatically restarted sometimes. i didn't configure the auto-restart option. but while using the mobile, it automatically restarts.": [
+    {
+      "code": "P251118-02947",
+      "title": "Device Restart Automatic",
+      "subModule": "Settings",
+      "similarity": 0.6885
+    },
+    {
+      "code": "P251216-04932",
+      "title": "Device restarts automatically.",
+      "subModule": "Settings",
+      "similarity": 0.7151
+    }
+  ],
+  "A35 5G|Settings|i had recently updated my phone with the new update and a few days later i noticed the smart replies features disappeared. otherwise first i would just tap on \"hello\",\"okay\".... etc options from the notification and reply. for your reference i have uploaded the pictures 2nd picture u can see those smart replies that used to be there.": [
+    {
+      "code": "P260309-09583",
+      "title": "Smart replies features not working after update",
+      "subModule": "Now Bar",
+      "similarity": 0.7889
+    }
+  ],
+  "A15 5G|Security|finger print not work": [
+    {
+      "code": "P260224-07350",
+      "title": "Fingerprint is not getting activated",
+      "subModule": "Biometrics",
+      "similarity": 0.6647
+    }
+  ],
+  "Z Fold4|Camera|front camera working some time and failing": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.7416
+    }
+  ],
+  "S24|Media|youtube videos gets stuck or in lower feamerates like 15 or 20 fps kind of feeling when a video plays and exit youtube like minimising and after minimising opening the currently playing video will be played stuck. even on shorts. but after completely closing the app from recent apps and again opening youtube fixes it. but doing it more and more makes it a problem": [
+    {
+      "code": "P251117-08518",
+      "title": "YouTube video frame drop and lag while playing shorts and normal video",
+      "subModule": "YouTube",
+      "similarity": 0.6965
+    }
+  ],
+  "S22|Camera|camera is crashing and causing \"system ui not responding\" pop up": [
+    {
+      "code": "P260108-06115",
+      "title": "Issue faced while exiting the camera but the pop up didn't cleared.",
+      "subModule": "Camera",
+      "similarity": 0.656
+    }
+  ],
+  "S24 Ultra|Display|sometimes my home screen just freezes and i cannot do anything or access it by swiping right or left. the only way out is restarting the device. image and logs are attached for your reference.": [
+    {
+      "code": "P260309-09150",
+      "title": "Sometimes my home screen just freezes",
+      "subModule": "Settings",
+      "similarity": 0.6761
+    }
+  ],
+  "Z Fold4|Camera|when open front camera ,saying warning camera failed": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.6843
+    }
+  ],
+  "Z Fold4|Camera|front camera is not working": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.9018
+    }
+  ],
+  "Z Fold4|Camera|front camera is not working, fol screen is also not working": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.8177
+    }
+  ],
+  "M15 5G|Now Bar|dear customer support team, i am a galaxy m15 5g user. with the one ui 7.0 update on my device, the now bar functionality was added. but at that time the \"sports from google\" option was missing. the option is still missing even after jan 2026 security patch with one ui 8.0. i tried toggling the google app notifications on and off, including the show on lockscreen option etc.. but it is still not appearing. i hope samsung support resolves this issue as soon as possible. phone details: galaxy m15 5g (prime edition) 8gb/128gb [sm-m156b/ds] software version: one ui 8.0 [cza3] best regards, samit dighe": [
+    {
+      "code": "P260310-08758",
+      "title": "Sports from Google option missing from NowBar Settings",
+      "subModule": "Now Bar",
+      "similarity": 0.7165
+    }
+  ],
+  "S24 Ultra|System|app refreshing issue still persists even after reboot and reinstall apps and turned off power saving mode and performance profile please help fix asap or allow me beta grade to 8.5": [
+    {
+      "code": "P260119-07769",
+      "title": "Apps keep refreshing repeatedly even when using them",
+      "subModule": "Settings",
+      "similarity": 0.6537
+    }
+  ],
+  "S24 FE|Settings|software issue. 1st samsung keyboard mein translate option use nahi kar pa raha. 2nd google play update july se pending hai. baki sab ke device regular updates aa rahi hai. mene 1 mahine pehle device purchase kiya hai......": [
+    {
+      "code": "P251008-03799",
+      "title": "Live Translate and Samsung Keyboard Translate not giving proper English-Hindi translations",
+      "subModule": "Language & Input",
+      "similarity": 0.6532
+    }
+  ],
+  "A16 5G|Camera|rear camera not working/opening. it shows \"could not open camera\"": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7464
+    }
+  ],
+  "S24 Ultra|Settings|my mode and routines version is 4.9.04.13": [
+    {
+      "code": "P250924-08847",
+      "title": "Modes and routines not working properly.",
+      "subModule": "Settings",
+      "similarity": 0.7193
+    }
+  ],
+  "S23 FE|Camera|back camera failed": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.6604
+    }
+  ],
+  "S23 FE|Camera|my rear camera is not working. in the camera app, the front camera is not working however the front camera is working sometimes in other apps.": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.7234
+    }
+  ],
+  "A16 5G|Camera|my camera app is not working plz resolve my problem": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7563
+    }
+  ],
+  "S22|Connectivity|dual sim wifi calling feature not working. only first sim show wifi calling. not able to use wifi calling in 2nd sim.": [
+    {
+      "code": "P260108-05927",
+      "title": "Wifi calling appears for only sim 1 and not for sim2.",
+      "subModule": "Network",
+      "similarity": 0.8443
+    }
+  ],
+  "A35 5G|System|my device frozen and restarted automatically, i am attaching the log files, please tell me the issue happening with my phone and what are the resolutions of it. i have also gone through your service center, they simply installed new android version in it. but this issue is still persistent.": [
+    {
+      "code": "P251216-05238",
+      "title": "Device freezes and restarts.",
+      "subModule": "Settings",
+      "similarity": 0.6819
+    }
+  ],
+  "F55 5G|Display|how can i keep am/pm in time display under 12 hours format in f55 device": [
+    {
+      "code": "P260128-04696",
+      "title": "Unable to see AM/PM in 12-hour time display",
+      "subModule": "Settings",
+      "similarity": 0.7981
+    }
+  ],
+  "F55 5G|Display|attached the screenshot taken about option available in date and time under 12 hours format we are unable to see am/pm in time display": [
+    {
+      "code": "P260128-04696",
+      "title": "Unable to see AM/PM in 12-hour time display",
+      "subModule": "Settings",
+      "similarity": 0.8274
+    }
+  ],
+  "S24|Media|so while playing some videos on youtube even on low resolutions the video lags a lot not cause of network cause it works fine in other apps": [
+    {
+      "code": "P251117-08518",
+      "title": "YouTube video frame drop and lag while playing shorts and normal video",
+      "subModule": "YouTube",
+      "similarity": 0.6557
+    }
+  ],
+  "S22 Ultra|Settings|sleep didn't get recognized": [
+    {
+      "code": "P260108-06274",
+      "title": "Sleep detection not working properly.",
+      "subModule": "Settings",
+      "similarity": 0.6679
+    }
+  ],
+  "A35 5G|Network|hello, today i have installed the latest software update for below version update information . one ui version: 8.0 . android version: 16 . current version: a356exxs6cyk1/ a356eodm6cyk1/ a356exxs6cyk1 \u2022 security patch level: 1 december 2025 once completed, its observed that the mobile data cannot be enabled and only call function is working. data enable option, flight mode , and other data related options are disabled. please check this issue and revert asap. thanks": [
+    {
+      "code": "P251125-05457",
+      "title": "Cannot turn on the mobile data post one UI 8 update",
+      "subModule": "Settings",
+      "similarity": 0.651
+    }
+  ],
+  "Tab A9|Display|the rotate button is not working while watching videos on video player in my tablet and also in my phone galaxy m35 5g after the recent software update please fix this bug as soon as possible. and while watching videos in samsung internet app also.": [
+    {
+      "code": "P260113-04861",
+      "title": "Rotate button is not working while watching videos on video player",
+      "subModule": "Video Player",
+      "similarity": 0.8655
+    }
+  ],
+  "S21 FE|Battery|battery draining fast problem": [
+    {
+      "code": "P250915-08176",
+      "title": "Battery drain issue observed.",
+      "subModule": "3rd-Party App",
+      "similarity": 0.7481
+    }
+  ],
+  "F55 5G|Display|hello sir the color screen mode option not showing in my phone please solve this issue": [
+    {
+      "code": "P260119-07408",
+      "title": "The screen mode option is not showing in display settings",
+      "subModule": "Settings",
+      "similarity": 0.6571
+    }
+  ],
+  "F55 5G|Display|the screen color mode option is not showing in this device": [
+    {
+      "code": "P260119-07408",
+      "title": "The screen mode option is not showing in display settings",
+      "subModule": "Settings",
+      "similarity": 0.7511
+    }
+  ],
+  "S25 Ultra|Lock Screen|good lock application problem": [
+    {
+      "code": "P251104-06857",
+      "title": "Good lock app not working properly",
+      "subModule": "Settings",
+      "similarity": 0.8033
+    }
+  ],
+  "S25 Ultra|Connectivity|\u200b\"i understand this is an international model, but this is a global software bug. please forward my system logs to the global technical team so they can improve bluetooth compatibility for the s25 ultra series.\"": [
+    {
+      "code": "P260105-05835",
+      "title": "Samsung Dex not working with S25 Ultra",
+      "subModule": "Samsung DeX",
+      "similarity": 0.6653
+    }
+  ],
+  "S21 FE(QC)|System|i want to resolve this problem bcz my phone automatically froze and restart anytime i don't know why this happened to my phone plz resolve": [
+    {
+      "code": "P260220-04248",
+      "title": "Phone is restarting several times a day and its screen freezes.",
+      "subModule": "Settings",
+      "similarity": 0.7174
+    }
+  ],
+  "A15 5G|Settings|can't access the media volume by default when i press the volume up and down buttons. instead accessibility volume slider pops out by default. the \"use volume buttons for media by default\" feature is also enabled in settings. checked for updates for the android accessibility suite and cleared cache but didn't work.": [
+    {
+      "code": "P260112-08341",
+      "title": "Can't access the media volume by default when press the volume up/down buttons.",
+      "subModule": "Settings",
+      "similarity": 0.8969
+    }
+  ],
+  "S23 FE|Camera|camera error. problem": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.7357
+    }
+  ],
+  "S24|Camera|during night video shoots the video quality got captured is not good. it is bit hazy and not up to the mark": [
+    {
+      "code": "P260115-07053",
+      "title": "Night mode image quality is not good",
+      "subModule": "Camera",
+      "similarity": 0.7655
+    }
+  ],
+  "Z Fold4|Camera|when front camera is opened it showed failed . as in below picture refered": [
+    {
+      "code": "P260310-08783",
+      "title": "Front Camera Is Not working",
+      "subModule": "Camera",
+      "similarity": 0.7845
+    }
+  ],
+  "Z Fold7|Camera|the whole gallery app of my phone of z-fold 7 which is latest and fully updated with latest software and there is over 150 gb free rom i have restarted the phone clear cache everything still the whole of the gallery app is hanging when i am trying to open any picture and trying to edit it like for rotating the picture or for doing anything which is the very basic feature of the gallery the hole app is turning black after that when i am trying to open any other app the whole phone is hanging it is shocking samsung, wasted my 2 lakh rupees": [
+    {
+      "code": "P260113-07454",
+      "title": "Gallery app is hanging when I am trying to open any picture",
+      "subModule": "Gallery",
+      "similarity": 0.8085
+    }
+  ],
+  "S23|Connectivity|my s23 in when i do the open vpn then a popup message display \"action not allowed. you do not have permission to perform this action. contact your organisation's it administrator for more information. i can't use vpn please \" how to fix this problem.": [
+    {
+      "code": "P260106-08074",
+      "title": "Action not allowed pop up received on using VPN",
+      "subModule": "Network",
+      "similarity": 0.7769
+    }
+  ],
+  "S23 Ultra|Battery|battery drain frequently on overnight.about 15-20% of battery drain wvery night upto morning.": [
+    {
+      "code": "P250604-08401",
+      "title": "Battery drain observed.",
+      "subModule": "System",
+      "similarity": 0.7013
+    }
+  ],
+  "A35 5G|Battery|hello team, my device battery backup is too short even on normal usage it giving only 5-5:30 hour sot. where a device in normal usage must give at least 7-8 hour sot. also my battery drain at 4-6%/h in idle condition (when data location etc are off device screen is off overnight) , please provide me help and resolve this drain issue": [
+    {
+      "code": "P260310-08287",
+      "title": "Battery Backup Is not good in device",
+      "subModule": "3rd-Party App",
+      "similarity": 0.6922
+    }
+  ],
+  "S24 Ultra|Security|banking apps do not work in samsung secure folder.which is causing widespread inconvenience.": [
+    {
+      "code": "P251118-08328",
+      "title": "not able to activate my gpay, phone and few banking apps inside the secure folder",
+      "subModule": "Secure Folder",
+      "similarity": 0.6748
+    }
+  ],
+  "S21 FE(QC)|Settings|issue: secure folder cannot be opened. error: \u201csettings keeps stopping\u201d when accessing secure folder. context: issue began after system instability; phone entered a boot loop, which was recovered. current state: phone boots after few bootloops if i restart it and works fine once it is on and instability increases when i put the sim on, but secure folder access fails due to settings crash. currently using it on wifi only. data status: secure folder data is not backed up and the encrypted container is still present/visible in my files. request: please diagnose and repair knox / secure folder / settings service issue without resetting secure folder or deleting data.": [
+    {
+      "code": "P260123-07142",
+      "title": "Settings keeps stopping when accessing Secure Folder",
+      "subModule": "Secure Folder",
+      "similarity": 0.6793
+    }
+  ],
+  "A16 5G|Camera|not working back camera.": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7535
+    }
+  ],
+  "S21 FE(QC)|Settings|issue: secure folder cannot be opened. error: \u201csettings keeps stopping\u201d when accessing secure folder. context: issue began after system instability; phone entered a boot loop, which was recovered. current state: phone boots after few bootloops if i restart it and works fine once it is on and instability increases when i put the sim on, but secure folder access fails due to settings crash. currently using it on wifi only. data status: secure folder data is not backed up and the encrypted container is still present/visible in my files. request: please diagnose and repair knox / secure folder / settings service issue without resetting secure folder or deleting data. 12/01": [
+    {
+      "code": "P260123-07142",
+      "title": "Settings keeps stopping when accessing Secure Folder",
+      "subModule": "Secure Folder",
+      "similarity": 0.6722
+    }
+  ],
+  "S23 FE|Camera|my rear camera suddenly stopped working; it's showing a black screen.": [
+    {
+      "code": "P260305-09882",
+      "title": "Camera not working",
+      "subModule": "Camera",
+      "similarity": 0.6981
+    }
+  ],
+  "S22|System|my phone very freeze (hang) today start even i cant typing properly sudden system ui cant's respond (wait and close) notification show my display and some time auto cut and restart. my phone is s22. its very big problem for me,not open propely any app very time taken. plzz resolve my issue.": [
+    {
+      "code": "P260225-08139",
+      "title": "Device Getting hang and UI system is Not responding",
+      "subModule": "Settings",
+      "similarity": 0.6567
+    }
+  ],
+  "A16 5G|Camera|rear camera and torch not working": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.6579
+    }
+  ],
+  "S25|Camera|still getting camera failed often n some times it works. reset also didn't work. why the hell is it so inconsistent.": [
+    {
+      "code": "P260317-07904",
+      "title": "Camera sometimes freezes and fails to open",
+      "subModule": "Camera",
+      "similarity": 0.6584
+    }
+  ],
+  "S22|System|my samsung s22 automatically switch off hang and freeze . and showing the home screen system ui are not responding.. then mobile switch off . please fixed this problem": [
+    {
+      "code": "P260225-08139",
+      "title": "Device Getting hang and UI system is Not responding",
+      "subModule": "Settings",
+      "similarity": 0.6574
+    }
+  ],
+  "Tab S9 FE+|Display|hey ! i m using samsung galaxy s9 fe plus tablet which i have purchased just about a month ago . i m writing with my s pen and it's lagging while writing means i m writing with my s -pen after i finish my writing then after that ink is appearing which feels annoying please do something i m attaching a video of my writing": [
+    {
+      "code": "P260310-07997",
+      "title": "S pen lagging/jittering upon some area of s9fe tablet",
+      "subModule": "S Pen",
+      "similarity": 0.7589
+    }
+  ],
+  "A16 5G|Camera|camera couldnot open error ocured back camera not working.": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.6933
+    }
+  ],
+  "S22|System|facing force restart and ui not responds": [
+    {
+      "code": "P260119-10038",
+      "title": "System UI isn't responding",
+      "subModule": "Settings",
+      "similarity": 0.6547
+    }
+  ],
+  "S22|Settings|i have tried to access my secure folder and i entered my password 2 times and i received a pop up of settings keeps stopping. i have also screen recorded same issue but screen got blank when settings stopped and i clicked secure folder again for second time in same video. my google is also not responding and i am not able to carry out my daily tasks. i am attaching the video and screenshot for same issue. waiting for your quick response and redressal.": [
+    {
+      "code": "P260122-07835",
+      "title": "Settings app keeps stopping which prevents me from accessing my secure folder",
+      "subModule": "Settings",
+      "similarity": 0.7588
+    }
+  ],
+  "M06 5G|Settings|hi! galaxy widget settings are not functioning properly to change the wallpapers in a dynamic manner. it always show the same screen that no new banner is available now. i have attached a screenshot. please rectify. thank you.": [
+    {
+      "code": "P260121-07136",
+      "title": "Galaxy Widget Settings are not functioning properly to change the wallpapers in a dynamic manner.",
+      "subModule": "Widget",
+      "similarity": 0.9079
+    }
+  ],
+  "A35 5G|Performance|whenever i play game like free fire and cricket game i get lag problem. please fix this problem otherwise i will never trust on samsung phones": [
+    {
+      "code": "P260123-07066",
+      "title": "Device getting Lag while playing game (Free fire/Cricket)",
+      "subModule": "Game",
+      "similarity": 0.8046
+    }
+  ],
+  "S23 Ultra|Camera|when capturing images with my 200mp and 50mp lenses, the resulting photographs are not appearing in the gallery. upon attempting to access them, an error message is displayed. please resolve this issue asap.": [
+    {
+      "code": "P260123-07479",
+      "title": "Photos from 200MP and 50MP camera lenses can't open and show error",
+      "subModule": "Camera",
+      "similarity": 0.8098
+    }
+  ],
+  "M35 5G|Display|still google cricket live scores are not showing in samsung galaxy m35 5g now bar lock screen. all settings and apps are upto date.": [
+    {
+      "code": "P260211-05402",
+      "title": "Google live scores showing in Google app and live notifications but not in lock screen Now Bar",
+      "subModule": "Now Bar",
+      "similarity": 0.7201
+    }
+  ],
+  "S23 Ultra|Camera|whenever clicking photos from 200mp amd 50mp camera lens photos can't open and show error.": [
+    {
+      "code": "P260123-07479",
+      "title": "Photos from 200MP and 50MP camera lenses can't open and show error",
+      "subModule": "Camera",
+      "similarity": 0.8562
+    }
+  ],
+  "Tab S9 FE+|Display|hey ! i m using samsung galaxy s9 fe plus tablet which i have purchased just about a month ago . i m writing with my s pen and it's lagging while writing means i m writing with my s -pen after i finish my writing then after that ink is appearing which feels annoying please do something i have already attached a video of my writing please review it again since it is happening again and again i don't know about your logs or something whatever you are demanding from me it take a lot of time to send you log of my tablet please make your logs general so that you don't need logs for every question posted this is very annoying....": [
+    {
+      "code": "P260310-07997",
+      "title": "S pen lagging/jittering upon some area of s9fe tablet",
+      "subModule": "S Pen",
+      "similarity": 0.7567
+    }
+  ],
+  "A35 5G|System|how and automatic restart, how?": [
+    {
+      "code": "P251118-02947",
+      "title": "Device Restart Automatic",
+      "subModule": "Settings",
+      "similarity": 0.7241
+    },
+    {
+      "code": "P251216-04932",
+      "title": "Device restarts automatically.",
+      "subModule": "Settings",
+      "similarity": 0.6526
+    }
+  ],
+  "A15 5G|Security|not working fingerprint some fingers not accept and water tpich": [
+    {
+      "code": "P260224-07350",
+      "title": "Fingerprint is not getting activated",
+      "subModule": "Biometrics",
+      "similarity": 0.6596
+    }
+  ],
+  "S23 Ultra|Battery|these days the problem of battery draining is occurring more and more.": [
+    {
+      "code": "P250604-08401",
+      "title": "Battery drain observed.",
+      "subModule": "System",
+      "similarity": 0.7502
+    },
+    {
+      "code": "P260206-08491",
+      "title": "Battery drains abnormally fast even during basic usage",
+      "subModule": "System",
+      "similarity": 0.6615
+    }
+  ],
+  "S25|Camera|sir ... many time this problem show... camera faild ... but few day after .. camera work normaly please slove this problem": [
+    {
+      "code": "P260317-07904",
+      "title": "Camera sometimes freezes and fails to open",
+      "subModule": "Camera",
+      "similarity": 0.6504
+    }
+  ],
+  "A56 5G|UI/UX|the app opening animations are completely destroyed on my samsung galaxy a56 smartphone after the one ui 8 android 16 update. when the phone came out of the box it was on android 15 and one ui 7 and it was buttery smooth let it be app opening animations or quick panel animations everything worked perfectly fine. but from the time i updated it to one ui 8 the app opening animations are gone the quick panel feels so much laggy sometimes and also skips the animation 50% of the times!!!! the phone of this expensive price range doesn't deserve these cost cuttings in animations!!!": [
+    {
+      "code": "P260213-07421",
+      "title": "App opening and closing animations are very fast and not smooth",
+      "subModule": "Settings",
+      "similarity": 0.6817
+    }
+  ],
+  "S24|Now Bar|now bar is not updating the sports score i have checked everything twice google setti gs phine settings still not working": [
+    {
+      "code": "P260306-07736",
+      "title": "Not able to see sports from Google option in Now Bar settings",
+      "subModule": "Now Bar",
+      "similarity": 0.6944
+    }
+  ],
+  "S24|Display|my clock screen clock randomly moving down from normal position of staying at default up position.": [
+    {
+      "code": "P260225-08851",
+      "title": "Clock alignment is not stable in lock screen its often changing",
+      "subModule": "Clock",
+      "similarity": 0.6677
+    }
+  ],
+  "A35 5G|System|the phone restart automatically when i am using it. i didn't notice specific app that i was using when the phone suddenly restarted. and this happened several times in last 2 months. initially when this happened the temperature of the phone was a bit high but when the phone's temperature was normal then also it happened.": [
+    {
+      "code": "P251216-04932",
+      "title": "Device restarts automatically.",
+      "subModule": "Settings",
+      "similarity": 0.7149
+    }
+  ],
+  "S23|Settings|bixby offline commands broken after update \u2013 needs immediate fix after a recent update, bixby no longer works offline for basic tasks like making calls or turning system features on/off. this functionality worked properly before and has now been broken or silently removed. this is not a small issue. it is a clear feature regression. offline voice control was one of bixby\u2019s core advantages. downgrading it through an update without warning is unacceptable and damages user trust. the issue persists despite enabling offline processing, checking language downloads, clearing cache/data, and restarting\u2014so this is not user error. if samsung is moving bixby toward cloud-only operation, users deserve clear disclosure, not broken features. if this is a bug, it must be fixed urgently. please escalate this to the bixby/one ui team and provide either: a fix restoring offline functionality, or an official statement confirming whether offline commands are being discontinued. fix it asap": [
+    {
+      "code": "P260203-04577",
+      "title": "Bixby Offline Commands Broken After Update",
+      "subModule": "Bixby",
+      "similarity": 0.7906
+    }
+  ],
+  "S24 Ultra|Settings|modes and routines issues not working fix is as soon as possible": [
+    {
+      "code": "P250924-08847",
+      "title": "Modes and routines not working properly.",
+      "subModule": "Settings",
+      "similarity": 0.8023
+    }
+  ],
+  "A35 5G|System|my phone automatic restart many time i facing this problem from 4 to 5 months please solve this issue as soon as possible \ud83d\ude4f\ud83c\udffb": [
+    {
+      "code": "P251216-04932",
+      "title": "Device restarts automatically.",
+      "subModule": "Settings",
+      "similarity": 0.6756
+    }
+  ],
+  "A36 5G|Display|as per you say after the update again i checked it but still this bug is there. if i increase my dpi more than 600 then the gaming app is converting it to tablet mode its making my game too laggy. games usually dafault in landscape mode even i increase it to 1000 or more dpi but now its not being same its converting to tablet mode.": [
+    {
+      "code": "P260206-05116",
+      "title": "When changed DPI more than 600 then the gaming app become Laggy",
+      "subModule": "Settings",
+      "similarity": 0.8235
+    }
+  ],
+  "A16 5G|Camera|till now camera not work.": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.7716
+    }
+  ],
+  "A16 5G|Camera|camera not work": [
+    {
+      "code": "P260206-05907",
+      "title": "Camera not work",
+      "subModule": "Camera",
+      "similarity": 0.8649
+    }
+  ],
+  "S21 FE(QC)|System|repeated phone froze and restart again and again": [
+    {
+      "code": "P260220-04248",
+      "title": "Phone is restarting several times a day and its screen freezes.",
+      "subModule": "Settings",
+      "similarity": 0.7153
+    }
+  ],
+  "M56 5G|Display|model: samsung galaxy m56 (india variant) software: one ui 8 subject: critical visibility issue with always on display & charging information description: i am reporting a significant usability issue regarding the brightness levels of the \"charging information\" and always on display (aod) on the new galaxy m56. despite this being a premium m-series device, the charging text is extremely dim\u2014to the point of being illegible\u2014even in well-lit environments. this is a clear regression in user experience compared to previous samsung models (as demonstrated in the attached comparison photos). it appears the software calibration for minimum luminance is far too aggressive on this specific model. phone on colored book shows how dim that information is in my new phone as compared to the old one in other image": [
+    {
+      "code": "P260206-07045",
+      "title": "Charging text is extremely dim on AOD screen",
+      "subModule": "Settings",
+      "similarity": 0.6604
+    }
+  ]
+}

@@ -15,8 +15,8 @@ import traceback
 
 # --------- CONFIGURATION (edit these if you want) -----------
 BASE_DIR = Path(__file__).parent.resolve()   # folder where script is located
-SOURCE_DIR = BASE_DIR / "D:\issue_classification\input_data"         # default source folder
-DEST_DIR = BASE_DIR / "D:\issue_classification\input_data"         # default destination folder
+SOURCE_DIR = BASE_DIR / "D:\\RAW data\\25032026"         # default source folder
+DEST_DIR = BASE_DIR / "D:\\RAW data\\25032026_excel"         # default destination folder
 OVERWRITE = False                            # set True to overwrite existing .xlsx files
 # ------------------------------------------------------------
 
