@@ -268,7 +268,7 @@
     <a href="employee_ut_Dashboard.html" class="source-pill pill-lime"><span class="pill-dot" style="background:#84cc16"></span>Employee UT</a>
     <a href="SMVOC_Dashboard.html" class="source-pill pill-purple"><span class="pill-dot" style="background:#a855f7"></span>Samsung Members VOC</a>
     <a href="OS_Wise_bug_dashboard.html" class="source-pill pill-orange"><span class="pill-dot" style="background:#f97316"></span>Service Issues</a>
-    <a href="aiprocessor.html" class="source-pill pill-indigo"><span class="pill-dot" style="background:#6366f1"></span>AI Processor</a>
+    <a href="aiprocessor.html" class="source-pill pill-indigo" style="margin-left: auto;"><span class="pill-dot" style="background:#6366f1"></span>AI Processor</a>
   </nav>
 
   <main class="page-body">
@@ -361,11 +361,13 @@
     <!-- ── CRITICAL ISSUES TABLE ──────────────────────────── -->
     <div class="section-label">Critical Issues</div>
     <div class="table-card">
-      <div class="table-header">
+      <div class="table-header" style="display: flex; justify-content: space-between; align-items: center;">
         <div class="table-title">
           <div class="table-title-icon"><i class="fa-solid fa-table"></i></div>
           Top Critical Market Issues
           <span class="ts-badge" id="last-updated"></span>
+        </div>
+        <div style="display: flex; gap: 8px;">
         </div>
       </div>
 
@@ -381,42 +383,6 @@
           <div class="filter-search-wrap">
             <i class="fa-solid fa-magnifying-glass filter-search-icon"></i>
             <input class="filter-search" type="text" id="f-search" placeholder="Search title or PLM code…" oninput="applyTableFilters()">
-      <!-- Severity Wise Issue Chart -->
-      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-        <h3 class="text-md font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center">
-          <i class="fa-solid fa-triangle-exclamation mr-2 text-rose-500"></i>
-          Severity Wise Issue
-        </h3>
-        <div id="severity-chart" class="w-full h-44"></div>
-      </div>
-    </section>
-
-
-
-    <!-- MODEL SUMMARY TABLE -->
-    <section class="mt-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-        <!-- Header with subtle accent -->
-        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center">
-              Top Critical Market Issues
-              <span id="last-updated" class="text-xs text-slate-500 dark:text-slate-400 font-normal ml-3"></span>
-            </h3>
-            <div class="flex items-center gap-3">
-              <button onclick="openAiInsight()"
-                title="Run AI similarity analysis on all market issues"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold
-                       bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white
-                       rounded-lg shadow hover:shadow-indigo-300 dark:hover:shadow-indigo-900
-                       transition-all duration-200 hover:scale-105 select-none">
-                <i class="fa-solid fa-brain"></i>
-                AI Insight
-              </button>
-              <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
-              </div>
-            </div>
           </div>
           <div class="filter-divider"></div>
           <button class="filter-clear-btn" onclick="clearAllTableFilters()"><i class="fa-solid fa-xmark"></i> Clear all</button>
@@ -646,13 +612,11 @@
       const modelsDom = document.getElementById('top-models-chart');
       if (modelsDom) {
         const modelsChart = echarts.init(modelsDom);
-        const top10Models = (analyticsData.top_models || []).slice(0, 10);
-        modelsChart.setOption({
         const top10Models = (analyticsData.top_models || [])
           .filter(m => m.label !== '[Global VOC]SWA_Error_Report' && m.label !== 'Unknown')
           .slice(0, 10);
 
-        const option = {
+        modelsChart.setOption({
           tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
           grid: { left: '3%', right: '8%', bottom: '3%', top: '5%', containLabel: true },
           xAxis: { type: 'value', show: false, splitLine: { show: false } },
@@ -678,16 +642,13 @@
       if (sourcesDom) {
         const sourcesChart = echarts.init(sourcesDom);
         const sourceDist = analyticsData.kpis.source_distribution || {};
-        const sourceData = Object.entries(sourceDist).map(([name, value]) => ({ name, value }))
-          .sort((a, b) => b.value - a.value).slice(0, 5);
-        sourcesChart.setOption({
         const sourceData = Object.entries(sourceDist)
           .map(([name, value]) => ({ name, value }))
           .filter(d => d.name !== 'Unknown' && d.name !== '[Global VOC]SWA_Error_Report')
           .sort((a, b) => b.value - a.value)
           .slice(0, 5);
 
-        const option = {
+        sourcesChart.setOption({
           tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
           grid: { left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true },
           xAxis: { type: 'value', show: false, splitLine: { show: false } },
@@ -857,9 +818,6 @@
         }).join('');
       }
 
-      try {
-        // Fetch new data source specifically for this table
-        const response = await fetch('/downloads/global_voc_plm/analytics.json');
 
     }
 
@@ -922,6 +880,7 @@
         const filtered = analyticsData.rows.filter(item => {
           const st = (item['Progr.Stat.'] || '').toLowerCase();
           return st.startsWith('open') || st.startsWith('resolve');
+        });
 
         tbody.innerHTML = ''; // Clear loading message
 
@@ -1077,10 +1036,8 @@
         renderTable();
         updateTimestamp();
       } catch (error) {
-        console.error('Failed to load global_voc_PLM/analytics.json:', error);
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Failed to load table data.</td></tr>';
         console.error('Failed to load global_voc_plm/analytics.json:', error);
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-500">Failed to load table data.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Failed to load table data.</td></tr>';
       }
     }
 
@@ -1328,10 +1285,6 @@
       };
     }
 
-    // Open AI Insight page in a new tab
-    function openAiInsight() {
-      window.open('Ai_insight.html', '_blank');
-    }
 
     // Error handling
     function handleError(error) {

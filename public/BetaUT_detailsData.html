@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beta User Issues - Detail View</title>
 
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -17,6 +21,170 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --accent: #6366f1;
+            --accent2: #0ea5e9;
+            --accent3: #10b981;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --surface3: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text2: #475569;
+            --text3: #94a3b8;
+            --red: #f43f5e;
+            --amber: #f59e0b;
+            --green: #10b981;
+        }
+
+        html.dark {
+            --surface: #1e293b;
+            --surface2: #0f172a;
+            --surface3: #334155;
+            --border: #334155;
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --text3: #64748b;
+        }
+
+        body {
+            font-family: 'Sora', 'Inter', sans-serif;
+            background-color: var(--surface2);
+            color: var(--text);
+        }
+
+        /* ── KPI Cards CSS ──── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        @media(max-width:900px) {
+            .kpi-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 20px 15px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow .2s, transform .2s;
+            cursor: default;
+        }
+
+        .kpi-card:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, .09);
+            transform: translateY(-2px);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .kpi-card.kpi-total::before {
+            background: linear-gradient(90deg, #6366f1, #818cf8);
+        }
+
+        .kpi-card.kpi-high::before {
+            background: linear-gradient(90deg, #f43f5e, #fb7185);
+        }
+
+        .kpi-card.kpi-open::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .kpi-card.kpi-resolved::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .kpi-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+
+        .kpi-total .kpi-icon {
+            background: rgba(99, 102, 241, .1);
+            color: #6366f1;
+        }
+
+        .kpi-high .kpi-icon {
+            background: rgba(244, 63, 94, .1);
+            color: #f43f5e;
+        }
+
+        .kpi-resolved .kpi-icon {
+            background: rgba(245, 158, 11, .1);
+            color: #f59e0b;
+        }
+
+        .kpi-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .kpi-badge.red {
+            background: rgba(244, 63, 94, .1);
+            color: #f43f5e;
+        }
+
+        .kpi-badge.amber {
+            background: rgba(245, 158, 11, .1);
+            color: #d97706;
+        }
+
+        .kpi-badge.blue {
+            background: rgba(99, 102, 241, .1);
+            color: #6366f1;
+        }
+
+        .kpi-value {
+            font-size: 34px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 4px;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text2);
+            font-weight: 500;
+        }
+
+        .kpi-sub {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 3px;
+        }
+
         /* Custom styles for severity sorting */
         .sorted-desc {
             background-color: rgba(59, 130, 246, 0.1);
@@ -37,6 +205,17 @@
             margin-left: 4px;
             font-size: 10px;
         }
+
+        /* Standardized Pagination Buttons */
+        .pg-btn {
+            width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface);
+            color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            text-decoration: none; margin: 0 2px;
+        }
+        .pg-btn:hover:not(.disabled) { background: var(--surface3); color: var(--accent); border-color: var(--accent); }
+        .pg-btn.active { background: var(--accent); color: white; border-color: var(--accent); z-index: 10; }
+        .pg-btn.disabled { opacity: 0.4; cursor: not-allowed; }
     </style>
 
     <script>
@@ -82,28 +261,22 @@
                 <div class="px-4 mt-4">
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
+                            <i class="fa-solid fa-search text-slate-400 text-xs"></i>
                         </div>
                         <input type="text" id="model-search-input"
-                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            class="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
                             placeholder="Search models..." autocomplete="off">
                         <!-- Search Suggestions Dropdown -->
                         <div id="search-suggestions"
-                            class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg hidden">
+                            class="absolute z-10 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl hidden overflow-hidden">
                             <!-- Suggestions will be populated here -->
                         </div>
                     </div>
                     <!-- All Models Button -->
                     <div class="mt-3">
                         <button id="all-models-btn"
-                            class="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                            </svg>
+                            class="w-full inline-flex items-center justify-center px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                            <i class="fa-solid fa-layer-group mr-2 opacity-70"></i>
                             All Models
                         </button>
                     </div>
@@ -122,16 +295,13 @@
         <div class="flex flex-col w-0 flex-1 overflow-hidden">
             <main class="flex-1 relative overflow-y-auto focus:outline-none">
                 <!-- Header -->
-                <div class="bg-white dark:bg-gray-800 px-4 py-4 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="bg-white dark:bg-slate-800 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-center justify-between">
-                        <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Beta User Issues - Detail
-                            View</h1>
+                        <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100">Beta User Issues - Detailed View</h1>
                         <button id="back-button"
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 19l-7-7 7-7"></path>
-                            </svg>
+                            onclick="location.href='main.html'"
+                            class="inline-flex items-center justify-center px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-lg font-medium shadow-sm transition-all duration-200">
+                            <i class="fa-solid fa-arrow-left mr-2"></i>
                             Back
                         </button>
                     </div>
@@ -139,142 +309,78 @@
 
                 <!-- KPI Cards -->
                 <div class="px-4 py-6 sm:px-6">
-                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="kpi-grid">
                         <!-- Total Cases Card -->
-                        <div
-                            class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div class="p-5">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="ml-5 w-0 flex-1">
-                                        <dl>
-                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                                Total Cases</dt>
-                                            <dd class="text-lg font-medium text-gray-900 dark:text-gray-100"
-                                                id="total-cases">0</dd>
-                                        </dl>
-                                    </div>
-                                    <div class="ml-4 flex-shrink-0">
-                                        <button id="download-total"
-                                            class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </div>
+                        <div class="kpi-card kpi-total">
+                            <div class="kpi-top">
+                                <div class="kpi-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                                <div class="flex gap-2">
+                                    <button id="download-total"
+                                        class="kpi-badge blue flex items-center gap-1 hover:bg-indigo-300/30 transition-colors">
+                                        <i class="fa-solid fa-download"></i> Export
+                                    </button>
                                 </div>
                             </div>
+                            <div class="kpi-value" id="total-cases">0</div>
+                            <div class="kpi-label">Total Cases</div>
+                            <div class="kpi-sub">Matching filter criteria</div>
                         </div>
 
                         <!-- High Severity Card -->
-                        <div
-                            class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div class="p-5">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="ml-5 w-0 flex-1">
-                                        <dl>
-                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                                High Severity</dt>
-                                            <dd class="text-lg font-medium text-gray-900 dark:text-gray-100"
-                                                id="high-cases">0</dd>
-                                        </dl>
-                                    </div>
-                                    <div class="ml-4 flex-shrink-0">
-                                        <button id="download-high"
-                                            class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </div>
+                        <div class="kpi-card kpi-high">
+                            <div class="kpi-top">
+                                <div class="kpi-icon"><i class="fa-solid fa-fire text-red-500"></i></div>
+                                <div class="flex gap-2">
+                                    <button id="download-high"
+                                        class="kpi-badge red flex items-center gap-1 hover:bg-red-300/30 transition-colors">
+                                        <i class="fa-solid fa-download"></i> High
+                                    </button>
                                 </div>
                             </div>
+                            <div class="kpi-value" id="high-cases">0</div>
+                            <div class="kpi-label">High Severity</div>
+                            <div class="kpi-sub">Priority investigations</div>
                         </div>
 
                         <!-- Distinct Modules Card -->
-                        <div
-                            class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div class="p-5">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="ml-5 w-0 flex-1">
-                                        <dl>
-                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                                Distinct Categories</dt>
-                                            <dd class="text-lg font-medium text-gray-900 dark:text-gray-100"
-                                                id="distinct-modules">0</dd>
-                                        </dl>
-                                    </div>
-                                    <div class="ml-4 flex-shrink-0">
-                                        <button id="download-modules"
-                                            class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </div>
+                        <div class="kpi-card kpi-resolved">
+                            <div class="kpi-top">
+                                <div class="kpi-icon"><i class="fa-solid fa-cubes text-amber-500"></i></div>
+                                <div class="flex gap-2">
+                                    <button id="download-modules"
+                                        class="kpi-badge amber flex items-center gap-1 hover:bg-amber-300/30 transition-colors">
+                                        <i class="fa-solid fa-download"></i> Modules
+                                    </button>
                                 </div>
                             </div>
+                            <div class="kpi-value" id="distinct-modules">0</div>
+                            <div class="kpi-label">Distinct Categories</div>
+                            <div class="kpi-sub">Impacted component areas</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Charts Section -->
-                <div class="px-4 py-6 sm:px-6">
+                <div class="px-6 py-4">
                     <div class="grid grid-cols-12 gap-4">
                         <!-- Severity Distribution Chart -->
                         <div class="col-span-6">
                             <div
-                                class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[360px]">
+                                class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 h-[280px] overflow-hidden">
                                 <!-- Header with subtle accent -->
-                                <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+                                <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
                                     <div class="flex items-center justify-between">
-                                        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity
-                                            Distribution</h3>
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Severity Distribution</h3>
                                         <div
-                                            class="w-8 h-8 bg-red-50 dark:bg-red-950/30 rounded-lg flex items-center justify-center">
-                                            <i class="fa-solid fa-chart-pie text-red-600 dark:text-red-400"></i>
+                                            class="w-7 h-7 bg-rose-50 dark:bg-rose-900/30 rounded flex items-center justify-center">
+                                            <i class="fa-solid fa-chart-pie text-rose-600 dark:text-rose-400 text-xs"></i>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Chart Container -->
-                                <div class="p-4">
-                                    <div id="severity-chart" class="h-[280px] w-full"></div>
+                                <div class="p-2">
+                                    <div id="severity-chart" class="h-[210px] w-full"></div>
                                 </div>
                             </div>
                         </div>
@@ -282,22 +388,21 @@
                         <!-- Top Modules Chart -->
                         <div class="col-span-6">
                             <div
-                                class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[360px]">
+                                class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 h-[280px] overflow-hidden">
                                 <!-- Header with subtle accent -->
-                                <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+                                <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
                                     <div class="flex items-center justify-between">
-                                        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10
-                                            Categories</h3>
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top 10 Categories</h3>
                                         <div
-                                            class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                                            <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
+                                            class="w-7 h-7 bg-indigo-50 dark:bg-indigo-900/30 rounded flex items-center justify-center">
+                                            <i class="fa-solid fa-chart-bar text-indigo-600 dark:text-indigo-400 text-xs"></i>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Chart Container -->
-                                <div class="p-4">
-                                    <div id="modules-chart" class="h-[280px] w-full"></div>
+                                <div class="p-2">
+                                    <div id="modules-chart" class="h-[210px] w-full"></div>
                                 </div>
                             </div>
                         </div>
@@ -343,31 +448,20 @@
 
                 <!-- Main Table -->
                 <div class="px-4 sm:px-6 pb-6">
-                    <div
-                        class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md border border-gray-200 dark:border-gray-700">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Issue Summary
-                            </h3>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Issue Summary</h3>
+                            <span class="text-[10px] font-bold text-slate-400 px-2 py-0.5 bg-slate-100 dark:bg-slate-900 rounded">Paginated list</span>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="issues-table">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
+                            <table class="w-full text-left border-collapse" id="issues-table">
+                                <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
                                     <tr>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            S/N</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Model No.</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Category</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Top Issue Title</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Count</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">S/N</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Model No.</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Category</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Top Issue Title</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Count</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
@@ -381,9 +475,9 @@
                             id="pagination-container">
                             <div class="flex-1 flex justify-between sm:hidden">
                                 <button id="prev-page-mobile"
-                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">Previous</button>
+                                    class="inline-flex items-center justify-center px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-all duration-200">Previous</button>
                                 <button id="next-page-mobile"
-                                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">Next</button>
+                                    class="inline-flex items-center justify-center px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-all duration-200">Next</button>
                             </div>
                             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
@@ -417,20 +511,13 @@
                     </h3>
                     <div class="flex items-center space-x-2">
                         <button id="export-modal"
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
+                            class="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all duration-200">
+                            <i class="fa-solid fa-download mr-2"></i>
                             Download
                         </button>
                         <button id="close-modal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200">
+                            <i class="fa-solid fa-xmark text-lg"></i>
                         </button>
                     </div>
                 </div>
@@ -442,30 +529,14 @@
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="modal-table">
                                 <thead class="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            S/N</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Case Code</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Model No.</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            S/W Ver.</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Title</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Sub-Category</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Summarized Problem</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-                                            id="severity-header">Severity</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">S/N</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Case Code</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Model No.</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">S/W Ver.</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Title</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Sub-Category</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Summarized Problem</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em] cursor-pointer" id="severity-header">Severity</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
@@ -1034,15 +1105,15 @@
 
                 // Always show: S/N, Model No., Category, Top Issue Title (top titles), Count (count)
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${globalIndex}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${item.model}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-900 dark:text-gray-100 font-mono">${globalIndex}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400 font-mono">${item.model}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[12.5px] text-gray-500 dark:text-gray-400">
                         <button class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium module-link" data-module="${item.module}">
                             ${item.module}
                         </button>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${item.topIssueTitle}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${item.count}</td>
+                    <td class="px-6 py-4 text-[12.5px] text-gray-500 dark:text-gray-400">${(item.topIssueTitle || 'N/A').replace(/_x000d_/g, ' ')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400 font-mono">${item.count}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -1067,19 +1138,19 @@
             if (isModelSelected) {
                 // Model-specific headers: S/N, Category, Count, Top 2 Issue Titles
                 thead.innerHTML = `
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/N</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Count</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top 2 Issue Titles</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">S/N</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Category</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Count</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Top 2 Issue Titles</th>
                 `;
             } else {
                 // General headers: S/N, Model No., Category, Top Issue Title, Count
                 thead.innerHTML = `
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">S/N</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model No.</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top Issue Title</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Count</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">S/N</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Model No.</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Category</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Top Issue Title</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Count</th>
                 `;
             }
         }
@@ -1138,7 +1209,7 @@
             const btn = document.createElement('a');
             btn.href = '#';
             btn.textContent = text;
-            btn.className = `relative inline-flex items-center px-4 py-2 border text-sm font-medium ${isActive ? 'z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`;
+            btn.className = `pg-btn ${isActive ? 'active' : ''}`;
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 changePage(page);
@@ -1231,14 +1302,18 @@
                     severity === 'medium' ? 'bg-orange-400 dark:bg-orange-500 text-white dark:text-white' :
                         'bg-gray-400 dark:bg-gray-500 text-white dark:text-white';
 
+                // Data sanitization
+                const cleanTitle = (row.title || row.Title || 'N/A').replace(/_x000d_/g, ' ');
+                const cleanSummary = (row['Summarized Problem'] || row.summarizedProblem || 'N/A').replace(/_x000d_/g, ' ');
+
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['Case Code'] || row.caseCode || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${extractModelFromRow(row)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['S/W Ver.'] || row.sWVer || 'N/A'}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${row.title || row.Title || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${row['Sub-Module'] || row.subModule || 'N/A'}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${row['Summarized Problem'] || row.summarizedProblem || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-900 dark:text-gray-100 font-mono">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400 font-mono">${row['Case Code'] || row.caseCode || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400 font-mono">${extractModelFromRow(row)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400 font-mono">${row['S/W Ver.'] || row.sWVer || 'N/A'}</td>
+                    <td class="px-6 py-4 text-[12.5px] text-gray-500 dark:text-gray-400">${cleanTitle}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[12.5px] text-gray-500 dark:text-gray-400">${row['Sub-Module'] || row.subModule || 'N/A'}</td>
+                    <td class="px-6 py-4 text-[11px] text-gray-500 dark:text-gray-400">${cleanSummary}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${severityClass}">
                             ${row.Severity || row.severity || 'Low'}

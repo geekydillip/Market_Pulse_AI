@@ -29,7 +29,7 @@ downloads/
 uploads/
 temp/
 logs/
-RAG_implementation-main/knowledge_base
+RAG/knowledge_base
 
 # Log files
 *.log

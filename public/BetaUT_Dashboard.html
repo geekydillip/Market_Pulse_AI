@@ -6,8 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Beta User Issues - Overview</title>
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
 
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
@@ -22,8 +26,19 @@
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Sora', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
           colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
             primary: {
+              DEFAULT: "hsl(var(--primary))",
+              foreground: "hsl(var(--primary-foreground))",
               50: '#f0f9ff',
               100: '#e0f2fe',
               500: '#0ea5e9',
@@ -31,6 +46,8 @@
               700: '#0369a1',
             },
             secondary: {
+              DEFAULT: "hsl(var(--secondary))",
+              foreground: "hsl(var(--secondary-foreground))",
               50: '#f8fafc',
               100: '#f1f5f9',
               500: '#64748b',
@@ -54,6 +71,180 @@
     // Set initial theme
     updateTheme();
   </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 84% 4.9%;
+      --primary: 221.2 83.2% 53.3%;
+      --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96.1%;
+      --secondary-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 221.2 83.2% 53.3%;
+      --radius: 0.75rem;
+    }
+
+    .dark {
+      --background: 222.2 84% 4.9%;
+      --foreground: 210 40% 98%;
+      --card: 222.2 84% 4.9%;
+      --card-foreground: 210 40% 98%;
+      --popover: 222.2 84% 4.9%;
+      --popover-foreground: 210 40% 98%;
+      --primary: 217.2 91.2% 59.8%;
+      --primary-foreground: 222.2 47.4% 11.2%;
+      --secondary: 217.2 32.6% 17.5%;
+      --secondary-foreground: 210 40% 98%;
+      --muted: 217.2 32.6% 17.5%;
+      --muted-foreground: 215 20.2% 65.1%;
+      --accent: 217.2 32.6% 17.5%;
+      --accent-foreground: 210 40% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 217.2 32.6% 17.5%;
+      --input: 217.2 32.6% 17.5%;
+      --ring: 224.3 76.3% 48%;
+    }
+
+    .kpi-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 18px 20px 15px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .2s, transform .2s;
+      cursor: default;
+    }
+
+    .dark .kpi-card {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .kpi-card:hover {
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .09);
+      transform: translateY(-2px);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 14px 14px 0 0;
+      background: var(--card-accent, #6366f1);
+    }
+
+    .kpi-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .kpi-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .kpi-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .kpi-value {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #475569;
+    }
+
+    .dark .kpi-label {
+      color: #94a3b8;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      margin-top: 3px;
+      color: #94a3b8;
+    }
+
+    .dark .kpi-sub {
+      color: #64748b;
+    }
+
+    /* KPI Colors */
+    .kpi-indigo .kpi-icon {
+      background: rgba(99, 102, 241, .1);
+      color: #6366f1;
+    }
+
+    .kpi-indigo .kpi-badge {
+      background: rgba(99, 102, 241, .1);
+      color: #6366f1;
+    }
+
+    .kpi-rose .kpi-icon {
+      background: rgba(244, 63, 94, .1);
+      color: #f43f5e;
+    }
+
+    .kpi-rose .kpi-badge {
+      background: rgba(244, 63, 94, .1);
+      color: #f43f5e;
+    }
+
+    .kpi-amber .kpi-icon {
+      background: rgba(245, 158, 11, .1);
+      color: #f59e0b;
+    }
+
+    .kpi-amber .kpi-badge {
+      background: rgba(245, 158, 11, .1);
+      color: #d97706;
+    }
+
+    .kpi-emerald .kpi-icon {
+      background: rgba(16, 185, 129, .1);
+      color: #10b981;
+    }
+
+    .kpi-emerald .kpi-badge {
+      background: rgba(16, 185, 129, .1);
+      color: #10b981;
+    }
+  </style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
@@ -65,266 +256,257 @@
 
       <div class="flex gap-2">
         <a href="OS_Wise_bug_dashboard.html"
-          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-          <i class="fa-solid fa-microphone mr-2"></i>
+          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 group">
+          <i class="fa-solid fa-microphone mr-2 group-hover:rotate-12 transition-transform"></i>
           BETA UT VOC
         </a>
         <a href="main.html"
-          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-          <i class="fa-solid fa-home mr-2"></i>
+          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 group">
+          <i class="fa-solid fa-house mr-2 group-hover:rotate-12 transition-transform"></i>
           Home
         </a>
       </div>
     </div>
 
     <!-- KPI -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Total</p>
-            <p class="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1" id="total-issues">0</p>
-          </div>
-          <div class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-            <i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400 text-xl"></i>
-          </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px] mb-[20px]">
+      <!-- Total Volume -->
+      <div class="kpi-card kpi-indigo" style="--card-accent: linear-gradient(90deg, #6366f1, #818cf8);">
+        <div class="kpi-top">
+          <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+          <span class="kpi-badge">Issues</span>
         </div>
+        <div class="kpi-value" id="total-issues">0</div>
+        <div class="kpi-label">Total Volume</div>
+        <div class="kpi-sub">Processed issue entries</div>
       </div>
 
-      <div
-        class="bg-red-50 dark:bg-red-950/30 rounded-xl shadow-lg p-6 border-2 border-red-200 dark:border-red-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full -mr-8 -mt-8"></div>
-        <div class="flex items-center justify-between relative z-10">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Open</p>
-            <p class="text-3xl font-bold text-red-800 dark:text-red-200 mt-1" id="open-issues">0</p>
-          </div>
-          <div class="p-3 bg-red-100 dark:bg-red-900/40 rounded-lg">
-            <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
-          </div>
+      <!-- Open Issues -->
+      <div class="kpi-card kpi-rose" style="--card-accent: linear-gradient(90deg, #f43f5e, #fb7185);">
+        <div class="kpi-top">
+          <div class="kpi-icon"><i class="fa-solid fa-exclamation-triangle"></i></div>
+          <span class="kpi-badge">Action required</span>
         </div>
+        <div class="kpi-value" id="open-issues">0</div>
+        <div class="kpi-label">Open Issues</div>
+        <div class="kpi-sub">Pending technical solution</div>
       </div>
 
-      <div
-        class="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl shadow-lg p-6 border-2 border-yellow-200 dark:border-yellow-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-full -mr-8 -mt-8"></div>
-        <div class="flex items-center justify-between relative z-10">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Resolved</p>
-            <p class="text-3xl font-bold text-yellow-800 dark:text-yellow-200 mt-1" id="resolved-issues">0</p>
-          </div>
-          <div class="p-3 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
-            <i class="fa-solid fa-check-circle text-yellow-600 dark:text-yellow-400 text-xl"></i>
-          </div>
+      <!-- Resolved Issues -->
+      <div class="kpi-card kpi-amber" style="--card-accent: linear-gradient(90deg, #f59e0b, #fbbf24);">
+        <div class="kpi-top">
+          <div class="kpi-icon"><i class="fa-solid fa-check-circle"></i></div>
+          <span class="kpi-badge">Ongoing</span>
         </div>
+        <div class="kpi-value" id="resolved-issues">0</div>
+        <div class="kpi-label">Resolved Issues</div>
+        <div class="kpi-sub">Waiting for closure</div>
       </div>
 
+      <!-- Verified Issues -->
+      <div class="kpi-card kpi-emerald" style="--card-accent: linear-gradient(90deg, #10b981, #34d399);">
+        <div class="kpi-top">
+          <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <span class="kpi-badge">Verified</span>
+        </div>
+        <div class="kpi-value" id="close-issues">0</div>
+        <div class="kpi-label">Closed Issues</div>
+        <div class="kpi-sub">Completed lifecycle</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <section class="grid grid-cols-12 gap-4">
+
+    <!-- SEVERITY WISE ISSUE COUNT - Donut Chart -->
+    <div class="col-span-3">
       <div
-        class="bg-green-50 dark:bg-green-950/30 rounded-xl shadow-lg p-6 border-2 border-green-200 dark:border-green-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full -mr-8 -mt-8"></div>
-        <div class="flex items-center justify-between relative z-10">
-          <div>
-            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">Close</p>
-            <p class="text-3xl font-bold text-green-800 dark:text-green-200 mt-1" id="close-issues">0</p>
+        class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 h-[270px] overflow-hidden">
+        <!-- Header with subtle accent -->
+        <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Severity</h3>
+            <div class="w-7 h-7 bg-indigo-50 dark:bg-indigo-900/30 rounded flex items-center justify-center">
+              <i class="fa-solid fa-chart-pie text-indigo-600 dark:text-indigo-400 text-xs"></i>
+            </div>
           </div>
-          <div class="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
-            <i class="fa-solid fa-times-circle text-green-600 dark:text-green-400 text-xl"></i>
-          </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="p-2">
+          <div id="severity-split-chart" class="h-[200px] w-full"></div>
         </div>
       </div>
     </div>
 
-    <!-- CHARTS ROW -->
-    <section class="grid grid-cols-12 gap-4">
-
-      <!-- SEVERITY WISE ISSUE COUNT - Donut Chart -->
-      <div class="col-span-3">
-        <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[270px]">
-          <!-- Header with subtle accent -->
-          <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Severity Wise Issue Count</h3>
-              <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chart Container -->
-          <div class="p-4 flex items-center justify-bottom">
-            <div id="severity-split-chart" class="h-[180px] w-full"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TOP MODELS - Professional Design -->
-      <div class="col-span-5">
-        <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[270px]">
-          <!-- Header with subtle accent -->
-          <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Models</h3>
-              <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chart Container -->
-          <div class="p-4">
-            <div id="top-models-chart" class="h-[180px] w-full"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TOP MODULES - Donut Chart -->
-      <div class="col-span-4">
-        <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 h-[270px]">
-          <!-- Header with subtle accent -->
-          <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Modules</h3>
-              <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chart Container -->
-          <div class="p-4">
-            <div id="top-modules-chart" class="h-[180px] w-full"></div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- TOP 10 MODEL WISE BETA ISSUES SUMMARY TABLE -->
-    <section class="mt-5">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+    <!-- TOP MODELS - Professional Design -->
+    <div class="col-span-5">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 h-[270px] overflow-hidden">
         <!-- Header with subtle accent -->
-        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+        <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Model Wise Beta Issues Summary
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top 10 Models</h3>
+            <div class="w-7 h-7 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
+              <i class="fa-solid fa-chart-bar text-blue-600 dark:text-blue-400 text-xs"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="p-2">
+          <div id="top-models-chart" class="h-[200px] w-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP MODULES - Donut Chart -->
+    <div class="col-span-4">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 h-[270px] overflow-hidden">
+        <!-- Header with subtle accent -->
+        <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top 10 Modules
             </h3>
-            <div class="flex items-center gap-2">
-              <a href="BetaUT_detailsData.html"
-                class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
-                <i class="fa-solid fa-eye mr-1"></i>
-                Details
-              </a>
-              <div class="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-table text-green-600 dark:text-green-400"></i>
-              </div>
+            <div class="w-7 h-7 bg-emerald-50 dark:bg-emerald-900/30 rounded flex items-center justify-center">
+              <i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400 text-xs"></i>
             </div>
           </div>
         </div>
 
-        <!-- Table Container -->
-        <div class="overflow-x-auto">
-          <table class="w-full" id="model-summary-table">
-            <thead class="bg-slate-50 dark:bg-slate-700">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Model No.</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Open</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - App Update</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Duplicated</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Not Released</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Released</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Unnecessary</th>
-
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Total</th>
-              </tr>
-            </thead>
-            <tbody id="model-summary-table-body"
-              class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-              <!-- Dynamic content will be inserted here -->
-            </tbody>
-          </table>
+        <!-- Chart Container -->
+        <div class="p-2">
+          <div id="top-modules-chart" class="h-[200px] w-full"></div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- TOP 10 CATEGORY WISE BETA ISSUES SUMMARY TABLE -->
-    <section class="mt-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-        <!-- Header with subtle accent -->
-        <div class="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Top 10 Category Wise Beta Issues
-              Summary</h3>
-            <div class="flex items-center gap-2">
-              <a href="BetaUT_detailsData.html"
-                class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
-                <i class="fa-solid fa-eye mr-1"></i>
-                Details
-              </a>
-              <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-cubes text-blue-600 dark:text-blue-400"></i>
-              </div>
+  </section>
+
+  <!-- TOP 10 MODEL WISE BETA ISSUES SUMMARY TABLE -->
+  <section class="mt-5">
+    <div
+      class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <!-- Header with subtle accent -->
+      <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Model Summary</h3>
+          <div class="flex items-center gap-2">
+            <a href="BetaUT_detailsData.html"
+              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+              <i class="fa-solid fa-eye mr-2"></i>
+              Details
+            </a>
+            <div class="w-7 h-7 bg-green-50 dark:bg-green-900/30 rounded flex items-center justify-center">
+              <i class="fa-solid fa-table text-green-600 dark:text-green-400 text-xs"></i>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Table Container -->
-        <div class="overflow-x-auto">
-          <table class="w-full" id="module-summary-table">
-            <thead class="bg-slate-50 dark:bg-slate-700">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Category</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Open</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - App Update</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Duplicated</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Not Released</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Released</th>
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Resolve - Unnecessary</th>
+      <!-- Table Container -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" id="model-summary-table">
+          <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th
+                class="px-4 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.10em]">
+                Model No.</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.10em]">
+                Open</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.10em]">
+                App Update</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.10em]">
+                Duplicated</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.10em]">
+                Not Released</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.10em]">
+                Released</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.10em]">
+                Unnecessary</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-[0.10em]">
+                Total</th>
+            </tr>
+          </thead>
+          <tbody id="model-summary-table-body"
+            class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+            <!-- Dynamic content will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-                <th
-                  class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Total</th>
-              </tr>
-            </thead>
-            <tbody id="module-summary-table-body"
-              class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-              <!-- Dynamic content will be inserted here -->
-            </tbody>
-          </table>
+  <!-- TOP 10 CATEGORY WISE BETA ISSUES SUMMARY TABLE -->
+  <section class="mt-8">
+    <div
+      class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <!-- Header with subtle accent -->
+      <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Category Summary
+          </h3>
+          <div class="flex items-center gap-2">
+            <a href="BetaUT_detailsData.html"
+              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+              <i class="fa-solid fa-eye mr-2"></i>
+              Details
+            </a>
+            <div class="w-7 h-7 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
+              <i class="fa-solid fa-cubes text-blue-600 dark:text-blue-400 text-xs"></i>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" id="module-summary-table">
+          <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th
+                class="px-4 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                Category</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                Open</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                App Update</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                Duplicated</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                Not Released</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                Released</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                Unnecessary</th>
+              <th
+                class="px-4 py-3 text-center text-[10.5px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.07em]">
+                Total</th>
+            </tr>
+          </thead>
+          <tbody id="module-summary-table-body"
+            class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+            <!-- Dynamic content will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
   </div>
 
@@ -455,7 +637,8 @@
       const colors = getChartColors();
 
       // Calculate severity counts from Beta UT KPIs
-      const totalHigh = dashboardData.kpis?.High || 0;
+      // NOTE: High is an object {total, severe, moderate, deferred} in central_dashboard.json
+      const totalHigh = dashboardData.kpis?.High?.total || 0;
       const totalMedium = dashboardData.kpis?.Medium || 0;
       const totalLow = dashboardData.kpis?.Low || 0;
 
@@ -579,9 +762,8 @@
                 name: 'High',
                 itemStyle: {
                   color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                    { offset: 0, color: '#ef4444' },
-                    { offset: 0.5, color: '#dc2626' },
-                    { offset: 1, color: '#b91c1c' }
+                    { offset: 0, color: '#f43f5e' },
+                    { offset: 1, color: '#fb7185' }
                   ])
                 }
               },
@@ -590,9 +772,8 @@
                 name: 'Medium',
                 itemStyle: {
                   color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                    { offset: 0, color: '#fbbf24' },
-                    { offset: 0.5, color: '#f59e0b' },
-                    { offset: 1, color: '#d97706' }
+                    { offset: 0, color: '#f59e0b' },
+                    { offset: 1, color: '#fbbf24' }
                   ])
                 }
               },
@@ -601,9 +782,8 @@
                 name: 'Low',
                 itemStyle: {
                   color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                    { offset: 0, color: '#9ca3af' },
-                    { offset: 0.5, color: '#6b7280' },
-                    { offset: 1, color: '#4b5563' }
+                    { offset: 0, color: '#94a3b8' },
+                    { offset: 1, color: '#cbd5e1' }
                   ])
                 }
               }
@@ -683,11 +863,10 @@
             data: issueCounts,
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#0ea5e9' },
-                { offset: 0.5, color: '#0284c7' },
-                { offset: 1, color: '#0369a1' }
+                { offset: 0, color: '#6366f1' },
+                { offset: 1, color: '#818cf8' }
               ]),
-              borderRadius: [4, 4, 4, 4]
+              borderRadius: [0, 4, 4, 0]
             },
             label: {
               show: true,
@@ -768,10 +947,9 @@
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
                 { offset: 0, color: '#10b981' },
-                { offset: 0.5, color: '#059669' },
-                { offset: 1, color: '#047857' }
+                { offset: 1, color: '#34d399' }
               ]),
-              borderRadius: [4, 4, 4, 4]
+              borderRadius: [0, 4, 4, 0]
             },
             label: {
               show: true,
@@ -880,15 +1058,14 @@
         tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
 
         tr.innerHTML = `
-      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${model}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Open'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Duplicated'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
-
-      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
+      <td class="px-4 py-3 text-[12.5px] font-medium text-slate-900 dark:text-slate-100">${model}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Open'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - App Update'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Duplicated'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Not Released'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Released'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Unnecessary'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${counts['Total'] || 0}</td>
     `;
 
         tbody.appendChild(tr);
@@ -899,15 +1076,15 @@
       totalTr.className = 'bg-slate-100 dark:bg-slate-700 border-t-2 border-slate-300 dark:border-slate-600';
 
       totalTr.innerHTML = `
-    <td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Open']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - App Update']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Duplicated']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
+    <td class="px-4 py-3 text-[12.5px] font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Open']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - App Update']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Duplicated']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Not Released']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Released']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Unnecessary']}</td>
 
-    <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-bold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Total']}</td>
   `;
 
       tbody.appendChild(totalTr);
@@ -1004,15 +1181,15 @@
         tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
 
         tr.innerHTML = `
-      <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">${module}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Open'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - App Update'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Duplicated'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Not Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Released'] || 0}</td>
-      <td class="px-4 py-3 text-sm text-center text-slate-700 dark:text-slate-300">${counts['Resolve - Unnecessary'] || 0}</td>
+      <td class="px-4 py-3 text-[12.5px] font-medium text-slate-900 dark:text-slate-100">${module}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Open'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - App Update'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Duplicated'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Not Released'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Released'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center text-slate-700 dark:text-slate-300 font-mono">${counts['Resolve - Unnecessary'] || 0}</td>
 
-      <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${counts['Total'] || 0}</td>
+      <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${counts['Total'] || 0}</td>
     `;
 
         tbody.appendChild(tr);
@@ -1023,15 +1200,15 @@
       totalTr.className = 'bg-slate-100 dark:bg-slate-700 border-t-2 border-slate-300 dark:border-slate-600';
 
       totalTr.innerHTML = `
-    <td class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Open']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - App Update']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Duplicated']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Not Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Released']}</td>
-    <td class="px-4 py-3 text-sm text-center font-semibold text-slate-900 dark:text-slate-100">${grandTotal['Resolve - Unnecessary']}</td>
+    <td class="px-4 py-3 text-[12.5px] font-bold text-slate-900 dark:text-slate-100">Grand Total</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Open']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - App Update']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Duplicated']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Not Released']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Released']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-semibold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Resolve - Unnecessary']}</td>
 
-    <td class="px-4 py-3 text-sm text-center font-bold text-slate-900 dark:text-slate-100">${grandTotal['Total']}</td>
+    <td class="px-4 py-3 text-[11px] text-center font-bold text-slate-900 dark:text-slate-100 font-mono">${grandTotal['Total']}</td>
   `;
 
       tbody.appendChild(totalTr);
@@ -1040,11 +1217,15 @@
     // Theme-aware color helper
     function getChartColors() {
       const isDark = document.documentElement.classList.contains('dark');
+      const style = getComputedStyle(document.documentElement);
 
       return {
-        textPrimary: isDark ? '#FFFFFF' : '#000000',
-        textSecondary: isDark ? '#FFFFFF' : '#000000',
-        gridLines: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+        textPrimary: isDark ? '#FFFFFF' : '#0f172a',
+        textSecondary: isDark ? '#94a3b8' : '#475569',
+        gridLines: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(15,23,42,0.05)',
+        accent: '#6366f1',
+        accent2: '#0ea5e9',
+        accent3: '#10b981'
       };
     }
   </script>

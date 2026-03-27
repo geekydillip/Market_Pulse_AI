@@ -1335,8 +1335,8 @@ async function processExcel(req, res) {
       let cellStyle = {
         alignment: { vertical: "center", wrapText: true },
         font: {
-          name: "Arial",
-          sz: 10,
+          name: "Calibri",
+          sz: 11,
           color: { rgb: row === 0 ? "FFFFFF" : "000000" } // header row white, data black
         }
       };
@@ -1371,10 +1371,9 @@ async function processExcel(req, res) {
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;
-      const isSpecialHeader = specialHeaders.includes(header);
       newSheet[cellAddress].s = {
-        fill: { patternType: "solid", fgColor: { rgb: isSpecialHeader ? "1E90FF" : "000080" } },
-        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+        fill: { patternType: "solid", fgColor: { rgb: "305496" } },
+        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12, name: "Calibri" },
         alignment: { horizontal: "center", vertical: "center", wrapText: true }
       };
     });
@@ -2667,7 +2666,7 @@ app.get('/api/module-details', async (req, res) => {
 async function processUpdateKB(req, res) {
   try {
     const file = req.file;
-    const kbDir = path.join(__dirname, 'RAG_Data', 'knowledge_base');
+    const kbDir = path.join(__dirname, 'RAG', 'knowledge_base');
 
     // Ensure kb directory exists
     if (!fs.existsSync(kbDir)) {
@@ -2686,7 +2685,7 @@ async function processUpdateKB(req, res) {
     const { spawn } = require('child_process');
 
     // Spawn python to build vector DB
-    const pythonProcess = spawn('python', [path.join(__dirname, 'RAG_Data', 'build_vector.py')]);
+    const pythonProcess = spawn('python', [path.join(__dirname, 'RAG', 'build_vector.py')]);
 
     let pythonOutput = '';
     let pythonError = '';

@@ -131,8 +131,8 @@ def create_total_cases_excel(data: List[Dict], filename: str = None) -> str:
     """
     Create Excel file in total cases format matching the sample:
     Columns: Case Code, Model No., Progr.Stat., S/W Ver., Title, Problem,
-             Resolve Option(Medium), Module, Sub-Module, Issue Type, Sub-Issue Type,
-             Summarized Problem, Severity, Severity Reason, Resolve Type, R&D Comment
+             Module, Sub-Module, Issue Type, Sub-Issue Type,
+             Ai Summary, Severity, Severity Reason
     """
     if not filename:
         now = datetime.now()
@@ -150,16 +150,13 @@ def create_total_cases_excel(data: List[Dict], filename: str = None) -> str:
             'S/W Ver.': item.get('S/W Ver.', item.get('swVer', item.get('S/W Version', ''))),
             'Title': item.get('Title', item.get('title', '')),
             'Problem': item.get('Problem', item.get('problem', '')),
-            'Resolve Option(Medium)': item.get('Resolve Option(Medium)', item.get('resolveOption', '')),
             'Module': item.get('Module', item.get('module', '')),
             'Sub-Module': item.get('Sub-Module', item.get('subModule', '')),
             'Issue Type': item.get('Issue Type', item.get('issueType', '')),
             'Sub-Issue Type': item.get('Sub-Issue Type', item.get('subIssueType', '')),
-            'Summarized Problem': item.get('Summarized Problem', item.get('summarizedProblem', '')),
+            'Ai Summary': item.get('Summarized Problem', item.get('summarizedProblem', item.get('Ai Summary', ''))),
             'Severity': item.get('Severity', item.get('severity', '')),
-            'Severity Reason': item.get('Severity Reason', item.get('severityReason', '')),
-            'Resolve Type': item.get('Resolve Type', item.get('resolveType', '')),
-            'R&D Comment': item.get('R&D Comment', item.get('rdComment', ''))
+            'Severity Reason': item.get('Severity Reason', item.get('severityReason', ''))
         })
 
     # Create DataFrame and save to Excel
@@ -184,16 +181,13 @@ def create_total_cases_excel(data: List[Dict], filename: str = None) -> str:
             'D': 15,  # S/W Ver.
             'E': 40,  # Title
             'F': 40,  # Problem
-            'G': 25,  # Resolve Option(Medium)
-            'H': 20,  # Module
-            'I': 20,  # Sub-Module
-            'J': 15,  # Issue Type
-            'K': 18,  # Sub-Issue Type
-            'L': 40,  # Summarized Problem
-            'M': 10,  # Severity
-            'N': 20,  # Severity Reason
-            'O': 15,  # Resolve Type
-            'P': 40   # R&D Comment
+            'G': 20,  # Module
+            'H': 20,  # Sub-Module
+            'I': 15,  # Issue Type
+            'J': 18,  # Sub-Issue Type
+            'K': 40,  # Ai Summary
+            'L': 10,  # Severity
+            'M': 20   # Severity Reason
         }
 
         for col, width in column_widths.items():
@@ -218,8 +212,8 @@ def create_total_cases_excel(data: List[Dict], filename: str = None) -> str:
                 cell = worksheet.cell(row=row_num, column=col_num)
                 cell.font = data_font
 
-                # Center align columns C, G, H, I, J, K, M, O (3, 7, 8, 9, 10, 11, 13, 15)
-                if col_num in [3, 7, 8, 9, 10, 11, 13, 15]:
+                # Center align columns C, G, H, I, J, L (3, 7, 8, 9, 10, 12)
+                if col_num in [3, 7, 8, 9, 10, 12]:
                     cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
                 else:
                     cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)

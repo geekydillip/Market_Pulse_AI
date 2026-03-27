@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Insight – BERT VOC Similarity</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +22,7 @@
 
   <style>
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Sora', 'Inter', sans-serif;
     }
 
     @keyframes spin-slow {
@@ -146,6 +147,41 @@
     #voc-modal {
       backdrop-filter: blur(4px);
     }
+
+    /* ── KPI Theme Variables ──── */
+    :root {
+      --accent:#6366f1; --accent2:#0ea5e9; --accent3:#10b981;
+      --surface:#ffffff; --surface2:#f8fafc; --surface3:#f1f5f9;
+      --border:#e2e8f0; --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+      --red:#f43f5e; --amber:#f59e0b; --green:#10b981;
+    }
+    html.dark { --surface:#1e293b; --surface2:#0f172a; --surface3:#334155; --border:#334155; --text:#f1f5f9; --text2:#94a3b8; --text3:#64748b; }
+
+    /* ── KPI Cards CSS ──── */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+    @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+    .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px 15px;box-shadow:0 1px 4px rgba(0,0,0,.04);position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;cursor:default;}
+    .kpi-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.09);transform:translateY(-2px);}
+    .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;}
+    .kpi-card.kpi-total::before{background:linear-gradient(90deg,#6366f1,#818cf8);}
+    .kpi-card.kpi-high::before{background:linear-gradient(90deg,#f43f5e,#fb7185);}
+    .kpi-card.kpi-open::before{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+    .kpi-card.kpi-resolved::before{background:linear-gradient(90deg,#10b981,#34d399);}
+    .kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+    .kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+    .kpi-total .kpi-icon{background:rgba(99,102,241,.1);color:#6366f1;}
+    .kpi-high .kpi-icon{background:rgba(244,63,94,.1);color:#f43f5e;}
+    .kpi-open .kpi-icon{background:rgba(245,158,11,.1);color:#f59e0b;}
+    .kpi-resolved .kpi-icon{background:rgba(16,185,129,.1);color:#10b981;}
+    .kpi-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+    .kpi-badge.red{background:rgba(244,63,94,.1);color:#f43f5e;}
+    .kpi-badge.green{background:rgba(16,185,129,.1);color:#10b981;}
+    .kpi-badge.amber{background:rgba(245,158,11,.1);color:#d97706;}
+    .kpi-badge.blue{background:rgba(99,102,241,.1);color:#6366f1;}
+    .kpi-value{font-size:34px;font-weight:700;line-height:1;color:var(--text);font-family:'JetBrains Mono', monospace;margin-bottom:4px;}
+    .kpi-label{font-size:12px;color:var(--text2);font-weight:500;}
+    .kpi-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
   </style>
 </head>
 
@@ -155,12 +191,7 @@
   <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700
                  px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
     <div class="flex items-center gap-3">
-      <button onclick="window.close()" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium
-               text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700
-               hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">
-        <i class="fa-solid fa-xmark"></i> Close
-      </button>
-      <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+
       <div class="flex items-center gap-2">
         <div class="relative w-9 h-9 flex-shrink-0">
           <div class="absolute inset-0 rounded-full bg-indigo-100 dark:bg-indigo-900/60 pulse-glow"></div>
@@ -186,7 +217,7 @@
       <span><i class="fa-solid fa-database mr-1 text-slate-400"></i><span id="stat-total">0</span> issues</span>
       <span><i class="fa-solid fa-layer-group mr-1 text-indigo-400"></i><span id="stat-groups">0</span> groups</span>
       <span class="text-green-500 font-semibold">
-        <i class="fa-solid fa-circle-check mr-1"></i>BERT complete
+        <i class="fa-solid fa-circle-check mr-1"></i>AI Check completed
       </span>
     </div>
   </header>
@@ -293,7 +324,8 @@
 
       <!-- Status text -->
       <div class="text-center">
-        <p id="status-txt" class="text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 mb-2">
+        <p id="status-txt"
+          class="text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 mb-2">
           <span id="status-msg">Connecting to BERT server</span>
           <span class="flex gap-1" id="loading-dots">
             <span class="dot inline-block w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
@@ -302,8 +334,10 @@
           </span>
         </p>
         <!-- Simulated Progress Bar -->
-        <div class="w-full max-w-sm mx-auto bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mb-1 overflow-hidden" id="progress-container" style="display: none;">
-          <div id="simulated-progress" class="bg-indigo-600 h-1.5 rounded-full" style="width: 0%; transition: width 1s linear;"></div>
+        <div class="w-full max-w-sm mx-auto bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mb-1 overflow-hidden"
+          id="progress-container" style="display: none;">
+          <div id="simulated-progress" class="bg-indigo-600 h-1.5 rounded-full"
+            style="width: 0%; transition: width 1s linear;"></div>
         </div>
         <p id="progress-text" class="text-xs text-slate-400 font-mono hidden">0%</p>
       </div>
@@ -335,28 +369,10 @@
   <!-- ══════════════════ RESULTS PAGE ══════════════════ -->
   <div id="results-page" class="hidden max-w-7xl mx-auto px-6 py-6 fade-in">
 
-    <!-- Info banner -->
-    <div class="mb-5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200
-                dark:border-indigo-800 rounded-xl px-5 py-4 flex items-start gap-4">
-      <div
-        class="w-9 h-9 flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/60 rounded-lg flex items-center justify-center mt-0.5">
-        <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400"></i>
-      </div>
-      <div>
-        <p class="text-sm font-semibold text-indigo-800 dark:text-indigo-300 mb-0.5">
-          Offline BERT Semantic Similarity
-        </p>
-        <p class="text-xs text-indigo-700 dark:text-indigo-400 leading-relaxed">
-          Results computed by the local <strong>BAAI/bge-m3</strong> sentence transformer
-          already running on your machine — <strong>no internet or CDN required</strong>.
-          For each <strong>Model + Module</strong> group, the AI picks the most-reported VOC
-          and counts all titles with cosine similarity ≥ 0.50.
-        </p>
-      </div>
-    </div>
+    <!-- Info banner removed -->
 
-    <!-- Summary pills -->
-    <div id="summary-pills" class="flex flex-wrap gap-2 mb-4 text-xs"></div>
+    <!-- KPI Summary Grid -->
+    <div id="summary-pills"></div>
 
     <!-- Table card -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200
@@ -380,30 +396,18 @@
           <thead
             class="bg-slate-200 dark:bg-slate-900 sticky top-0 z-10 border-b-2 border-slate-300 dark:border-slate-800">
             <tr class="divide-x divide-slate-300 dark:divide-slate-700">
-              <th
-                class="px-4 py-3 text-center align-middle text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider w-12">
-                #
+              <th class="px-4 py-3 text-center align-middle text-[10.5px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-[0.07em] w-12">#</th>
+              <th onclick="sortBy('model')" class="px-2 py-3 text-left align-middle text-[10.5px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-[0.07em] cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors w-[12ch]">
+                <div class="flex items-center gap-1 whitespace-nowrap">Model No. <i id="si-model" class="fa-solid fa-sort text-slate-400"></i></div>
               </th>
-              <th onclick="sortBy('model')"
-                class="px-4 py-3 text-left align-middle text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors">
-                <div class="flex items-center gap-1">Model No. <i id="si-model"
-                    class="fa-solid fa-sort text-slate-400"></i></div>
+              <th onclick="sortBy('module')" class="px-2 py-3 text-center align-middle text-[10.5px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-[0.07em] cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors w-[12ch]">
+                <div class="flex items-center justify-center gap-1 whitespace-nowrap">Module <i id="si-module" class="fa-solid fa-sort text-slate-400"></i></div>
               </th>
-              <th onclick="sortBy('module')"
-                class="px-4 py-3 text-left align-middle text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors">
-                <div class="flex items-center gap-1">Module <i id="si-module"
-                    class="fa-solid fa-sort text-slate-400"></i></div>
+              <th onclick="sortBy('voc')" class="px-4 py-3 text-left align-middle text-[10.5px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-[0.07em] cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors">
+                <div class="flex items-center gap-1">VOC <i id="si-voc" class="fa-solid fa-sort text-slate-400"></i></div>
               </th>
-              <th onclick="sortBy('voc')"
-                class="px-4 py-3 text-left align-middle text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors">
-                <div class="flex items-center gap-1">VOC <i id="si-voc" class="fa-solid fa-sort text-slate-400"></i>
-                </div>
-              </th>
-              <th onclick="sortBy('count')"
-                class="px-4 py-3 text-center align-middle text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors w-44">
-                <div class="flex items-center justify-center gap-1">
-                  Similar VOC (Count) <i id="si-count" class="fa-solid fa-sort-down text-indigo-500"></i>
-                </div>
+              <th onclick="sortBy('count')" class="px-4 py-3 text-center align-middle text-[10.5px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-[0.07em] cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 select-none transition-colors w-44">
+                <div class="flex items-center justify-center gap-1">Similar VOC (Count) <i id="si-count" class="fa-solid fa-sort-down text-indigo-500"></i></div>
               </th>
             </tr>
           </thead>
@@ -431,7 +435,7 @@
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="modal-voc-subtitle">Showing similar issues</p>
         </div>
         <button onclick="closeModal()"
-          class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors">
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -442,7 +446,7 @@
       <div
         class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end">
         <button onclick="closeModal()"
-          class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg transition-colors">
+          class="inline-flex items-center justify-center px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-all duration-200">
           Close
         </button>
       </div>
@@ -510,11 +514,11 @@
         // Initialize progress simulation
         let isRunning = true;
         let progress = 0;
-        
+
         const progContainer = document.getElementById('progress-container');
         const progBar = document.getElementById('simulated-progress');
         const progText = document.getElementById('progress-text');
-        
+
         if (progContainer) progContainer.style.display = 'block';
         if (progText) progText.classList.remove('hidden');
 
@@ -528,7 +532,7 @@
         // Simulate progress slowly crawling up to 95%
         const progressInterval = setInterval(() => {
           if (isRunning && progress < 95) {
-            const increment = (95 - progress) * 0.05; 
+            const increment = (95 - progress) * 0.05;
             progress += increment > 0.1 ? increment : 0.1;
             if (progBar) progBar.style.width = `${progress}%`;
             if (progText) progText.textContent = `${Math.round(progress)}%`;
@@ -537,12 +541,12 @@
 
         /* One API call — server does everything offline, wait indefinitely */
         const resp = await fetch(API_ENDPOINT);
-        
+
         // Clean up intervals
         isRunning = false;
         clearTimeout(slowLoadTimer);
         clearInterval(progressInterval);
-        
+
         // Snap progress to 100%
         if (progBar) progBar.style.width = '100%';
         if (progText) progText.textContent = '100%';
@@ -597,7 +601,10 @@
     };
 
     function esc(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      if (s == null) return '';
+      return String(s)
+        .replace(/_x000[dD]_/g, '') // Remove Excel artifacts
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
@@ -617,14 +624,14 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors divide-x divide-slate-200 dark:divide-slate-700';
         tr.innerHTML = `
-          <td class="px-4 py-3 text-sm text-slate-500 text-center align-middle font-medium">${idx + 1}</td>
-          <td class="px-4 py-3 align-middle">
-            <span class="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">${esc(item.model)}</span>
+          <td class="px-4 py-3 text-[11px] text-slate-500 text-center align-middle font-mono">${idx + 1}</td>
+          <td class="px-2 py-3 align-middle w-[12ch]">
+            <span class="font-mono text-[11px] font-semibold text-slate-800 dark:text-slate-200 block truncate max-w-[12ch]" title="${esc(item.model)}">${esc(item.model)}</span>
           </td>
-          <td class="px-4 py-3 align-middle text-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium ${modCls}">${esc(item.module)}</span>
+          <td class="px-2 py-3 align-middle text-center w-[12ch]">
+            <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold uppercase tracking-[0.07em] ${modCls} inline-block truncate max-w-[12ch]" title="${esc(item.module)}">${esc(item.module)}</span>
           </td>
-          <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 max-w-xs align-middle" title="${esc(item.voc)}">
+          <td class="px-4 py-3 text-[12.5px] text-slate-700 dark:text-slate-300 max-w-xs align-middle" title="${esc(item.voc)}">
             <span class="line-clamp-2">${esc(item.voc)}</span>
           </td>
           <td class="px-4 py-3 align-middle">
@@ -632,7 +639,7 @@
               <div class="flex-1 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden" style="height:6px">
                 <div class="score-bar group-hover:bg-indigo-400" style="width:${barW}%"></div>
               </div>
-              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 w-8 text-right underline decoration-indigo-300 dark:decoration-indigo-600 underline-offset-2">${item.count}</span>
+              <span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 w-8 text-right underline decoration-indigo-300 dark:decoration-indigo-600 underline-offset-2 font-mono">${item.count}</span>
             </div>
           </td>`;
         tbody.appendChild(tr);
@@ -646,24 +653,48 @@
       const topMod = Object.entries(mf).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
 
       document.getElementById('summary-pills').innerHTML = `
-        <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full font-medium">
-          <i class="fa-solid fa-layer-group mr-1"></i>${data.total_groups} groups
-        </span>
-        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-medium">
-          <i class="fa-solid fa-database mr-1"></i>${data.total_issues?.toLocaleString()} issues
-        </span>
-        <span class="px-3 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 rounded-full font-medium">
-          <i class="fa-solid fa-fire mr-1"></i>Top module: ${esc(topMod)}
-        </span>
-        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full font-medium">
-          <i class="fa-solid fa-arrow-up mr-1"></i>Max similar: ${top?.count ?? 0}
-        </span>
-        <span class="px-3 py-1 bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 rounded-full font-medium">
-          <i class="fa-solid fa-server mr-1"></i>Local · BAAI/bge-m3
-        </span>
-        <span class="px-3 py-1 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full font-medium">
-          <i class="fa-solid fa-shield mr-1"></i>Threshold: ${data.threshold ?? 0.70}
-        </span>`;
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-total">
+            <div class="kpi-top">
+              <div class="kpi-icon"><i class="fa-solid fa-layer-group"></i></div>
+              <span class="kpi-badge blue">${data.total_groups || 0} groups</span>
+            </div>
+            <div class="kpi-value">${data.total_groups?.toLocaleString() || 0}</div>
+            <div class="kpi-label">Similarity Groups</div>
+            <div class="kpi-sub">Total unique clusters</div>
+          </div>
+
+          <div class="kpi-card kpi-high">
+            <div class="kpi-top">
+              <div class="kpi-icon"><i class="fa-solid fa-database"></i></div>
+              <span class="kpi-badge red">${data.total_issues || 0} issues</span>
+            </div>
+            <div class="kpi-value">${data.total_issues?.toLocaleString() || 0}</div>
+            <div class="kpi-label">Total VOC Count</div>
+            <div class="kpi-sub">Processed by AI</div>
+          </div>
+
+          <div class="kpi-card kpi-open">
+            <div class="kpi-top">
+              <div class="kpi-icon"><i class="fa-solid fa-fire"></i></div>
+              <span class="kpi-badge amber">Impact</span>
+            </div>
+            <div class="kpi-value truncate max-w-full" style="font-size:24px; padding-top:8px" title="${esc(topMod)}">${esc(topMod)}</div>
+            <div class="kpi-label">Top Module Area</div>
+            <div class="kpi-sub">Highest similarity volume</div>
+          </div>
+
+          <div class="kpi-card kpi-resolved">
+            <div class="kpi-top">
+              <div class="kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+              <span class="kpi-badge green">Matches</span>
+            </div>
+            <div class="kpi-value">${top?.count ?? 0}</div>
+            <div class="kpi-label">Max. Similarity</div>
+            <div class="kpi-sub">Top cluster size</div>
+          </div>
+        </div>
+      `;
     }
 
     function filterTable(q) {
@@ -709,7 +740,7 @@
           let modelStr = t.model || "";
           let vocStr = t.voc || t;
           let countVal = t.count || 1;
-          
+
           if (typeof t === 'string') {
             const match1 = t.match(/^\[(.*?)\] (.*?) \((\d+) cases\)$/);
             const match2 = t.match(/^\[(.*?)\] (.*?)$/);
@@ -724,21 +755,21 @@
           }
 
           return `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-             <td class="px-4 py-3 whitespace-nowrap text-xs font-semibold text-slate-500 dark:text-slate-400 w-12 text-center border-b border-slate-100 dark:border-slate-700/50">${index + 1}</td>
-             <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700/50 font-semibold">${esc(modelStr)}</td>
-             <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700/50 leading-relaxed whitespace-pre-wrap">${esc(vocStr)}</td>
-             <td class="px-4 py-3 whitespace-nowrap text-xs font-bold text-indigo-600 dark:text-indigo-400 text-center border-b border-slate-100 dark:border-slate-700/50">${countVal}</td>
+             <td class="px-4 py-3 whitespace-nowrap text-[11px] font-semibold text-slate-500 dark:text-slate-400 w-12 text-center border-b border-slate-100 dark:border-slate-700/50 font-mono">${index + 1}</td>
+             <td class="px-4 py-3 whitespace-nowrap text-[12.5px] text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700/50 font-semibold">${esc(modelStr)}</td>
+             <td class="px-4 py-3 text-[12.5px] text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700/50 leading-relaxed whitespace-pre-wrap">${esc(vocStr)}</td>
+             <td class="px-4 py-3 whitespace-nowrap text-[11px] font-bold text-indigo-600 dark:text-indigo-400 text-center border-b border-slate-100 dark:border-slate-700/50 font-mono">${countVal}</td>
            </tr>`;
         }).join('');
-        
+
         listContainer.innerHTML = `
           <table class="w-full text-left border-collapse">
             <thead class="bg-slate-100 dark:bg-slate-800/80 sticky top-0 shadow-sm">
               <tr>
-                <th class="px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border-b border-slate-200 dark:border-slate-700 w-12">#</th>
-                <th class="px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Model No.</th>
-                <th class="px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 w-full">VOC Data</th>
-                <th class="px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border-b border-slate-200 dark:border-slate-700">Count</th>
+                <th class="px-4 py-3 text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em] text-center border-b border-slate-200 dark:border-slate-700 w-12">#</th>
+                <th class="px-4 py-3 text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em] border-b border-slate-200 dark:border-slate-700">Model No.</th>
+                <th class="px-4 py-3 text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em] border-b border-slate-200 dark:border-slate-700 w-full">VOC Data</th>
+                <th class="px-4 py-3 text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em] text-center border-b border-slate-200 dark:border-slate-700">Count</th>
               </tr>
             </thead>
             <tbody>

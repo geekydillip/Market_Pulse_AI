@@ -11,6 +11,11 @@ from sentence_transformers import SentenceTransformer
 KNOWLEDGE_BASE_FOLDER = "RAG/knowledge_base"
 VECTOR_DB_FOLDER      = "RAG/vector_db"
 
+def normalise_module(mod):
+    if not mod or not isinstance(mod, str):
+        return ""
+    return mod.strip()
+
 # BGE-M3: multilingual (100+ languages incl. Korean, Hindi, Hinglish),
 # 1024-dim embeddings, significantly better retrieval than all-MiniLM-L6-v2.
 # Supports dense retrieval out of the box with sentence-transformers.
@@ -40,26 +45,50 @@ def clean_text(text):
 # ==============================
 # LOAD ALL JSON FILES
 # ==============================
-def load_all_json(folder):
+def load_all_files(folder):
     all_records = []
-    files = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(".json")]
-    print(f"Found {len(files)} JSON files")
+    if not os.path.exists(folder):
+        print(f"Directory {folder} does not exist.")
+        return []
+    
+    files = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith((".json", ".xlsx", ".xls"))]
+    print(f"Found {len(files)} files in {folder}")
+    
     for file in files:
         print(f"Loading {file}")
-        with open(file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                all_records.extend(data)
-            elif isinstance(data, dict):
-                if "data" in data and isinstance(data["data"], list):
-                    all_records.extend(data["data"])
-                elif "rows" in data and isinstance(data["rows"], list):
-                    all_records.extend(data["rows"])
+        if file.endswith(".json"):
+            with open(file, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        all_records.extend(data)
+                    elif isinstance(data, dict):
+                        if "data" in data and isinstance(data["data"], list):
+                            all_records.extend(data["data"])
+                        elif "rows" in data and isinstance(data["rows"], list):
+                            all_records.extend(data["rows"])
+                except Exception as e:
+                    print(f"Error loading {file}: {e}")
+        elif file.endswith((".xlsx", ".xls")):
+            try:
+                import pandas as pd
+                # Read excel and convert to list of dicts
+                df = pd.read_excel(file)
+                # Convert NaNs to None for compatibility with .get() logic
+                df = df.where(pd.notnull(df), None)
+                records = df.to_dict('records')
+                all_records.extend(records)
+                print(f"  Loaded {len(records)} rows from Excel")
+            except Exception as e:
+                print(f"Error loading Excel {file}: {e}")
+                
     print("Total records:", len(all_records))
     return all_records
 
-
-data = load_all_json(KNOWLEDGE_BASE_FOLDER)
+# ==============================
+# MAIN PROCESSING
+# ==============================
+data = load_all_files(KNOWLEDGE_BASE_FOLDER)
 
 documents         = []
 metadata          = []
