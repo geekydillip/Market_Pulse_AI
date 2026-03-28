@@ -14,6 +14,10 @@ function normalizeHeaders(rows) {
     'dev. mdl. name/item name': 'Model No.',
     'target model': 'Model No.',
 
+    // Source mapping
+    'source': 'Source',
+    'occurr. type': 'Source',
+
     // Case Code variants
     'case code': 'Case Code',
     'plm code': 'Case Code',
@@ -56,7 +60,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve'];
+  const canonicalCols = ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve'];
 
   // Priority definitions for column resolution
   // If multiple raw headers map to the same canonical column, use this order (first match wins)
@@ -197,7 +201,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'EmployeeUT',
-  expectedHeaders: ['Case Code', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -336,6 +340,7 @@ module.exports = {
       const original = originalRows[index] || {};
       return {
         'Case Code': original['Case Code'] || '',
+        'Source': original['Source'] || '',
         'Model No.': (original['Model No.'] && /\[OS Beta\]/i.test(String(original['Model No.'])))
           ? (original['S/W Ver.'] && typeof original['S/W Ver.'] === 'string' && original['S/W Ver.'].length >= 5 ? 'SM-' + original['S/W Ver.'].trim().substring(0, 5) : '')
           : (original['Model No.'] || ''),
@@ -361,7 +366,7 @@ module.exports = {
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
       if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
-      if (h === 'Model No.' || h === 'Resolve') return { wch: 20 };
+      if (['Model No.', 'Source', 'Resolve'].includes(h)) return { wch: 20 };
       if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };

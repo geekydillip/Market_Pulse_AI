@@ -470,6 +470,16 @@ def clean_excel(file_path, folder_type=None):
                     df.insert(0, 'Source', '[Global VOC] SWA ERROR')
         else:
             # ── Standard Source Logic ───────────────────────────────
+            static_sources = {
+                'beta_ut': '[OS UP] Beta UT',
+                'employee_ut': 'EMPLOYEE UT',
+                'samsung_members_voc': 'Samsung Member VOC',
+                'beta_ut_voc': '[OS UP] Beta VOCs'
+            }
+            
+            if folder_type in static_sources:
+                final_sources = [static_sources[folder_type]] * len(df)
+                
             source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
             if source_col:
                 df[source_col] = final_sources

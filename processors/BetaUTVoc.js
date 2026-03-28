@@ -11,9 +11,11 @@ function normalizeHeaders(rows) {
     'no': 'No',
     // Model variants
     'model no.': 'Model No.',
-    'model_no': 'Model No.',
     // OS
     'os': 'OS',
+    // Source mapping
+    'source': 'Source',
+    'occurr. type': 'Source',
     // CSC
     'csc': 'CSC',
     // Category
@@ -47,7 +49,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['No', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'AI Insight'];
+  const canonicalCols = ['No', 'Source', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'AI Insight'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -149,7 +151,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'BetaUTVoc',
-  expectedHeaders: ['No', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
+  expectedHeaders: ['No', 'Source', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -325,6 +327,7 @@ module.exports = {
       }
       return {
         'No': original['No'] || original['S/N'] || '',
+        'Source': original['Source'] || '',
         'Date': original['Date'] || '',
         'Status': original['Status'] || '',
         'S/W Ver.': original['S/W Ver.'] || '',
@@ -354,7 +357,7 @@ module.exports = {
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
       if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
-      if (h === 'Application Name') return { wch: 25 };
+      if (['Application Name', 'Source'].includes(h)) return { wch: 25 };
       if (['No', 'Model No.', 'OS', 'CSC', 'Date', 'Status', 'S/W Ver.'].includes(h)) return { wch: 15 };
       if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type'].includes(h)) return { wch: 15 };
       if (h === 'error') return { wch: 15 };
