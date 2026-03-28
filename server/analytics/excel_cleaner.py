@@ -2,12 +2,14 @@ import pandas as pd
 import sys
 import os
 import re
+import math
+from datetime import date, datetime
 
 def clean_title(title_val):
     if pd.isna(title_val):
         return ""
     
-    title_str = str(title_val).strip()
+    title_str = sanitize_excel_artifacts(str(title_val))
     
     # Remove all bracketed items e.g. [CS], [EWP], [SM-F415F_SWA], [Display]
     cleaned = re.sub(r'[\[{].*?[\]}]', '', title_str)
@@ -31,10 +33,8 @@ def clean_problem(problem_val):
     if pd.isna(problem_val):
         return ""
     
-    problem_str = str(problem_val)
-    # ── Zero-width and special spaces ─────────────────────────
-    problem_str = re.sub(r'[\xa0\u200b\u200c]+', ' ', problem_str)
-    problem_str = problem_str.strip()
+    # ── Excel artifacts and Whitespace ─────────────────────────
+    problem_str = sanitize_excel_artifacts(str(problem_val))
     
     # ── SIP and IMS Logs (usually rest of text) ───────────────
     problem_str = re.compile(
@@ -276,8 +276,62 @@ def clean_problem(problem_val):
     
     return problem_str.strip()
 
-def clean_excel(file_path):
-    print(f"[excel_cleaner] Processing file: {file_path}")
+
+def sanitize_excel_artifacts(text):
+    """
+    Clean text from Excel that may contain unwanted HTML entities and characters.
+    Handles _x000D_, _x000A_, _x0009_ (case-insensitive) and collapses whitespace.
+    """
+    if not isinstance(text, str):
+        if text is None or (isinstance(text, float) and math.isnan(text)):
+            return ""
+        return str(text)
+
+    # Remove common Excel HTML entities (case-insensitive for _x000d_ etc.)
+    cleaned = re.sub(r'_x[0-9a-f]{4}_', ' ', text, flags=re.IGNORECASE)
+
+    # Replace multiple newlines with single space if they are within text
+    # But for problem descriptions we might want to preserve some structure?
+    # Actually, the user's JS code collapses \n+ to ' '. 
+    # Let's collapse multiple newlines but keep single ones if they look intentional.
+    # Wait, the instruction said collapse whitespace.
+    cleaned = re.sub(r'\s+', ' ', cleaned)
+    
+    return cleaned.strip()
+
+
+def clean_model_number(model_val):
+    """
+    Clean model number string by removing common prefixes like [Regular Folder],
+    [OS Beta], [Global VOC], etc.
+    """
+    if pd.isna(model_val) or not isinstance(model_val, str):
+        return model_val
+    
+    model_str = model_val.strip()
+    # Remove bracketed prefixes used as folder/source markers
+    model_str = re.sub(r'^\[(Regular Folder|OS Beta|Global VOC)\]\s*', '', model_str, flags=re.IGNORECASE)
+    
+    return model_str.strip()
+
+
+def sanitize_nan_values(obj):
+    """
+    Recursively replace NaN values with None and format dates for JSON serialization.
+    """
+    if isinstance(obj, float) and math.isnan(obj):
+        return None
+    elif isinstance(obj, (date, datetime)):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {k: sanitize_nan_values(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_nan_values(item) for item in obj]
+    return obj
+
+
+def clean_excel(file_path, folder_type=None):
+    print(f"[excel_cleaner] Processing file: {file_path} (Type: {folder_type})")
     
     try:
         # Load the whole file
@@ -390,15 +444,41 @@ def clean_excel(file_path):
         final_sources = [ext if ext else flb for ext, flb in zip(extracted_sources, fallback_sources)]
 
         # Place Source column
-        source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
-        if source_col:
-            df[source_col] = final_sources
-        else:
-            if title_col:
-                title_idx = df.columns.get_loc(title_col)
-                df.insert(title_idx, 'Source', final_sources)
+        if folder_type == 'global_voc_plm':
+            # ── Restructuring for Global VOC PLM ─────────────────────
+            # Insert a new Column Before the Source. Name it as Source and
+            # Earlier Source Column should be Named as Sub-Sources.
+            # Source Column Should have Data as "[Global VOC] SWA ERROR".
+            
+            orig_source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
+            
+            if orig_source_col:
+                orig_idx = df.columns.get_loc(orig_source_col)
+                # Rename existing Source to Sub-Sources and update values
+                df.rename(columns={orig_source_col: 'Sub-Sources'}, inplace=True)
+                df['Sub-Sources'] = final_sources
+                # Insert static Source before renamed Sub-Sources
+                df.insert(orig_idx, 'Source', '[Global VOC] SWA ERROR')
             else:
-                df['Source'] = final_sources
+                # If no Source exists, use Title or Occurr. Type as anchor
+                if title_col:
+                    title_idx = df.columns.get_loc(title_col)
+                    df.insert(title_idx, 'Sub-Sources', final_sources)
+                    df.insert(title_idx, 'Source', '[Global VOC] SWA ERROR')
+                else:
+                    df.insert(0, 'Sub-Sources', final_sources)
+                    df.insert(0, 'Source', '[Global VOC] SWA ERROR')
+        else:
+            # ── Standard Source Logic ───────────────────────────────
+            source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
+            if source_col:
+                df[source_col] = final_sources
+            else:
+                if title_col:
+                    title_idx = df.columns.get_loc(title_col)
+                    df.insert(title_idx, 'Source', final_sources)
+                else:
+                    df['Source'] = final_sources
 
         # Replace 'Dev. Mdl. Name/Item Name' data with extracted Model No.
         dev_mdl_col = next((c for c in df.columns if 'dev. mdl. name' in str(c).lower() or 'item name' in str(c).lower()), None)
@@ -447,4 +527,5 @@ if __name__ == "__main__":
         sys.exit(1)
     
     file_path = sys.argv[1].strip().strip('"\'')
-    clean_excel(file_path)
+    folder_type = sys.argv[2].strip() if len(sys.argv) > 2 else None
+    clean_excel(file_path, folder_type)

@@ -1060,7 +1060,7 @@ async function processExcel(req, res) {
           const cleanerStart = Date.now();
           const pypath = path.join(__dirname, 'server', 'analytics', 'excel_cleaner.py');
           const cp = require('child_process');
-          const output = cp.execSync(`python "${pypath}" "${uploadedPath}"`, { encoding: 'utf-8' });
+          const output = cp.execSync(`python "${pypath}" "${uploadedPath}" "${processingType}"`, { encoding: 'utf-8' });
           if (output) process.stdout.write(output);
           logger.log(`✅ Excel Cleaner finished in ${Date.now() - cleanerStart}ms`);
 

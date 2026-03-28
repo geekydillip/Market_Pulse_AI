@@ -24,6 +24,7 @@ if str(_THIS_DIR) not in sys.path:
 
 # Single source of truth for all criticality/exclusion/tier logic
 from extract_criticality import extract_criticality_data
+from excel_cleaner import sanitize_nan_values, clean_model_number
 
 
 def load_model_name_mappings():
@@ -45,16 +46,8 @@ MODEL_NAME_MAPPINGS = load_model_name_mappings()
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 def sanitize_nan(obj):
-    """Recursively replace NaN/dates for JSON serialization."""
-    if isinstance(obj, float) and math.isnan(obj):
-        return None
-    elif isinstance(obj, (date, datetime)):
-        return obj.isoformat()
-    elif isinstance(obj, dict):
-        return {k: sanitize_nan(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [sanitize_nan(item) for item in obj]
-    return obj
+    """Delegate to excel_cleaner for JSON sanitization."""
+    return sanitize_nan_values(obj)
 
 
 def derive_model_name_from_sw_ver(sw_ver):
@@ -68,21 +61,9 @@ def derive_model_name_from_sw_ver(sw_ver):
 
 
 def transform_model_names(df):
-    if 'Model No.' in df.columns:
-        if 'S/W Ver.' in df.columns:
-            mask = df['Model No.'].astype(str).str.startswith('[OS Beta]')
-            df.loc[mask, 'Model No.'] = (
-                df.loc[mask, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
-            )
-        mask2 = df['Model No.'].astype(str).str.startswith('[Regular Folder]')
-        if mask2.any():
-            df.loc[mask2, 'Model No.'] = (
-                df.loc[mask2, 'Model No.']
-                  .str.replace(r'^\[Regular Folder\]', '', regex=True)
-            )
     """
     Transform Model No. column for OS Beta and Global VOC entries using S/W Ver.
-    Also remove [Regular Folder] prefix from model names.
+    Also remove prefixes from model names using excel_cleaner.
     """
     if 'Model No.' in df.columns:
         # Apply transformation where Model No. starts with "[OS Beta]" or "[Global VOC]"
@@ -92,10 +73,8 @@ def transform_model_names(df):
             mask_to_transform = mask_os_beta | mask_global_voc
             df.loc[mask_to_transform, 'Model No.'] = df.loc[mask_to_transform, 'S/W Ver.'].apply(derive_model_name_from_sw_ver)
         
-        # Remove [Regular Folder] prefix from model names
-        mask_regular_folder = df['Model No.'].astype(str).str.startswith('[Regular Folder]').fillna(False)
-        if mask_regular_folder.any():
-            df.loc[mask_regular_folder, 'Model No.'] = df.loc[mask_regular_folder, 'Model No.'].str.replace(r'^\[Regular Folder\]', '', regex=True)
+        # Strip prefixes using centralized logic
+        df['Model No.'] = df['Model No.'].apply(clean_model_number)
     return df
 
 

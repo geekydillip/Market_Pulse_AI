@@ -164,19 +164,8 @@ module.exports = {
     // Apply normalization using the local normalizeHeaders function
     let transformedRows = normalizeHeaders(rows);
 
-    // Clean content field of Excel artifacts
-    transformedRows = transformedRows.map(row => {
-      const cleanedRow = { ...row };
-      if (cleanedRow.content) {
-        cleanedRow.content = cleanedRow.content
-          .replace(/_x000d_/g, '') // Remove Excel line break artifacts
-          .replace(/\n+/g, ' ') // Replace multiple newlines with space
-          .trim();
-      }
-
-      return cleanedRow;
-    });
-
+    // Cleaned during Excel ingest by excel_cleaner.py
+    // No additional manual cleaning needed here
     return transformedRows;
   },
 

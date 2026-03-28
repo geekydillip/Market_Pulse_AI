@@ -36,6 +36,8 @@ function normalizeHeaders(rows) {
 
     // Source (usually calculated, but if present)
     'source': 'Source',
+    'sub-sources': 'Sub-Sources',
+    'sub-source': 'Sub-Sources',
     'occurr. type': 'Source',
 
     // Additional columns from your Excel file to preserve
@@ -54,7 +56,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'];
+  const canonicalCols = ['Case Code', 'Source', 'Sub-Sources', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -185,7 +187,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'UTportal',
-  expectedHeaders: ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Source', 'Sub-Sources', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -392,6 +394,7 @@ module.exports = {
       return {
         'Case Code': original['Case Code'] || '',
         'Source': original['Source'] || '',
+        'Sub-Sources': original['Sub-Sources'] || '',
         'Model No.': extractedModel || ((original['Model No.'] && /\[OS Beta\]/i.test(String(original['Model No.'])))
           ? (original['S/W Ver.'] && typeof original['S/W Ver.'] === 'string' && original['S/W Ver.'].length >= 5 ? 'SM-' + original['S/W Ver.'].trim().substring(0, 5) : '')
           : (original['Model No.'] || '')),
@@ -418,7 +421,7 @@ module.exports = {
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
       if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
-      if (['Source', 'Model No.'].includes(h)) return { wch: 20 };
+      if (['Source', 'Sub-Sources', 'Model No.'].includes(h)) return { wch: 20 };
       if (['S/W Ver.', 'Progr.Stat.', 'Issue Type', 'Sub-Issue Type', 'Case Code'].includes(h)) return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
       if (h === 'error') return { wch: 15 };
