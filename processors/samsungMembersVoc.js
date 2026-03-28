@@ -11,6 +11,13 @@ function normalizeHeaders(rows) {
     'no': 'No',
     // Model variants
     'model no.': 'Model No.',
+    'model no': 'Model No.',
+    'model': 'Model No.',
+    'model name': 'Model No.',
+    'model_no': 'Model No.',
+    'dev. mdl. name/item name': 'Model No.',
+    'dev. mdl. name': 'Model No.',
+    'item name': 'Model No.',
     // OS
     'os': 'OS',
     // Source mapping
@@ -151,7 +158,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'samsungMembersVoc',
-  expectedHeaders: ['No', 'Source', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'],
+  expectedHeaders: ['No', 'Source', 'Date', 'Status', 'S/W Ver.', 'Model No.', 'OS', 'CSC', 'Category', 'Application Name', 'Application Type', 'content', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'AI Insight'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -272,7 +279,7 @@ module.exports = {
         }
       }
       if (!Array.isArray(aiRows)) {
-        const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
+        const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'AI Insight'];
         const hasExpectedFields = expectedFields.some(field => aiRows.hasOwnProperty(field));
         if (hasExpectedFields) {
           aiRows = [aiRows];
@@ -296,12 +303,12 @@ module.exports = {
     } else {
       console.warn(`[samsungMembersVoc formatResponse] Row count mismatch: AI=${aiRows.length} vs input=${originalRows.length}. Preserving original rows with partial AI data.`);
       resolvedAiRows = originalRows.map((_, idx) =>
-        aiRows[idx] || { Module: '', 'Sub-Module': '', 'Issue Type': '', 'Sub-Issue Type': '', 'AI Insight': '' }
+        aiRows[idx] || { Module: '', 'Sub-Module': '', 'Issue Type': '', 'Sub-Issue Type': '', 'Severity': '', 'AI Insight': '' }
       );
     }
     // ──────────────────────────────────────────────────────────────────
 
-    const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight'];
+    const expectedFields = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'AI Insight'];
 
     const mergedRows = resolvedAiRows.map((aiRow, index) => {
       const original = originalRows[index] || {};
@@ -330,6 +337,7 @@ module.exports = {
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
+        'Severity': aiRow['Severity'] || '',
         'AI Insight': aiRow['AI Insight'] || ''
       };
     });
@@ -343,7 +351,7 @@ module.exports = {
       if (['content', 'AI Insight'].includes(h)) return { wch: 41 };
       if (['Application Name', 'Source'].includes(h)) return { wch: 25 };
       if (['No', 'Model No.', 'OS', 'CSC', 'Date', 'Status', 'S/W Ver.'].includes(h)) return { wch: 15 };
-      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type'].includes(h)) return { wch: 15 };
+      if (['Category', 'Application Type', 'Main Type', 'Sub Type', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity'].includes(h)) return { wch: 15 };
       if (h === 'error') return { wch: 15 };
       return { wch: 20 };
     });

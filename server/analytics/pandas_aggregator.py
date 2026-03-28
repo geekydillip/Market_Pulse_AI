@@ -6,6 +6,9 @@ import math
 from pathlib import Path
 from datetime import date, datetime
 
+# Prevent HuggingFace Hub from pinging the network for updates, avoiding timeouts
+os.environ["HF_HUB_OFFLINE"] = "1"
+
 _THIS_DIR     = Path(__file__).resolve().parent
 _PROJECT_ROOT = _THIS_DIR.parent.parent
 
@@ -13,6 +16,7 @@ if str(_THIS_DIR) not in sys.path:
     sys.path.insert(0, str(_THIS_DIR))
 
 from extract_criticality import extract_criticality_data
+from excel_cleaner import clean_model_number
 
 
 def load_model_name_mappings():

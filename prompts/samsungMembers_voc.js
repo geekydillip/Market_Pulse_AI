@@ -29,6 +29,17 @@ FALLBACK DEFINITIONS (use only when RAG context is absent or clearly irrelevant)
   Issue Type    → ONE of: System, Functional, Performance, Usability, Compatibility, Security, Connectivity, Battery, UI/UX, Crash, Heat
   Sub-Issue Type → ONE of: CP Crash, App Crash, ANR, Slow/Lag Performance Issue, Feature Not Working,
                    Poor Quality, UI Issue, Heating Issue, Battery Drain, Compatibility Issue, Restart, other Issue, ""
+  Severity      → High / Medium / Low based on real user impact:
+                   High: device unusable, crashes, freezing, data loss, lag/hang, touch not working, basic features broken.
+                         Examples: phone stuck on boot, cannot make calls, touch unresponsive, data wiped.
+                   Medium: partial malfunction, intermittent failure, major feature degraded.
+                         Examples: Camera crashes on open, app keeps stopping, Bluetooth drops, keyboard slow.
+                   Low: cosmetic issue, minor visual glitch, appearance slightly off, animation not smooth,
+                        icon/text misaligned, feature works correctly but looks wrong, user suggestion.
+                        Examples: dark mode grey in one screen, search bar animation looks off,
+                        clock font slightly wrong, notification icon misaligned, minor layout issue.
+                   DECISION RULE: Does this stop the user from using their phone normally?
+                   YES → High or Medium.  NO → Low.  Only appearance is affected → always Low.
 
 You are also responsible for generating this field using your own reasoning:
   - AI Insight → exactly 1 clean English sentence clearly describing the customer issue and its impact.
@@ -37,7 +48,7 @@ You are also responsible for generating this field using your own reasoning:
 ========================
 INPUT DATA
 ========================
-Each row may contain English, Hindi, Marathi, Hinglish text, emojis, and masked placeholders.
+Each row may contain English language, indian languages, emojis, and masked placeholders.
 
 PRE-PROCESSING (apply before classifying):
 1. Translate ALL non-English text to clear professional English. Preserve meaning exactly — do NOT summarize or shorten.
@@ -57,10 +68,11 @@ Each object MUST contain EXACTLY these keys in this order:
 "Sub-Module"
 "Issue Type"
 "Sub-Issue Type"
+"Severity"
 "AI Insight"
 
 - Start with [ and end with ]
-- No markdown, no explanations, no text outside the JSON array
+- No markdown, no explanations, no text outside the JSON array, "Do not include the \`\`\`json markdown block, return raw JSON."
 - Every input row MUST produce exactly ONE output object — do NOT add or remove rows
 - Never leave any field empty
 `;

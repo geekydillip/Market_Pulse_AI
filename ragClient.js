@@ -101,7 +101,7 @@ const RAG_API_URL = "http://127.0.0.1:5000/search";
  * @param {string[]} queriesArray
  * @returns {Promise<Array<Array<Object>>>}
  */
-async function getRAGContextBatch(queriesArray) {
+async function getRAGContextBatch(queriesArray, signal = null) {
   if (!queriesArray || queriesArray.length === 0) {
     return [];
   }
@@ -111,6 +111,7 @@ async function getRAGContextBatch(queriesArray) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ queries: queriesArray }),
+      signal: signal, // Pass signal to fetch
     });
 
     if (!response.ok) {

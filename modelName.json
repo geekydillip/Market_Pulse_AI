@@ -15,6 +15,10 @@
         "name": "A07 5G",
         "chipset": "Dimensity 6100+"
     },
+    "SM-A076B": {
+        "name": "A07 5G",
+        "chipset": "Dimensity 6300"
+    },
     "SM-A105F": {
         "name": "A10",
         "chipset": "Exynos 7884"
@@ -250,6 +254,10 @@
     "SM-E156B": {
         "name": "F15 5G",
         "chipset": "Dimensity 6100+"
+    },
+    "SM-E176B": {
+        "name": "F17 5G",
+        "chipset": "Exynos 1330"
     },
     "SM-E236B": {
         "name": "F23 5G (Alt Variant)",

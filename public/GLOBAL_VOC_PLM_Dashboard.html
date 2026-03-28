@@ -7,17 +7,16 @@
   <title>Samsung Members PLM - Overview</title>
 
   <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="/lib/google-fonts/fonts.css" rel="stylesheet">
 
   <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="/lib/font-awesome/css/all.min.css" rel="stylesheet">
 
   <!-- ECharts -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="/lib/echarts.min.js"></script>
 
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/lib/tailwind.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -302,7 +301,8 @@
           <!-- Header with subtle accent -->
           <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
             <div class="flex items-center justify-between">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Severity split</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Severity split
+              </h3>
               <div class="w-7 h-7 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
                 <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400 text-[10px]"></i>
               </div>
@@ -323,7 +323,8 @@
           <!-- Header with subtle accent -->
           <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
             <div class="flex items-center justify-between">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top 10 Models</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top 10 Models
+              </h3>
               <div class="w-7 h-7 bg-indigo-50 dark:bg-indigo-900/30 rounded flex items-center justify-center">
                 <i class="fa-solid fa-chart-bar text-indigo-600 dark:text-indigo-400 text-[10px]"></i>
               </div>
@@ -344,7 +345,8 @@
           <!-- Header with subtle accent -->
           <div class="border-b border-slate-100 dark:border-slate-700 px-5 py-3 bg-slate-50/50 dark:bg-slate-900/20">
             <div class="flex items-center justify-between">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top 10 Modules</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top 10 Modules
+              </h3>
               <div class="w-7 h-7 bg-emerald-50 dark:bg-emerald-900/30 rounded flex items-center justify-center">
                 <i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
               </div>
@@ -385,15 +387,33 @@
           <table class="w-full text-left border-collapse" id="model-summary-table">
             <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th class="px-4 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Model No.</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Open</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">App Update</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Duplicated</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Not Released</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Released</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Unnecessary</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Close</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.07em]">Total</th>
+                <th
+                  class="px-4 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Model No.</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Open</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  App Update</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Duplicated</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Not Released</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Released</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Unnecessary</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Close</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.07em]">
+                  Total</th>
               </tr>
             </thead>
             <tbody id="model-summary-table-body"
@@ -430,15 +450,33 @@
           <table class="w-full text-left border-collapse" id="module-summary-table">
             <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th class="px-4 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Module</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Open</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">App Update</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Duplicated</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Not Released</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Released</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Unnecessary</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Close</th>
-                <th class="px-4 py-3 text-center text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.07em]">Total</th>
+                <th
+                  class="px-4 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Module</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Open</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  App Update</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Duplicated</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Not Released</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Released</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Unnecessary</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">
+                  Close</th>
+                <th
+                  class="px-4 py-3 text-center text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.07em]">
+                  Total</th>
               </tr>
             </thead>
             <tbody id="module-summary-table-body"
@@ -522,7 +560,7 @@
         const analyticsData = await analyticsResponse.json();
 
         // Extract Global VOC PLM specific data
-        dashboardData.kpis = jsonData.kpis['Global VOC PLM'];
+        dashboardData.kpis = jsonData.kpis['[Global VOC] SWA ERROR'];
         dashboardData.seriesDistribution = jsonData.series_distribution;
         dashboardData.topModels = jsonData.global_voc_plm_top_models;
         dashboardData.topModules = jsonData.global_voc_plm_top_modules;

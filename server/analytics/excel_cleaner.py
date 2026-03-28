@@ -294,7 +294,8 @@ def clean_problem(problem_val):
         r'^[\s]*(?:[A-Z]\d{2}[\s]+)+[A-Z]\d{2}[\s]*$', re.MULTILINE
     ).sub('', problem_str)
     problem_str = re.sub(r'^\s*[\d,.\-]+\s*$', '', problem_str, flags=re.MULTILINE)
-    problem_str = re.sub(r'\n{3,}', '\n\n', problem_str)
+    problem_str = re.sub(r'[ \t]+$', '', problem_str, flags=re.MULTILINE)
+    problem_str = re.sub(r'(?:\s*\n){3,}', '\n\n', problem_str)
     
     return problem_str.strip()
 
@@ -513,32 +514,25 @@ def clean_excel(file_path, folder_type=None):
                     df['Source'] = final_sources
 
         # Replace 'Dev. Mdl. Name/Item Name' data with extracted Model No.
-        dev_mdl_col = next((c for c in df.columns if 'dev. mdl. name' in str(c).lower() or 'item name' in str(c).lower()), None)
+        # Find model column: check for 'dev. mdl. name', 'item name', 'model no', 'model_no'
+        dev_mdl_col = next((c for c in df.columns if any(x in str(c).lower() for x in ['dev. mdl. name', 'item name', 'model no', 'model_no'])), None)
         if dev_mdl_col:
             existing_models = df[dev_mdl_col].fillna("").astype(str).tolist()
             final_models = [ext if ext else exm for ext, exm in zip(extracted_models, existing_models)]
             df[dev_mdl_col] = final_models
         else:
             final_models = [ext if ext else "" for ext in extracted_models]
-            df['Dev. Mdl. Name/Item Name'] = final_models
+            model_col_name = 'Model No.' if folder_type == 'samsung_members_voc' else 'Dev. Mdl. Name/Item Name'
+            df[model_col_name] = final_models
 
         # Apply cleaning
         if title_col:
             cleaned_titles = []
             for val in df[title_col]:
-                cln = clean_title(val)
+                _, cln = clean_title(val)
                 cleaned_titles.append(cln)
                 
             df[title_col] = cleaned_titles
-            
-            # Map Source to column
-            source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
-            if source_col:
-                df[source_col] = sources
-            else:
-                # Insert Source column near Title
-                title_idx = df.columns.get_loc(title_col)
-                df.insert(title_idx, 'Source', sources)
                 
         if problem_col:
             df[problem_col] = df[problem_col].apply(clean_problem)
@@ -564,8 +558,11 @@ def clean_excel(file_path, folder_type=None):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("[excel_cleaner] ERROR: Please provide an Excel file path as an argument.")
-        print("  Usage: python excel_cleaner.py <path_to_excel_file>")
+        print("  Usage: python excel_cleaner.py <path_to_excel_file> [folder_type]")
         sys.exit(1)
     
     file_path = sys.argv[1].strip().strip('"\'')
-    clean_excel(file_path)
+    # Second argument is optional folder_type
+    folder_type = sys.argv[2].strip().strip('"\'') if len(sys.argv) > 2 else None
+    
+    clean_excel(file_path, folder_type)

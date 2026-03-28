@@ -7,20 +7,17 @@
     <title>Samsung Member PLM - Detail View</title>
 
     <!-- Font -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/lib/google-fonts/fonts.css" rel="stylesheet">
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/lib/tailwind.min.js"></script>
 
     <!-- ECharts and XLSX for exports -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="/lib/echarts.min.js"></script>
+    <script src="/lib/xlsx.full.min.js"></script>
 
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="/lib/font-awesome/css/all.min.css" rel="stylesheet">
 
     <style>
         :root {
@@ -575,7 +572,7 @@
                                         <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">S/W Ver.</th>
                                         <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Title</th>
                                         <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Sub-Module</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">Ai Summary</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em]">AI Insight</th>
                                         <th scope="col" class="px-6 py-3 text-left text-[10.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.07em] cursor-pointer" id="severity-header">Severity</th>
                                     </tr>
                                 </thead>
@@ -695,9 +692,11 @@
             const moduleMap = new Map();
 
             rows.forEach(row => {
-                // Fix: Check for 'Module' (capital M) field as per processor
-                const module = row['Module'] || row.Module || row.module || 'Unknown';
+                const module = row['Module'] || row.Module || row.module || '';
+                if (!module || module.toLowerCase() === 'unknown') return; // Strict exclusion
+
                 const modelNo = extractModelFromRow(row);
+                if (!modelNo || modelNo.toLowerCase() === 'unknown') return; // Strict exclusion
 
                 if (!moduleMap.has(module)) {
                     moduleMap.set(module, {
@@ -714,8 +713,8 @@
                 moduleData.rows.push(row);
                 moduleData.models.add(modelNo);
 
-                const title = (row.title || '').toLowerCase().trim();
-                if (title) {
+                const title = (row.Title || row.title || row['Title'] || '').trim();
+                if (title && title.toLowerCase() !== 'unknown') {
                     moduleData.titleCount.set(title, (moduleData.titleCount.get(title) || 0) + 1);
                 }
             });
@@ -738,7 +737,7 @@
                 } else if (modelsArray.length > 2) {
                     modelDisplay = `${modelsArray[0]}, ${modelsArray[1]}, +${modelsArray.length - 2} more`;
                 } else {
-                    modelDisplay = 'Unknown';
+                    modelDisplay = 'N/A';
                 }
 
                 return {
@@ -756,7 +755,10 @@
             rows.forEach(row => {
                 const module = row['Module'] || row.Module || row.module || 'Unknown';
                 const modelNo = extractModelFromRow(row);
+                if (!modelNo || modelNo.toLowerCase() === 'unknown') return; // Strict exclusion
+
                 const key = `${modelNo}-${module}`;
+                if (module.toLowerCase() === 'unknown') return; // Strict exclusion
 
                 if (!modelModuleMap.has(key)) {
                     modelModuleMap.set(key, {
@@ -772,8 +774,8 @@
                 modelModuleData.count++;
                 modelModuleData.rows.push(row);
 
-                const title = (row.Title || row.title || row['Title'] || '').toLowerCase().trim();
-                if (title) {
+                const title = (row.Title || row.title || row['Title'] || '').trim();
+                if (title && title.toLowerCase() !== 'unknown') {
                     modelModuleData.titleCount.set(title, (modelModuleData.titleCount.get(title) || 0) + 1);
                 }
             });
@@ -813,7 +815,8 @@
                 rows;
 
             filteredRows.forEach(row => {
-                const module = row['Module'] || row.Module || row.module || 'Unknown';
+                const module = row['Module'] || row.Module || row.module || '';
+                if (!module || module.toLowerCase() === 'unknown') return; // Strict exclusion
 
                 if (!moduleMap.has(module)) {
                     moduleMap.set(module, {
@@ -840,7 +843,9 @@
             const modelRows = rows.filter(row => extractModelFromRow(row) === selectedModel);
 
             modelRows.forEach(row => {
-                const module = row['Module'] || row.Module || row.module || 'Unknown';
+                const module = row['Module'] || row.Module || row.module || '';
+                if (!module || module.toLowerCase() === 'unknown') return; // Strict exclusion
+
                 const key = `${selectedModel}-${module}`;
 
                 if (!modelModuleMap.has(key)) {
@@ -857,8 +862,8 @@
                 modelModuleData.count++;
                 modelModuleData.rows.push(row);
 
-                const title = (row.title || '').toLowerCase().trim();
-                if (title) {
+                const title = (row.Title || row.title || row['Title'] || '').trim();
+                if (title && title.toLowerCase() !== 'unknown') {
                     modelModuleData.titleCount.set(title, (modelModuleData.titleCount.get(title) || 0) + 1);
                 }
             });
@@ -882,11 +887,11 @@
         function extractModelFromRow(row) {
             const candidates = ['Model No.', 'Model', 'modelFromFile', 'ModelNo', 'Model_No', 'model', 'model_no'];
             for (const c of candidates) {
-                if (row[c] && String(row[c]).trim()) {
+                if (row[c] && String(row[c]).trim() && String(row[c]).trim().toLowerCase() !== 'unknown') {
                     return String(row[c]).trim();
                 }
             }
-            return 'Unknown';
+            return ''; // Return empty instead of 'Unknown'
         }
 
         function renderModelsList(filteredModels = null) {
@@ -907,6 +912,8 @@
                 }
 
                 modelsToShow.forEach(({ model, count }) => {
+                    if (!model || model.trim() === '') return; // Guard against blank models
+
                     const item = document.createElement('a');
                     item.href = '#';
                     item.className = 'group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100';
@@ -929,6 +936,7 @@
             const modelCounts = {};
             currentData.rows.forEach(row => {
                 const model = extractModelFromRow(row);
+                if (!model) return; // Skip empty models
                 modelCounts[model] = (modelCounts[model] || 0) + 1;
             });
 
@@ -940,7 +948,7 @@
 
         function handleModelSearch(event) {
             const searchTerm = event.target.value.toLowerCase().trim();
-            const allModels = getTopModels();
+            const allModels = getTopModels().filter(m => m.model && m.model.trim() !== '');
 
             if (searchTerm === '') {
                 hideSearchSuggestions();
@@ -1355,7 +1363,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400 font-mono">${row['S/W Ver.'] || row.sWVer || 'N/A'}</td>
                     <td class="px-6 py-4 text-[12.5px] text-gray-500 dark:text-gray-400">${row.title || row.Title || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-[12.5px] text-gray-500 dark:text-gray-400">${row['Sub-Module'] || row.subModule || 'N/A'}</td>
-                    <td class="px-6 py-4 text-[11px] text-gray-500 dark:text-gray-400">${row['Ai Summary'] || row.summarizedProblem || 'N/A'}</td>
+                    <td class="px-6 py-4 text-[11px] text-gray-500 dark:text-gray-400">${row['AI Insight'] || row.summarizedProblem || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${severityClass}">
                             ${row.Severity || row.severity || 'Low'}

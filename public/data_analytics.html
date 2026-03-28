@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Service Issues — Analytics</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="/lib/chart.umd.js"></script>
+<link href="/lib/google-fonts/fonts.css" rel="stylesheet">
 <style>
 /* ── Reset & tokens ── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -278,20 +277,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
   <!-- Source tabs -->
   <div class="source-bar" id="source-bar">
-    <button class="src-tab" data-src="beta_ut" onclick="switchSource('beta_ut',this)">
-      <span class="src-dot" style="background:#4975c9"></span>Beta UT
+    <button class="src-tab active" data-src="beta_ut" onclick="switchSource('beta_ut',this)">
+      <span class="src-dot" style="background:#4975c9"></span>[OS UP] Beta UT
     </button>
     <button class="src-tab" data-src="beta_ut_voc" onclick="switchSource('beta_ut_voc',this)">
-      <span class="src-dot" style="background:#3d8a8a"></span>Beta UT VOC
+      <span class="src-dot" style="background:#3d8a8a"></span>[OS UP] Beta UT VOC
     </button>
     <button class="src-tab" data-src="employee_ut" onclick="switchSource('employee_ut',this)">
       <span class="src-dot" style="background:#7059a8"></span>Employee UT
     </button>
-    <button class="src-tab" data-src="samsung_member_voc" onclick="switchSource('samsung_members_voc',this)">
+    <button class="src-tab" data-src="samsung_members_voc" onclick="switchSource('samsung_members_voc',this)">
       <span class="src-dot" style="background:#b07a34"></span>Samsung Member VOC
     </button>
     <button class="src-tab" data-src="global_voc_plm" onclick="switchSource('global_voc_plm',this)">
-      <span class="src-dot" style="background:#3d8c5e"></span>Global VOC PLM
+      <span class="src-dot" style="background:#3d8c5e"></span>[Global VOC] SWA ERROR
     </button>
   </div>
 
@@ -367,7 +366,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         </div>
         <div class="legend">
           <div class="leg-item" id="si-leg-m1"></div>
-          <div class="leg-item" id="si-leg-m2"></div>
+          <div class="leg-item" id="si-m2-label"></div>
         </div>
         <div class="ch" style="height:280px"><canvas id="c-subissuetype-cmp"></canvas></div>
         <div class="drill-hint">Click any bar to drill down →</div>
@@ -604,11 +603,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 // CONFIG
 // ══════════════════════════════════════════════════
 const SOURCES = {
-  beta_ut:            { label:'Beta UT',           color:'#4975c9', path:'downloads/beta_ut/analytics.json' },
-  beta_ut_voc:        { label:'Beta UT VOC',        color:'#3d8a8a', path:'downloads/beta_ut_voc/analytics.json' },
-  employee_ut:        { label:'Employee UT',        color:'#7059a8', path:'downloads/employee_ut/analytics.json' },
+  beta_ut:            { label:'[OS UP] Beta UT',           color:'#4975c9', path:'downloads/beta_ut/analytics.json' },
+  beta_ut_voc:        { label:'[OS UP] Beta UT VOC',       color:'#3d8a8a', path:'downloads/beta_ut_voc/analytics.json' },
+  employee_ut:        { label:'EMPLOYEE UT',        color:'#7059a8', path:'downloads/employee_ut/analytics.json' },
   samsung_members_voc:{ label:'Samsung Member VOC', color:'#b07a34', path:'downloads/samsung_members_voc/analytics.json' },
-  global_voc_plm:     { label:'Global VOC PLM',     color:'#3d8c5e', path:'downloads/global_voc_plm/analytics.json' },
+  global_voc_plm:     { label:'[Global VOC] SWA ERROR',     color:'#3d8c5e', path:'downloads/global_voc_plm/analytics.json' },
 };
 
 const BLUE='#4975c9', CORAL='#c96449';
@@ -632,8 +631,22 @@ const panelInited={};
 window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('app').style.display='flex';
   document.getElementById('lo').style.display='none';
+  
+  // Handle ?src=URL parameter if present
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetSrc = urlParams.get('src');
+  
+  if (targetSrc) {
+    const targetTab = document.querySelector(`.src-tab[data-src="${targetSrc}"]`);
+    if (targetTab) {
+      targetTab.click();
+      return;
+    }
+  }
+  
   // Default: click first tab
-  document.querySelector('.src-tab').click();
+  const firstTab = document.querySelector('.src-tab');
+  if (firstTab) firstTab.click();
 });
 
 // ══════════════════════════════════════════════════
@@ -665,12 +678,20 @@ async function switchSource(src, tabEl){
     // Re-init current visible panel
     const visPanel=document.querySelector('.panel.active')?.id?.replace('panel-','');
     if(visPanel){panelInited[visPanel]=true;initSection(visPanel);}
-  }catch(e){
-    document.getElementById('lo').innerHTML=`
-      <div style="font-size:32px">⚠️</div>
-      <div style="font-size:16px;font-weight:600">${cfg.label} — Failed to load</div>
-      <div style="font-size:13px;color:var(--text2);max-width:380px;text-align:center;line-height:1.5">${e.message}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:6px">Using bundled demo data instead</div>`;
+  } catch (e) {
+    // Show error without destroying lo structure if possible, but since we want a nice error UI:
+    const lo = document.getElementById('lo');
+    lo.style.display = 'flex';
+    lo.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;">
+        <div style="font-size:32px">⚠️</div>
+        <div style="font-size:16px;font-weight:600">${cfg.label} — Failed to load</div>
+        <div style="font-size:13px;color:var(--text2);max-width:380px;text-align:center;line-height:1.5">${e.message}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">Attempting to load bundled demo data...</div>
+        <div id="lo-msg" class="lo-msg" style="display:none"></div>
+        <div id="lo-src" class="lo-src" style="display:none"></div>
+      </div>`;
+    
     // Load from uploaded file as fallback (dev/demo)
     loadBundledData(src, cfg);
     return;
@@ -684,7 +705,7 @@ async function loadBundledData(src, cfg){
     beta_ut:           '__BETA_UT__',
     beta_ut_voc:       '__BETA_UT_VOC__',
     employee_ut:       '__EMP_UT__',
-    samsung_member_voc:'__SM_VOC__',
+    samsung_members_voc: '__SM_VOC__',
     global_voc_plm:    '__GLOBAL_VOC__',
   };
   const key=fileMap[src];
@@ -1367,7 +1388,7 @@ function applyEx(){
     if(sevF&&(r.Severity||r['Problem Type'])!==sevF)return false;
     if(swvF&&(r['S/W Ver.']||'').split('/')[0].trim()!==swvF)return false;
     if(q){
-      const hay=[r.content,r.Title,r.Problem,r['Ai Summary'],r['AI Insight'],r.Module,r.Category,r['Issue Type'],r['Model No.'],r['S/W Ver.']].filter(Boolean).join(' ').toLowerCase();
+      const hay=[r.content,r.Title,r.Problem,r['AI Insight'],r.Module,r.Category,r['Issue Type'],r['Model No.'],r['S/W Ver.']].filter(Boolean).join(' ').toLowerCase();
       if(!hay.includes(q))return false;
     }
     return true;
@@ -1472,7 +1493,7 @@ function applyDrillFlt(){
     if(mdlF&&r['Model No.']!==mdlF)return false;
     if(sevF&&(r.Severity||r['Problem Type'])!==sevF)return false;
     if(q){
-      const hay=[r.content,r.Title,r.Problem,r['Ai Summary'],r.Module,r['Issue Type'],r['Model No.']].filter(Boolean).join(' ').toLowerCase();
+      const hay=[r.content,r.Title,r.Problem,r['AI Insight'],r.Module,r['Issue Type'],r['Model No.']].filter(Boolean).join(' ').toLowerCase();
       if(!hay.includes(q))return false;
     }
     return true;
@@ -1521,7 +1542,7 @@ function fmtContent(r){
   const t=r.Title||r.content||r.Problem||'';
   if(!t)return'—';
   const c=String(t).replace(/_x000d_/gi,' ').replace(/\s+/g,' ').trim();
-  const ai=r['Ai Summary']||r['AI Insight']||'';
+  const ai=r['AI Insight']||'';
   const aiPart=ai?`<div style="font-size:10px;color:var(--blue);margin-bottom:2px;font-style:italic">AI: ${ai.slice(0,70)}${ai.length>70?'…':''}</div>`:'';
   return aiPart+(c.length>85?`<span title="${c.replace(/"/g,'&quot;')}">${c.slice(0,85)}…</span>`:c);
 }

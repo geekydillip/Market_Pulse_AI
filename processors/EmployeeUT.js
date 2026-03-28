@@ -201,7 +201,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'EmployeeUT',
-  expectedHeaders: ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Source', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Problem', 'Resolve', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -331,7 +331,7 @@ module.exports = {
                  (aiProblem && origProblem && aiProblem === origProblem) ||
                  (aiTitle && origTitle && origTitle.startsWith(aiTitle.substring(0, 30)));
         });
-        return match || { Title: '', Problem: '', Module: '', 'Sub-Module': '', 'Issue Type': '', 'Sub-Issue Type': '', 'Ai Summary': '', Severity: '', 'Severity Reason': '' };
+        return match || { Title: '', Problem: '', Module: '', 'Sub-Module': '', 'Issue Type': '', 'Sub-Issue Type': '', 'AI Insight': '', Severity: '', 'Severity Reason': '' };
       });
     }
     // ──────────────────────────────────────────────────────────────────
@@ -353,7 +353,7 @@ module.exports = {
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Ai Summary': aiRow['Ai Summary'] || '',
+        'AI Insight': aiRow['AI Insight'] || '',
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
@@ -365,7 +365,7 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
+      if (['Title', 'Problem', 'AI Insight', 'Severity Reason'].includes(h)) return { wch: 41 };
       if (['Model No.', 'Source', 'Resolve'].includes(h)) return { wch: 20 };
       if (h === 'S/W Ver.' || h === 'Progr.Stat.' || h === 'Issue Type' || h === 'Sub-Issue Type') return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };

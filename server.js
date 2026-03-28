@@ -148,8 +148,28 @@ const upload = multer({
   }
 });
 
-// simple health route (optional)
+// Health routes — both /health (alias) and /api/health (used by frontend)
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// GET /api/health -> checks Ollama connectivity and returns status
+app.get('/api/health', (req, res) => {
+  // Probe Ollama to see if it is reachable
+  const ollamaReq = http.request(
+    { hostname: '127.0.0.1', port: DEFAULT_OLLAMA_PORT, path: '/api/tags', method: 'GET' },
+    (ollamaRes) => {
+      ollamaRes.resume(); // drain the body
+      res.json({ status: 'ok', ollama: ollamaRes.statusCode === 200 ? 'connected' : 'disconnected' });
+    }
+  );
+  ollamaReq.setTimeout(3000, () => {
+    ollamaReq.destroy();
+    res.json({ status: 'ok', ollama: 'disconnected' });
+  });
+  ollamaReq.on('error', () => {
+    res.json({ status: 'ok', ollama: 'disconnected' });
+  });
+  ollamaReq.end();
+});
 
 // ─── OS Bug Dashboard Live Data ──────────────────────────────────────────── update by vandana 21.03.2026
 // GET /api/os-bug-data
@@ -384,36 +404,138 @@ async function callOllama(prompt, model = DEFAULT_AI_MODEL, opts = {}) {
 // Route: Upload and process file (Excel or JSON only)
 app.post('/api/process', upload.single('file'), validateFileUpload, async (req, res) => {
   try {
-    // Sanitize input parameters to prevent injection
     const processingType = sanitizeInput(req.body.processingType || 'ut_portal');
     const model = sanitizeInput(req.body.model || DEFAULT_AI_MODEL);
+    const sessionId = req.body.sessionId || `session_${Date.now()}`;
+    const chunkSize = parseInt(req.body.chunkSize) || 1;
 
-    // Validate processing type
-    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut', 'beta_ut_voc', 'update_kb']; // Supported processing types for Excel files
+    const validProcessingTypes = ['employee_ut', 'clean', 'samsung_members_voc', 'global_voc_plm', 'beta_ut', 'beta_ut_voc', 'update_kb'];
     if (!validProcessingTypes.includes(processingType)) {
-      return res.status(400).json({ error: 'Invalid processing type. For Excel files, use "employee_ut", "global_voc_plm", "beta_ut", "beta_ut_voc", "samsung_members_voc", "clean", or "update_kb".' });
+      return res.status(400).json({ error: 'Invalid processing type.' });
     }
 
-    if (processingType === 'update_kb') {
-      return processUpdateKB(req, res);
+    // Initialize session with status 'queued'
+    activeSessions.set(sessionId, {
+      cancelled: false,
+      paused: false,
+      status: 'queued',
+      metadata: {
+        fileName: req.file.originalname,
+        processingType,
+        model,
+        chunkSize,
+        addedAt: new Date(),
+        percent: 0,
+        message: 'Waiting in queue...',
+        processingStartedAt: null
+      },
+      result: null,
+      error: null,
+      startTime: Date.now(),
+      abortController: new AbortController(),
+      activeRequests: new Set(),
+      logBuffer: [], // Buffer for terminal logs
+      // Store req-like object for later processing
+      reqData: {
+        file: {
+          path: req.file.path,
+          originalname: req.file.originalname
+        },
+        body: {
+          processingType,
+          model,
+          sessionId,
+          chunkSize
+        }
+      }
+    });
+
+    globalQueue.push(sessionId);
+    console.log(`[Queue] Added session ${sessionId} to queue. Position: ${globalQueue.length}`);
+
+    // Trigger processing if idle
+    if (!systemStatus.isProcessing) {
+      processNextInQueue();
     }
 
-    const ext = path.extname(req.file.originalname).toLowerCase();
-
-    if (ext === '.xlsx' || ext === '.xls' || ext === '.csv') {
-      // Excel and CSV files - both convert to JSON internally and output Excel
-      return processExcel(req, res);
-    } else {
-      return res.status(400).json({ error: 'Only Excel (.xlsx, .xls) and CSV (.csv) files are supported for this type' });
-    }
+    res.json({
+      success: true,
+      sessionId: sessionId,
+      status: 'queued',
+      queuePosition: globalQueue.length
+    });
 
   } catch (error) {
-    console.error('Error processing file:', error);
-    res.status(500).json({
-      error: error.message || 'Failed to process file'
-    });
+    console.error('Error adding to queue:', error);
+    res.status(500).json({ error: error.message || 'Failed to add to queue' });
   }
 });
+
+// Helper to process the next item in the global queue
+async function processNextInQueue() {
+  if (globalQueue.length === 0) {
+    systemStatus.isProcessing = false;
+    systemStatus.currentSessionId = null;
+    return;
+  }
+
+  const sessionId = globalQueue.shift();
+  const session = activeSessions.get(sessionId);
+
+  if (!session || session.cancelled) {
+    processNextInQueue(); // Skip and move to next
+    return;
+  }
+
+  systemStatus.isProcessing = true;
+  systemStatus.currentSessionId = sessionId;
+  session.status = 'processing';
+  session.metadata.processingStartedAt = Date.now();
+  session.metadata.message = 'Starting processing...';
+
+  console.log(`[Queue] Starting processing for session ${sessionId}`);
+
+  try {
+    if (session.metadata.processingType === 'update_kb') {
+      await processUpdateKB(session.reqData, {
+        json: (data) => {
+          session.status = data.success ? 'completed' : 'failed';
+          session.result = data;
+          finishSession(sessionId);
+        },
+        status: (code) => ({ json: (data) => {
+          session.status = 'failed';
+          session.error = data.error;
+          finishSession(sessionId);
+        }})
+      });
+    } else {
+      await processExcel(session.reqData, {
+        json: (data) => {
+          session.status = data.success ? 'completed' : 'failed';
+          session.result = data;
+          finishSession(sessionId);
+        },
+        status: (code) => ({ json: (data) => {
+          session.status = 'failed';
+          session.error = data.error;
+          finishSession(sessionId);
+        }})
+      });
+    }
+  } catch (error) {
+    console.error(`[Queue] Fatal error in session ${sessionId}:`, error);
+    session.status = 'failed';
+    session.error = error.message;
+    finishSession(sessionId);
+  }
+}
+
+function finishSession(sessionId) {
+  completedSessions.unshift(sessionId);
+  if (completedSessions.length > 10) completedSessions.pop();
+  processNextInQueue();
+}
 
 // Generic cleaning function
 function applyGenericCleaning(value) {
@@ -446,7 +568,39 @@ function applyGenericCleaning(value) {
 const progressClients = new Map();
 
 // Store active processing sessions for cancellation
-const activeSessions = new Map(); // sessionId -> { cancelled, startTime, abortController, activeRequests }
+const activeSessions = new Map(); // sessionId -> { cancelled, startTime, abortController, activeRequests, metadata }
+
+// Global Queue State
+const globalQueue = []; // list of sessions waitlisted
+const completedSessions = []; // list of last 10 completed sessions
+let systemStatus = {
+  isProcessing: false,
+  currentSessionId: null
+};
+
+// GET /api/system-status -> returns current processing state and queue
+app.get('/api/system-status', (req, res) => {
+  const queueData = globalQueue.map(id => {
+    const session = activeSessions.get(id);
+    return session ? { sessionId: id, metadata: session.metadata } : null;
+  }).filter(v => v !== null);
+
+  const completedData = completedSessions.map(id => {
+    const session = activeSessions.get(id);
+    return session ? { sessionId: id, metadata: session.metadata, result: session.result, status: session.status } : null;
+  }).filter(v => v !== null);
+
+  const currentSession = systemStatus.currentSessionId ? activeSessions.get(systemStatus.currentSessionId) : null;
+
+  res.json({
+    success: true,
+    isProcessing: systemStatus.isProcessing,
+    currentSessionId: systemStatus.currentSessionId,
+    currentSessionMetadata: currentSession ? currentSession.metadata : null,
+    queue: queueData,
+    completed: completedData
+  });
+});
 
 // Process a single chunk
 // precomputedRagContexts: array of RAG results pre-fetched upfront for all rows in this chunk.
@@ -708,6 +862,14 @@ app.get('/api/progress/:sessionId', (req, res) => {
   // Store this client
   progressClients.set(sessionId, res);
 
+  // Send initial log buffer if it exists
+  const session = activeSessions.get(sessionId);
+  if (session && session.logBuffer && session.logBuffer.length > 0) {
+    session.logBuffer.forEach(logLine => {
+      res.write(`data: ${JSON.stringify({ type: 'log', message: logLine })}\n\n`);
+    });
+  }
+
   // Heartbeat every 30 seconds
   const keepAlive = setInterval(() => {
     res.write(': keepalive\n\n');
@@ -722,6 +884,17 @@ app.get('/api/progress/:sessionId', (req, res) => {
 
 // Function to send progress updates to a specific session
 function sendProgress(sessionId, data) {
+  // Update lastPercent in session if it exists
+  const session = activeSessions.get(sessionId);
+  if (session) {
+    if (data.percent !== undefined) session.lastPercent = data.percent;
+    if (data.message !== undefined) session.lastMessage = data.message;
+    if (session.metadata) {
+       session.metadata.percent = data.percent ?? session.lastPercent;
+       session.metadata.message = data.message ?? session.lastMessage;
+    }
+  }
+
   const client = progressClients.get(sessionId);
   if (client) {
     client.write(`data: ${JSON.stringify(data)}\n\n`);
@@ -817,6 +990,14 @@ app.post('/api/cancel/:sessionId', (req, res) => {
     });
 
     console.log(`Session ${sessionId} cancelled, aborted ${abortedCount} active requests`);
+    
+    // Send final cancellation message via SSE
+    sendProgress(sessionId, { 
+      type: 'progress', 
+      percent: session.lastPercent || 0, 
+      message: 'Processing cancelled by user' 
+    });
+
     res.json({ success: true, message: `Processing cancelled, aborted ${abortedCount} active requests` });
   } else {
     res.status(404).json({ success: false, error: 'Session not found' });
@@ -853,7 +1034,8 @@ app.get('/api/status/:sessionId', (req, res) => {
       success: true,
       status: session.status,
       error: session.error,
-      result: session.result
+      result: session.result,
+      metadata: session.metadata
     });
   } else {
     res.status(404).json({ success: false, error: 'Session not found' });
@@ -865,18 +1047,42 @@ const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
 process.stdout.write = function(chunk, encoding, callback) {
+  const msg = chunk.toString();
   activeLoggers.forEach(logger => {
     if (logger.logStream) {
        logger.logStream.write(chunk);
+       
+       // Update session log buffer
+       const session = activeSessions.get(logger.sessionId);
+       if (session) {
+         if (!session.logBuffer) session.logBuffer = [];
+         session.logBuffer.push(msg);
+         if (session.logBuffer.length > 200) session.logBuffer.shift();
+       }
+       
+       // Broadcast via SSE
+       sendProgress(logger.sessionId, { type: 'log', message: msg });
     }
   });
   return originalStdoutWrite(chunk, encoding, callback);
 };
 
 process.stderr.write = function(chunk, encoding, callback) {
+  const msg = chunk.toString();
   activeLoggers.forEach(logger => {
     if (logger.logStream) {
        logger.logStream.write(chunk);
+       
+       // Update session log buffer
+       const session = activeSessions.get(logger.sessionId);
+       if (session) {
+         if (!session.logBuffer) session.logBuffer = [];
+         session.logBuffer.push(msg);
+         if (session.logBuffer.length > 200) session.logBuffer.shift();
+       }
+       
+       // Broadcast via SSE
+       sendProgress(logger.sessionId, { type: 'log', message: msg });
     }
   });
   return originalStderrWrite(chunk, encoding, callback);
@@ -980,17 +1186,36 @@ async function processExcel(req, res) {
     const processingType = req.body.processingType || 'clean';
     const model = req.body.model || 'qwen3:4b-instruct';
 
-    // Initialize session tracking for cancellation and pause
-    activeSessions.set(sessionId, {
-      cancelled: false,
-      paused: false,
-      status: 'processing',
-      result: null,
-      error: null,
-      startTime: Date.now(),
-      abortController: new AbortController(),
-      activeRequests: new Set()
-    });
+    // Ensure session exists or initialize if missing (fallback for direct API calls)
+    let session = activeSessions.get(sessionId);
+    if (!session) {
+      session = {
+        cancelled: false,
+        paused: false,
+        status: 'processing',
+        result: null,
+        error: null,
+        startTime: Date.now(),
+        abortController: new AbortController(),
+        activeRequests: new Set(),
+        logBuffer: [],
+        metadata: {
+          fileName: originalName,
+          processingType,
+          model,
+          percent: 0,
+          message: 'Starting processing...'
+        }
+      };
+      activeSessions.set(sessionId, session);
+    } else {
+      session.status = 'processing';
+      session.startTime = Date.now();
+      // Ensure metadata is present
+      if (!session.metadata) {
+        session.metadata = { fileName: originalName, processingType, model, percent: 0, message: 'Starting processing...' };
+      }
+    }
 
     // Initialize logger
     const logger = new LogManager(sessionId, fileNameBase, processingType);
@@ -1140,10 +1365,31 @@ async function processExcel(req, res) {
     if (processingType !== 'clean') {
       const ragTimerLabel = 'RAG_Prefetch_All';
       const allQueries = rows.map(r => `${r.Title || ""} ${r.Problem || r.content || ""}`);
+      
+      // Check for cancellation before RAG pre-fetch
+      if (session && session.cancelled) {
+        console.log(`Session ${sessionId} cancelled before RAG pre-fetch`);
+        return res.json({ success: false, error: 'Processing cancelled by user' });
+      }
+
       console.log(`[RAG] Pre-fetching RAG for all ${allQueries.length} rows in one batch call...`);
+      sendProgress(sessionId, { type: 'progress', percent: 2, message: 'Retrieving RAG knowledge base...' });
+      
       console.time(ragTimerLabel);
-      allRagContexts = await getRAGContextBatch(allQueries);
+      try {
+        // Pass session's AbortSignal to RAG client
+        allRagContexts = await getRAGContextBatch(allQueries, session?.abortController?.signal);
+      } catch (ragError) {
+        if (ragError.name === 'AbortError' || (session && session.cancelled)) {
+          console.log(`[RAG] Pre-fetch aborted for session ${sessionId}`);
+          return res.json({ success: false, error: 'Processing cancelled by user' });
+        }
+        console.error(`[RAG] Pre-fetch failed: ${ragError.message}`);
+        // Fallback: proceed with empty contexts
+        allRagContexts = allQueries.map(() => []);
+      }
       console.timeEnd(ragTimerLabel);
+      
       console.log(`[RAG] Pre-fetch complete — ${allRagContexts.length} result sets received`);
       logger.log(`[RAG] Pre-fetched ${allRagContexts.length} RAG contexts in one HTTP call`);
     }
@@ -1333,7 +1579,7 @@ async function processExcel(req, res) {
       const row = cellRef.r; // zero-based row index
 
       let cellStyle = {
-        alignment: { vertical: "center", wrapText: true },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
         font: {
           name: "Calibri",
           sz: 11,
@@ -1341,24 +1587,16 @@ async function processExcel(req, res) {
         }
       };
 
-      if (row === 0) {
-        // Header row - always center
-        cellStyle.alignment.horizontal = "center";
-      } else {
-        // Data rows - center specific columns, left for others
-        if (centerAlignColumns.includes(col)) {
-          cellStyle.alignment.horizontal = "center";
-        } else {
-          cellStyle.alignment.horizontal = "left";
-        }
-      }
+      // Header and Data rows - always center for the entire sheet
+      cellStyle.alignment.horizontal = "center";
+      cellStyle.alignment.vertical = "center";
 
-      if (row > 0 && row <= dataRows) {
+      if (row >= 0 && row <= dataRows) {
         cellStyle.border = {
-          top: { style: "thin", color: { rgb: "ADD8E6" } },
-          bottom: { style: "thin", color: { rgb: "ADD8E6" } },
-          left: { style: "thin", color: { rgb: "ADD8E6" } },
-          right: { style: "thin", color: { rgb: "ADD8E6" } }
+          top: { style: "thin", color: { rgb: "305496" } },
+          bottom: { style: "thin", color: { rgb: "305496" } },
+          left: { style: "thin", color: { rgb: "305496" } },
+          right: { style: "thin", color: { rgb: "305496" } }
         };
       }
 
@@ -1367,12 +1605,15 @@ async function processExcel(req, res) {
     });
 
     // === Apply Header Styling ===
-    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'Severity Reason', 'Ai Summary', 'AI Insight'];
+    const specialHeaders = ['Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Severity', 'Severity Reason', 'AI Insight'];
     finalHeaders.forEach((header, index) => {
       const cellAddress = xlsx.utils.encode_cell({ r: 0, c: index });
       if (!newSheet[cellAddress]) return;
+
+      const isSpecial = specialHeaders.includes(header);
+
       newSheet[cellAddress].s = {
-        fill: { patternType: "solid", fgColor: { rgb: "305496" } },
+        fill: { patternType: "solid", fgColor: { rgb: isSpecial ? "1E90FF" : "305496" } },
         font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12, name: "Calibri" },
         alignment: { horizontal: "center", vertical: "center", wrapText: true }
       };
@@ -1452,6 +1693,16 @@ async function processExcel(req, res) {
       console.warn('[Temp] Failed to clean up temp directory:', e.message);
     }
 
+    // Clean up original uploaded file and intermediate cleaned files
+    try {
+      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+      const cleanPath = uploadedPath.replace('.xlsx', '_cleaned.xlsx').replace('.xls', '_cleaned.xls');
+      if (fs.existsSync(cleanPath)) fs.unlinkSync(cleanPath);
+      console.log(`[Cleanup] Deleted uploaded file: ${uploadedPath}`);
+    } catch (e) {
+      console.warn('[Cleanup] Failed to delete uploaded file:', e.message);
+    }
+
     const resultObj = {
       success: true,
       total_processing_time_ms: Date.now() - tStart,
@@ -1460,7 +1711,6 @@ async function processExcel(req, res) {
       { url: `/downloads/${processingType}/${logFilename}`, filename: logFilename }]
     };
 
-    const session = activeSessions.get(sessionId);
     if (session) {
       session.status = 'completed';
       session.result = resultObj;
@@ -1469,12 +1719,18 @@ async function processExcel(req, res) {
     res.json(resultObj);
   } catch (error) {
     console.error('Excel processing error:', error);
-    // Original uploaded file is intentionally kept in the uploads folder.
-    // try { if (req && req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) { }
-    const session = activeSessions.get(sessionId);
-    if (session) {
-      session.status = 'failed';
-      session.error = error.message || 'Processing failed';
+    // Clean up original uploaded file and intermediate cleaned files on error
+    try {
+      if (req && req.file && req.file.path && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+        const cleanPath = req.file.path.replace('.xlsx', '_cleaned.xlsx').replace('.xls', '_cleaned.xls');
+        if (fs.existsSync(cleanPath)) fs.unlinkSync(cleanPath);
+      }
+    } catch (e) { }
+    const error_session = activeSessions.get(sessionId);
+    if (error_session) {
+      error_session.status = 'failed';
+      error_session.error = error.message || 'Processing failed';
     }
 
     res.status(500).json({
@@ -2664,7 +2920,40 @@ app.get('/api/module-details', async (req, res) => {
 
 // Function to update Knowledge Base
 async function processUpdateKB(req, res) {
+  let sessionId = req?.body?.sessionId || 'default';
+  const tStart = Date.now();
   try {
+    // Ensure session exists
+    let session = activeSessions.get(sessionId);
+    if (!session) {
+      session = {
+        cancelled: false,
+        paused: false,
+        status: 'processing',
+        result: null,
+        error: null,
+        startTime: Date.now(),
+        abortController: new AbortController(),
+        activeRequests: new Set(),
+        metadata: {
+          fileName: req.file.originalname,
+          processingType: 'update_kb',
+          model: 'N/A',
+          processingStartedAt: Date.now(),
+          percent: 0,
+          message: 'Initializing indexing...'
+        }
+      };
+      activeSessions.set(sessionId, session);
+    } else {
+      session.status = 'processing';
+      session.startTime = Date.now();
+      if (!session.metadata) session.metadata = {};
+      session.metadata.processingStartedAt = Date.now();
+      session.metadata.percent = 0;
+      session.metadata.message = 'Initializing indexing...';
+    }
+
     const file = req.file;
     const kbDir = path.join(__dirname, 'RAG', 'knowledge_base');
 
@@ -2720,6 +3009,7 @@ async function processUpdateKB(req, res) {
 
           res.json({
             success: true,
+            total_processing_time_ms: Date.now() - tStart,
             message: 'Knowledge base updated and RAG API reloaded.',
             output: pythonOutput,
             downloads: [],

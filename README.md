@@ -98,7 +98,7 @@ A comprehensive AI-powered data processing and Voice of Customer (VOC) analysis 
 After processing data with specialized processing types, access dedicated dashboards:
 
 - **Central Dashboard**: `http://localhost:3001/main.html`
-- **Beta UT Dashboard**: `http://localhost:3001/BetaUT_Dashboard.html`
+- **[OS UP] Beta UT Dashboard**: `http://localhost:3001/BetaUT_Dashboard.html`
 - **Global VOC PLM Dashboard**: `http://localhost:3001/GLOBAL_VOC_PLM_Dashboard.html`
 - **Samsung Members VOC Dashboard**: `http://localhost:3001/SMVOC_Dashboard.html`
 - **Employee UT Dashboard**: `http://localhost:3001/employee_ut_Dashboard.html`
@@ -118,7 +118,7 @@ Each dashboard provides:
    - **UT Portal** (`employee_ut`): Analysis for UT Portal data (Employee UT)
    - **Samsung Members VOC** (`samsung_members_voc`): Analysis for Samsung Members VOC data
    - **Global VOC PLM** (`global_voc_plm`): Analysis for Global VOC PLM data
-   - **Beta UT** (`beta_ut`): Analysis for Beta UT data
+   - **[OS UP] Beta UT** (`beta_ut`): Analysis for [OS UP] Beta UT data
    - **Clean**: Generic data cleaning without AI processing
 3. **Select AI Model**: Choose from available Ollama models (defaults to qwen3:4b-instruct)
 4. **Process File**: Click "Process with AI" and monitor real-time progress
@@ -479,12 +479,12 @@ Market Pulse AI/
 ├── processors/                        # Modular processing pipeline
 │   ├── _helpers.js                    # Shared utility functions
 │   ├── EmployeeUT.js                  # Employee UT processor
-│   ├── betaUT.js                      # Beta UT processor
+│   ├── betaUT.js                      # [OS UP] Beta UT processor
 │   ├── globalvocplm.js                # Global VOC PLM processor
 │   └── samsungMembersVoc.js           # Samsung Members VOC processor
 ├── prompts/                           # AI prompt templates
 │   ├── EmployeeUTPrompt.js            # Employee UT prompt
-│   ├── betaUT.js                      # Beta UT prompt
+│   ├── betaUT.js                      # [OS UP] Beta UT prompt
 │   ├── globalvocplm.js                # Global VOC PLM prompt
 │   └── samsungMembers_voc.js          # Samsung Members VOC prompt
 ├── public/                            # Static frontend files
@@ -494,8 +494,8 @@ Market Pulse AI/
 │   ├── dashboard.js                   # Dashboard logic and utilities
 │   ├── script.js                      # Upload interface logic
 │   ├── styles.css                     # Neumorphic design styles
-│   ├── BetaUT_Dashboard.html          # Beta UT specialized dashboard
-│   ├── BetaUT_detailsData.html        # Beta UT detailed data
+│   ├── BetaUT_Dashboard.html          # [OS UP] Beta UT specialized dashboard
+│   ├── BetaUT_detailsData.html        # [OS UP] Beta UT detailed data
 │   ├── GLOBAL_VOC_PLM_Dashboard.html  # Global VOC PLM dashboard
 │   ├── GLOBAL_VOC_PLM_detailsData.html# Global VOC PLM detailed data
 │   ├── SMVOC_Dashboard.html           # Samsung Members VOC dashboard
@@ -557,7 +557,7 @@ Market Pulse AI/
 ### Centralized Data Aggregation
 The platform uses a Python-based aggregation engine (`central_aggregator.py`) that periodically scans the `downloads` directories to generate a unified cache (`central_dashboard.json`). This cache powers the highly responsive main dashboard, providing:
 - **KPI Tracking**: Real-time totals for High/Medium/Low severity across all sources.
-- **Source Distribution**: Comparative analysis of issue volume from SMVOC, PLM, and Beta UT.
+- **Source Distribution**: Comparative analysis of issue volume from SMVOC, PLM, and [OS UP] Beta UT.
 - **Performance**: Pre-computed metrics ensure sub-second dashboard load times even with large datasets.
 
 ### Semantic Matching Engine
@@ -657,7 +657,7 @@ Deterministic automated cleaning without AI:
 
 - **v1.9.0** - (March 2026) Scalability & RAG Enhancements
   - **Knowledge Base UI**: Added frontend capabilities to seamlessly upload and append processed data to the RAG knowledge base.
-  - **Universal Excel Cleaner**: Extended `excel_cleaner.py` integration to standardize Excel extraction across Beta UT, Samsung PLM, and all related modules.
+  - **Universal Excel Cleaner**: Extended `excel_cleaner.py` integration to standardize Excel extraction across [OS UP] Beta UT, Samsung PLM, and all related modules.
   - **Persistent RAG API**: Deployed a dedicated FastAPI server (`rag_api.py`) for efficient, batch-processed vector database lookups.
   - **Adaptive RAG Thresholding**: Implemented dynamic context retrieval logic ensuring highly confident RAG matches bypass redundant LLM queries.
 

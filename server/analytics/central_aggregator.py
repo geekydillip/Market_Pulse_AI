@@ -344,16 +344,11 @@ def compute_central_kpis(data: dict) -> tuple:
     Returns (kpis_dict, total_status_counts_dict).
     """
     kpis = {}
-    processor_map = {
-        'employee_ut':    'EMPLOYEE UT',
-        'global_voc_plm': 'Global VOC PLM',
-        'beta_ut':        'Beta UT',
-    }
     total_status_counts = {'Open': 0, 'Close': 0, 'Resolve': 0}
     base_path = './downloads'
 
     for folder, dfs in data.items():
-        if folder not in processor_map:
+        if folder not in ('employee_ut', 'global_voc_plm', 'beta_ut'):
             continue
 
         # ── Try reading analytics.json (has updated_tier on every row) ───
@@ -438,7 +433,27 @@ def compute_central_kpis(data: dict) -> tuple:
                 status_counts["Close"]   = int(vc.get("Close",   0))
                 status_counts["Resolve"] = int(vc.get("Resolve", 0))
 
-        kpis[processor_map[folder]] = {
+        source_name = None
+        if rows and 'Source' in rows[0]:
+             source_name = str(rows[0]['Source']).strip()
+        
+        if not source_name:
+             combined_all = combine_dataframes(dfs)
+             if 'Source' in combined_all.columns and not combined_all['Source'].empty:
+                 source_name = str(combined_all['Source'].iloc[0]).strip()
+        
+        if not source_name:
+            # ── PROFESSIONAL LABEL MAPPING ─────────────────────────
+            folder_labels = {
+                'beta_ut':            '[OS UP] Beta UT',
+                'beta_ut_voc':        '[OS UP] Beta UT VOC',
+                'employee_ut':        'EMPLOYEE UT',
+                'global_voc_plm':     '[Global VOC] SWA ERROR',
+                'samsung_members_voc': 'Samsung Member VOC'
+            }
+            source_name = folder_labels.get(folder, folder.replace('_', ' ').title())
+
+        kpis[source_name] = {
             'total':                total,
             'High':                 high_entry,
             'Medium':               sev_dist['Medium']['total'],
@@ -567,11 +582,7 @@ def compute_high_issues(data: dict) -> list:
     Top 10 High-severity issues from the module with the most High bugs.
     Only Severe-tier High issues are included (scale-down applied).
     """
-    processor_map = {
-        'employee_ut':    'UT',
-        'global_voc_plm': 'PLM',
-        'beta_ut':        'Beta',
-    }
+    # We just iterate all folders without needing processor_map
 
     # Find the module with the most High-severity issues across all sources
     all_modules: dict = {}
@@ -593,7 +604,7 @@ def compute_high_issues(data: dict) -> list:
     # Collect High issues from that module
     module_high_issues = []
     for folder, dfs in data.items():
-        if folder not in processor_map:
+        if folder not in ('employee_ut', 'global_voc_plm', 'beta_ut'):
             continue
         combined = combine_dataframes(dfs)
         if 'Severity' not in combined.columns or 'Module' not in combined.columns:
@@ -602,13 +613,17 @@ def compute_high_issues(data: dict) -> list:
             (combined['Severity'].str.lower() == 'high') &
             (combined['Module'].str.strip() == max_module)
         ]
+        source_name = folder.replace('_', ' ').title()
+        if 'Source' in combined.columns and not combined['Source'].empty:
+             source_name = str(combined['Source'].iloc[0]).strip()
+
         for _, row in high_df.iterrows():
             module_high_issues.append({
                 "Model Number": str(row.get('Model No.', '')),
                 "Case Code":    str(row.get('Case Code', '')),
                 "Module Name":  str(row.get('Module', '')),
                 "Title":        str(row.get('Title', '')),
-                "Processor":    processor_map[folder],
+                "Processor":    source_name,
             })
 
     return module_high_issues[:10]
@@ -664,21 +679,21 @@ def compute_source_model_summary(data: dict) -> list:
     """
     Summary table: Source × Model with top 5 modules, issue count, top 5 titles.
     """
-    source_map = {
-        'employee_ut':    'EMPLOYEE UT',
-        'global_voc_plm': 'Global VOC PLM',
-        'beta_ut':        'Beta UT',
-    }
     summary = []
 
     for folder, dfs in data.items():
-        if folder not in source_map:
+        if folder not in ('employee_ut', 'global_voc_plm', 'beta_ut'):
             continue
-        source_name = source_map[folder]
+        
         combined = combine_dataframes(dfs)
         combined = filter_allowed_severity(combined)
         combined = normalize_status(combined, folder)
         combined = filter_open_resolve(combined)
+        
+        source_name = folder.replace('_', ' ').title()
+        if 'Source' in combined.columns and not combined['Source'].empty:
+            source_name = str(combined['Source'].iloc[0]).strip()
+        
         if 'Model No.' not in combined.columns:
             continue
 

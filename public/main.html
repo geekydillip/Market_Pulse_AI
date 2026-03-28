@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Market Pulse - VOC Intelligence</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/lib/google-fonts/fonts.css" rel="stylesheet">
+  <link href="/lib/font-awesome/css/all.min.css" rel="stylesheet">
+  <script src="/lib/echarts.min.js"></script>
+  <script src="/lib/tailwind.min.js"></script>
   <script>
     tailwind.config = { darkMode: "class" };
     function updateTheme() {
@@ -24,8 +24,13 @@
       --red: #f43f5e; --amber: #f59e0b; --green: #10b981;
     }
     .dark {
-      --surface: #0f172a; --surface2: #1e293b; --surface3: #273248;
-      --border: #1e2d45; --text: #f1f5f9; --text2: #94a3b8; --text3: #4b5e7a;
+      --surface: #0f172a;    /* card surface */
+      --surface2: #020617;   /* deep background */
+      --surface3: #1e293b;   /* active/hover surface */
+      --border: #1e2d45;
+      --text: #f8fafc;
+      --text2: #cbd5e1;
+      --text3: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Sora', sans-serif; background: var(--surface2); color: var(--text); min-height: 100vh; }
@@ -36,15 +41,6 @@
       padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
       height: 52px; position: sticky; top: 0; z-index: 100;
     }
-    .live-badge {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 10px; color: #10b981; font-weight: 600;
-      background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.18);
-      padding: 3px 10px; border-radius: 20px;
-      letter-spacing: .04em; text-transform: uppercase;
-    }
-    .live-dot { width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: blink 2s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
     .topnav-time { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
 
     /* ── SOURCE NAV ── */
@@ -55,14 +51,27 @@
     }
     .source-bar::-webkit-scrollbar { display: none; }
     .source-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 12px; border-radius: 6px;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 99px;
       font-size: 11px; font-weight: 600; letter-spacing: .02em;
-      text-decoration: none; color: var(--text3);
-      transition: all .14s; white-space: nowrap; border: 1px solid transparent;
+      text-decoration: none; color: var(--text2); 
+      transition: all .18s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; 
+      border: 1px solid var(--border);
+      background: var(--surface3);
     }
-    .source-pill:hover { color: var(--text2); background: var(--surface3); border-color: var(--border); }
-    .pill-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .dark .source-pill { background: var(--surface2); color: var(--text2); border-color: var(--border); }
+    .source-pill:hover { 
+      color: var(--text); 
+      background: var(--surface); 
+      border-color: var(--text3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    }
+    .source-pill .pill-dot { 
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; 
+      transition: transform .18s;
+    }
+    .source-pill:hover .pill-dot { transform: scale(1.3); }
 
     /* ── PAGE BODY ── */
     .page-body { padding: 20px 28px 48px; max-width: 1600px; margin: 0 auto; }
@@ -124,7 +133,7 @@
     .t-neutral  { background: rgba(148,163,184,.1); color: var(--text3); }
 
     /* ── ANALYTICS GRID ── */
-    .chart-grid { display: grid; grid-template-columns: 240px 1fr 1.5fr; gap: 12px; margin-bottom: 18px; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 12px; margin-bottom: 18px; }
     .chart-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
       padding: 16px 18px; transition: box-shadow .2s;
@@ -416,31 +425,42 @@
     .tier-modal-result-bar { padding: 5px 16px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: space-between; font-size: 11px; flex-shrink: 0; }
 
     /* Dark mode */
-    .dark .chart-card,.dark .table-card,.dark .sh-item,.dark .summary-strip { background: #1e293b; border-color: #2d3f5a; }
-    .dark .table-header,.dark .pagination-bar { background: #1e293b; border-color: #2d3f5a; }
-    .dark .data-table thead tr { background: #0f172a; border-color: #2d3f5a; }
-    .dark .data-table tbody tr { border-color: #2d3f5a; }
-    .dark .data-table tbody tr:hover { background: #0f172a; }
-    .dark .filter-bar { background: #0f172a; border-color: #2d3f5a; }
-    .dark .filter-select,.dark .filter-search { background: #1e293b; border-color: #2d3f5a; color: #f1f5f9; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234b5e7a' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-color: #1e293b !important; }
-    .dark .filter-result-bar { background: #1e293b; border-color: #2d3f5a; }
+    .dark .chart-card,.dark .table-card,.dark .sh-item,.dark .summary-strip { background: var(--surface); border-color: var(--border); }
+    .dark .table-header,.dark .pagination-bar { background: var(--surface); border-color: var(--border); }
+    .dark .data-table thead tr { background: var(--surface2); border-color: var(--border); }
+    .dark .data-table tbody tr { border-color: var(--border); }
+    .dark .data-table tbody tr:hover { background: var(--surface2); }
+    .dark .filter-bar { background: var(--surface2); border-color: var(--border); }
+    .dark .filter-select { 
+      background-color: var(--surface) !important; 
+      border-color: var(--border); 
+      color: var(--text); 
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+    }
+    .dark .filter-search {
+      background-color: var(--surface) !important;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .dark .filter-result-bar { background: var(--surface); border-color: var(--border); }
     .dark .mod-row:hover { background: rgba(99,102,241,.1); }
-    .dark .sev-table tr:hover td { background: #0f172a; }
-    .dark .source-bar,.dark .topnav { background: #1e293b; border-color: #2d3f5a; }
-    .dark .summary-item { border-color: #2d3f5a; }
-    .dark .summary-item:hover { background: #273248; }
-    .dark .sev-tooltip { background: #1e293b; border-color: #2d3f5a; }
-    .dark .sev-tooltip::after { border-top-color: #2d3f5a; }
-    .dark .sev-tooltip::before { border-top-color: #1e293b; }
-    .dark .tier-modal-box { background: #1e293b; }
-    .dark .tier-modal-head { background: #0f172a; border-color: #2d3f5a; }
-    .dark .tier-modal-stats { border-color: #2d3f5a; }
-    .dark .tier-modal-stat { border-color: #2d3f5a; }
-    .dark .tier-modal-search-bar { background: #0f172a; border-color: #2d3f5a; }
-    .dark .tier-modal-search { background: #1e293b; border-color: #2d3f5a; color: #f1f5f9; }
-    .dark .tier-modal-result-bar { background: #1e293b; border-color: #2d3f5a; }
-    .dark .tier-filter-pill { background: #1e293b; border-color: #2d3f5a; }
-    .dark .tier-modal-close { background: #1e293b; border-color: #2d3f5a; }
+    .dark .sev-table tr:hover td { background: var(--surface2); }
+    .dark .source-bar,.dark .topnav { background: var(--surface); border-color: var(--border); }
+    .dark .summary-item { border-color: var(--border); }
+    .dark .summary-item:hover { background: var(--surface3); }
+    .dark .sev-tooltip { background: var(--surface); border-color: var(--border); }
+    .dark .sev-tooltip::after { border-top-color: var(--border); }
+    .dark .sev-tooltip::before { border-top-color: var(--surface); }
+    .dark .tier-modal-box { background: var(--surface); }
+    .dark .tier-modal-head { background: var(--surface2); border-color: var(--border); }
+    .dark .tier-modal-stats { border-color: var(--border); }
+    .dark .tier-modal-stat { border-color: var(--border); }
+    .dark .tier-modal-search-bar { background: var(--surface2); border-color: var(--border); }
+    .dark .tier-modal-search { background: var(--surface); border-color: var(--border); color: var(--text); }
+    .dark .tier-modal-result-bar { background: var(--surface); border-color: var(--border); }
+    .dark .tier-filter-pill { background: var(--surface); border-color: var(--border); }
+    .dark .tier-modal-close { background: var(--surface); border-color: var(--border); }
 
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -467,7 +487,6 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
-      <div class="live-badge"><div class="live-dot"></div>5 Sources Live</div>
       <div class="topnav-time" id="live-clock"></div>
     </div>
   </nav>
@@ -475,16 +494,13 @@
   <!-- SOURCE NAV -->
   <nav class="source-bar">
     <a href="#" class="source-pill"><span class="pill-dot" style="background:#10b981"></span>Samsung Member</a>
-    <a href="GLOBAL_VOC_PLM_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#10b981"></span>Global VOC PLM</a>
-    <a href="BetaUT_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#14b8a6"></span>Beta UT</a>
+    <a href="GLOBAL_VOC_PLM_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#10b981"></span>[Global VOC] SWA ERROR</a>
+    <a href="BetaUT_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#14b8a6"></span>[OS UP] Beta UT</a>
     <a href="SMVOC_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#a855f7"></span>Samsung Members VOC</a>
     <a href="data_analytics.html" class="source-pill"><span class="pill-dot" style="background:#f97316"></span>Data Analytics</a>
     <a href="employee_ut_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#84cc16"></span>Employee UT</a>
     <span class="source-pill" style="cursor:default;opacity:.55;border:1px dashed var(--border)"><span class="pill-dot" style="background:#94a3b8"></span>Big Data <span style="font-size:9px;background:rgba(245,158,11,.15);color:#d97706;border-radius:4px;padding:1px 5px;margin-left:3px;font-weight:700">Upcoming</span></span>
-    <a href="aiprocessor.html" class="source-pill"><span class="pill-dot" style="background:#6366f1"></span>AI Processor</a>
-    <!-- <a href="aiprocessor.html" class="source-pill" style="margin-left:auto">
-      <span class="pill-dot" style="background:#6366f1"></span>AI Processor
-    </a> -->
+    <a href="aiprocessor.html" class="source-pill" style="margin-left:auto"><span class="pill-dot" style="background:#6366f1"></span>AI Processor</a>
   </nav>
 
   <main class="page-body">
@@ -578,7 +594,7 @@
       </div>
     </div>
 
-    <div class="section-label">Critical issues — Global VOC PLM</div>
+    <div class="section-label">Critical issues — [Global VOC] SWA ERROR</div>
     <div class="table-card">
       <div class="table-header">
         <div class="table-title">
@@ -801,22 +817,11 @@
   // const SOURCE_DEFS = [
   //   { key:'beta_ut',             kpiKey:'Beta UT',           label:'Beta UT',           color:'#4975c9', dot:'#4975c9', path:'downloads/beta_ut/analytics.json'},
   //   { key:'beta_ut_voc',         kpiKey:null,                label:'Beta UT VOC',        color:'#14b8a6', dot:'#14b8a6', path:'downloads/beta_ut_voc/analytics.json' },
-  //   { key:'employee_ut',         kpiKey:'EMPLOYEE UT',       label:'Employee UT',        color:'#7059a8', dot:'#7059a8', path:'downloads/employee_ut/analytics.json'},
-  //   { key:'samsung_members_voc', kpiKey:null,                label:'Samsung Member VOC', color:'#b07a34', dot:'#b07a34', path:'downloads/samsung_members_voc/analytics.json' },
-  //   { key:'global_voc_plm',      kpiKey:'Global VOC PLM',   label:'Global VOC PLM',     color:'#10b981', dot:'#10b981', path:'downloads/global_voc_plm/analytics.json' },
-  // ];
-  // const SOURCE_DEFS = [
-  //   { key:'beta_ut',             kpiKey:'Beta UT',           label:'Beta UT',           color:'#4975c9', dot:'#4975c9', path:'downloads/beta_ut/analytics.json',           link:'service_issues.html?src=beta_ut' },
-  //   { key:'beta_ut_voc',         kpiKey:null,                label:'Beta UT VOC',        color:'#14b8a6', dot:'#14b8a6', path:'downloads/beta_ut_voc/analytics.json',        link:'service_issues.html?src=beta_ut_voc' },
-  //   { key:'employee_ut',         kpiKey:'EMPLOYEE UT',       label:'Employee UT',        color:'#7059a8', dot:'#7059a8', path:'downloads/employee_ut/analytics.json',         link:'service_issues.html?src=employee_ut' },
-  //   { key:'samsung_members_voc', kpiKey:null,                label:'Samsung Member VOC', color:'#b07a34', dot:'#b07a34', path:'downloads/samsung_members_voc/analytics.json', link:'service_issues.html?src=samsung_members_voc' },
-  //   { key:'global_voc_plm',      kpiKey:'Global VOC PLM',   label:'Global VOC PLM',     color:'#10b981', dot:'#10b981', path:'downloads/global_voc_plm/analytics.json',      link:'service_issues.html?src=global_voc_plm' },
-  // ];
   const SOURCE_DEFS = [ 
-    { key:'global_voc_plm',      kpiKey:'Global VOC PLM',   label:'Global VOC PLM',     color:'#10b981', dot:'#10b981', path:'downloads/global_voc_plm/analytics.json',      link:'data_analytics.html?src=global_voc_plm' },
+    { key:'global_voc_plm',      kpiKey:'[Global VOC] SWA ERROR',   label:'[Global VOC] SWA ERROR',     color:'#10b981', dot:'#10b981', path:'downloads/global_voc_plm/analytics.json',      link:'data_analytics.html?src=global_voc_plm' },
 	{ key:'samsung_members_voc', kpiKey:null,                label:'Samsung Member VOC', color:'#b07a34', dot:'#b07a34', path:'downloads/samsung_members_voc/analytics.json', link:'data_analytics.html?src=samsung_members_voc' },
-	{ key:'beta_ut',             kpiKey:'Beta UT',           label:'Beta UT',           color:'#4975c9', dot:'#4975c9', path:'downloads/beta_ut/analytics.json',           link:'data_analytics.html?src=beta_ut'},
-	{ key:'beta_ut_voc',         kpiKey:null,                label:'Beta UT VOC',        color:'#14b8a6', dot:'#14b8a6', path:'downloads/beta_ut_voc/analytics.json',        link:'data_analytics.html?src=beta_ut_voc' },
+	{ key:'beta_ut',             kpiKey:'[OS UP] Beta UT',           label:'[OS UP] Beta UT',           color:'#4975c9', dot:'#4975c9', path:'downloads/beta_ut/analytics.json',           link:'data_analytics.html?src=beta_ut'},
+	{ key:'beta_ut_voc',         kpiKey:'[OS UP] Beta UT VOC',       label:'[OS UP] Beta UT VOC',       color:'#14b8a6', dot:'#14b8a6', path:'downloads/beta_ut_voc/analytics.json',        link:'data_analytics.html?src=beta_ut_voc' },
     { key:'employee_ut',         kpiKey:'EMPLOYEE UT',       label:'Employee UT',        color:'#7059a8', dot:'#7059a8', path:'downloads/employee_ut/analytics.json',         link:'data_analytics.html?src=employee_ut' },
   ];
 
@@ -853,8 +858,9 @@
 
     // ── 1. Load central_dashboard.json FIRST (all KPIs come from here) ─
     const centralPaths = [
-      'central_dashboard.json',
+      'downloads/__dashboard_cache__/central_dashboard.json',
       'downloads/central_dashboard.json',
+      'central_dashboard.json',
       '../central_dashboard.json',
     ];
     for (const cp of centralPaths) {
@@ -1162,9 +1168,11 @@
       }
       const maxF = fallback[0]?.[1] || 1;
       wrap.innerHTML = fallback.map(([mod, cnt]) => `
-        <div class="mod-row">
+        <div class="mod-row" onclick="openModuleModal('${mod.replace(/'/g,"\\'")}')">
           <div class="mod-lbl" title="${mod}">${mod}</div>
-          <div class="mod-track"><div class="mod-fill" style="width:${Math.round(cnt/maxF*100)}%;background:linear-gradient(90deg,#6366f1,#818cf8)"></div></div>
+          <div class="mod-track">
+            <div class="mod-fill" style="width:${Math.round(cnt/maxF*100)}%;background:linear-gradient(90deg,#6366f1,#818cf8)"></div>
+          </div>
           <div class="mod-val">${Number(cnt).toLocaleString()}</div>
         </div>`).join('');
       return;
@@ -1341,8 +1349,8 @@
       const makeCell = (tier, badgeCls) => {
         if (!hasData) return `<span class="sev-na">—</span>`;
         const counts = getSevCounts(def.key, tier);
-        if (counts.total === 0) return `<span class="sev-na">0</span>`;
-
+        
+        // Even for 0 total, we show the badge + tooltip for a consistent hover experience
         const tooltipHTML = `
           <div class="sev-tooltip">
             <div class="sev-tooltip-row">
@@ -1370,14 +1378,81 @@
         </div>`;
       };
 
+      // Summary tooltip for Total column
+      const buildTotalTooltip = () => {
+        if (!hasData) return "";
+        const s = kpi || SOURCE_DATA[def.key]?.kpis || {};
+        const open     = s.open     || s.open_issues     || 0;
+        const resolved = s.resolved || s.resolved_issues || 0;
+        const closed   = s.close    || s.close_issues    || 0;
+        return `
+          <div class="sev-tooltip">
+            <div class="sev-tooltip-row" style="border-bottom:1px solid var(--border);margin-bottom:4px;padding-bottom:4px">
+              <span class="sev-tooltip-label">Source Summary</span>
+            </div>
+            <div class="sev-tooltip-row">
+              <span class="sev-tooltip-label">Open</span>
+              <span class="sev-tooltip-val t-open-v">${open.toLocaleString()}</span>
+            </div>
+            <div class="sev-tooltip-row">
+              <span class="sev-tooltip-label">Resolved</span>
+              <span class="sev-tooltip-val t-resolve-v">${resolved.toLocaleString()}</span>
+            </div>
+            <div class="sev-tooltip-row">
+              <span class="sev-tooltip-label">Closed</span>
+              <span class="sev-tooltip-val t-close-v">${closed.toLocaleString()}</span>
+            </div>
+          </div>`;
+      };
+
       return `<tr>
         <td><div class="sev-src"><span class="sev-d" style="background:${def.dot}"></span>${def.label}</div></td>
         <td>${makeCell('Severe',   'sv')}</td>
         <td>${makeCell('Moderate', 'mo')}</td>
         <td>${makeCell('Deferred', 'df')}</td>
-        <td style="text-align:right"><span class="sev-total">${total.toLocaleString()}</span></td>
+        <td style="text-align:right">
+          <div class="sev-badge-wrap">
+            <span class="sev-total" style="cursor:pointer;padding:2px 6px;border-radius:4px" 
+                  onclick="openSourceDrillDown('${def.key}', '${def.label}')">
+              ${total.toLocaleString()}
+            </span>
+            ${buildTotalTooltip()}
+          </div>
+        </td>
       </tr>`;
     }).join('');
+  }
+
+  // Helper for source-wide drilldown from Severity Matrix totals
+  function openSourceDrillDown(sourceKey, sourceLabel) {
+    const d = SOURCE_DATA[sourceKey]; if (!d) return;
+    _tierModalRows = d.rows || [];
+    _tierStatusFilter = 'all'; 
+    _tierSearchQ = '';
+
+    document.getElementById('tier-modal-icon').innerHTML=`<i class="fa-solid fa-database"></i>`;
+    document.getElementById('tier-modal-icon').style.cssText=`width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:rgba(99,102,241,.1);color:var(--accent)`;
+    document.getElementById('tier-modal-title').textContent=`All Issues — ${sourceLabel}`;
+    document.getElementById('tier-modal-meta').textContent=`${_tierModalRows.length.toLocaleString()} total issues from this source`;
+    
+    // Stats for source
+    const kpi = getCentralKpi(sourceKey) || d.kpis || {};
+    const open     = kpi.open     || kpi.open_issues     || 0;
+    const resolved = kpi.resolved || kpi.resolved_issues || 0;
+    const closed   = kpi.close    || kpi.close_issues    || 0;
+    
+    document.getElementById('tier-modal-stats').innerHTML=`
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-total">${_tierModalRows.length.toLocaleString()}</div><div class="tier-modal-stat-lbl">Total</div></div>
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-open">${open.toLocaleString()}</div><div class="tier-modal-stat-lbl">Open</div></div>
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-resolve">${resolved.toLocaleString()}</div><div class="tier-modal-stat-lbl">Resolved</div></div>
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-close">${closed.toLocaleString()}</div><div class="tier-modal-stat-lbl">Closed</div></div>`;
+    
+    document.getElementById('tier-modal-search-input').value='';
+    document.querySelectorAll('.tier-filter-pill').forEach(p=>p.classList.remove('active'));
+    document.querySelector('.tier-filter-pill:first-child').classList.add('active');
+    document.getElementById('tier-drill-modal').style.display='flex';
+    document.body.style.overflow='hidden';
+    renderTierModalTable();
   }
 
   // ══════════════════════════════════════════════════════════════════════

@@ -24,7 +24,12 @@ Start:
 import asyncio
 import json
 import re
+import os
 import numpy as np
+
+# Prevent HuggingFace Hub from pinging the network for updates, avoiding timeouts
+os.environ["HF_HUB_OFFLINE"] = "1"
+
 import faiss
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -49,10 +54,10 @@ SIMILARITY_THRESHOLD = 0.38
 # ── Load model and index once at startup ──────────────────────────────────────
 
 print("Loading RAG model: BAAI/bge-m3 ...")
-embed_model_rag = SentenceTransformer("BAAI/bge-m3")
+embed_model_rag = SentenceTransformer("BAAI/bge-m3", local_files_only=True)
 
 print("Loading AI Insight model: all-MiniLM-L6-v2 ...")
-embed_model_insight = SentenceTransformer("all-MiniLM-L6-v2")
+embed_model_insight = SentenceTransformer("all-MiniLM-L6-v2", local_files_only=True)
 
 print("Loading FAISS index...")
 faiss_index = faiss.read_index(INDEX_FILE)
@@ -130,9 +135,9 @@ def _run_search(queries: list[str]) -> list[list[dict]]:
                 "Problem":          problem_text,
                 "Content":          problem_text,
                 "Module":           meta.get("Module", ""),
-                "Sub Module":       meta.get("Sub-Module", ""),
+                "Sub Module":       meta.get("Sub Module", ""),
                 "Issue Type":       meta.get("Issue Type", ""),
-                "Sub Issue Type":   meta.get("Sub-Issue Type", ""),
+                "Sub Issue Type":   meta.get("Sub Issue Type", ""),
                 "Severity":         meta.get("Severity", ""),
                 "frequency":        meta.get("frequency", 1),   # how many similar issues this represents
                 "similarity_score": score,

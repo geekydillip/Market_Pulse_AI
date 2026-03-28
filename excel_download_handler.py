@@ -132,7 +132,7 @@ def create_total_cases_excel(data: List[Dict], filename: str = None) -> str:
     Create Excel file in total cases format matching the sample:
     Columns: Case Code, Model No., Progr.Stat., S/W Ver., Title, Problem,
              Module, Sub-Module, Issue Type, Sub-Issue Type,
-             Ai Summary, Severity, Severity Reason
+             AI Insight, Severity, Severity Reason
     """
     if not filename:
         now = datetime.now()
@@ -154,7 +154,7 @@ def create_total_cases_excel(data: List[Dict], filename: str = None) -> str:
             'Sub-Module': item.get('Sub-Module', item.get('subModule', '')),
             'Issue Type': item.get('Issue Type', item.get('issueType', '')),
             'Sub-Issue Type': item.get('Sub-Issue Type', item.get('subIssueType', '')),
-            'Ai Summary': item.get('Summarized Problem', item.get('summarizedProblem', item.get('Ai Summary', ''))),
+            'AI Insight': item.get('Summarized Problem', item.get('summarizedProblem', item.get('AI Insight', ''))),
             'Severity': item.get('Severity', item.get('severity', '')),
             'Severity Reason': item.get('Severity Reason', item.get('severityReason', ''))
         })
@@ -185,7 +185,7 @@ def create_total_cases_excel(data: List[Dict], filename: str = None) -> str:
             'H': 20,  # Sub-Module
             'I': 15,  # Issue Type
             'J': 18,  # Sub-Issue Type
-            'K': 40,  # Ai Summary
+            'K': 40,  # AI Insight
             'L': 10,  # Severity
             'M': 20   # Severity Reason
         }

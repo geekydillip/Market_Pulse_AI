@@ -33,7 +33,7 @@ FALLBACK DEFINITIONS (use only when RAG context is absent or clearly irrelevant)
 You are also responsible for generating these fields using your own reasoning:
   - Title          → clean the input title: remove IDs, tags, usernames, timestamps, content in [ ... ], non-English text, duplicates. Keep only essential title text.
   - Problem        → clean the input problem: same rules as Title. Keep only essential problem description.
-  - Ai Summary     → 1 sentence describing the actual issue and its user impact
+  - AI Insight     → 1 sentence describing the actual issue and its user impact
   - Severity Reason → 1 sentence explaining the chosen Severity based on real-world impact
 
 ========================
@@ -53,7 +53,7 @@ Each object MUST contain EXACTLY these keys in this order:
 "Sub-Module"
 "Issue Type"
 "Sub-Issue Type"
-"Ai Summary"
+"AI Insight"
 "Severity"
 "Severity Reason"
 

@@ -581,7 +581,7 @@ def extract_criticality_data(
         base_cols = [
             'Case Code', 'Source', 'Title', 'Priority', 'Occurr. Freq.',
             'Issue Type', 'Sub-Issue Type', 'Module', 'Progr.Stat.',
-            'Ai Summary', 'Severity',
+            'AI Insight', 'Severity',
         ]
 
     else:  # schema2
@@ -617,7 +617,7 @@ def extract_criticality_data(
         ]
         base_cols = [
             'Case Code', 'Model No.', 'Title', 'Severity', 'Issue Type',
-            'Sub-Issue Type', 'Module', 'Resolve', 'Progr.Stat.', 'Ai Summary',
+            'Sub-Issue Type', 'Module', 'Resolve', 'Progr.Stat.', 'AI Insight',
         ]
 
     active_count = len(df)
@@ -625,7 +625,7 @@ def extract_criticality_data(
     # ── 3. Round, assign tier, sort ────────────────────────────────────────
     df['criticality_score'] = df['criticality_score'].round(1)
     df['tier'] = df['criticality_score'].apply(lambda s: _assign_tier(s, thr))
-    df['Ai Summary'] = df['Ai Summary'].fillna('')
+    df['AI Insight'] = df['AI Insight'].fillna('')
     df = df.sort_values('criticality_score', ascending=False).reset_index(drop=True)
 
     # ── 4. Build output ────────────────────────────────────────────────────

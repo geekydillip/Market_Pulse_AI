@@ -39,14 +39,14 @@ FALLBACK DEFINITIONS (use only when RAG context is absent or clearly irrelevant)
 You are also responsible for generating these fields using your own reasoning:
   - Title          → translate all non-English text to English, keep only essential title text
   - Problem        → translate all non-English text to English, keep only essential problem description
-  - Ai Summary     → 1 natural user-focused sentence summarizing the real experience. No jargon, no repetition.
+  - AI Insight     → 1 natural user-focused sentence summarizing the real experience. No jargon, no repetition.
   - Severity Reason → 1 sentence explaining the chosen Severity based on real-world impact. No vague statements.
 
 ERROR HANDLING:
 If input is blank, malformed, or missing → return:
 { "Title": "No issue reported", "Problem": "No issue reported", "Module": "System",
   "Sub-Module": "3rd-Party App", "Issue Type": "Other Issue", "Sub-Issue Type": "Other Issue",
-  "Ai Summary": "No issue reported.", "Severity": "Low", "Severity Reason": "No issue reported." }
+  "AI Insight": "No issue reported.", "Severity": "Low", "Severity Reason": "No issue reported." }
 
 ========================
 INPUT DATA
@@ -65,7 +65,7 @@ Each object MUST contain EXACTLY these keys in this order:
 "Sub-Module"
 "Issue Type"
 "Sub-Issue Type"
-"Ai Summary"
+"AI Insight"
 "Severity"
 "Severity Reason"
 

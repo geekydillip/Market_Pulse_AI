@@ -1,5 +1,5 @@
 const xlsx = require('xlsx');
-const promptTemplate = require('../prompts/globalvocplm');
+const promptTemplate = require('../prompts/GlobalvocplmPrompt');
 
 /**
  * Shared header normalization utility - eliminates code duplication
@@ -56,7 +56,7 @@ function normalizeHeaders(rows) {
   };
 
   // canonical columns you expect in the downstream processing
-  const canonicalCols = ['Case Code', 'Source', 'Sub-Sources', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'];
+  const canonicalCols = ['Case Code', 'Source', 'Sub-Sources', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight', 'Severity', 'Severity Reason'];
 
   const normalizedRows = rows.map(orig => {
     const out = {};
@@ -76,6 +76,7 @@ function normalizeHeaders(rows) {
         }
       }
     });
+
     // Fill canonical fields
     for (const tgt of canonicalCols) {
       // find a source raw key that maps to this tgt
@@ -99,6 +100,19 @@ function normalizeHeaders(rows) {
     out['Source'] = source;
 
     return out;
+  }).filter(row => {
+    // [Strict Filter] Remove rows that lack essential VOC content or Model No.
+    // If Title and Problem are both missing, the row is useless for VOC analysis.
+    const title = String(row['Title'] || '').trim();
+    const problem = String(row['Problem'] || '').trim();
+    const model = String(row['Model No.'] || '').trim();
+
+    // Filter out rows where essential fields are missing or strictly "Unknown"
+    // Users want "Unknown" entries completely removed from display.
+    if (!title && !problem) return false;
+    if (!model || model.toLowerCase() === 'unknown') return false;
+
+    return true;
   });
 
   return normalizedRows;
@@ -187,7 +201,7 @@ function normalizeRows(rows) {
 
 module.exports = {
   id: 'UTportal',
-  expectedHeaders: ['Case Code', 'Source', 'Sub-Sources', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'],
+  expectedHeaders: ['Case Code', 'Source', 'Sub-Sources', 'Model No.', 'Progr.Stat.', 'S/W Ver.', 'Title', 'Priority', 'Occurr. Freq.', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight', 'Severity', 'Severity Reason'],
 
   validateHeaders(rawHeaders) {
     // Check if required fields are present
@@ -276,7 +290,7 @@ module.exports = {
     let aiRows;
 
     // Field order must match the OUTPUT spec in prompts/globalvocplm.js exactly.
-    const FIELD_ORDER = ['Title', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'Ai Summary', 'Severity', 'Severity Reason'];
+    const FIELD_ORDER = ['Title', 'Problem', 'Module', 'Sub-Module', 'Issue Type', 'Sub-Issue Type', 'AI Insight', 'Severity', 'Severity Reason'];
 
     function repairPositionalJson(text) {
       const objects = text.match(/\{([^{}]+)\}/g);
@@ -376,7 +390,7 @@ module.exports = {
           'Sub-Module': '',
           'Issue Type': '',
           'Sub-Issue Type': '',
-          'Ai Summary': '',
+          'AI Insight': '',
           Severity: '',
           'Severity Reason': ''
         };
@@ -408,7 +422,7 @@ module.exports = {
         'Sub-Module': aiRow['Sub-Module'] || '',
         'Issue Type': aiRow['Issue Type'] || '',
         'Sub-Issue Type': aiRow['Sub-Issue Type'] || '',
-        'Ai Summary': aiRow['Ai Summary'] || '',
+        'AI Insight': aiRow['AI Insight'] || '',
         'Severity': aiRow['Severity'] || '',
         'Severity Reason': aiRow['Severity Reason'] || ''
       };
@@ -420,7 +434,7 @@ module.exports = {
   // Returns column width configurations for Excel export
   getColumnWidths(finalHeaders) {
     return finalHeaders.map((h, idx) => {
-      if (['Title', 'Problem', 'Ai Summary', 'Severity Reason'].includes(h)) return { wch: 41 };
+      if (['Title', 'Problem', 'AI Insight', 'Severity Reason'].includes(h)) return { wch: 41 };
       if (['Source', 'Sub-Sources', 'Model No.'].includes(h)) return { wch: 20 };
       if (['S/W Ver.', 'Progr.Stat.', 'Issue Type', 'Sub-Issue Type', 'Case Code'].includes(h)) return { wch: 15 };
       if (h === 'Module' || h === 'Sub-Module') return { wch: 15 };
