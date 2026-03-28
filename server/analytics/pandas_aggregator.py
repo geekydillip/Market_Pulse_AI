@@ -5,30 +5,17 @@ import json
 import math
 from pathlib import Path
 from datetime import date, datetime
-import numpy as np
-from sentence_transformers import SentenceTransformer
-from sklearn.cluster import AgglomerativeClustering
 
-
-# pandas_aggregator.py lives at:  <project_root>/server/analytics/pandas_aggregator.py
-# extract_criticality.py lives at: <project_root>/server/analytics/extract_criticality.py
-# modelName.json lives at:         <project_root>/modelName.json
-#
-# _THIS_DIR is added to sys.path so `from extract_criticality import ...`
-# always works regardless of cwd when called by server.js via spawn().
-_THIS_DIR     = Path(__file__).resolve().parent   # .../server/analytics/
-_PROJECT_ROOT = _THIS_DIR.parent.parent           # project root
+_THIS_DIR     = Path(__file__).resolve().parent
+_PROJECT_ROOT = _THIS_DIR.parent.parent
 
 if str(_THIS_DIR) not in sys.path:
     sys.path.insert(0, str(_THIS_DIR))
 
-# Single source of truth for all criticality/exclusion/tier logic
 from extract_criticality import extract_criticality_data
-from excel_cleaner import sanitize_nan_values, clean_model_number
 
 
 def load_model_name_mappings():
-    # Look for modelName.json at project root, then fallback to cwd
     for candidate in [_PROJECT_ROOT / 'modelName.json', Path('modelName.json')]:
         try:
             with open(candidate, 'r') as f:
@@ -44,19 +31,21 @@ def load_model_name_mappings():
 MODEL_NAME_MAPPINGS = load_model_name_mappings()
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
 def sanitize_nan(obj):
-    """Delegate to excel_cleaner for JSON sanitization."""
-    return sanitize_nan_values(obj)
+    if isinstance(obj, float) and math.isnan(obj):
+        return None
+    elif isinstance(obj, (date, datetime)):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {k: sanitize_nan(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_nan(item) for item in obj]
+    return obj
 
 
 def derive_model_name_from_sw_ver(sw_ver):
-    """
-    Derive model name from S/W Ver. for OS Beta entries
-    Example: "S911BXXU8ZYHB" -> "SM-S911B"
-    """
-    if pd.isna(sw_ver) or not isinstance(sw_ver, str) or len(sw_ver) < 5:
-        return sw_ver  # Return original if invalid
+    if not sw_ver or not isinstance(sw_ver, str) or len(sw_ver) < 5:
+        return sw_ver
     return 'SM-' + sw_ver[:5]
 
 
@@ -101,17 +90,14 @@ def load_all_excels(folder_path: str) -> pd.DataFrame:
         try:
             df = pd.read_excel(excel_file, dtype=dtype_spec, engine='openpyxl')
             dfs.append(df)
-            import sys
             sys.stderr.write(f"Loaded {len(df)} rows from {excel_file.name}\n")
         except Exception as e:
-            import sys
             sys.stderr.write(f"Warning: Failed to load {excel_file.name}: {e}\n")
 
     if not dfs:
         raise FileNotFoundError(f"Failed to load any Excel files from {folder_path}")
 
     combined_df = pd.concat(dfs, ignore_index=True, sort=False)
-    import sys
     sys.stderr.write(f"Combined {len(dfs)} files, total {len(combined_df)} rows\n")
 
     if len(combined_df) > 10000:
@@ -123,79 +109,188 @@ def load_all_excels(folder_path: str) -> pd.DataFrame:
     return combined_df
 
 
-def _build_severity_distribution(excel_paths: list) -> dict:
-    """
-    Delegate to extract_criticality.py for severity breakdown.
-    Runs extract_criticality_data() on each Excel file and merges counts.
+# ── Schema detection ──────────────────────────────────────────────────────────
+# VOC schema  : has 'Status' + 'Category' columns, no 'Progr.Stat.' / 'Severity'
+# Issue schema: has 'Progr.Stat.' + 'Severity' columns
+def _is_voc_schema(df: pd.DataFrame) -> bool:
+    cols = set(df.columns)
+    return 'Status' in cols and 'Category' in cols and 'Progr.Stat.' not in cols
 
-    Final shape:
-    {
-        "Severe":   { "total": N, "open": N, "resolve": N, "close": N },
-        "Moderate": { "total": N, "open": N, "resolve": N, "close": N },
-        "Deferred": { "total": N, "open": N, "resolve": N, "close": N },
-    }
+
+# ── VOC status normalisation ──────────────────────────────────────────────────
+# VOC uses:  OPENED / PROCESSING / RESOLVED / CLOSED
+# Map to the same Open / Resolve / Close buckets used everywhere else
+def _normalize_voc_status(val: str) -> str:
+    v = str(val).upper()
+    if v in ('OPENED', 'PROCESSING'):
+        return 'Open'
+    elif v == 'RESOLVED':
+        return 'Resolve'
+    elif v == 'CLOSED':
+        return 'Close'
+    return 'Other'
+
+
+def _is_voc_file(path) -> bool:
     """
-    import sys
-    merged = {}
+    Peek at column headers only (no full load) to decide if this is a VOC file.
+    Avoids passing VOC files into extract_criticality_data() which cannot handle them.
+    """
+    try:
+        headers = pd.read_excel(str(path), nrows=0).columns.tolist()
+        col_set = set(headers)
+        return 'Status' in col_set and 'Category' in col_set and 'Progr.Stat.' not in col_set
+    except Exception:
+        return False
+
+
+def _build_severity_distribution(excel_paths: list) -> tuple:
+    """
+    Issue-schema files only — delegate scoring to extract_criticality.
+    VOC files are silently skipped.
+
+    Reads the new flat severity_breakdown from extract_criticality_data():
+      severity_breakdown = {
+          'High':   { total, open, resolve, close,
+                      moved_to_medium: {moderate, deferred} },
+          'Medium': { total, open, resolve, close },
+          'Low':    { total, open, resolve, close },
+      }
+
+    Merges these directly into severity_dist (same shape, accumulated
+    across all Excel files in the folder).
+
+    Returns: (severity_dist_dict, scored_rows_list)
+      severity_dist_dict : { 'High': {total,open,resolve,close},
+                              'Medium': {...}, 'Low': {...} }
+      scored_rows_list   : list of scored issue dicts (for tier merge on rows)
+    """
+    severity_dist   = {}
+    all_scored_rows = []
+
+    def _empty_bucket():
+        return {'total': 0, 'open': 0, 'resolve': 0, 'close': 0}
+
+    def _add(dest: dict, key: str, src: dict):
+        if key not in dest:
+            dest[key] = _empty_bucket()
+        for k in ('total', 'open', 'resolve', 'close'):
+            dest[key][k] += src.get(k, 0)
 
     for path in excel_paths:
+        if _is_voc_file(path):
+            sys.stderr.write(f"  [VOC]   Skipping VOC file: {Path(path).name}\n")
+            continue
         try:
             result = extract_criticality_data(str(path))
         except Exception as e:
             sys.stderr.write(f"Warning: extract_criticality_data failed for {path}: {e}\n")
             continue
 
-        for tier_name, stats in result['summary'].items():
-            s = stats.get('status', {})
-            bucket = {
-                'total':   stats['count'],
-                'open':    s.get('Open',    0),
-                'resolve': s.get('Resolve', 0),
-                'close':   s.get('Close',   0),
-            }
-            if tier_name not in merged:
-                merged[tier_name] = bucket
-            else:
-                for key in ('total', 'open', 'resolve', 'close'):
-                    merged[tier_name][key] += bucket[key]
+        all_scored_rows.extend(result.get('issues', []))
 
-    return merged
+        # ── New flat severity_breakdown: keys are Title-case High/Medium/Low ──
+        sev_breakdown = result.get('severity_breakdown', {})
+        for sev_key in ('High', 'Medium', 'Low'):
+            entry = sev_breakdown.get(sev_key)
+            if not entry:
+                continue
+            # Entry is already flat: {total, open, resolve, close}
+            _add(severity_dist, sev_key, {
+                'total':   entry.get('total',   0),
+                'open':    entry.get('open',    0),
+                'resolve': entry.get('resolve', 0),
+                'close':   entry.get('close',   0),
+            })
+
+    return severity_dist, all_scored_rows
+
+
+def _build_voc_status_distribution(df: pd.DataFrame) -> dict:
+    """
+    VOC schema: count Open / Resolve / Close from the 'Status' column.
+    Returns the same shape as the issue-schema status_distribution so the
+    rest of the pipeline (open_issues / resolved_issues / close_issues) works
+    identically for both schemas.
+    """
+    if 'Status' not in df.columns:
+        return {}
+    normalised = df['Status'].astype(str).apply(_normalize_voc_status)
+    return normalised.value_counts().to_dict()
 
 
 def compute_kpis(df: pd.DataFrame, excel_paths: list = None) -> dict:
     """
-    Return high-level KPIs.
+    Build KPIs for both schemas.
 
-    excel_paths: list of Path/str for all Excel files in the folder.
-                 Passed to extract_criticality.py for accurate severity bucketing.
-                 Falls back to simple value_counts() when not provided.
+    Issue schema  → uses Progr.Stat., Severity, Source
+    VOC schema    → uses Status, Category, CSC
+    Both produce the same output keys so the rest of the pipeline is unchanged.
 
-    severity_distribution shape:
-    {
-        "Severe":   { "total": N, "open": N, "resolve": N, "close": N },
-        "Moderate": { "total": N, "open": N, "resolve": N, "close": N },
-        "Deferred": { "total": N, "open": N, "resolve": N, "close": N },
-    }
+    SCALE-DOWN (issue schema only):
+    ────────────────────────────────
+    severity_distribution['High']   = scaled total (Severe-tier only)
+    severity_distribution['Medium'] = original Medium + High's Moderate + High's Deferred
+    severity_distribution['Low']    = unchanged
+
+    The Severe/Moderate/Deferred tier keys are also kept for backward compat.
     """
     total_rows    = len(df)
-    unique_models = df['Model No.'].nunique()          if 'Model No.'    in df.columns else 0
-    category_dist = df['Module'].value_counts().to_dict()       if 'Module'      in df.columns else {}
-    status_dist   = df['Progr.Stat.'].value_counts().to_dict()  if 'Progr.Stat.' in df.columns else {}
-    source_dist   = df['Source'].value_counts().to_dict()       if 'Source'      in df.columns else {}
+    unique_models = df['Model No.'].nunique() if 'Model No.' in df.columns else 0
 
-    # ── Severity distribution: delegate to extract_criticality ──────────────
-    if excel_paths:
-        severity_dist = _build_severity_distribution(excel_paths)
+    voc = _is_voc_schema(df)
+
+    # ── category distribution ─────────────────────────────────────────────────
+    if voc:
+        category_dist = df['Category'].value_counts().to_dict() if 'Category' in df.columns else {}
     else:
-        raw = df['Severity'].value_counts().to_dict() if 'Severity' in df.columns else {}
-        severity_dist = {k: {'total': v, 'open': 0, 'resolve': 0, 'close': 0}
-                         for k, v in raw.items()}
+        category_dist = df['Module'].value_counts().to_dict() if 'Module' in df.columns else {}
 
+    # ── source distribution ───────────────────────────────────────────────────
+    if voc:
+        source_dist = df['CSC'].value_counts().to_dict() if 'CSC' in df.columns else {}
+    else:
+        source_dist = df['Source'].value_counts().to_dict() if 'Source' in df.columns else {}
 
-    # Legacy flat counts kept for backward compatibility with existing charts
-    open_issues     = int(df['Progr.Stat.'].eq('Open').sum())               if 'Progr.Stat.' in df.columns else 0
-    resolved_issues = int(df['Progr.Stat.'].str.startswith('Resolve').sum()) if 'Progr.Stat.' in df.columns else 0
-    close_issues    = int(df['Progr.Stat.'].eq('Close').sum())              if 'Progr.Stat.' in df.columns else 0
+    # ── status distribution + open/resolved/close counts ─────────────────────
+    if voc:
+        status_dist     = _build_voc_status_distribution(df)
+        open_issues     = status_dist.get('Open',    0)
+        resolved_issues = status_dist.get('Resolve', 0)
+        close_issues    = status_dist.get('Close',   0)
+    else:
+        status_dist = df['Progr.Stat.'].value_counts().to_dict() if 'Progr.Stat.' in df.columns else {}
+        open_issues     = int(df['Progr.Stat.'].eq('Open').sum())                if 'Progr.Stat.' in df.columns else 0
+        resolved_issues = int(df['Progr.Stat.'].str.startswith('Resolve').sum()) if 'Progr.Stat.' in df.columns else 0
+        close_issues    = int(df['Progr.Stat.'].eq('Close').sum())               if 'Progr.Stat.' in df.columns else 0
+
+    # ── severity distribution ─────────────────────────────────────────────────
+    if voc:
+        # VOC: group by Issue Type, map Status → open/resolve/close
+        if 'Issue Type' in df.columns and 'Status' in df.columns:
+            norm_status = df['Status'].astype(str).apply(_normalize_voc_status)
+            severity_dist = {}
+            for issue_type, grp in df.groupby(df['Issue Type'].fillna('Other')):
+                grp_status = norm_status.loc[grp.index]
+                severity_dist[str(issue_type)] = {
+                    'total':   len(grp),
+                    'open':    int((grp_status == 'Open').sum()),
+                    'resolve': int((grp_status == 'Resolve').sum()),
+                    'close':   int((grp_status == 'Close').sum()),
+                }
+        else:
+            severity_dist = {}
+        scored_rows = []
+    else:
+        if excel_paths:
+            # _build_severity_distribution returns severity_dist with scale-down
+            # already applied: High=Severe-tier-only, Medium=original+moved, Low=unchanged
+            severity_dist, scored_rows = _build_severity_distribution(excel_paths)
+        else:
+            raw = df['Severity'].value_counts().to_dict() if 'Severity' in df.columns else {}
+            severity_dist = {k: {'total': v, 'open': 0, 'resolve': 0, 'close': 0}
+                             for k, v in raw.items()}
+            scored_rows = []
 
     return {
         "total_rows":            total_rows,
@@ -204,10 +299,11 @@ def compute_kpis(df: pd.DataFrame, excel_paths: list = None) -> dict:
         "severity_distribution": severity_dist,
         "status_distribution":   status_dist,
         "source_distribution":   source_dist,
-        # Legacy flat counts
-        "open_issues":     open_issues,
-        "resolved_issues": resolved_issues,
-        "close_issues":    close_issues,
+        "open_issues":           open_issues,
+        "resolved_issues":       resolved_issues,
+        "close_issues":          close_issues,
+        "schema":                "voc" if voc else "issue",
+        "scored_rows":           scored_rows,
     }
 
 
@@ -291,7 +387,6 @@ def time_series(df: pd.DataFrame, date_column: str) -> list:
     )
 
 
-# Folders inside ./downloads/ to always skip
 _SKIP_FOLDERS = {'__dashboard_cache__', '__pycache__'}
 def cluster_insights(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -370,50 +465,157 @@ if __name__ == "__main__":
 def _process_folder(folder_path: str, save_to_file: bool = True) -> bool:
     """
     Process one source folder: load all Excel files, build analytics.
+    Auto-detects VOC vs issue schema per file.
 
-    save_to_file=True  (--save-json):  write analytics.json into the folder
-                                        used by precomputeAnalytics() in server.js
-    save_to_file=False (no flag):      print JSON to stdout
-                                        used by /api/analytics/:module fallback in server.js
-    Returns True on success, False on failure/skip.
+    save_to_file=True  (default): write analytics.json into the folder.
+    save_to_file=False:           print JSON to stdout only (--stdout-only mode).
+
+    SCALE-DOWN (issue schema):
+    ──────────────────────────
+    severity_distribution['High']   = Severe-tier count only
+    severity_distribution['Medium'] = original Medium + High's Moderate + High's Deferred
+    This is transparently handled by _build_severity_distribution() via
+    extract_criticality's severity_breakdown output.
+
+    high_issues KPI = severity_distribution['High']['total'] (scaled)
     """
     folder      = Path(folder_path)
     folder_name = folder.name
 
     excel_paths = list(folder.glob("*.xlsx")) + list(folder.glob("*.xls"))
     if not excel_paths:
+        msg = f"No Excel files found in {folder_name}/"
         sys.stderr.write(f"  [SKIP]  {folder_name}/ — no Excel files found\n")
+        if not save_to_file:
+            print(json.dumps({"error": msg}))
         return False
 
     try:
         df = load_all_excels(folder_path)
         df = transform_model_names(df)
 
-        kpis       = compute_kpis(df, excel_paths=excel_paths)
-        # Apply semantic clustering on AI Insight
-        df = cluster_insights(df)
+        voc = _is_voc_schema(df)
+        sys.stderr.write(f"  Schema: {'VOC' if voc else 'Issue'}\n")
 
-        kpis = compute_kpis(df)
+        # Pass excel_paths only for issue schema (extract_criticality needs them)
+        kpis = compute_kpis(df, excel_paths=(None if voc else excel_paths))
 
         top_models = group_by_column(df, 'Model No.')
         for m in top_models:
             m['friendly_name'] = map_model_name(m['label'])
 
-        categories  = group_by_column(df, 'Module')
-        time_data   = time_series(df, 'Date') if 'Date' in df.columns else []
-        rows        = df.to_dict('records')
-        high_issues = kpis["severity_distribution"].get("Severe", {}).get("total", 0)
+        # VOC uses Category as primary grouping; issue schema uses Module
+        categories = group_by_column(df, 'Category' if voc else 'Module')
+
+        time_data = time_series(df, 'Date') if 'Date' in df.columns else []
+
+        # ── Merge tier scores back onto raw rows ───────────────────────────
+        # extract_criticality scores each issue and assigns a 'tier'
+        # (Severe / Moderate / Deferred) + 'criticality_score'.
+        # The frontend tier-drill modal uses r.tier to filter which rows
+        # belong to each tier bucket.  Without this merge, the modal falls
+        # back to r.Severity which maps High→Severe, Medium→Moderate — WRONG
+        # because a High-severity issue can score as Moderate or Deferred.
+        #
+        # NOTE: After scale-down, High issues that scored as Moderate or
+        # Deferred still retain their original 'tier' value in the row data
+        # (e.g. tier='Moderate') so the frontend drill-down correctly shows
+        # them in the Moderate bucket — consistent with where they were moved.
+        #
+        # Join key: 'Case Code' (unique issue identifier, present in both
+        # the raw df and the extract_criticality scored output).
+        scored_rows = kpis.get("scored_rows", [])
+        if scored_rows and not voc:
+            # Build lookup: Case Code → {tier, criticality_score}
+            tier_lookup = {
+                str(r.get('Case Code', '')).strip(): {
+                    'tier':              r.get('tier', ''),
+                    'criticality_score': r.get('criticality_score', None),
+                }
+                for r in scored_rows
+                if r.get('Case Code')
+            }
+            rows = []
+            for rec in df.to_dict('records'):
+                cc = str(rec.get('Case Code', '')).strip()
+                scored = tier_lookup.get(cc, {})
+                rec['tier']              = scored.get('tier', 'Deferred')
+                rec['criticality_score'] = scored.get('criticality_score', None)
+                # ── Compute updated_tier (scale-down applied) ──────────────
+                # Same rules as export_moved_issues_updated_file:
+                #   High  + Severe   → updated_tier = Severe   (kept)
+                #   High  + Moderate → updated_tier = Moderate (moved)
+                #   High  + Low      → updated_tier = Deferred (moved)
+                #   High  + Excluded → updated_tier = Deferred (moved)
+                #   Medium + Severe  → updated_tier = Moderate (scaled down)
+                #   All others       → updated_tier = tier     (unchanged)
+                sev  = str(rec.get('Severity', '')).strip()
+                tier = str(rec.get('tier',     '')).strip()
+                if sev == 'High':
+                    if tier == 'Severe':
+                        rec['updated_tier'] = 'Severe'
+                    elif tier == 'Moderate':
+                        rec['updated_tier'] = 'Moderate'
+                    else:
+                        rec['updated_tier'] = 'Deferred'
+                elif sev == 'Medium' and tier == 'Severe':
+                    rec['updated_tier'] = 'Moderate'
+                else:
+                    rec['updated_tier'] = tier
+                rows.append(rec)
+        else:
+            rows = df.to_dict('records')
+            # VOC rows: add schema-appropriate tier proxy using Issue Type
+            if voc:
+                for rec in rows:
+                    rec['tier']         = rec.get('Issue Type', 'Other')
+                    rec['updated_tier'] = rec.get('Issue Type', 'Other')
+
+        # ── Recompute severity_distribution from updated_tier on rows ───────
+        # updated_tier is the single source of truth after scale-down:
+        #   Severe                      → High   bucket
+        #   Moderate                    → Medium bucket
+        #   Low / Deferred / Excluded   → Low    bucket
+        # Progr.Stat. is used to split open / resolve / close per bucket.
+        if not voc:
+            _sev_dist = {
+                'High':   {'total': 0, 'open': 0, 'resolve': 0, 'close': 0},
+                'Medium': {'total': 0, 'open': 0, 'resolve': 0, 'close': 0},
+                'Low':    {'total': 0, 'open': 0, 'resolve': 0, 'close': 0},
+            }
+            for rec in rows:
+                ut  = str(rec.get('updated_tier', '')).strip()
+                st  = str(rec.get('Progr.Stat.', '')).lower()
+                if ut == 'Severe':
+                    bucket = 'High'
+                elif ut == 'Moderate':
+                    bucket = 'Medium'
+                else:                          # Low / Deferred / Excluded / anything else
+                    bucket = 'Low'
+                _sev_dist[bucket]['total'] += 1
+                if st.startswith('open'):
+                    _sev_dist[bucket]['open']    += 1
+                elif st.startswith('resolve'):
+                    _sev_dist[bucket]['resolve'] += 1
+                elif st.startswith('close'):
+                    _sev_dist[bucket]['close']   += 1
+            severity_distribution = _sev_dist
+            high_issues = severity_distribution['High']['total']
+        else:
+            severity_distribution = kpis["severity_distribution"]
+            high_issues = kpis["open_issues"]
 
         response = {
             "kpis": {
                 "total_rows":            kpis["total_rows"],
                 "unique_models":         kpis["unique_models"],
                 "high_issues":           high_issues,
-                "severity_distribution": kpis["severity_distribution"],
+                "severity_distribution": severity_distribution,
                 "source_distribution":   kpis["source_distribution"],
                 "open_issues":           kpis["open_issues"],
                 "resolved_issues":       kpis["resolved_issues"],
                 "close_issues":          kpis["close_issues"],
+                "schema":                kpis["schema"],
             },
             "top_models": top_models,
             "categories": categories,
@@ -425,114 +627,100 @@ def _process_folder(folder_path: str, save_to_file: bool = True) -> bool:
         response = sanitize_nan(response)
 
         if save_to_file:
-            # Write analytics.json into the folder
             json_path = folder / "analytics.json"
             with open(json_path, 'w', encoding='utf-8') as f:
                 json.dump(response, f, indent=2)
             sys.stderr.write(
-                f"  [OK]    {folder_name}/analytics.json  ({kpis['total_rows']} rows)\n"
+                f"  [OK]    {folder_name}/analytics.json  "
+                f"({kpis['total_rows']} rows, schema={'VOC' if voc else 'Issue'})\n"
             )
+            # ── Export moved_issues_updated_file.xlsx for issue schema ────
+            # Runs export_moved_issues_updated_file on each Excel file in the
+            # folder so you can verify which High/Medium rows moved tiers.
+            if not voc:
+                for excel_path in excel_paths:
+                    try:
+                        out_path = str(excel_path).replace(
+                            excel_path.suffix,
+                            '_moved_issues_updated_file.xlsx'
+                        )
+                        export_moved_issues_updated_file(str(excel_path), out_path)
+                    except Exception as _exp_err:
+                        sys.stderr.write(
+                            f"  [WARN]  Could not export moved issues for "
+                            f"{excel_path.name}: {_exp_err}\n"
+                        )
         else:
-            # Print to stdout for server.js /api/analytics/:module fallback
             print(json.dumps(response))
 
         return True
 
     except Exception as e:
-        if save_to_file:
-            sys.stderr.write(f"  [ERROR] {folder_name}/ — {e}\n")
         import traceback
-        error_msg = traceback.format_exc()
-        if save_json:
-            print(f"Error saving analytics:\n{error_msg}")
-        else:
+        sys.stderr.write(f"  [ERROR] {folder_name}/ — {e}\n")
+        sys.stderr.write(traceback.format_exc())
+        if not save_to_file:
             print(json.dumps({"error": str(e)}))
         return False
 
 
-# ── Entry point ──────────────────────────────────────────────────────────────
+# ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    import sys
     import shutil
-
-    # ── How this script works ─────────────────────────────────────────────────
-    #
-    # Pass ONE Excel file path (anywhere on disk):
-    #   python pandas_aggregator.py path/to/beta_ut.xlsx
-    #   python pandas_aggregator.py path/to/GlobalVOC_2025.xlsx
-    #
-    # The script will:
-    #   1. Derive the folder name from the file stem  →  beta_ut
-    #   2. Create  downloads/beta_ut/  if it doesn't exist
-    #   3. Copy the file into  downloads/beta_ut/beta_ut.xlsx
-    #   4. Run full analytics and write  downloads/beta_ut/analytics.json
-    #
-    # No args → process all existing folders in ./downloads/ (batch mode)
-    # ─────────────────────────────────────────────────────────────────────────
 
     downloads_root = Path("./downloads")
     downloads_root.mkdir(parents=True, exist_ok=True)
 
-    # Strip flags (--save-json etc); keep only positional args
+    stdout_only = '--stdout-only' in sys.argv
+    save_json   = not stdout_only
+
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
 
     if args:
-        # ── File-based mode ───────────────────────────────────────────────────
-        # Input is a file path.  For each file:
-        #   • derive folder name from file stem (lowercased)
-        #   • create downloads/<stem>/ if needed
-        #   • copy file in (skip copy if it's already inside the target folder)
-        #   • run _process_folder on that folder
-
         target_folders = []
 
         for file_arg in args:
             file_path = Path(file_arg)
 
-            # Accept bare stem names too (e.g. "beta_ut" → look for existing folder)
             if not file_path.suffix:
-                # Treated as a folder name (legacy / run_server.py startup usage)
                 folder = downloads_root / file_path.name
                 if folder.is_dir():
                     target_folders.append(folder)
                 else:
-                    print(f"ERROR: '{file_arg}' is not a file and "
-                          f"'{folder}' folder does not exist.", file=sys.stderr)
+                    sys.stderr.write(
+                        f"ERROR: '{file_arg}' is not a file and "
+                        f"'{folder}' folder does not exist.\n"
+                    )
                     sys.exit(1)
                 continue
 
             if not file_path.exists():
-                print(f"ERROR: file not found — {file_path}", file=sys.stderr)
+                sys.stderr.write(f"ERROR: file not found — {file_path}\n")
                 sys.exit(1)
 
-            # Derive folder name from file stem  (beta_ut.xlsx → beta_ut)
             folder_name = file_path.stem.lower().replace(' ', '_')
             folder      = downloads_root / folder_name
             folder.mkdir(parents=True, exist_ok=True)
 
-            # Copy file into the folder (unless it's already there)
             dest = folder / file_path.name
             if dest.resolve() != file_path.resolve():
                 shutil.copy2(file_path, dest)
-                sys.stderr.write(f"  [COPY]  {file_path.name} → {folder}/\n")
+                sys.stderr.write(f"  [COPY]  {file_path.name} -> {folder}/\n")
 
             target_folders.append(folder)
 
     else:
-        # ── Batch mode: no args → process all existing folders ────────────────
         target_folders = sorted([
             p for p in downloads_root.iterdir()
             if p.is_dir() and p.name not in _SKIP_FOLDERS
         ])
         if not target_folders:
-            print("No subfolders found in ./downloads/", file=sys.stderr)
+            sys.stderr.write("No subfolders found in ./downloads/\n")
             sys.exit(1)
 
     sys.stderr.write(
         f"\nProcessing {len(target_folders)} folder(s) inside {downloads_root}/\n\n"
     )
-
-    save_json = '--save-json' in sys.argv
 
     ok = failed = 0
     for folder in target_folders:
@@ -540,8 +728,7 @@ if __name__ == "__main__":
         ok     += int(success)
         failed += int(not success)
 
-    if save_json:
-        sys.stderr.write(f"\nDone — {ok} succeeded, {failed} failed/skipped.\n\n")
+    sys.stderr.write(f"\nDone — {ok} succeeded, {failed} failed/skipped.\n\n")
 
     if failed and not ok:
         sys.exit(1)

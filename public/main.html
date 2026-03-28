@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { darkMode: "class" }
+    tailwind.config = { darkMode: "class" };
     function updateTheme() {
       document.documentElement.classList.toggle("dark", window.matchMedia("(prefers-color-scheme: dark)").matches);
     }
@@ -18,413 +18,740 @@
   </script>
   <style>
     :root {
-      --accent:#6366f1; --accent2:#0ea5e9; --accent3:#10b981;
-      --surface:#ffffff; --surface2:#f8fafc; --surface3:#f1f5f9;
-      --border:#e2e8f0; --text:#0f172a; --text2:#475569; --text3:#94a3b8;
-      --red:#f43f5e; --amber:#f59e0b; --green:#10b981;
+      --accent: #6366f1; --accent2: #0ea5e9; --accent3: #10b981;
+      --surface: #ffffff; --surface2: #f8fafc; --surface3: #f1f5f9;
+      --border: #e2e8f0; --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+      --red: #f43f5e; --amber: #f59e0b; --green: #10b981;
     }
-    .dark { --surface:#0f172a; --surface2:#1e293b; --surface3:#334155; --border:#334155; --text:#f1f5f9; --text2:#94a3b8; --text3:#64748b; }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Sora',sans-serif;background:var(--surface2);color:var(--text);min-height:100vh;}
+    .dark {
+      --surface: #0f172a; --surface2: #1e293b; --surface3: #273248;
+      --border: #1e2d45; --text: #f1f5f9; --text2: #94a3b8; --text3: #4b5e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sora', sans-serif; background: var(--surface2); color: var(--text); min-height: 100vh; }
 
-    /* ── Loading ──── */
-    @keyframes brainPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.75}}
-    @keyframes brainGlow{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0)}50%{box-shadow:0 0 40px 15px rgba(99,102,241,.45)}}
-    @keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes loadBarMove{0%{width:0%}100%{width:100%}}
-    #loading-brain-wrap{width:100px;height:100px;border-radius:50%;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;animation:brainGlow 1.6s ease-in-out infinite;margin-bottom:28px;}
-    #loading-brain-icon{font-size:52px;color:#818cf8;animation:brainPulse 1.6s ease-in-out infinite;}
-    #loading-title{font-family:'Sora',sans-serif;font-size:2rem;font-weight:700;letter-spacing:.06em;color:#f1f5f9;animation:fadeInUp .7s ease both;animation-delay:.15s;}
-    #loading-subtitle{font-family:'Sora',sans-serif;font-size:.85rem;color:#64748b;letter-spacing:.15em;text-transform:uppercase;margin-top:6px;animation:fadeInUp .7s ease both;animation-delay:.4s;}
-    #loading-bar-bg{margin-top:36px;width:200px;height:3px;background:rgba(99,102,241,.15);border-radius:99px;overflow:hidden;}
-    #loading-bar{height:100%;background:linear-gradient(90deg,#6366f1,#818cf8);border-radius:99px;animation:loadBarMove 1.8s cubic-bezier(.4,0,.2,1) forwards;}
+    /* ── TOPNAV ── */
+    .topnav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
+      height: 52px; position: sticky; top: 0; z-index: 100;
+    }
+    .live-badge {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: #10b981; font-weight: 600;
+      background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.18);
+      padding: 3px 10px; border-radius: 20px;
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+    .live-dot { width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .topnav-time { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
 
-    /* ── Topnav ──── */
-    .topnav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.04);}
-    .topnav-brand{display:flex;align-items:center;gap:10px;}
-    .topnav-logo{width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;box-shadow:0 2px 8px rgba(99,102,241,.35);}
-    .topnav-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
-    .topnav-sub{font-size:11px;color:var(--text3);}
-    .topnav-right{display:flex;align-items:center;gap:10px;}
-    .topnav-badge{font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(16,185,129,.1);color:#10b981;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(16,185,129,.2);}
-    .topnav-time{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+    /* ── SOURCE NAV ── */
+    .source-bar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 28px; display: flex; gap: 2px; align-items: center;
+      height: 40px; overflow-x: auto;
+    }
+    .source-bar::-webkit-scrollbar { display: none; }
+    .source-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: .02em;
+      text-decoration: none; color: var(--text3);
+      transition: all .14s; white-space: nowrap; border: 1px solid transparent;
+    }
+    .source-pill:hover { color: var(--text2); background: var(--surface3); border-color: var(--border); }
+    .pill-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── Source nav ──── */
-    .source-bar{padding:12px 28px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-    .source-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;text-decoration:none;color:var(--text2);background:var(--surface2);border:1.5px solid var(--border);transition:all .18s;white-space:nowrap;}
-    .source-pill:hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(0,0,0,.07);}
-    .pill-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-    .source-pill.pill-green:hover{border-color:#10b981;color:#059669;background:rgba(16,185,129,.06);}
-    .source-pill.pill-teal:hover{border-color:#14b8a6;color:#0d9488;background:rgba(20,184,166,.06);}
-    .source-pill.pill-lime:hover{border-color:#84cc16;color:#65a30d;background:rgba(132,204,22,.06);}
-    .source-pill.pill-purple:hover{border-color:#a855f7;color:#9333ea;background:rgba(168,85,247,.06);}
-    .source-pill.pill-orange:hover{border-color:#f97316;color:#ea580c;background:rgba(249,115,22,.06);}
-    .source-pill.pill-indigo:hover{border-color:#6366f1;color:#4f46e5;background:rgba(99,102,241,.06);}
+    /* ── PAGE BODY ── */
+    .page-body { padding: 20px 28px 48px; max-width: 1600px; margin: 0 auto; }
+    .section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--text3);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* ── Page body ──── */
-    .page-body{padding:22px 28px 48px;max-width:1600px;margin:0 auto;}
+    /* ── SUMMARY STRIP ── */
+    .summary-strip {
+      display: flex; align-items: stretch; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px;
+      margin-bottom: 16px; overflow: hidden;
+    }
+    .summary-item {
+      flex: 1; display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px; border-right: 1px solid var(--border);
+      transition: background .15s; cursor: default;
+    }
+    .summary-item:last-child { border-right: none; }
+    .summary-item:hover { background: var(--surface2); }
+    .summary-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    .si-blue  { background: rgba(99,102,241,.1);  color: #6366f1; }
+    .si-red   { background: rgba(244,63,94,.1);   color: #f43f5e; }
+    .si-amber { background: rgba(245,158,11,.1);  color: #f59e0b; }
+    .si-green { background: rgba(16,185,129,.1);  color: #10b981; }
+    .summary-body { min-width: 0; }
+    .summary-num { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; line-height: 1; color: var(--text); letter-spacing: -.5px; }
+    .summary-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .summary-badge { margin-left: auto; flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .sb-red   { background: rgba(244,63,94,.08);  color: #f43f5e; }
+    .sb-amber { background: rgba(245,158,11,.08); color: #d97706; }
+    .sb-green { background: rgba(16,185,129,.08); color: #059669; }
+    .sb-blue  { background: rgba(99,102,241,.08); color: #6366f1; }
 
-    /* ── Section label ──── */
-    .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-    .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+    /* ── SOURCE HEALTH ── */
+    .source-health-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 18px; }
+    .sh-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; text-decoration: none; display: block; transition: all .18s;
+      position: relative; overflow: hidden;
+    }
+    .sh-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 2px 2px 0 0; }
+    .sh-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); border-color: rgba(99,102,241,.25); }
+    .sh-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .sh-item-name { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text2); }
+    .sh-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sh-total { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 6px; }
+    .sh-meta { font-size: 10px; color: var(--text3); margin-bottom: 7px; }
+    .sh-bar { height: 3px; border-radius: 2px; background: var(--surface3); overflow: hidden; display: flex; gap: 1px; }
+    .sh-bar-seg { height: 100%; }
+    .sh-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+    .sh-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+    .t-open     { background: rgba(245,158,11,.1);  color: #d97706; }
+    .t-resolved { background: rgba(16,185,129,.1);  color: #059669; }
+    .t-severe   { background: rgba(244,63,94,.1);   color: #e11d48; }
+    .t-neutral  { background: rgba(148,163,184,.1); color: var(--text3); }
 
-    /* ── KPI cards ──── */
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
-    @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
-    .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px 15px;box-shadow:0 1px 4px rgba(0,0,0,.04);position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;cursor:default;}
-    .kpi-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.09);transform:translateY(-2px);}
-    .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;}
-    .kpi-card.kpi-total::before{background:linear-gradient(90deg,#6366f1,#818cf8);}
-    .kpi-card.kpi-high::before{background:linear-gradient(90deg,#f43f5e,#fb7185);}
-    .kpi-card.kpi-open::before{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
-    .kpi-card.kpi-resolved::before{background:linear-gradient(90deg,#10b981,#34d399);}
-    .kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
-    .kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;}
-    .kpi-total .kpi-icon{background:rgba(99,102,241,.1);color:#6366f1;}
-    .kpi-high .kpi-icon{background:rgba(244,63,94,.1);color:#f43f5e;}
-    .kpi-open .kpi-icon{background:rgba(245,158,11,.1);color:#f59e0b;}
-    .kpi-resolved .kpi-icon{background:rgba(16,185,129,.1);color:#10b981;}
-    .kpi-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
-    .kpi-badge.red{background:rgba(244,63,94,.1);color:#f43f5e;}
-    .kpi-badge.green{background:rgba(16,185,129,.1);color:#10b981;}
-    .kpi-badge.amber{background:rgba(245,158,11,.1);color:#d97706;}
-    .kpi-badge.blue{background:rgba(99,102,241,.1);color:#6366f1;}
-    .kpi-value{font-size:34px;font-weight:700;line-height:1;color:var(--text);font-family:'JetBrains Mono',monospace;margin-bottom:4px;}
-    .kpi-label{font-size:12px;color:var(--text2);font-weight:500;}
-    .kpi-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+    /* ── ANALYTICS GRID ── */
+    .chart-grid { display: grid; grid-template-columns: 240px 1fr 1.5fr; gap: 12px; margin-bottom: 18px; }
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 18px; transition: box-shadow .2s;
+    }
+    .chart-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+    .cc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .cc-title { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--text); }
+    .cc-icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .cc-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; background: var(--surface3); color: var(--text3); border: 1px solid var(--border); }
 
-    /* ── Chart grids ──── */
-    .chart-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
-    .chart-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
-    @media(max-width:1200px){.chart-grid-4{grid-template-columns:repeat(2,1fr);}}
-    @media(max-width:700px){.chart-grid-4{grid-template-columns:1fr;}}
-    @media(max-width:1000px){.chart-grid{grid-template-columns:1fr;}}
-    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:17px 19px 15px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .2s;}
-    .chart-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.08);}
-    .chart-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-    .chart-card-header-left{display:flex;align-items:center;gap:8px;}
-    .chart-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
-    .chart-icon.indigo{background:rgba(99,102,241,.1);color:#6366f1;}
-    .chart-icon.emerald{background:rgba(16,185,129,.1);color:#10b981;}
-    .chart-icon.rose{background:rgba(244,63,94,.1);color:#f43f5e;}
-    .chart-icon.amber{background:rgba(245,158,11,.1);color:#f59e0b;}
-    .chart-icon.sky{background:rgba(14,165,233,.1);color:#0ea5e9;}
-    .chart-icon.violet{background:rgba(139,92,246,.1);color:#8b5cf6;}
-    .chart-card-title{font-size:12.5px;font-weight:600;color:var(--text);}
-    .chart-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:var(--surface2);color:var(--text3);border:1px solid var(--border);}
+    /* Module bars */
+    .mod-row { display: flex; align-items: center; gap: 8px; padding: 4px 4px; margin: 0 -4px; border-radius: 6px; cursor: pointer; transition: background .1s; position: relative; }
+    .mod-row:hover { background: rgba(99,102,241,.06); }
+    .mod-lbl { width: 88px; font-size: 11px; color: var(--text2); flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mod-track { flex: 1; height: 5px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+    .mod-fill { height: 100%; border-radius: 3px; }
+    .mod-val { font-size: 10.5px; color: var(--text3); font-family: 'JetBrains Mono', monospace; width: 34px; text-align: right; }
 
-    /* ── Status legend ──── */
-    .status-legend{display:flex;flex-direction:column;gap:9px;margin-top:6px;}
-    .sl-row{display:flex;align-items:center;gap:8px;}
-    .sl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-    .sl-label{font-size:12px;color:var(--text2);flex:1;}
-    .sl-val{font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);}
-    .sl-pct{font-size:10.5px;color:var(--text3);min-width:32px;text-align:right;}
+    /* Module bar tooltip */
+    .mod-tooltip {
+      position: absolute; right: 0; bottom: calc(100% + 6px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 11px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+      font-size: 10.5px; white-space: nowrap; z-index: 50;
+      pointer-events: none; opacity: 0; transition: opacity .15s;
+      min-width: 140px;
+    }
+    .mod-row:hover .mod-tooltip { opacity: 1; }
+    .mod-tooltip-row { display: flex; justify-content: space-between; gap: 14px; padding: 2px 0; }
+    .mod-tooltip-lbl { color: var(--text3); }
+    .mod-tooltip-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text); }
+    .mod-tooltip-val.tv-open    { color: #f59e0b; }
+    .mod-tooltip-val.tv-resolve { color: #10b981; }
 
-    /* ── Table ──── */
-    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);}
-    .table-header{padding:14px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);}
-    .table-title{font-size:13.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:9px;}
-    .table-title-icon{width:26px;height:26px;border-radius:6px;background:rgba(16,185,129,.1);display:flex;align-items:center;justify-content:center;color:#10b981;font-size:11px;}
-    .ts-badge{font-size:11px;color:var(--text3);font-weight:400;font-family:'JetBrains Mono',monospace;}
-    .data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
-    .data-table thead{position:sticky;top:0;z-index:5;}
-    .data-table thead tr{background:var(--surface3);border-bottom:2px solid var(--border);}
-    .data-table th{padding:10px 14px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);user-select:none;}
-    .data-table th:last-child{border-right:none;}
-    .data-table th.sortable{cursor:pointer;transition:background .15s;}
-    .data-table th.sortable:hover{background:var(--border);}
-    .data-table td{padding:10px 14px;color:var(--text2);text-align:center;vertical-align:middle;border-right:1px solid rgba(0,0,0,.04);}
-    .data-table td:last-child{border-right:none;}
-    .data-table tbody tr{border-bottom:1px solid var(--border);transition:background .12s;}
-    .data-table tbody tr:last-child{border-bottom:none;}
-    .data-table tbody tr:hover{background:var(--surface2);}
-    .sl-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);}
-    .title-cell{text-align:left!important;max-width:300px;line-height:1.45;color:var(--text)!important;font-weight:500;}
-    .status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
-    .status-open{background:rgba(244,63,94,.1);color:#f43f5e;}
-    .status-resolved{background:rgba(16,185,129,.1);color:#059669;}
-    .status-default{background:rgba(100,116,139,.1);color:#64748b;}
-    .table-scroll{overflow-x:auto;overflow-y:auto;max-height:500px;}
+    /* Module drill modal */
+    .mod-modal-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn .15s ease;
+    }
+    .mod-modal-box {
+      background: var(--surface); border-radius: 14px;
+      width: 92%; max-width: 1000px; max-height: 88vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      animation: slideUp .18s ease;
+    }
+    .mod-modal-head {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2); flex-shrink: 0;
+    }
+    .mod-modal-title { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .mod-modal-close {
+      width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+      transition: all .13s;
+    }
+    .mod-modal-close:hover { background: var(--surface3); color: var(--text); }
+    .mod-modal-stats { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .mod-modal-stat { flex: 1; padding: 10px 16px; border-right: 1px solid var(--border); text-align: center; }
+    .mod-modal-stat:last-child { border-right: none; }
+    .mod-modal-stat-num { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+    .mod-modal-stat-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: .06em; }
+    .mod-modal-search-bar {
+      padding: 8px 16px; border-bottom: 1px solid var(--border);
+      background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+    }
+    .mod-modal-search-wrap { position: relative; flex: 1; }
+    .mod-modal-search {
+      width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+      color: var(--text); border-radius: 7px; padding: 5px 10px 5px 28px;
+      font-size: 11px; font-family: 'Sora', sans-serif; outline: none;
+    }
+    .mod-modal-search:focus { border-color: var(--accent); }
+    .mod-modal-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 10px; pointer-events: none; }
+    .mod-modal-result-bar { padding: 5px 16px; border-bottom: 1px solid var(--border); font-size: 11px; flex-shrink: 0; }
+    .mod-modal-body { overflow-y: auto; flex: 1; }
+    .dark .mod-modal-box { background: #1e293b; }
+    .dark .mod-modal-head { background: #0f172a; border-color: #2d3f5a; }
+    .dark .mod-modal-stats,.dark .mod-modal-stat { border-color: #2d3f5a; }
+    .dark .mod-modal-search-bar { background: #0f172a; border-color: #2d3f5a; }
+    .dark .mod-modal-search { background: #1e293b; border-color: #2d3f5a; color: #f1f5f9; }
+    .dark .mod-modal-result-bar { border-color: #2d3f5a; }
+    .dark .mod-tooltip { background: #1e293b; border-color: #2d3f5a; }
 
-    /* ── Filter bar ──── */
-    .filter-bar{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;flex-direction:column;gap:9px;}
-    .filter-row{display:flex;flex-wrap:wrap;gap:7px;align-items:center;}
-    .filter-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);white-space:nowrap;}
-    .filter-select{background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:8px;padding:6px 28px 6px 10px;font-size:11.5px;font-family:'Sora',sans-serif;cursor:pointer;outline:none;min-width:120px;transition:border-color .15s,box-shadow .15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;background-color:var(--surface);}
-    .filter-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
-    .filter-select.f-active{border-color:var(--accent);background-color:rgba(99,102,241,.07);color:var(--accent);font-weight:600;}
-    .filter-search-wrap{position:relative;display:flex;align-items:center;flex:1;min-width:160px;max-width:260px;}
-    .filter-search-icon{position:absolute;left:9px;color:var(--text3);font-size:11px;pointer-events:none;}
-    .filter-search{width:100%;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px 6px 28px;font-size:11.5px;font-family:'Sora',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;}
-    .filter-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
-    .filter-search::placeholder{color:var(--text3);}
-    .filter-divider{width:1px;height:18px;background:var(--border);flex-shrink:0;}
-    .filter-clear-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 11px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text3);font-size:11.5px;font-family:'Sora',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;}
-    .filter-clear-btn:hover{border-color:#f43f5e;color:#f43f5e;background:rgba(244,63,94,.05);}
-    .chips-row{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
-    .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.22);border-radius:20px;font-size:11px;color:var(--accent);font-weight:500;cursor:pointer;transition:all .14s;white-space:nowrap;}
-    .chip:hover{background:rgba(244,63,94,.1);border-color:rgba(244,63,94,.3);color:#f43f5e;}
-    .chip-key{font-weight:700;font-size:9.5px;opacity:.6;text-transform:uppercase;letter-spacing:.04em;}
-    .chip-x{font-size:13px;line-height:1;opacity:.5;}
-    .chip:hover .chip-x{opacity:1;}
-    .filter-result-bar{padding:6px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11.5px;gap:8px;}
-    .filter-result-count{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);}
-    .filter-result-total{color:var(--text3);font-size:11px;}
-    .no-results-row td{padding:40px!important;text-align:center!important;color:var(--text3)!important;font-size:13px!important;}
+    /* Module modal filter bar */
+    .mod-filter-bar {
+      padding: 8px 16px; border-bottom: 1px solid var(--border);
+      background: var(--surface2); flex-shrink: 0;
+      display: flex; flex-wrap: wrap; gap: 7px; align-items: center;
+    }
+    .mod-filter-select {
+      background: var(--surface); border: 1.5px solid var(--border); color: var(--text);
+      border-radius: 7px; padding: 4px 24px 4px 8px; font-size: 11px;
+      font-family: 'Sora', sans-serif; cursor: pointer; outline: none;
+      appearance: none; min-width: 120px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 7px center;
+      background-color: var(--surface); transition: border-color .15s;
+    }
+    .mod-filter-select:focus { border-color: var(--accent); }
+    .mod-filter-select.active { border-color: var(--accent); background-color: rgba(99,102,241,.07); color: var(--accent); font-weight: 600; }
+    .mod-status-pill {
+      padding: 3px 11px; border-radius: 20px; font-size: 10.5px; font-weight: 600;
+      border: 1.5px solid var(--border); background: var(--surface); color: var(--text3);
+      cursor: pointer; transition: all .13s; white-space: nowrap;
+    }
+    .mod-status-pill:hover  { border-color: var(--accent); color: var(--accent); }
+    .mod-status-pill.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .mod-status-pill.p-open.active   { border-color: #f59e0b; background: rgba(245,158,11,.15); color: #d97706; }
+    .mod-status-pill.p-resolve.active{ border-color: #10b981; background: rgba(16,185,129,.15); color: #059669; }
+    .mod-clear-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 7px; border: 1.5px solid var(--border);
+      background: transparent; color: var(--text3); font-size: 11px;
+      font-family: 'Sora', sans-serif; font-weight: 600; cursor: pointer;
+      transition: all .15s; white-space: nowrap;
+    }
+    .mod-clear-btn:hover { border-color: #f43f5e; color: #f43f5e; background: rgba(244,63,94,.05); }
+    .dark .mod-filter-bar { background: #0f172a; border-color: #2d3f5a; }
+    .dark .mod-filter-select { background: #1e293b; border-color: #2d3f5a; color: #f1f5f9; background-color: #1e293b !important; }
+    .dark .mod-status-pill { background: #1e293b; border-color: #2d3f5a; }
 
-    /* ── Modal ──── */
-    #details-modal{font-family:'Sora',sans-serif;}
-    .modal-inner{position:relative;margin:40px auto;max-width:900px;max-height:calc(100vh - 80px);background:var(--surface);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.22);}
-    .modal-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
-    .modal-title{font-size:15px;font-weight:700;color:var(--text);}
-    .modal-close{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
-    .modal-close:hover{background:var(--surface3);color:var(--text);}
-    .modal-body{flex:1;overflow-y:auto;padding:22px 24px;}
-    .modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
-    .modal-stat{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
-    .modal-stat-val{font-size:26px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:4px;}
-    .modal-stat-val.red{color:#f43f5e;}
-    .modal-stat-lbl{font-size:11px;color:var(--text3);}
+    /* ════════════════════════════════════════
+       SEVERITY TABLE — hover tooltip + clickable cells
+    ════════════════════════════════════════ */
+    .sev-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .sev-table th {
+      text-align: left; padding: 6px 8px;
+      font-size: 9.5px; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border);
+    }
+    .sev-table th:not(:first-child) { text-align: center; }
+    .sev-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
+    .sev-table td:not(:first-child) { text-align: center; }
+    .sev-table tr:last-child td { border-bottom: none; }
+    .sev-table tr:hover td { background: var(--surface2); }
+    .sev-src { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text); }
+    .sev-d { width: 6px; height: 6px; border-radius: 50%; }
 
-    /* ── Pagination ──── */
-    .pagination-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap;gap:8px;}
-    .pagination-info{font-size:11.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
-    .pagination-info strong{color:var(--text);}
-    .pagination-controls{display:flex;align-items:center;gap:4px;}
-    .pg-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;font-family:'Sora',sans-serif;}
-    .pg-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.06);}
-    .pg-btn:disabled{opacity:.35;cursor:not-allowed;}
-    .pg-btn.active{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:700;}
-    .pg-ellipsis{font-size:12px;color:var(--text3);padding:0 4px;}
-    .issue-modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;}
-    .issue-modal-box{background:var(--surface);border-radius:16px;width:90%;max-width:860px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.22);overflow:hidden;}
-    .issue-modal-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);flex-shrink:0;}
-    .issue-modal-title{font-size:14px;font-weight:700;color:var(--text);}
-    .issue-modal-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;}
-    .issue-modal-close:hover{background:var(--surface3);color:var(--text);}
-    .issue-modal-body{overflow-y:auto;flex:1;}
-    /* ── Scrollbar ──── */
-    ::-webkit-scrollbar{width:5px;height:5px;}
-    ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
-    ::-webkit-scrollbar-thumb:hover{background:var(--text3);}
+    /* Clickable severity badge */
+    .sev-badge-wrap { position: relative; display: inline-block; }
+    .sev-badge {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px;
+      cursor: pointer; transition: all .15s; position: relative;
+      user-select: none;
+    }
+    .sev-badge:hover { transform: scale(1.08); filter: brightness(1.05); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    .sev-badge:active { transform: scale(0.97); }
+    .sv { background: rgba(244,63,94,.1);   color: #e11d48; }
+    .sv:hover { background: rgba(244,63,94,.18); }
+    .mo { background: rgba(245,158,11,.1);  color: #d97706; }
+    .mo:hover { background: rgba(245,158,11,.18); }
+    .df { background: rgba(148,163,184,.1); color: var(--text3); }
+    .df:hover { background: rgba(148,163,184,.2); }
+    .sev-na { color: var(--text3); font-size: 10.5px; }
+    .sev-total { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; color: var(--text); }
 
-    /* ── Dark overrides ──── */
-    .dark .chart-card,.dark .kpi-card,.dark .table-card{background:#1e293b;border-color:#334155;}
-    .dark .table-header{background:#1e293b;border-color:#334155;}
-    .dark .data-table thead tr{background:#0f172a;border-color:#334155;}
-    .dark .data-table td{border-color:rgba(255,255,255,.04);}
-    .dark .data-table tbody tr{border-color:#334155;}
-    .dark .data-table tbody tr:hover{background:#0f172a;}
-    .dark .source-pill{background:#1e293b;border-color:#334155;color:#94a3b8;}
-    .dark .source-bar,.dark .topnav{background:#1e293b;border-color:#334155;}
-    .dark .modal-inner{background:#1e293b;}
-    .dark .modal-head,.dark .modal-stat{background:#0f172a;border-color:#334155;}
-    .dark .filter-bar{background:#0f172a;border-color:#334155;}
-    .dark .filter-select,.dark .filter-search{background:#1e293b;border-color:#334155;color:#f1f5f9;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2364748b' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");}
-    .dark .filter-select{background-color:#1e293b;}
-    .dark .filter-result-bar{background:#1e293b;border-color:#334155;}
-    .dark .filter-select.f-active{background:rgba(99,102,241,.18);}
+    /* Tooltip */
+    .sev-tooltip {
+      position: absolute; bottom: calc(100% + 6px); left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+      min-width: 130px; z-index: 50;
+      pointer-events: none; opacity: 0;
+      transition: opacity .15s, transform .15s;
+      transform: translateX(-50%) translateY(4px);
+      white-space: nowrap;
+    }
+    .sev-badge-wrap:hover .sev-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .sev-tooltip-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 10.5px; padding: 1.5px 0; }
+    .sev-tooltip-label { color: var(--text3); font-weight: 500; }
+    .sev-tooltip-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text); }
+    .sev-tooltip-val.t-open-v { color: #f59e0b; }
+    .sev-tooltip-val.t-resolve-v { color: #10b981; }
+    .sev-tooltip-val.t-close-v { color: #94a3b8; }
+    .sev-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--border); }
+    .sev-tooltip::before { content: ''; position: absolute; top: calc(100% - 1px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--surface); z-index: 1; }
+    .click-hint { font-size: 8px; opacity: 0; margin-left: 3px; transition: opacity .15s; vertical-align: middle; }
+    .sev-badge:hover .click-hint { opacity: 0.6; }
+
+    /* ── CRITICAL ISSUES TABLE ── */
+    .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .table-header { padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .table-title { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .table-title-icon { width: 24px; height: 24px; border-radius: 6px; background: rgba(16,185,129,.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .ts-badge { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; font-weight: 400; }
+    .filter-bar { padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); display: flex; flex-direction: column; gap: 7px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .filter-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
+    .filter-select {
+      background: var(--surface); border: 1.5px solid var(--border); color: var(--text);
+      border-radius: 7px; padding: 5px 26px 5px 9px; font-size: 11px; font-family: 'Sora', sans-serif;
+      cursor: pointer; outline: none; min-width: 110px; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; background-color: var(--surface);
+      transition: border-color .15s;
+    }
+    .filter-select:focus { border-color: var(--accent); }
+    .filter-select.f-active { border-color: var(--accent); background-color: rgba(99,102,241,.07); color: var(--accent); font-weight: 600; }
+    .filter-search-wrap { position: relative; display: flex; align-items: center; flex: 1; min-width: 150px; max-width: 240px; }
+    .filter-search-icon { position: absolute; left: 8px; color: var(--text3); font-size: 10px; pointer-events: none; }
+    .filter-search { width: 100%; background: var(--surface); border: 1.5px solid var(--border); color: var(--text); border-radius: 7px; padding: 5px 10px 5px 26px; font-size: 11px; font-family: 'Sora', sans-serif; outline: none; transition: border-color .15s; }
+    .filter-search:focus { border-color: var(--accent); }
+    .filter-search::placeholder { color: var(--text3); }
+    .filter-clear-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 7px; border: 1.5px solid var(--border); background: transparent; color: var(--text3); font-size: 11px; font-family: 'Sora', sans-serif; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .filter-clear-btn:hover { border-color: #f43f5e; color: #f43f5e; background: rgba(244,63,94,.05); }
+    .chips-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2); border-radius: 20px; font-size: 10.5px; color: var(--accent); font-weight: 500; cursor: pointer; transition: all .13s; }
+    .chip:hover { background: rgba(244,63,94,.1); border-color: rgba(244,63,94,.25); color: #f43f5e; }
+    .chip-key { font-weight: 700; font-size: 9px; opacity: .6; text-transform: uppercase; }
+    .filter-result-bar { padding: 5px 16px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+    .filter-result-count { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text); }
+    .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 480px; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .data-table thead tr { background: var(--surface3); border-bottom: 1.5px solid var(--border); position: sticky; top: 0; z-index: 5; }
+    .data-table th { padding: 9px 13px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text2); white-space: nowrap; border-right: 1px solid var(--border); }
+    .data-table th:last-child { border-right: none; }
+    .data-table th.sortable { cursor: pointer; }
+    .data-table th.sortable:hover { background: var(--border); }
+    .data-table td { padding: 9px 13px; color: var(--text2); text-align: center; vertical-align: middle; border-right: 1px solid rgba(0,0,0,.03); }
+    .data-table td:last-child { border-right: none; }
+    .data-table tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table tbody tr:hover { background: var(--surface2); }
+    .sl-num { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); }
+    .title-cell { text-align: left !important; max-width: 280px; line-height: 1.4; color: var(--text) !important; font-weight: 500; }
+    .status-pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+    .status-open     { background: rgba(244,63,94,.1);  color: #f43f5e; }
+    .status-resolved { background: rgba(16,185,129,.1); color: #059669; }
+    .status-default  { background: rgba(100,116,139,.1);color: #64748b; }
+    .tier-pill { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 9.5px; font-weight: 700; white-space: nowrap; letter-spacing: .03em; }
+    .tier-severe   { background: rgba(244,63,94,.1);   color: #e11d48; }
+    .tier-moderate { background: rgba(245,158,11,.1);  color: #d97706; }
+    .tier-deferred { background: rgba(148,163,184,.12); color: #64748b; }
+    .tier-low      { background: rgba(148,163,184,.12); color: #64748b; }
+    .pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 9px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 7px; }
+    .pagination-info { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+    .pagination-info strong { color: var(--text); }
+    .pagination-controls { display: flex; align-items: center; gap: 3px; }
+    .pg-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text2); font-size: 10.5px; cursor: pointer; transition: all .13s; }
+    .pg-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: rgba(99,102,241,.06); }
+    .pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .pg-btn.active { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 700; }
+    .pg-ellipsis { font-size: 11px; color: var(--text3); padding: 0 3px; }
+
+    /* ── TIER DRILL MODAL ── */
+    .tier-modal-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; animation: fadeIn .15s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .tier-modal-box { background: var(--surface); border-radius: 14px; width: 92%; max-width: 960px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.25); animation: slideUp .18s ease; }
+    @keyframes slideUp { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .tier-modal-head { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); flex-shrink: 0; gap: 12px; }
+    .tier-modal-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .tier-modal-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    .tier-modal-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .tier-modal-meta { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .tier-modal-close { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all .13s; flex-shrink: 0; }
+    .tier-modal-close:hover { background: var(--surface3); color: var(--text); border-color: var(--text2); }
+    .tier-modal-stats { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .tier-modal-stat { flex: 1; padding: 10px 16px; border-right: 1px solid var(--border); text-align: center; }
+    .tier-modal-stat:last-child { border-right: none; }
+    .tier-modal-stat-num { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+    .tier-modal-stat-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: .06em; }
+    .tms-open    { color: #f59e0b; }
+    .tms-resolve { color: #10b981; }
+    .tms-close   { color: #94a3b8; }
+    .tms-total   { color: var(--accent); }
+    .tier-modal-search-bar { padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    .tier-modal-search { flex: 1; background: var(--surface); border: 1.5px solid var(--border); color: var(--text); border-radius: 7px; padding: 5px 10px 5px 28px; font-size: 11px; font-family: 'Sora', sans-serif; outline: none; transition: border-color .15s; }
+    .tier-modal-search:focus { border-color: var(--accent); }
+    .tier-modal-search::placeholder { color: var(--text3); }
+    .tier-modal-search-wrap { position: relative; flex: 1; }
+    .tier-modal-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 10px; pointer-events: none; }
+    .tier-modal-filter-pills { display: flex; gap: 5px; align-items: center; }
+    .tier-filter-pill { padding: 3px 10px; border-radius: 20px; font-size: 10.5px; font-weight: 600; border: 1.5px solid var(--border); background: var(--surface); color: var(--text3); cursor: pointer; transition: all .13s; }
+    .tier-filter-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .tier-filter-pill.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .tier-filter-pill.p-open.active   { border-color: #f59e0b; background: rgba(245,158,11,.15); color: #d97706; }
+    .tier-filter-pill.p-resolve.active{ border-color: #10b981; background: rgba(16,185,129,.15); color: #059669; }
+    .tier-filter-pill.p-close.active  { border-color: #94a3b8; background: rgba(148,163,184,.15); color: #64748b; }
+    .tier-modal-body { overflow-y: auto; flex: 1; }
+    .tier-modal-result-bar { padding: 5px 16px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: space-between; font-size: 11px; flex-shrink: 0; }
+
+    /* Dark mode */
+    .dark .chart-card,.dark .table-card,.dark .sh-item,.dark .summary-strip { background: #1e293b; border-color: #2d3f5a; }
+    .dark .table-header,.dark .pagination-bar { background: #1e293b; border-color: #2d3f5a; }
+    .dark .data-table thead tr { background: #0f172a; border-color: #2d3f5a; }
+    .dark .data-table tbody tr { border-color: #2d3f5a; }
+    .dark .data-table tbody tr:hover { background: #0f172a; }
+    .dark .filter-bar { background: #0f172a; border-color: #2d3f5a; }
+    .dark .filter-select,.dark .filter-search { background: #1e293b; border-color: #2d3f5a; color: #f1f5f9; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234b5e7a' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-color: #1e293b !important; }
+    .dark .filter-result-bar { background: #1e293b; border-color: #2d3f5a; }
+    .dark .mod-row:hover { background: rgba(99,102,241,.1); }
+    .dark .sev-table tr:hover td { background: #0f172a; }
+    .dark .source-bar,.dark .topnav { background: #1e293b; border-color: #2d3f5a; }
+    .dark .summary-item { border-color: #2d3f5a; }
+    .dark .summary-item:hover { background: #273248; }
+    .dark .sev-tooltip { background: #1e293b; border-color: #2d3f5a; }
+    .dark .sev-tooltip::after { border-top-color: #2d3f5a; }
+    .dark .sev-tooltip::before { border-top-color: #1e293b; }
+    .dark .tier-modal-box { background: #1e293b; }
+    .dark .tier-modal-head { background: #0f172a; border-color: #2d3f5a; }
+    .dark .tier-modal-stats { border-color: #2d3f5a; }
+    .dark .tier-modal-stat { border-color: #2d3f5a; }
+    .dark .tier-modal-search-bar { background: #0f172a; border-color: #2d3f5a; }
+    .dark .tier-modal-search { background: #1e293b; border-color: #2d3f5a; color: #f1f5f9; }
+    .dark .tier-modal-result-bar { background: #1e293b; border-color: #2d3f5a; }
+    .dark .tier-filter-pill { background: #1e293b; border-color: #2d3f5a; }
+    .dark .tier-modal-close { background: #1e293b; border-color: #2d3f5a; }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    .issue-modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
+    .issue-modal-box { background: var(--surface); border-radius: 14px; width: 90%; max-width: 820px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .issue-modal-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); flex-shrink: 0; }
+    .issue-modal-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .issue-modal-close { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all .13s; }
+    .issue-modal-close:hover { background: var(--surface3); color: var(--text); }
+    .issue-modal-body { overflow-y: auto; flex: 1; }
   </style>
 </head>
 <body>
 
-  <!-- LOADING SCREEN -->
-  <div id="loading-screen" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f172a 100%);transition:opacity 0.6s ease,visibility 0.6s ease;">
-    <div id="loading-brain-wrap"><i id="loading-brain-icon" class="fa-solid fa-brain"></i></div>
-    <div id="loading-title">Market Pulse AI</div>
-    <div id="loading-subtitle">VOC Intelligence Dashboard</div>
-    <div id="loading-bar-bg"><div id="loading-bar"></div></div>
-  </div>
-  <script>
-    (function(){
-      var s=document.getElementById('loading-screen');
-      if(!s)return;
-      if(sessionStorage.getItem('mpa_visited')){s.style.display='none';}
-      else{sessionStorage.setItem('mpa_visited','1');window.addEventListener('DOMContentLoaded',function(){setTimeout(function(){s.style.opacity='0';s.style.visibility='hidden';s.style.pointerEvents='none';},2000);});}
-    })();
-  </script>
-
   <!-- TOPNAV -->
-  <header class="topnav">
-    <div class="topnav-brand">
-      <div class="topnav-logo"><i class="fa-solid fa-brain"></i></div>
+  <nav class="topnav">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:28px;height:28px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;"><i class="fa-solid fa-brain"></i></div>
       <div>
-        <div class="topnav-title">Market Pulse AI</div>
-        <div class="topnav-sub">VOC Intelligence Dashboard</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.01em;">Market Pulse AI</div>
+        <div style="font-size:10px;color:var(--text3);letter-spacing:.03em;">VOC Intelligence Dashboard</div>
       </div>
     </div>
-    <div class="topnav-right">
-      <span class="topnav-time" id="live-clock"></span>
-      <span class="topnav-badge"><i class="fa-solid fa-circle" style="font-size:6px;vertical-align:middle;margin-right:4px"></i>Live</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="live-badge"><div class="live-dot"></div>5 Sources Live</div>
+      <div class="topnav-time" id="live-clock"></div>
     </div>
-  </header>
+  </nav>
 
   <!-- SOURCE NAV -->
   <nav class="source-bar">
-    <a href="GLOBAL_VOC_PLM_Dashboard.html" class="source-pill pill-green"><span class="pill-dot" style="background:#10b981"></span>Global VOC PLM</a>
-    <a href="BetaUT_Dashboard.html" class="source-pill pill-teal"><span class="pill-dot" style="background:#14b8a6"></span>Beta UT</a>
-    <a href="employee_ut_Dashboard.html" class="source-pill pill-lime"><span class="pill-dot" style="background:#84cc16"></span>Employee UT</a>
-    <a href="SMVOC_Dashboard.html" class="source-pill pill-purple"><span class="pill-dot" style="background:#a855f7"></span>Samsung Members VOC</a>
-    <a href="OS_Wise_bug_dashboard.html" class="source-pill pill-orange"><span class="pill-dot" style="background:#f97316"></span>Service Issues</a>
-    <a href="aiprocessor.html" class="source-pill pill-indigo" style="margin-left: auto;"><span class="pill-dot" style="background:#6366f1"></span>AI Processor</a>
+    <a href="#" class="source-pill"><span class="pill-dot" style="background:#10b981"></span>Samsung Member</a>
+    <a href="GLOBAL_VOC_PLM_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#10b981"></span>Global VOC PLM</a>
+    <a href="BetaUT_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#14b8a6"></span>Beta UT</a>
+    <a href="SMVOC_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#a855f7"></span>Samsung Members VOC</a>
+    <a href="data_analytics.html" class="source-pill"><span class="pill-dot" style="background:#f97316"></span>Data Analytics</a>
+    <a href="employee_ut_Dashboard.html" class="source-pill"><span class="pill-dot" style="background:#84cc16"></span>Employee UT</a>
+    <span class="source-pill" style="cursor:default;opacity:.55;border:1px dashed var(--border)"><span class="pill-dot" style="background:#94a3b8"></span>Big Data <span style="font-size:9px;background:rgba(245,158,11,.15);color:#d97706;border-radius:4px;padding:1px 5px;margin-left:3px;font-weight:700">Upcoming</span></span>
+    <a href="aiprocessor.html" class="source-pill"><span class="pill-dot" style="background:#6366f1"></span>AI Processor</a>
+    <!-- <a href="aiprocessor.html" class="source-pill" style="margin-left:auto">
+      <span class="pill-dot" style="background:#6366f1"></span>AI Processor
+    </a> -->
   </nav>
 
   <main class="page-body">
-
-    <!-- ── KPI CARDS ──────────────────────────────────────── -->
-    <div class="section-label">Key Metrics</div>
-    <div class="kpi-grid">
-      <div class="kpi-card kpi-total">
-        <div class="kpi-top">
-          <div class="kpi-icon"><i class="fa-solid fa-database"></i></div>
-          <span class="kpi-badge blue" id="kpi-total-badge">All</span>
+    <div class="section-label" style="margin-top:4px">Cross-source summary — all 5 data sources</div>
+    <div class="summary-strip">
+      <div class="summary-item">
+        <div class="summary-icon si-blue"><i class="fa-solid fa-database"></i></div>
+        <div class="summary-body">
+          <div class="summary-num" id="total-issues">—</div>
+          <div class="summary-lbl">Total Issues · across all 5 sources</div>
         </div>
-        <div class="kpi-value" id="total-issues">—</div>
-        <div class="kpi-label">Total Issues</div>
-        <div class="kpi-sub">across all sources</div>
+        <span class="summary-badge sb-blue" id="kpi-total-badge">5 sources</span>
       </div>
-      <div class="kpi-card kpi-high">
-        <div class="kpi-top">
-          <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-          <span class="kpi-badge red" id="kpi-high-badge">Critical</span>
+      <div class="summary-item">
+        <div class="summary-icon si-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="summary-body">
+          <div class="summary-num" id="high-issues">—</div>
+          <div class="summary-lbl">Severe Issues · scored High + Severe tier</div>
         </div>
-        <div class="kpi-value" id="high-issues">—</div>
-        <div class="kpi-label">High Severity</div>
-        <div class="kpi-sub" id="high-pct">needs immediate attention</div>
+        <span class="summary-badge sb-red" id="kpi-high-badge">—</span>
       </div>
-      <div class="kpi-card kpi-open">
-        <div class="kpi-top">
-          <div class="kpi-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
-          <span class="kpi-badge amber" id="kpi-open-badge">Action Needed</span>
+      <div class="summary-item">
+        <div class="summary-icon si-amber"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <div class="summary-body">
+          <div class="summary-num" id="open-issues">—</div>
+          <div class="summary-lbl">Open Issues · pending resolution</div>
         </div>
-        <div class="kpi-value" id="open-issues">—</div>
-        <div class="kpi-label">Open Issues</div>
-        <div class="kpi-sub" id="open-pct">pending resolution</div>
+        <span class="summary-badge sb-amber" id="kpi-open-badge">—</span>
       </div>
-      <div class="kpi-card kpi-resolved">
-        <div class="kpi-top">
-          <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
-          <span class="kpi-badge green" id="kpi-resolved-badge">Good</span>
+      <div class="summary-item">
+        <div class="summary-icon si-green"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="summary-body">
+          <div class="summary-num" id="resolved-issues">—</div>
+          <div class="summary-lbl">Resolved · closed or fixed</div>
         </div>
-        <div class="kpi-value" id="resolved-issues">—</div>
-        <div class="kpi-label">Resolved Issues</div>
-        <div class="kpi-sub" id="resolved-pct">closed or fixed</div>
+        <span class="summary-badge sb-green" id="kpi-resolved-badge">—</span>
       </div>
     </div>
 
-    <!-- ── ALL 4 CHARTS IN ONE ROW ─── -->
-    <div class="section-label">Analytics Overview</div>
-    <div class="chart-grid-4">
+    <div class="section-label">Source health — click to deep-dive</div>
+    <div class="source-health-row" id="source-health-grid"></div>
+
+    <div class="section-label">Analytics overview</div>
+    <div class="chart-grid">
       <div class="chart-card">
-        <div class="chart-card-header">
-          <div class="chart-card-header-left">
-            <div class="chart-icon indigo"><i class="fa-solid fa-mobile-screen"></i></div>
-            <span class="chart-card-title">Top 10 Models</span>
+        <div class="cc-header">
+          <div class="cc-title">
+            <div class="cc-icon si-blue" style="border-radius:6px"><i class="fa-solid fa-mobile-screen"></i></div>
+            Top 10 Models
           </div>
-          <span class="chart-badge" id="models-badge">—</span>
+          <span class="cc-badge" id="models-badge">—</span>
         </div>
-        <div id="top-models-chart" style="width:100%;height:200px;"></div>
+        <div id="top-models-chart" style="width:100%;height:210px;"></div>
       </div>
+
       <div class="chart-card">
-        <div class="chart-card-header">
-          <div class="chart-card-header-left">
-            <div class="chart-icon emerald"><i class="fa-solid fa-layer-group"></i></div>
-            <span class="chart-card-title">Top 5 Sources</span>
+        <div class="cc-header">
+          <div class="cc-title">
+            <div class="cc-icon si-blue" style="border-radius:6px"><i class="fa-solid fa-cubes"></i></div>
+            Top Modules
           </div>
+          <span class="cc-badge">All sources</span>
         </div>
-        <div id="top-sources-chart" style="width:100%;height:200px;"></div>
+        <div id="module-bars"></div>
       </div>
+
+      <!-- SEVERITY MATRIX -->
       <div class="chart-card">
-        <div class="chart-card-header">
-          <div class="chart-card-header-left">
-            <div class="chart-icon rose"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <span class="chart-card-title">Severity Distribution</span>
+        <div class="cc-header">
+          <div class="cc-title">
+            <div class="cc-icon si-red" style="border-radius:6px"><i class="fa-solid fa-layer-group"></i></div>
+            Severity by Source
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:9.5px;color:var(--text3);display:flex;align-items:center;gap:3px;"><i class="fa-solid fa-hand-pointer" style="font-size:8px"></i> Click counts to drill down</span>
+            <span class="cc-badge">Scaled view</span>
           </div>
         </div>
-        <div id="severity-chart" style="width:100%;height:160px;"></div>
-        <div id="severity-breakdown"></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <div class="chart-card-header-left">
-            <div class="chart-icon sky"><i class="fa-solid fa-chart-pie"></i></div>
-            <span class="chart-card-title">Issue Status</span>
-          </div>
-        </div>
-        <div id="status-donut-chart" style="width:100%;height:130px;"></div>
-        <div class="status-legend" id="status-legend"></div>
+        <table class="sev-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Severe <span style="font-size:8px;opacity:.5">(High scored)</span></th>
+              <th>Moderate</th>
+              <th>Low</th>
+              <th style="text-align:right">Total</th>
+            </tr>
+          </thead>
+          <tbody id="sev-matrix-body"></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- ── CRITICAL ISSUES TABLE ──────────────────────────── -->
-    <div class="section-label">Critical Issues</div>
+    <div class="section-label">Critical issues — Global VOC PLM</div>
     <div class="table-card">
-      <div class="table-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="table-header">
         <div class="table-title">
           <div class="table-title-icon"><i class="fa-solid fa-table"></i></div>
           Top Critical Market Issues
           <span class="ts-badge" id="last-updated"></span>
         </div>
-        <div style="display: flex; gap: 8px;">
-        </div>
       </div>
-
-      <!-- FILTER BAR -->
       <div class="filter-bar">
         <div class="filter-row">
-          <span class="filter-label">Filters</span>
+          <span class="filter-label">Filter</span>
           <select class="filter-select" id="f-source" onchange="applyTableFilters()"><option value="">All Sources</option></select>
-          <select class="filter-select" id="f-model" onchange="applyTableFilters()"><option value="">All Models</option></select>
+          <select class="filter-select" id="f-model"  onchange="applyTableFilters()"><option value="">All Models</option></select>
           <select class="filter-select" id="f-chipset" onchange="applyTableFilters()"><option value="">All Chipsets</option></select>
           <select class="filter-select" id="f-status" onchange="applyTableFilters()"><option value="">All Statuses</option></select>
-          <div class="filter-divider"></div>
           <div class="filter-search-wrap">
             <i class="fa-solid fa-magnifying-glass filter-search-icon"></i>
             <input class="filter-search" type="text" id="f-search" placeholder="Search title or PLM code…" oninput="applyTableFilters()">
           </div>
-          <div class="filter-divider"></div>
-          <button class="filter-clear-btn" onclick="clearAllTableFilters()"><i class="fa-solid fa-xmark"></i> Clear all</button>
+          <button class="filter-clear-btn" onclick="clearAllTableFilters()"><i class="fa-solid fa-xmark"></i> Clear</button>
         </div>
         <div class="chips-row" id="active-chips-row" style="display:none">
           <span class="filter-label">Active:</span>
           <div id="active-chips"></div>
         </div>
       </div>
-
       <div class="filter-result-bar" id="filter-result-bar" style="display:none">
-        <div><span class="filter-result-count" id="filter-result-count">0</span><span class="filter-result-total" id="filter-result-label"> results</span></div>
-        <span class="filter-result-total" id="filter-match-info"></span>
+        <div><span class="filter-result-count" id="filter-result-count">0</span><span style="color:var(--text3);font-size:11px;" id="filter-result-label"> results</span></div>
+        <span style="color:var(--text3);font-size:11px;" id="filter-match-info"></span>
       </div>
-
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th style="width:40px">SL.</th>
-              <th class="sortable" onclick="sortTable('source')">Source <i id="sort-icon-source" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
-              <th class="sortable" onclick="sortTable('model')">Model No. <i id="sort-icon-model" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
-              <th class="sortable" onclick="sortTable('chipset')">Chipset <i id="sort-icon-chipset" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
-              <th class="sortable" onclick="sortTable('plm')">PLM Code <i id="sort-icon-plm" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
-              <th class="sortable" onclick="sortTable('title')">Title <i id="sort-icon-title" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
-              <th class="sortable" onclick="sortTable('status')">Status <i id="sort-icon-status" class="fa-solid fa-sort" style="opacity:.35;font-size:9px;margin-left:3px"></i></th>
+              <th style="width:38px">SL.</th>
+              <th class="sortable" onclick="sortTable('source')">Source <i id="sort-icon-source" class="fa-solid fa-sort" style="opacity:.3;font-size:8px;margin-left:2px"></i></th>
+              <th class="sortable" onclick="sortTable('model')">Model <i id="sort-icon-model" class="fa-solid fa-sort" style="opacity:.3;font-size:8px;margin-left:2px"></i></th>
+              <th class="sortable" onclick="sortTable('chipset')">Chipset <i id="sort-icon-chipset" class="fa-solid fa-sort" style="opacity:.3;font-size:8px;margin-left:2px"></i></th>
+              <th class="sortable" onclick="sortTable('plm')">PLM Code <i id="sort-icon-plm" class="fa-solid fa-sort" style="opacity:.3;font-size:8px;margin-left:2px"></i></th>
+              <th class="sortable" onclick="sortTable('title')">Title <i id="sort-icon-title" class="fa-solid fa-sort" style="opacity:.3;font-size:8px;margin-left:2px"></i></th>
+              <th class="sortable" onclick="sortTable('tier')">Tier <i id="sort-icon-tier" class="fa-solid fa-sort" style="opacity:.3;font-size:8px;margin-left:2px"></i></th>
+              <th class="sortable" onclick="sortTable('status')">Status <i id="sort-icon-status" class="fa-solid fa-sort" style="opacity:.3;font-size:8px;margin-left:2px"></i></th>
             </tr>
           </thead>
           <tbody id="model-summary-table-body">
-            <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text3)"><i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px"></i>Loading data…</td></tr>
+            <tr><td colspan="8" style="padding:28px;text-align:center;color:var(--text3)"><i class="fa-solid fa-circle-notch fa-spin" style="margin-right:6px"></i>Loading data…</td></tr>
           </tbody>
         </table>
       </div>
-
-      <!-- PAGINATION BAR -->
       <div class="pagination-bar" id="table-pagination" style="display:none;">
-        <span class="pagination-info" id="pagination-info">Showing <strong id="pg-from">1</strong>–<strong id="pg-to">10</strong> of <strong id="pg-total">0</strong> issues</span>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span class="pagination-info" id="pagination-info">Showing <strong id="pg-from">1</strong>–<strong id="pg-to">10</strong> of <strong id="pg-total">0</strong> issues</span>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
+            Show
+            <select id="page-size-select" onchange="changePageSize(this.value)"
+              style="background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;outline:none;">
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+            </select>
+            per page
+          </div>
+        </div>
         <div class="pagination-controls" id="pg-controls"></div>
       </div>
     </div>
 
-    <!-- ISSUE DRILL-DOWN MODAL -->
+    <!-- TIER DRILL MODAL -->
+    <div id="tier-drill-modal" style="display:none;" class="tier-modal-overlay" onclick="if(event.target===this)closeTierDrillModal()">
+      <div class="tier-modal-box">
+        <div class="tier-modal-head">
+          <div class="tier-modal-title-wrap">
+            <div class="tier-modal-icon" id="tier-modal-icon"></div>
+            <div>
+              <div class="tier-modal-title" id="tier-modal-title">Issues</div>
+              <div class="tier-modal-meta" id="tier-modal-meta"></div>
+            </div>
+          </div>
+          <button class="tier-modal-close" onclick="closeTierDrillModal()">✕</button>
+        </div>
+        <div class="tier-modal-stats" id="tier-modal-stats"></div>
+        <div class="tier-modal-search-bar">
+          <div class="tier-modal-search-wrap">
+            <i class="fa-solid fa-magnifying-glass tier-modal-search-icon"></i>
+            <input class="tier-modal-search" type="text" id="tier-modal-search-input" placeholder="Search title, PLM code, module…" oninput="filterTierModal()">
+          </div>
+          <div class="tier-filter-pills" id="tier-filter-pills">
+            <button class="tier-filter-pill active" onclick="setTierStatusFilter('all', this)">All</button>
+            <button class="tier-filter-pill p-open" onclick="setTierStatusFilter('open', this)"><i class="fa-solid fa-circle-dot" style="font-size:8px"></i> Open</button>
+            <button class="tier-filter-pill p-resolve" onclick="setTierStatusFilter('resolve', this)"><i class="fa-solid fa-circle-check" style="font-size:8px"></i> Resolve</button>
+            <button class="tier-filter-pill p-close" onclick="setTierStatusFilter('close', this)"><i class="fa-solid fa-circle-xmark" style="font-size:8px"></i> Close</button>
+          </div>
+        </div>
+        <div class="tier-modal-result-bar" id="tier-modal-result-bar">
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text)" id="tier-modal-result-count">0</span>
+          <span style="color:var(--text3);font-size:11px;margin-left:4px">issues shown</span>
+        </div>
+        <div class="tier-modal-body">
+          <table class="data-table" style="min-width:640px;">
+            <thead><tr>
+              <th style="width:38px">SL.</th>
+              <th>PLM Code</th>
+              <th>Model</th>
+              <th>Module</th>
+              <th>Priority</th>
+              <th>Freq.</th>
+              <th>Title</th>
+              <th>Status</th>
+            </tr></thead>
+            <tbody id="tier-drill-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE DRILL MODAL -->
+    <div id="module-drill-modal" style="display:none;" class="mod-modal-overlay" onclick="if(event.target===this)closeModuleModal()">
+      <div class="mod-modal-box">
+        <div class="mod-modal-head">
+          <div class="mod-modal-title">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(99,102,241,.12);color:#6366f1;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">
+              <i class="fa-solid fa-cubes"></i>
+            </div>
+            <div>
+              <div id="mod-modal-title-text">Module Issues</div>
+              <div id="mod-modal-meta" style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px"></div>
+            </div>
+          </div>
+          <button class="mod-modal-close" onclick="closeModuleModal()">&#x2715;</button>
+        </div>
+        <div class="mod-modal-stats">
+          <div class="mod-modal-stat"><div class="mod-modal-stat-num" id="mod-stat-total" style="color:#6366f1">0</div><div class="mod-modal-stat-lbl">Total</div></div>
+          <div class="mod-modal-stat"><div class="mod-modal-stat-num" id="mod-stat-open" style="color:#f59e0b">0</div><div class="mod-modal-stat-lbl">Open</div></div>
+          <div class="mod-modal-stat"><div class="mod-modal-stat-num" id="mod-stat-resolve" style="color:#10b981">0</div><div class="mod-modal-stat-lbl">Resolve &middot; Not Released</div></div>
+        </div>
+        <!-- Filter bar: Status pills + Source select + Search + Clear -->
+        <div class="mod-filter-bar">
+          <button class="mod-status-pill active"     id="mod-pill-all"     onclick="setModStatus('all',this)">All</button>
+          <button class="mod-status-pill p-open"     id="mod-pill-open"    onclick="setModStatus('open',this)"><i class="fa-solid fa-circle-dot" style="font-size:8px"></i> Open</button>
+          <button class="mod-status-pill p-resolve"  id="mod-pill-resolve" onclick="setModStatus('resolve',this)"><i class="fa-solid fa-circle-check" style="font-size:8px"></i> Resolve · Not Released</button>
+          <select class="mod-filter-select" id="mod-source-select" onchange="filterModuleModal()">
+            <option value="">All Sources</option>
+          </select>
+          <div class="mod-modal-search-wrap" style="flex:1;min-width:140px;max-width:240px;position:relative">
+            <i class="fa-solid fa-magnifying-glass mod-modal-search-icon"></i>
+            <input class="mod-modal-search" type="text" id="mod-modal-search-input"
+              placeholder="Search title, PLM code, model..." oninput="filterModuleModal()">
+          </div>
+          <button class="mod-clear-btn" onclick="clearModFilters()"><i class="fa-solid fa-xmark"></i> Clear</button>
+        </div>
+        <div class="mod-modal-result-bar">
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text)" id="mod-modal-result-count">0</span>
+          <span style="color:var(--text3);font-size:11px;margin-left:4px">issues shown</span>
+        </div>
+        <div class="mod-modal-body">
+          <table class="data-table" style="min-width:640px;">
+            <thead><tr>
+              <th style="width:36px">SL.</th>
+              <th>PLM Code</th>
+              <th>Model</th>
+              <th>Source</th>
+              <th>Priority</th>
+              <th>Freq.</th>
+              <th>Title</th>
+              <th>Status</th>
+            </tr></thead>
+            <tbody id="mod-modal-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Original drill modal (backward compat) -->
     <div id="issue-drill-modal" style="display:none;" class="issue-modal-overlay" onclick="if(event.target===this)closeIssueDrillModal()">
       <div class="issue-modal-box">
         <div class="issue-modal-head">
@@ -432,16 +759,11 @@
           <button class="issue-modal-close" onclick="closeIssueDrillModal()">✕</button>
         </div>
         <div class="issue-modal-body">
-          <table class="data-table" style="min-width:600px;">
-            <thead>
-              <tr>
-                <th style="width:40px">SL.</th>
-                <th>PLM Code</th>
-                <th>Model No.</th>
-                <th>Title</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+          <table class="data-table" style="min-width:580px;">
+            <thead><tr>
+              <th style="width:38px">SL.</th>
+              <th>PLM Code</th><th>Model</th><th>Title</th><th>Status</th>
+            </tr></thead>
             <tbody id="issue-drill-body"></tbody>
           </table>
         </div>
@@ -449,975 +771,976 @@
     </div>
   </main>
 
-  <!-- ── DETAILS MODAL ─────────── -->
-  <div id="details-modal" class="fixed inset-0 z-50 hidden" style="font-family:'Sora',sans-serif;">
-    <div class="fixed inset-0" style="background:rgba(0,0,0,.5);backdrop-filter:blur(4px);" onclick="closeDetailsModal()"></div>
-    <div class="modal-inner">
-      <div class="modal-head">
-        <h2 class="modal-title">Detailed Model Analysis</h2>
-        <button class="modal-close" onclick="closeDetailsModal()">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-stats">
-          <div class="modal-stat">
-            <div class="modal-stat-val" id="modal-total-models">0</div>
-            <div class="modal-stat-lbl">Total Models</div>
-          </div>
-          <div class="modal-stat">
-            <div class="modal-stat-val" id="modal-total-issues">0</div>
-            <div class="modal-stat-lbl">Total Issues</div>
-          </div>
-          <div class="modal-stat">
-            <div class="modal-stat-val red" id="modal-high-risk">0</div>
-            <div class="modal-stat-lbl">High Risk Models</div>
-          </div>
-        </div>
-        <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Model</th>
-                <th>Module</th>
-                <th>Source</th>
-                <th>Issues</th>
-                <th>Severity</th>
-                <th>Risk Level</th>
-              </tr>
-            </thead>
-            <tbody id="modal-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // Global state
-    let dashboardData = { kpis: {}, topModels: [], topModules: [] };
-    let globalTableData = [];
-    let currentSortColumn = '';
-    let isAscending = true;
-    let modelNameMapping = {};
+  // ══════════════════════════════════════════════════════════════════════
+  //  DATA ARCHITECTURE
+  //  ─────────────────────────────────────────────────────────────────────
+  //  PRIMARY  : central_dashboard.json
+  //    → KPIs (total, High{severe,moderate,deferred}, Medium, Low)
+  //    → Severity matrix (already has scale-down applied)
+  //    → Top modules / top models / high_issues / source_model_summary
+  //    → Per-source top models: filtered_top_models[source_key]
+  //
+  //  SECONDARY: downloads/{source}/analytics.json  (loaded in background)
+  //    → Row-level data (d.rows) for tier drill-down modal only
+  //    → Also used for source health card open/resolve/close bar
+  //
+  //  central_dashboard.json kpis shape:
+  //    kpis["Beta UT"]        = { total, High:{total,severe,moderate,deferred}, Medium, Low, open, close, resolved }
+  //    kpis["EMPLOYEE UT"]    = { ... }
+  //    kpis["Global VOC PLM"] = { ... }
+  //
+  //  Severity matrix columns map to High breakdown:
+  //    Severe   → kpis[source].High.severe
+  //    Moderate → kpis[source].High.moderate + kpis[source].Medium  (scale-down)
+  //    Deferred → kpis[source].High.deferred + kpis[source].Low
+  // ══════════════════════════════════════════════════════════════════════
 
-    async function loadModelNameMapping() {
+  // Source definitions: key must match central_dashboard kpis display name
+  // and analytics.json folder path
+  // const SOURCE_DEFS = [
+  //   { key:'beta_ut',             kpiKey:'Beta UT',           label:'Beta UT',           color:'#4975c9', dot:'#4975c9', path:'downloads/beta_ut/analytics.json'},
+  //   { key:'beta_ut_voc',         kpiKey:null,                label:'Beta UT VOC',        color:'#14b8a6', dot:'#14b8a6', path:'downloads/beta_ut_voc/analytics.json' },
+  //   { key:'employee_ut',         kpiKey:'EMPLOYEE UT',       label:'Employee UT',        color:'#7059a8', dot:'#7059a8', path:'downloads/employee_ut/analytics.json'},
+  //   { key:'samsung_members_voc', kpiKey:null,                label:'Samsung Member VOC', color:'#b07a34', dot:'#b07a34', path:'downloads/samsung_members_voc/analytics.json' },
+  //   { key:'global_voc_plm',      kpiKey:'Global VOC PLM',   label:'Global VOC PLM',     color:'#10b981', dot:'#10b981', path:'downloads/global_voc_plm/analytics.json' },
+  // ];
+  // const SOURCE_DEFS = [
+  //   { key:'beta_ut',             kpiKey:'Beta UT',           label:'Beta UT',           color:'#4975c9', dot:'#4975c9', path:'downloads/beta_ut/analytics.json',           link:'service_issues.html?src=beta_ut' },
+  //   { key:'beta_ut_voc',         kpiKey:null,                label:'Beta UT VOC',        color:'#14b8a6', dot:'#14b8a6', path:'downloads/beta_ut_voc/analytics.json',        link:'service_issues.html?src=beta_ut_voc' },
+  //   { key:'employee_ut',         kpiKey:'EMPLOYEE UT',       label:'Employee UT',        color:'#7059a8', dot:'#7059a8', path:'downloads/employee_ut/analytics.json',         link:'service_issues.html?src=employee_ut' },
+  //   { key:'samsung_members_voc', kpiKey:null,                label:'Samsung Member VOC', color:'#b07a34', dot:'#b07a34', path:'downloads/samsung_members_voc/analytics.json', link:'service_issues.html?src=samsung_members_voc' },
+  //   { key:'global_voc_plm',      kpiKey:'Global VOC PLM',   label:'Global VOC PLM',     color:'#10b981', dot:'#10b981', path:'downloads/global_voc_plm/analytics.json',      link:'service_issues.html?src=global_voc_plm' },
+  // ];
+  const SOURCE_DEFS = [ 
+    { key:'global_voc_plm',      kpiKey:'Global VOC PLM',   label:'Global VOC PLM',     color:'#10b981', dot:'#10b981', path:'downloads/global_voc_plm/analytics.json',      link:'data_analytics.html?src=global_voc_plm' },
+	{ key:'samsung_members_voc', kpiKey:null,                label:'Samsung Member VOC', color:'#b07a34', dot:'#b07a34', path:'downloads/samsung_members_voc/analytics.json', link:'data_analytics.html?src=samsung_members_voc' },
+	{ key:'beta_ut',             kpiKey:'Beta UT',           label:'Beta UT',           color:'#4975c9', dot:'#4975c9', path:'downloads/beta_ut/analytics.json',           link:'data_analytics.html?src=beta_ut'},
+	{ key:'beta_ut_voc',         kpiKey:null,                label:'Beta UT VOC',        color:'#14b8a6', dot:'#14b8a6', path:'downloads/beta_ut_voc/analytics.json',        link:'data_analytics.html?src=beta_ut_voc' },
+    { key:'employee_ut',         kpiKey:'EMPLOYEE UT',       label:'Employee UT',        color:'#7059a8', dot:'#7059a8', path:'downloads/employee_ut/analytics.json',         link:'data_analytics.html?src=employee_ut' },
+  ];
+
+  // Global state
+  let CENTRAL = null;        // central_dashboard.json — primary source for all KPIs
+  const SOURCE_DATA = {};    // per-source analytics.json — used for row drill-downs only
+  let modelNameMapping = {};
+
+  // ── Resolve fetch paths relative to the HTML file location ──────────
+  // Supports both root-served (/) and subdirectory-served setups.
+  // All paths in SOURCE_DEFS are relative (e.g. 'downloads/beta_ut/analytics.json').
+  // We detect the base by stripping the filename from window.location.pathname.
+  const _BASE = (() => {
+    const p = window.location.pathname;
+    return p.substring(0, p.lastIndexOf('/') + 1); // e.g. '/' or '/dashboard/'
+  })();
+  function _url(relPath) {
+    return _BASE + relPath + '?v=' + Date.now();
+  }
+
+  // ── Debug helper: open console and run mpDebug() to see load status ──
+  window.mpDebug = () => {
+    console.group('[MarketPulse] Load status');
+    console.log('Base URL:', _BASE);
+    console.log('CENTRAL loaded:', !!CENTRAL, CENTRAL ? Object.keys(CENTRAL) : 'null');
+    SOURCE_DEFS.forEach(d => console.log(`  ${d.key}:`, SOURCE_DATA[d.key] ? 'loaded' : 'null/failed'));
+    console.log('modelNameMapping keys:', Object.keys(modelNameMapping).length);
+    console.groupEnd();
+  };
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    // ── 0. Load modelName mapping ─────────────────────────────────────
+    try { const r = await fetch(_url('modelName.json')); if(r.ok) modelNameMapping = await r.json(); } catch(e) { modelNameMapping = {}; }
+
+    // ── 1. Load central_dashboard.json FIRST (all KPIs come from here) ─
+    const centralPaths = [
+      'central_dashboard.json',
+      'downloads/central_dashboard.json',
+      '../central_dashboard.json',
+    ];
+    for (const cp of centralPaths) {
       try {
-        const response = await fetch('/modelName.json');
-        modelNameMapping = await response.json();
-        console.log(`Loaded ${Object.keys(modelNameMapping).length} model name mappings`);
-      } catch (error) {
-        console.warn('Failed to load modelName.json:', error);
-        modelNameMapping = {};
-      }
+        const r = await fetch(_BASE + cp + '?v=' + Date.now());
+        if (r.ok) { CENTRAL = await r.json(); break; }
+      } catch(e) { /* try next */ }
     }
+    if (!CENTRAL) console.warn('[MarketPulse] central_dashboard.json not found at any expected path');
 
-    function applyModelNameMapping(modelNumber) {
-      if (!modelNumber || typeof modelNumber !== 'string') return modelNumber;
-      const modelStr = modelNumber.trim();
-      if (modelNameMapping[modelStr]) {
-        const mapping = modelNameMapping[modelStr];
-        return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
-      }
-      const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
-      if (match) {
-        const baseModel = match[1];
-        for (const [mapKey, mapping] of Object.entries(modelNameMapping)) {
-          if (mapKey.startsWith(baseModel)) {
-            return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
-          }
-        }
-      }
-      const sortedKeys = Object.keys(modelNameMapping).sort((a, b) => b.length - a.length);
-      for (const key of sortedKeys) {
-        if (modelStr.startsWith(key)) {
-          const mapping = modelNameMapping[key];
-          return typeof mapping === 'object' ? (mapping.name || modelNumber) : mapping;
-        }
-      }
-      return modelNumber;
-    }
+    // ── 2. Render KPI strip, severity matrix, charts from central data ─
+    // If CENTRAL failed to load, these render with zeros initially.
+    // They will be called again after analytics.json files load (step 4).
+    renderCrossSourceKPIs();
+    renderSeverityMatrix();
+    renderModuleBarChart();
+    renderCrossSourceCharts();
 
-    document.addEventListener('DOMContentLoaded', async function () {
-      await loadModelNameMapping();
-      loadDashboardData();
+    // ── 3. Render health cards with skeleton ───────────────────────────
+    renderSourceHealthCards();
+
+    // ── 4. Load individual analytics.json in background ───────────────
+    // After all load: re-render everything so analytics.json data fills in
+    // even if central_dashboard.json was missing.
+    Promise.allSettled(SOURCE_DEFS.map(def => loadSourceAnalytics(def))).then(() => {
+      renderSourceHealthCards();
+      // If central_dashboard.json never loaded, re-render KPIs + matrix
+      // using analytics.json data as fallback
+      if (!CENTRAL) {
+        renderCrossSourceKPIs();
+        renderSeverityMatrix();
+        renderModuleBarChart();
+        renderCrossSourceCharts();
+      }
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-      const tableHeaders = document.querySelectorAll('th');
-      tableHeaders.forEach(header => header.setAttribute('scope', 'col'));
-    });
+    // ── 5. Load PLM table ──────────────────────────────────────────────
+    loadPLMTable();
+  });
 
-    async function loadDashboardData() {
-      try {
-        const response = await fetch('/downloads/__dashboard_cache__/central_dashboard.json');
-        const jsonData = await response.json();
-        dashboardData.kpis = jsonData.kpis;
-        dashboardData.totalIssues = jsonData.total_issues;
-        dashboardData.highIssuesCount = jsonData.high_issues_count;
-        dashboardData.topModules = jsonData.top_modules;
-        dashboardData.topModels = jsonData.top_models;
-        dashboardData.seriesDistribution = jsonData.series_distribution;
-        dashboardData.sourceModelSummary = jsonData.source_model_summary;
-        dashboardData.modelModuleMatrix = jsonData.model_module_matrix;
-        dashboardData.filteredTopModels = jsonData.filtered_top_models;
-        dashboardData.totalUniqueModels = jsonData.total_unique_models;
-        dashboardData.totalUniqueModules = jsonData.total_unique_modules;
-        createModelSummaryTable();
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
+  async function loadSourceAnalytics(def) {
+    try {
+      const r = await fetch(_url(def.path));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      SOURCE_DATA[def.key] = await r.json();
+    } catch(e) { SOURCE_DATA[def.key] = null; }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  getCentralKpi(sourceKey)
+  //  Returns the kpis entry for a source from central_dashboard.json.
+  //  central_dashboard.json kpis are keyed by display name (e.g. "Beta UT"),
+  //  not by folder key (e.g. "beta_ut"). SOURCE_DEFS.kpiKey maps between them.
+  // ══════════════════════════════════════════════════════════════════════
+  function getCentralKpi(sourceKey) {
+    if (!CENTRAL) return null;
+    const def = SOURCE_DEFS.find(d => d.key === sourceKey);
+    if (!def || !def.kpiKey) return null;
+    return CENTRAL.kpis?.[def.kpiKey] || null;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  getSevCounts(sourceKey, tier)
+  //
+  //  PRIMARY: central_dashboard.json kpis (scale-down already applied)
+  //    Severe   → kpi.High.severe
+  //    Moderate → kpi.High.moderate + kpi.Medium
+  //    Deferred → kpi.High.deferred + kpi.Low
+  //
+  //  FALLBACK: analytics.json severity_distribution (NEW flat format)
+  //    Keys: 'High' / 'Medium' / 'Low'  → { total, open, resolve, close }
+  //    Mapping: Severe→High, Moderate→Medium, Deferred→Low
+  // ══════════════════════════════════════════════════════════════════════
+  function getSevCounts(sourceKey, tier) {
+    // Tier → severity_distribution key mapping (new flat format)
+    const tierToSevKey = { Severe: 'High', Moderate: 'Medium', Deferred: 'Low' };
+    const sevKey = tierToSevKey[tier];
+
+    // ── PRIMARY: central_dashboard.json ───────────────────────────────
+    const kpi = getCentralKpi(sourceKey);
+    if (kpi) {
+      const h = kpi.High || {};
+      let total = 0;
+      if (tier === 'Severe')   total = h.severe   || 0;
+      if (tier === 'Moderate') total = (h.moderate || 0) + (kpi.Medium || 0);
+      if (tier === 'Deferred') total = (h.deferred || 0) + (kpi.Low    || 0);
+
+      // Get open/resolve/close from analytics.json severity_distribution (new flat format)
+      const srcData = SOURCE_DATA[sourceKey];
+      const sd = srcData?.kpis?.severity_distribution || {};
+
+      // New flat format: sd['High'] = { total, open, resolve, close }
+      const entry = sd[sevKey];
+      if (entry && typeof entry.total !== 'undefined') {
+        return { total, open: entry.open || 0, resolve: entry.resolve || 0, close: entry.close || 0 };
       }
+
+      return { total, open: 0, resolve: 0, close: 0 };
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // FIX 1: updateGlobalKPIs
-    // OLD: const high = kpis.severity_distribution?.High || 0;
-    // NEW: reads from new {Severe:{total}, Moderate:{total}, Deferred:{total}}
-    //      format produced by pandas_aggregator.py, with fallback to old flat
-    //      format so it works whether analytics.json is old or new.
-    // ─────────────────────────────────────────────────────────────────────
-    function updateGlobalKPIs(analyticsData) {
-      const kpis = analyticsData.kpis || {};
-      const total    = kpis.total_rows || 0;
-      const open     = kpis.open_issues || 0;
-      const resolved = kpis.resolved_issues || 0;
+    // ── FALLBACK: no central data — read analytics.json directly ──────
+    const srcData = SOURCE_DATA[sourceKey];
+    if (!srcData) return { total: 0, open: 0, resolve: 0, close: 0 };
+    const sd = srcData?.kpis?.severity_distribution || {};
 
-      // NEW: support both old flat format (High: 82) and new object format
-      // (Severe: {total:39, open:11, resolve:28, close:0})
-      const sevDist = kpis.severity_distribution || {};
-      const high = (sevDist.Severe && typeof sevDist.Severe === 'object')
-        ? (sevDist.Severe.total || 0)
-        : (sevDist.High || 0);
+    // New flat format: { High, Medium, Low }
+    const entry = sd[sevKey];
+    if (entry && typeof entry.total !== 'undefined') {
+      return { total: entry.total || 0, open: entry.open || 0, resolve: entry.resolve || 0, close: entry.close || 0 };
+    }
 
-      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    // If severity_distribution doesn't reflect updated_tier, count from rows directly
+    const rows = srcData.rows || [];
+    if (rows.length > 0) {
+      const tierToCheck = tier; // 'Severe', 'Moderate', 'Deferred'
+      let total = 0, open = 0, resolve = 0, close = 0;
+      rows.forEach(r => {
+        const rt = (r.updated_tier || r.tier || '').trim();
+        const match = tierToCheck === 'Deferred'
+          ? (rt === 'Deferred' || rt === 'Low' || (!rt && (r.Severity||'').trim() === 'Low'))
+          : rt === tierToCheck;
+        if (!match) return;
+        total++;
+        const st = (r['Progr.Stat.'] || '').toLowerCase();
+        if (st.startsWith('open'))    open++;
+        else if (st.startsWith('resolve')) resolve++;
+        else if (st.startsWith('close'))   close++;
+      });
+      return { total, open, resolve, close };
+    }
+
+    // Legacy format fallback: { Severe, Moderate, Deferred } with count/status keys
+    const legacyEntry = sd[tier];
+    if (!legacyEntry) return { total: 0, open: 0, resolve: 0, close: 0 };
+    return {
+      total:   legacyEntry.total   || legacyEntry.count             || 0,
+      open:    legacyEntry.open    || legacyEntry.status?.Open      || 0,
+      resolve: legacyEntry.resolve || legacyEntry.status?.Resolve   || 0,
+      close:   legacyEntry.close   || legacyEntry.status?.Close     || 0,
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  KPI STRIP — reads directly from central_dashboard.json
+  // ══════════════════════════════════════════════════════════════════════
+  function renderCrossSourceKPIs() {
+    const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+
+    if (CENTRAL) {
+      const total    = CENTRAL.total_issues    || 0;
+      const severe   = CENTRAL.high_issues_count || 0;
+      const open     = CENTRAL.status_kpis?.open     || 0;
+      const resolved = CENTRAL.status_kpis?.resolved || 0;
+
       set('total-issues',    total.toLocaleString());
-      set('high-issues',     high.toLocaleString());
+      set('high-issues',     severe.toLocaleString());
       set('open-issues',     open.toLocaleString());
       set('resolved-issues', resolved.toLocaleString());
       if (total > 0) {
-        set('kpi-total-badge',    (analyticsData.top_models?.length || 0) + ' models');
-        set('kpi-high-badge',     ((high/total)*100).toFixed(1) + '%');
-        set('kpi-open-badge',     ((open/total)*100).toFixed(1) + '%');
-        set('kpi-resolved-badge', ((resolved/total)*100).toFixed(1) + '%');
-        set('high-pct',     high + ' of ' + total + ' total issues');
-        set('open-pct',     open + ' pending resolution');
-        set('resolved-pct', resolved + ' closed or fixed');
+        set('kpi-high-badge',     ((severe/total)*100).toFixed(1)+'%');
+        set('kpi-open-badge',     ((open/total)*100).toFixed(1)+'%');
+        set('kpi-resolved-badge', ((resolved/total)*100).toFixed(1)+'%');
       }
+      const srcCount = Object.keys(CENTRAL.kpis||{}).length;
+      set('kpi-total-badge', srcCount + ' sources');
+      return;
     }
 
-    function initGlobalCharts(analyticsData) {
-      const colors = getChartColors();
-      const kpis = analyticsData.kpis || {};
+    // Fallback: aggregate from individual analytics files
+    let total=0,open=0,resolved=0,severe=0;
+    SOURCE_DEFS.forEach(def => {
+      const d = SOURCE_DATA[def.key]; if(!d) return;
+      const k = d.kpis||{};
+      total    += k.total_rows||0;
+      open     += k.open_issues||0;
+      resolved += k.resolved_issues||0;
+      severe   += getSevCounts(def.key, 'Severe').total;
+    });
+    set('total-issues', total.toLocaleString());
+    set('high-issues',  severe.toLocaleString());
+    set('open-issues',  open.toLocaleString());
+    set('resolved-issues', resolved.toLocaleString());
+    if(total>0){
+      set('kpi-high-badge',     ((severe/total)*100).toFixed(1)+'%');
+      set('kpi-open-badge',     ((open/total)*100).toFixed(1)+'%');
+      set('kpi-resolved-badge', ((resolved/total)*100).toFixed(1)+'%');
+    }
+    set('kpi-total-badge', SOURCE_DEFS.filter(d=>SOURCE_DATA[d.key]).length+' sources loaded');
+  }
 
-      // ── 1. Top Models chart ──────────────────────────────────────────
-      const modelsDom = document.getElementById('top-models-chart');
-      if (modelsDom) {
-        const modelsChart = echarts.init(modelsDom);
-        const top10Models = (analyticsData.top_models || [])
-          .filter(m => m.label !== '[Global VOC]SWA_Error_Report' && m.label !== 'Unknown')
-          .slice(0, 10);
+  // ══════════════════════════════════════════════════════════════════════
+  //  SOURCE HEALTH CARDS
+  //  Uses central_dashboard kpis for totals/severe count.
+  //  Uses individual analytics.json for open/resolve/close bar if available.
+  // ══════════════════════════════════════════════════════════════════════
+  function renderSourceHealthCards() {
+    const grid = document.getElementById('source-health-grid');
+    if (!grid) return;
+    grid.innerHTML = SOURCE_DEFS.map(def => {
+      const kpi = getCentralKpi(def.key);
+      const src = SOURCE_DATA[def.key];
 
-        modelsChart.setOption({
-          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-          grid: { left: '3%', right: '8%', bottom: '3%', top: '5%', containLabel: true },
-          xAxis: { type: 'value', show: false, splitLine: { show: false } },
-          yAxis: {
-            type: 'category',
-            data: top10Models.map(m => m.friendly_name || m.label).reverse(),
-            axisLabel: { color: colors.textPrimary, fontSize: 10 },
-            axisLine: { show: false },
-            axisTick: { show: false }
-          },
-          series: [{
-            name: 'Issues', type: 'bar',
-            data: top10Models.map(m => m.count).reverse(),
-            itemStyle: { color: '#6366f1', borderRadius: [0, 4, 4, 0] },
-            label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
-          }]
-        });
-        window.addEventListener('resize', () => modelsChart.resize());
+      // Always show card — use central data for numbers, analytics.json for extras
+      const total    = kpi?.total    || src?.kpis?.total_rows      || 0;
+      const open     = kpi?.open     || src?.kpis?.open_issues     || 0;
+      const resolved = kpi?.resolved || src?.kpis?.resolved_issues || 0;
+      const closed   = kpi?.close    || src?.kpis?.close_issues    || 0;
+
+      // If neither central nor analytics loaded yet, show skeleton
+      if (!kpi && !src) return `<a href="${def.link}" class="sh-item" style="opacity:.45">
+        <div class="sh-item-top"><div class="sh-item-name"><span class="sh-dot" style="background:${def.dot}"></span>${def.label}</div></div>
+        <div class="sh-total" style="color:var(--text3)">—</div>
+        <div class="sh-meta">No data</div>
+        <div class="sh-bar"><div class="sh-bar-seg" style="width:100%;background:var(--surface3)"></div></div>
+        <div class="sh-tags"><span class="sh-tag t-neutral">unavailable</span></div>
+      </a>`;
+
+      // severe count from severity_distribution (updated_tier=Severe rows)
+      const severe = kpi?.severity_distribution?.High?.total || kpi?.High?.severe || 0;
+      // Extra info from analytics.json if loaded
+      const models  = src?.top_models?.length || 0;
+      const modules = src ? [...new Set((src.rows||[]).map(r=>r.Module).filter(Boolean))].length : 0;
+
+      const openW    = total ? Math.round((open/total)*100)     : 0;
+      const resolveW = total ? Math.round((resolved/total)*100) : 0;
+      const closeW   = Math.max(0, 100 - openW - resolveW);
+
+      const pills = [];
+      if (open>0)     pills.push(`<span class="sh-tag t-open">${open.toLocaleString()} open</span>`);
+      if (resolved>0) pills.push(`<span class="sh-tag t-resolved">${resolved.toLocaleString()} resolved</span>`);
+      if (severe>0)   pills.push(`<span class="sh-tag t-severe">${severe} severe</span>`);
+      if (!pills.length && closed>0) pills.push(`<span class="sh-tag t-neutral">${closed.toLocaleString()} closed</span>`);
+      if (!pills.length) pills.push(`<span class="sh-tag t-neutral">${total.toLocaleString()} total</span>`);
+
+      const sub = [];
+      if (models>0)  sub.push(models + ' models');
+      if (modules>0) sub.push(modules + ' modules');
+      if (!sub.length && total>0) sub.push(total.toLocaleString() + ' issues');
+
+      return `<a href="${def.link}" class="sh-item">
+        <div class="sh-item-top">
+          <div class="sh-item-name"><span class="sh-dot" style="background:${def.dot}"></span>${def.label}</div>
+        </div>
+        <div class="sh-total">${total.toLocaleString()}</div>
+        <div class="sh-meta">${sub.join(' · ')}</div>
+        <div class="sh-bar">
+          <div class="sh-bar-seg" style="width:${openW}%;background:#f59e0b"></div>
+          <div class="sh-bar-seg" style="width:${resolveW}%;background:#10b981"></div>
+          <div class="sh-bar-seg" style="width:${closeW}%;background:#94a3b8;opacity:.35"></div>
+        </div>
+        <div class="sh-tags">${pills.join('')}</div>
+      </a>`;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  MODULE BARS
+  //  Shows only Open + Resolve-Not-Released issues per module.
+  //  Hover → tooltip with Open / Resolve-Not-Released breakdown.
+  //  Click → module drill modal with all matching issues.
+  // ══════════════════════════════════════════════════════════════════════
+
+  // Build module stats from all loaded SOURCE_DATA rows.
+  // Returns Map: moduleName → { open, resolveNR, rows[] }
+  function _buildModuleStats() {
+    const map = new Map();
+    SOURCE_DEFS.forEach(def => {
+      const rows = SOURCE_DATA[def.key]?.rows || [];
+      rows.forEach(r => {
+        const mod = (r.Module || r.Category || '').trim();
+        if (!mod) return;
+        const st = (r['Progr.Stat.'] || '').toLowerCase();
+        const isOpen      = st.startsWith('open');
+        const isResolveNR = st === 'resolve - not released' || st === 'resolve-not released'
+                         || st === 'resolve not released'   || st.includes('not released');
+        if (!isOpen && !isResolveNR) return;   // skip all other statuses
+        if (!map.has(mod)) map.set(mod, { open: 0, resolveNR: 0, rows: [] });
+        const e = map.get(mod);
+        if (isOpen)      e.open++;
+        if (isResolveNR) e.resolveNR++;
+        // tag row with source for modal display
+        e.rows.push({ ...r, _source: def.label });
+      });
+    });
+    return map;
+  }
+
+  function renderModuleBarChart() {
+    const wrap = document.getElementById('module-bars');
+    if (!wrap) return;
+
+    const stats = _buildModuleStats();
+
+    // Sort by open + resolveNR descending, take top 8
+    const top = [...stats.entries()]
+      .map(([mod, e]) => [mod, e.open + e.resolveNR, e])
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8);
+
+    if (top.length === 0) {
+      // Fallback: use central_dashboard top_modules (counts only, no breakdown)
+      let fallback = [];
+      if (CENTRAL?.top_modules?.length) {
+        fallback = CENTRAL.top_modules.slice(0, 8).map(m => [m.label, m.value]);
       }
-
-      // ── 2. Top Sources chart ─────────────────────────────────────────
-      const sourcesDom = document.getElementById('top-sources-chart');
-      if (sourcesDom) {
-        const sourcesChart = echarts.init(sourcesDom);
-        const sourceDist = analyticsData.kpis.source_distribution || {};
-        const sourceData = Object.entries(sourceDist)
-          .map(([name, value]) => ({ name, value }))
-          .filter(d => d.name !== 'Unknown' && d.name !== '[Global VOC]SWA_Error_Report')
-          .sort((a, b) => b.value - a.value)
-          .slice(0, 5);
-
-        sourcesChart.setOption({
-          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-          grid: { left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true },
-          xAxis: { type: 'value', show: false, splitLine: { show: false } },
-          yAxis: {
-            type: 'category',
-            data: sourceData.map(d => d.name).reverse(),
-            axisLabel: { color: colors.textPrimary, fontSize: 10 },
-            axisLine: { show: false },
-            axisTick: { show: false }
-          },
-          series: [{
-            name: 'Issues', type: 'bar',
-            data: sourceData.map(d => d.value).reverse(),
-            itemStyle: { color: '#10b981', borderRadius: [0, 4, 4, 0] },
-            label: { show: true, position: 'right', color: colors.textPrimary, fontSize: 10 }
-          }]
-        });
-        window.addEventListener('resize', () => sourcesChart.resize());
-      }
-
-      // ── 3. Severity Distribution chart ───────────────────────────────
-      // FIX 2: support new {Severe:{total}, Moderate:{total}, Deferred:{total}}
-      // format from pandas_aggregator.py, with fallback to old flat {High, Medium, Low}
-      const severityDom = document.getElementById('severity-chart');
-      if (severityDom) {
-        const severityChart = echarts.init(severityDom);
-        const sevDist = kpis.severity_distribution || {};
-
-        // Detect format: new format has object values, old format has plain numbers
-        window._lastSevDist = sevDist;
-        const isNewFormat = sevDist.Severe && typeof sevDist.Severe === 'object';
-
-        let sevCategories, sevValues, sevColors;
-        if (isNewFormat) {
-          sevCategories = ['Deferred', 'Moderate', 'Severe'];
-          sevColors     = ['#94a3b8',  '#f59e0b',   '#f43f5e'];
-          sevValues     = sevCategories.map(cat =>
-            sevDist[cat] && typeof sevDist[cat] === 'object'
-              ? (sevDist[cat].total || 0)
-              : (sevDist[cat] || 0)
-          );
-        } else {
-          sevCategories = ['Low', 'Medium', 'High'];
-          sevColors     = ['#94a3b8', '#f59e0b', '#f43f5e'];
-          sevValues     = sevCategories.map(cat => sevDist[cat] || 0);
-        }
-
-        severityChart.setOption({
-          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-          grid: { left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true },
-          xAxis: { type: 'value', show: false, splitLine: { show: false } },
-          yAxis: {
-            type: 'category',
-            data: sevCategories,
-            axisLabel: { color: colors.textPrimary, fontSize: 10 },
-            axisLine: { show: false },
-            axisTick: { show: false }
-          },
-          series: [{
-            name: 'Issues', type: 'bar',
-            data: sevValues,
-            itemStyle: {
-              color: function (params) { return sevColors[params.dataIndex]; },
-              borderRadius: [0, 4, 4, 0]
-            },
-            label: {
-              show: true, position: 'right', fontSize: 10,
-              color: function(params) { return sevColors[params.dataIndex]; },
-              fontWeight: '600'
-            }
-          }]
-        });
-        window.addEventListener('resize', () => severityChart.resize());
-
-        // ── Severity tier breakdown (Open / Resolve / Close per tier) ──────
-        // Renders dynamically from severity_distribution data.
-        // Only shows tiers that are objects with breakdown data (new format).
-        // Skips Deferred as it is not actionable.
-        const breakdownEl = document.getElementById('severity-breakdown');
-        if (breakdownEl && isNewFormat) {
-          const tierDefs = [
-            { key: 'Severe',   color: '#f43f5e', bg: 'rgba(244,63,94,.06)',   border: 'rgba(244,63,94,.15)'  },
-            { key: 'Moderate', color: '#f59e0b', bg: 'rgba(245,158,11,.06)',  border: 'rgba(245,158,11,.15)' },
-          ];
-          const statusDots = {
-            open:    { label: 'Open',    color: '#f59e0b' },
-            resolve: { label: 'Resolve', color: '#10b981' },
-            close:   { label: 'Close',   color: '#6366f1' },
-          };
-
-          const cards = tierDefs.map(tier => {
-            const d = sevDist[tier.key] || {};
-            const tot = d.total || 0;
-            if (tot === 0) return '';
-            const rows = Object.entries(statusDots).map(([key, st]) => {
-              const val = d[key] || 0;
-              const pct = tot > 0 ? ((val / tot) * 100).toFixed(0) : '0';
-              const clickable = val > 0 ? `cursor:pointer;` : '';
-              const onclick   = val > 0 ? `onclick="openIssueDrillModal('${tier.key}','${key}')"` : '';
-              return `<div ${onclick} style="display:flex;align-items:center;gap:7px;margin-bottom:5px;${clickable}border-radius:6px;padding:2px 4px;transition:background .12s;" onmouseenter="if(${val}>0)this.style.background='var(--surface3)'" onmouseleave="this.style.background=''">
-                <span style="width:7px;height:7px;border-radius:50%;background:${st.color};flex-shrink:0;display:inline-block;"></span>
-                <span style="font-size:11.5px;color:var(--text2);flex:1;">${st.label}</span>
-                <span style="font-size:11.5px;font-weight:600;color:var(--text);min-width:22px;text-align:right;">${val}</span>
-                <span style="font-size:10.5px;color:var(--text3);min-width:30px;text-align:right;">${pct}%</span>
-                ${val > 0 ? `<i class="fa-solid fa-chevron-right" style="font-size:9px;color:var(--text3);opacity:.5;"></i>` : ''}
-              </div>`;
-            }).join('');
-            return `<div style="background:${tier.bg};border:1px solid ${tier.border};border-radius:10px;padding:11px 13px;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
-                <span style="width:9px;height:9px;border-radius:50%;background:${tier.color};flex-shrink:0;display:inline-block;"></span>
-                <span style="font-size:12px;font-weight:600;color:var(--text);">${tier.key} (${tot})</span>
-              </div>
-              ${rows}
-            </div>`;
-          }).join('');
-
-          breakdownEl.innerHTML = `
-            <div style="height:1px;background:var(--border);margin:12px 0 10px;"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${cards}</div>`;
-        }
-      }
-
-      // ── 5. Status donut + legend ─────────────────────────────────────
-      // FIX 3: use kpis.close_issues directly instead of deriving by subtraction
-      // OLD: const closedN = total - openN - resolvedN;  ← wrong with new format
-      // NEW: read close_issues from kpis (set by pandas_aggregator.py), fallback to subtraction
-      const total     = kpis.total_rows || 1;
-      const openN     = kpis.open_issues || 0;
-      const resolvedN = kpis.resolved_issues || 0;
-      const closedN   = kpis.close_issues != null
-        ? kpis.close_issues
-        : Math.max(total - openN - resolvedN, 0);
-
-      const statusDom = document.getElementById('status-donut-chart');
-      if (statusDom) {
-        const statusChart = echarts.init(statusDom);
-        statusChart.setOption({
-          tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-          legend: { show: false },
-          series: [{
-            type: 'pie', radius: ['50%', '80%'], center: ['50%', '50%'],
-            data: [
-              { value: openN,                  name: 'Open',    itemStyle: { color: '#f59e0b' } },
-              { value: resolvedN,              name: 'Resolved', itemStyle: { color: '#10b981' } },
-              { value: Math.max(closedN, 0),   name: 'Closed',  itemStyle: { color: '#6366f1' } },
-            ],
-            label: { show: false }, emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,.15)' } }
-          }]
-        });
-        window.addEventListener('resize', () => statusChart.resize());
-      }
-      const legendEl = document.getElementById('status-legend');
-      if (legendEl) {
-        const items = [
-          { label:'Open',     val: openN,                 color: '#f59e0b' },
-          { label:'Resolved', val: resolvedN,             color: '#10b981' },
-          { label:'Closed',   val: Math.max(closedN, 0), color: '#6366f1' },
-        ];
-        legendEl.innerHTML = items.map(it => {
-          const pct = total > 0 ? ((it.val/total)*100).toFixed(1) : '0.0';
-          return '<div class="sl-row">' +
-            '<span class="sl-dot" style="background:' + it.color + '"></span>' +
-            '<span class="sl-label">' + it.label + '</span>' +
-            '<span class="sl-val">' + it.val.toLocaleString() + '</span>' +
-            '<span class="sl-pct">' + pct + '%</span>' +
-          '</div>';
-        }).join('');
-      }
-
-
+      const maxF = fallback[0]?.[1] || 1;
+      wrap.innerHTML = fallback.map(([mod, cnt]) => `
+        <div class="mod-row">
+          <div class="mod-lbl" title="${mod}">${mod}</div>
+          <div class="mod-track"><div class="mod-fill" style="width:${Math.round(cnt/maxF*100)}%;background:linear-gradient(90deg,#6366f1,#818cf8)"></div></div>
+          <div class="mod-val">${Number(cnt).toLocaleString()}</div>
+        </div>`).join('');
+      return;
     }
 
-    // ── Pagination state ─────────────────────────────────────────────────
-    const PAGE_SIZE = 10;
-    let tablePage = 1;
-    let allTableRows = []; // full filtered+sorted dataset (Open+Resolve only, no Close)
+    const maxV = top[0][1] || 1;
+    wrap.innerHTML = top.map(([mod, cnt, e]) => `
+      <div class="mod-row" onclick="openModuleModal('${mod.replace(/'/g,"\\'")}')">
+        <div class="mod-lbl" title="${mod}">${mod}</div>
+        <div class="mod-track">
+          <div class="mod-fill" style="width:${Math.round(cnt/maxV*100)}%;background:linear-gradient(90deg,#6366f1,#818cf8)"></div>
+        </div>
+        <div class="mod-val" style="color:var(--accent);font-weight:600">${cnt.toLocaleString()}</div>
+        <div class="mod-tooltip">
+          <div class="mod-tooltip-row">
+            <span class="mod-tooltip-lbl"><i class="fa-solid fa-circle-dot" style="color:#f59e0b;font-size:8px;margin-right:3px"></i>Open</span>
+            <span class="mod-tooltip-val tv-open">${e.open.toLocaleString()}</span>
+          </div>
+          <div class="mod-tooltip-row">
+            <span class="mod-tooltip-lbl"><i class="fa-solid fa-circle-check" style="color:#10b981;font-size:8px;margin-right:3px"></i>Resolve&nbsp;·&nbsp;Not&nbsp;Released</span>
+            <span class="mod-tooltip-val tv-resolve">${e.resolveNR.toLocaleString()}</span>
+          </div>
+          <div class="mod-tooltip-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px">
+            <span class="mod-tooltip-lbl">Total</span>
+            <span class="mod-tooltip-val">${cnt.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>`).join('');
+  }
 
-    // ── Map a raw row from analytics.json → display object ───────────────
-    function mapRow(item) {
-      const modelNumber = item['Model No.'] || 'N/A';
-      const modelStr = modelNumber.trim();
-      let chipset = 'N/A';
-      if (modelNameMapping[modelStr] && modelNameMapping[modelStr].chipset) {
-        chipset = modelNameMapping[modelStr].chipset;
-      } else {
-        const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
-        if (match) {
-          const baseModel = match[1];
-          for (const [mapKey, mappingData] of Object.entries(modelNameMapping)) {
-            if (typeof mappingData === 'object' && mapKey.startsWith(baseModel) && mappingData.chipset) {
-              chipset = mappingData.chipset; break;
-            }
-          }
-        }
+  // ══════════════════════════════════════════════════════════════════════
+  //  MODULE DRILL MODAL
+  // ══════════════════════════════════════════════════════════════════════
+  let _modModalRows = [], _modSearchQ = '', _modStatusFilter = 'all', _modSourceFilter = '';
+
+  function openModuleModal(moduleName) {
+    const stats = _buildModuleStats();
+    const entry = stats.get(moduleName);
+    if (!entry) return;
+
+    _modModalRows    = entry.rows;
+    _modSearchQ      = '';
+    _modStatusFilter = 'all';
+    _modSourceFilter = '';
+
+    // Populate source dropdown with unique sources from this module's rows
+    const sources = [...new Set(entry.rows.map(r => r._source).filter(Boolean))].sort();
+    const sel = document.getElementById('mod-source-select');
+    sel.innerHTML = '<option value="">All Sources</option>'
+      + sources.map(s => `<option value="${s}">${s}</option>`).join('');
+    sel.value = '';
+    sel.classList.remove('active');
+
+    // Reset status pills
+    document.querySelectorAll('.mod-status-pill').forEach(p => p.classList.remove('active'));
+    document.getElementById('mod-pill-all').classList.add('active');
+
+    document.getElementById('mod-modal-title-text').textContent = moduleName;
+    document.getElementById('mod-modal-meta').textContent =
+      `${entry.rows.length.toLocaleString()} issues · Open + Resolve Not Released`;
+    document.getElementById('mod-stat-total').textContent   = entry.rows.length.toLocaleString();
+    document.getElementById('mod-stat-open').textContent    = entry.open.toLocaleString();
+    document.getElementById('mod-stat-resolve').textContent = entry.resolveNR.toLocaleString();
+    document.getElementById('mod-modal-search-input').value = '';
+    document.getElementById('module-drill-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    renderModuleModalTable();
+  }
+
+  function setModStatus(status, btn) {
+    _modStatusFilter = status;
+    document.querySelectorAll('.mod-status-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    renderModuleModalTable();
+  }
+
+  function filterModuleModal() {
+    _modSearchQ      = (document.getElementById('mod-modal-search-input')?.value || '').trim().toLowerCase();
+    _modSourceFilter = document.getElementById('mod-source-select')?.value || '';
+    const sel = document.getElementById('mod-source-select');
+    if (sel) sel.classList.toggle('active', !!_modSourceFilter);
+    renderModuleModalTable();
+  }
+
+  function clearModFilters() {
+    _modSearchQ = ''; _modStatusFilter = 'all'; _modSourceFilter = '';
+    document.getElementById('mod-modal-search-input').value = '';
+    const sel = document.getElementById('mod-source-select');
+    if (sel) { sel.value = ''; sel.classList.remove('active'); }
+    document.querySelectorAll('.mod-status-pill').forEach(p => p.classList.remove('active'));
+    document.getElementById('mod-pill-all').classList.add('active');
+    renderModuleModalTable();
+  }
+
+  function renderModuleModalTable() {
+    const tbody = document.getElementById('mod-modal-body');
+    if (!tbody) return;
+
+    const filtered = _modModalRows.filter(r => {
+      const st = (r['Progr.Stat.'] || '').toLowerCase();
+      // Status filter
+      if (_modStatusFilter === 'open'    && !st.startsWith('open'))    return false;
+      if (_modStatusFilter === 'resolve' && !st.includes('not released')) return false;
+      // Source filter
+      if (_modSourceFilter && r._source !== _modSourceFilter)           return false;
+      // Search filter
+      if (_modSearchQ) {
+        const hay = [r.Title||'', r['Case Code']||'', r['Model No.']||'', r._source||''].join(' ').toLowerCase();
+        if (!hay.includes(_modSearchQ)) return false;
       }
-      const status = item['Progr.Stat.'] || 'N/A';
-      let statusColorClass = 'status-default';
-      if (status.toLowerCase().startsWith('open')) statusColorClass = 'status-open';
-      else if (status.toLowerCase().startsWith('resolve')) statusColorClass = 'status-resolved';
-      return {
-        source:          item['Source'] || 'N/A',
-        model:           modelNumber !== 'N/A' ? modelNumber : applyModelNameMapping(modelNumber),
-        chipset,
-        plm:             item['Case Code'] || 'N/A',
-        title:           item['Title'] || 'No Title Available',
-        status,
-        statusColorClass,
-        _raw:            item   // keep raw for drill-down
+      return true;
+    });
+
+    document.getElementById('mod-modal-result-count').textContent = filtered.length.toLocaleString();
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text3)">No issues match the current filters.</td></tr>';
+      return;
+    }
+
+    const getPriorityColor = p => ({ A:'#f43f5e', B:'#f59e0b', C:'#94a3b8' })[p] || '#94a3b8';
+    const getStatusClass   = s => {
+      const sl = (s||'').toLowerCase();
+      if (sl.startsWith('open'))    return 'status-open';
+      if (sl.startsWith('resolve')) return 'status-resolved';
+      return 'status-default';
+    };
+    const getFreqIcon = f => {
+      const fl = (f||'').toLowerCase();
+      if (fl === 'always')    return '<i class="fa-solid fa-rotate" style="color:#f43f5e;font-size:9px"></i>';
+      if (fl === 'sometimes') return '<i class="fa-solid fa-rotate-right" style="color:#f59e0b;font-size:9px"></i>';
+      return '<i class="fa-solid fa-rotate-right" style="color:#94a3b8;font-size:9px"></i>';
+    };
+
+    tbody.innerHTML = filtered.map((r, idx) => {
+      const status = r['Progr.Stat.'] || 'N/A';
+      const pri    = r.Priority || r.priority || '?';
+      const freq   = r['Occurr. Freq.'] || '?';
+      return `<tr>
+        <td><span class="sl-num">${idx + 1}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px">${r['Case Code']||'N/A'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px">${r['Model No.']||'N/A'}</td>
+        <td><span style="font-size:10.5px;padding:1px 7px;border-radius:4px;background:rgba(99,102,241,.08);color:#6366f1;font-weight:600">${r._source||'—'}</span></td>
+        <td><span style="font-size:11px;font-weight:700;color:${getPriorityColor(pri)}">${pri}</span></td>
+        <td>${getFreqIcon(freq)}&nbsp;<span style="font-size:10px">${freq}</span></td>
+        <td class="title-cell" title="${(r.Title||'').replace(/"/g,'&quot;')}" style="max-width:260px">${r.Title||'No Title'}</td>
+        <td><span class="status-pill ${getStatusClass(status)}" style="font-size:10px">${status}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function closeModuleModal() {
+    document.getElementById('module-drill-modal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  SEVERITY MATRIX — reads scaled counts from central_dashboard via getSevCounts()
+  //
+  //  Severe   = kpi.High.severe
+  //  Moderate = kpi.High.moderate + kpi.Medium
+  //  Deferred = kpi.High.deferred + kpi.Low
+  //  Total    = kpi.total
+  // ══════════════════════════════════════════════════════════════════════
+  function renderSeverityMatrix() {
+    const tbody = document.getElementById('sev-matrix-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = SOURCE_DEFS.map(def => {
+      const kpi = getCentralKpi(def.key);
+      const total = kpi?.total || SOURCE_DATA[def.key]?.kpis?.total_rows || 0;
+      const hasData = !!(kpi || SOURCE_DATA[def.key]);
+
+      const makeCell = (tier, badgeCls) => {
+        if (!hasData) return `<span class="sev-na">—</span>`;
+        const counts = getSevCounts(def.key, tier);
+        if (counts.total === 0) return `<span class="sev-na">0</span>`;
+
+        const tooltipHTML = `
+          <div class="sev-tooltip">
+            <div class="sev-tooltip-row">
+              <span class="sev-tooltip-label"><i class="fa-solid fa-circle-dot" style="color:#f59e0b;font-size:8px;margin-right:3px"></i>Open</span>
+              <span class="sev-tooltip-val t-open-v">${counts.open.toLocaleString()}</span>
+            </div>
+            <div class="sev-tooltip-row">
+              <span class="sev-tooltip-label"><i class="fa-solid fa-circle-check" style="color:#10b981;font-size:8px;margin-right:3px"></i>Resolve</span>
+              <span class="sev-tooltip-val t-resolve-v">${counts.resolve.toLocaleString()}</span>
+            </div>
+            <div class="sev-tooltip-row">
+              <span class="sev-tooltip-label"><i class="fa-solid fa-circle-xmark" style="color:#94a3b8;font-size:8px;margin-right:3px"></i>Close</span>
+              <span class="sev-tooltip-val t-close-v">${counts.close.toLocaleString()}</span>
+            </div>
+          </div>`;
+
+        return `<div class="sev-badge-wrap">
+          <span class="sev-badge ${badgeCls}"
+            onclick="openTierDrillModal('${def.key}', '${def.label}', '${tier}', '${def.dot}')"
+            title="Click to view ${tier} issues for ${def.label}">
+            ${counts.total.toLocaleString()}
+            <i class="fa-solid fa-table-list click-hint"></i>
+          </span>
+          ${tooltipHTML}
+        </div>`;
       };
+
+      return `<tr>
+        <td><div class="sev-src"><span class="sev-d" style="background:${def.dot}"></span>${def.label}</div></td>
+        <td>${makeCell('Severe',   'sv')}</td>
+        <td>${makeCell('Moderate', 'mo')}</td>
+        <td>${makeCell('Deferred', 'df')}</td>
+        <td style="text-align:right"><span class="sev-total">${total.toLocaleString()}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  TIER DRILL MODAL
+  //  Row filter uses r.tier (set by pandas_aggregator from scored_rows).
+  //  After scale-down: a High row scored Moderate has r.tier='Moderate'
+  //  → correctly appears in Moderate drill-down, consistent with the matrix.
+  // ══════════════════════════════════════════════════════════════════════
+  let _tierModalRows = [], _tierStatusFilter = 'all', _tierSearchQ = '';
+
+  function openTierDrillModal(sourceKey, sourceLabel, tier, dotColor) {
+    const d = SOURCE_DATA[sourceKey]; if (!d) return;
+    const counts = getSevCounts(sourceKey, tier);
+
+    // Filter rows to match the scaled severity breakdown:
+    //   Severe   → r.tier='Severe'   AND r.Severity='High'   (only High rows that scored Severe)
+    //   Moderate → r.tier='Moderate' OR  r.Severity='Medium' (High rows scored Moderate + all Medium rows)
+    //   Deferred → r.Severity='Low'  OR  (r.Severity='High' AND r.tier='Low')
+    //              + excluded rows (those without tier set default to 'Deferred')
+    const rows = (d.rows || []).filter(r => {
+      // Always prefer updated_tier (post scale-down) over legacy tier field
+      const rtier = (r.updated_tier || r.tier || '').trim();
+      const sev   = (r.Severity || '').trim();
+
+      if (tier === 'Severe') {
+        return rtier === 'Severe';
+      }
+      if (tier === 'Moderate') {
+        return rtier === 'Moderate';
+      }
+      if (tier === 'Deferred') {
+        // Deferred = updated_tier is 'Deferred'/'Low'/'' or unscored non-High/Medium rows
+        return rtier === 'Deferred' || rtier === 'Low'
+          || (!rtier && sev !== 'High' && sev !== 'Medium');
+      }
+      return false;
+    });
+
+    _tierModalRows = rows; _tierStatusFilter = 'all'; _tierSearchQ = '';
+
+    const tierColors = { Severe:'#f43f5e', Moderate:'#f59e0b', Deferred:'#94a3b8' };
+    const tierIcons  = { Severe:'fa-triangle-exclamation', Moderate:'fa-circle-exclamation', Deferred:'fa-minus-circle' };
+    const tierBgs    = { Severe:'rgba(244,63,94,.1)', Moderate:'rgba(245,158,11,.1)', Deferred:'rgba(148,163,184,.1)' };
+    const c=tierColors[tier]||'#6366f1', ico=tierIcons[tier]||'fa-layer-group', bg=tierBgs[tier]||'rgba(99,102,241,.1)';
+
+    document.getElementById('tier-modal-icon').innerHTML=`<i class="fa-solid ${ico}"></i>`;
+    document.getElementById('tier-modal-icon').style.cssText=`width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:${bg};color:${c}`;
+    document.getElementById('tier-modal-title').textContent=`${tier} Issues — ${sourceLabel}`;
+    document.getElementById('tier-modal-meta').textContent=`${counts.total.toLocaleString()} issues · scored by criticality engine`;
+    document.getElementById('tier-modal-stats').innerHTML=`
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-total">${counts.total.toLocaleString()}</div><div class="tier-modal-stat-lbl">Total</div></div>
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-open">${counts.open.toLocaleString()}</div><div class="tier-modal-stat-lbl">Open</div></div>
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-resolve">${counts.resolve.toLocaleString()}</div><div class="tier-modal-stat-lbl">Resolved</div></div>
+      <div class="tier-modal-stat"><div class="tier-modal-stat-num tms-close">${counts.close.toLocaleString()}</div><div class="tier-modal-stat-lbl">Closed</div></div>`;
+    document.getElementById('tier-modal-search-input').value='';
+    document.querySelectorAll('.tier-filter-pill').forEach(p=>p.classList.remove('active'));
+    document.querySelector('.tier-filter-pill:first-child').classList.add('active');
+    document.getElementById('tier-drill-modal').style.display='flex';
+    document.body.style.overflow='hidden';
+    renderTierModalTable();
+  }
+
+  function setTierStatusFilter(status, btn) {
+    _tierStatusFilter=status;
+    document.querySelectorAll('.tier-filter-pill').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    renderTierModalTable();
+  }
+  function filterTierModal() {
+    _tierSearchQ=(document.getElementById('tier-modal-search-input')?.value||'').trim().toLowerCase();
+    renderTierModalTable();
+  }
+  function renderTierModalTable() {
+    const tbody=document.getElementById('tier-drill-body'); if(!tbody)return;
+    let filtered=_tierModalRows.filter(r=>{
+      if(_tierStatusFilter!=='all'){
+        const st=(r['Progr.Stat.']||'').toLowerCase();
+        if(_tierStatusFilter==='open'&&!st.includes('open'))return false;
+        if(_tierStatusFilter==='resolve'&&!st.includes('resolve'))return false;
+        if(_tierStatusFilter==='close'&&!st.includes('close'))return false;
+      }
+      if(_tierSearchQ){
+        const h=[r.Title||'',r['Case Code']||'',r.Module||'',r['Model No.']||'',r['Issue Type']||''].join(' ').toLowerCase();
+        if(!h.includes(_tierSearchQ))return false;
+      }
+      return true;
+    });
+    document.getElementById('tier-modal-result-count').textContent=filtered.length.toLocaleString();
+    if(filtered.length===0){tbody.innerHTML='<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text3)">No issues match this filter.</td></tr>';return;}
+    const gpc=p=>({A:'#f43f5e',B:'#f59e0b',C:'#94a3b8'})[p]||'#94a3b8';
+    const gsc=s=>{const sl=(s||'').toLowerCase();return sl.includes('open')?'status-open':sl.includes('resolve')?'status-resolved':'status-default';};
+    const gfi=f=>{if((f||'').toLowerCase()==='always')return'<i class="fa-solid fa-rotate" style="color:#f43f5e;font-size:9px"></i>';if((f||'').toLowerCase()==='sometimes')return'<i class="fa-solid fa-rotate-right" style="color:#f59e0b;font-size:9px"></i>';return'<i class="fa-solid fa-rotate-right" style="color:#94a3b8;font-size:9px"></i>';};
+    tbody.innerHTML=filtered.map((r,idx)=>{
+      const status=r['Progr.Stat.']||'N/A';
+      const shortStatus=status.replace('Resolve - ','Resolve · ').replace('Resolve-','Resolve · ');
+      return`<tr>
+        <td><span class="sl-num">${idx+1}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px">${r['Case Code']||'N/A'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px">${r['Model No.']||'N/A'}</td>
+        <td style="font-size:11px">${r.Module||'—'}</td>
+        <td><span style="font-size:11px;font-weight:700;color:${gpc(r.Priority||'?')}">${r.Priority||'?'}</span></td>
+        <td>${gfi(r['Occurr. Freq.'])}&nbsp;<span style="font-size:10px">${r['Occurr. Freq.']||'?'}</span></td>
+        <td class="title-cell" title="${(r.Title||'').replace(/"/g,'&quot;')}" style="max-width:240px">${r.Title||'No Title'}</td>
+        <td><span class="status-pill ${gsc(status)}" style="font-size:10px">${shortStatus}</span></td>
+      </tr>`;
+    }).join('');
+  }
+  function closeTierDrillModal(){document.getElementById('tier-drill-modal').style.display='none';document.body.style.overflow='';}
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeTierDrillModal();closeIssueDrillModal();closeModuleModal();}});
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  ECHARTS — Top Models bar chart (excludes Close / Closed issues)
+  // ══════════════════════════════════════════════════════════════════════
+  function renderCrossSourceCharts() {
+    const isDark    = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#4b5e7a' : '#94a3b8';
+
+    // Build a friendly-name → count map from analytics.json top_models.
+    // top_models entries already carry friendly_name + count per source.
+    // We rebuild the count by scanning rows so we can exclude Close/Closed.
+    const modelMap = {};   // friendlyName → count (excl. Close/Closed)
+
+    // Build a label→friendlyName lookup from top_models of each source
+    const friendlyLookup = {};   // raw model label → friendly name
+    SOURCE_DEFS.forEach(def => {
+      (SOURCE_DATA[def.key]?.top_models || []).forEach(m => {
+        if (m.label) friendlyLookup[m.label] = m.friendly_name || m.label;
+      });
+    });
+
+    // Count rows per model, skipping Close / Closed
+    SOURCE_DEFS.forEach(def => {
+      (SOURCE_DATA[def.key]?.rows || []).forEach(r => {
+        const st = (r['Progr.Stat.'] || r['Status'] || '').toLowerCase();
+        if (st.startsWith('close')) return;          // skip Close / Closed / CLOSED
+
+        const rawModel = (r['Model No.'] || '').toString().trim();
+        if (!rawModel || rawModel === 'N/A' || rawModel === 'nan') return;
+
+        const name = friendlyLookup[rawModel] || rawModel;
+        modelMap[name] = (modelMap[name] || 0) + 1;
+      });
+    });
+
+    let topModels = Object.entries(modelMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    // Fallback when analytics rows not yet loaded
+    if (!topModels.length && CENTRAL?.top_models?.length) {
+      topModels = CENTRAL.top_models.slice(0, 10).map(m => [m.label, m.value]);
     }
 
-    async function createModelSummaryTable() {
-      const tbody = document.getElementById('model-summary-table-body');
-      if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text3)"><i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px"></i>Loading data…</td></tr>';
+    const modelsDom = document.getElementById('top-models-chart');
+    if (!modelsDom || !topModels.length) return;
+
+    const mc = echarts.init(modelsDom);
+    mc.setOption({
+      tooltip: { show: false },
+      grid: { left:'3%', right:'10%', bottom:'3%', top:'3%', containLabel:true },
+      xAxis: { type:'value', show:false, splitLine:{show:false} },
+      yAxis: {
+        type: 'category',
+        data: topModels.map(m => m[0]).reverse(),
+        axisLabel: { color:textColor, fontSize:10 },
+        axisLine: { show:false }, axisTick: { show:false }
+      },
+      series: [{
+        type: 'bar',
+        data: topModels.map(m => m[1]).reverse(),
+        itemStyle: {
+          color: { type:'linear', x:0, y:0, x2:1, y2:0,
+            colorStops: [{offset:0,color:'#6366f1'},{offset:1,color:'#818cf8'}] },
+          borderRadius: [0,4,4,0]
+        },
+        label: { show:true, position:'right', color:textColor, fontSize:10 }
+      }]
+    });
+    window.addEventListener('resize', () => mc.resize());
+    document.getElementById('models-badge').textContent = topModels.length + ' models';
+  }
+
+  // ── PLM TABLE ──
+  let masterTableData=[],globalTableData=[],allTableRows=[];
+  let tablePage=1, PAGE_SIZE=10;
+  let currentSortColumn='',isAscending=true;
+
+  async function loadPLMTable() {
+    const tbody = document.getElementById('model-summary-table-body');
+    if (!tbody) return;
+
+    // ── Load analytics.json from ALL source folders ────────────────────
+    // Filter: updated_tier = 'Severe' only
+    // Sort:   criticality_score descending (most critical first)
+    const allRows = [];
+
+    // If SOURCE_DATA already has rows loaded (background load), use them
+    SOURCE_DEFS.forEach(def => {
+      const d = SOURCE_DATA[def.key];
+      if (d?.rows?.length) {
+        d.rows.forEach(r => { r._sourceLabel = def.label; });
+        allRows.push(...d.rows);
+      }
+    });
+
+    // Also try fetching any sources not yet loaded
+    const unfetched = SOURCE_DEFS.filter(def => !SOURCE_DATA[def.key]);
+    await Promise.allSettled(unfetched.map(async def => {
       try {
-        const response = await fetch('/downloads/global_voc_PLM/analytics.json');
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const analyticsData = await response.json();
-        if (!analyticsData.rows || !Array.isArray(analyticsData.rows)) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Error: Invalid data format</td></tr>';
-          return;
+        const r = await fetch(_url(def.path));
+        if (r.ok) {
+          const d = await r.json();
+          SOURCE_DATA[def.key] = d;
+          (d.rows || []).forEach(row => { row._sourceLabel = def.label; });
+          allRows.push(...(d.rows || []));
         }
-        window._lastAnalyticsRows = analyticsData.rows || [];
-        updateGlobalKPIs(analyticsData);
-        initGlobalCharts(analyticsData);
+      } catch(e) { /* skip */ }
+    }));
 
-        // Filter: EXCLUDE Close — keep Open and all Resolve variants
-        const filtered = analyticsData.rows.filter(item => {
-          const st = (item['Progr.Stat.'] || '').toLowerCase();
-          return st.startsWith('open') || st.startsWith('resolve');
-        });
+    try {
+      // Sort ALL rows by criticality_score descending (most critical first)
+      // const filtered = [...allRows];
+      const filtered = allRows.filter(r => !( (r['Progr.Stat.'] || '').toLowerCase().startsWith('close') ));
+      filtered.sort((a, b) => (b.criticality_score || 0) - (a.criticality_score || 0));
 
-        tbody.innerHTML = ''; // Clear loading message
-
-        // --- FILTER FOR CHARTS ---
-        const activeStatusesForCharts = ['open', 'resolve - app update', 'resolve - duplicated', 'resolve - not released', 'resolve - released'];
-        
-        const filteredRows = analyticsData.rows.filter(item => {
-          const status = (item['Progr.Stat.'] || '').toLowerCase().trim();
-          return activeStatusesForCharts.some(s => status.includes(s));
-        });
-
-        const modelCounts = {};
-        const sourceDist = {};
-        const sevDist = { 'High': 0, 'Medium': 0, 'Low': 0 };
-        let openCount = 0;
-        let resolvedCount = 0;
-
-        filteredRows.forEach(item => {
-          let modelNo = (item['Model No.'] || '').trim();
-          if (modelNo === '') modelNo = 'Unknown';
-          modelCounts[modelNo] = (modelCounts[modelNo] || 0) + 1;
-
-          let source = (item['Source'] || '').trim();
-          if (source === '') source = 'Unknown';
-          sourceDist[source] = (sourceDist[source] || 0) + 1;
-
-          let sev = (item['Severity'] || '').trim();
-          if (sev) {
-            sev = sev.charAt(0).toUpperCase() + sev.slice(1).toLowerCase();
-            if (sevDist[sev] !== undefined) sevDist[sev]++;
-          }
-          
-          const st = (item['Progr.Stat.'] || '').toLowerCase();
-          if (st.includes('open')) {
-              openCount++;
-          } else if (st.includes('resolve') || st.includes('close')) {
-              resolvedCount++;
-          }
-        });
-
-        const topModels = Object.entries(modelCounts)
-          .map(([model, count]) => ({
-            label: model,
-            count: count,
-            friendly_name: applyModelNameMapping(model)
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        if (!analyticsData.kpis) analyticsData.kpis = {};
-        analyticsData.top_models = topModels;
-        analyticsData.kpis.source_distribution = sourceDist;
-        analyticsData.kpis.severity_distribution = sevDist;
-        analyticsData.kpis.total_rows = filteredRows.length;
-        analyticsData.kpis.open_issues = openCount;
-        analyticsData.kpis.resolved_issues = resolvedCount;
-        // --- END FILTER ---
-
-        // Initialize charts and KPIs with analytics data
-        updateGlobalKPIs(analyticsData);
-        initGlobalCharts(analyticsData);
-
-        // Filter for Active statuses (show all data), keep only unique titles, and take top 10 most recent
-        const activeStatuses = ['open', 'resolve - not released', 'resolve - app update', 'resolve - duplicated'];
-
-        // Sort by date descending first so we keep the newest unique issue
-        const sortedRows = [...analyticsData.rows].sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
-        const seenTitles = new Set();
-
-        const criticalIssues = sortedRows
-          .filter(item => {
-            const status = (item['Progr.Stat.'] || '').toLowerCase();
-            const model = item['Model No.'] || '';
-            const source = item['Source'] || '';
-            const title = (item['Title'] || '').trim().toLowerCase();
-
-            if (model === '[Global VOC]SWA_Error_Report' || model === 'Unknown' || source === 'Unknown') return false;
-            if (!activeStatuses.some(s => status.includes(s))) return false;
-
-            if (seenTitles.has(title)) return false;
-            seenTitles.add(title);
-
-            return true;
-          })
-          .slice(0, 10);
-
-        // Store and compute fields into global array
-        globalTableData = criticalIssues.map(item => {
-          // Get model number from data
-          const modelNumber = item['Model No.'] || 'N/A';
-          const modelStr = modelNumber.trim();
-
-          // Get friendly name
-          const friendlyName = applyModelNameMapping(modelNumber);
-
-          // Get chipset directly from the original model string first, fallback to checking base prefix
-          let chipset = 'N/A';
-          if (modelNameMapping[modelStr] && modelNameMapping[modelStr].chipset) {
-            chipset = modelNameMapping[modelStr].chipset;
-          } else {
-            const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
-            if (match) {
-              const baseModel = match[1];
-              for (const [mapKey, mappingData] of Object.entries(modelNameMapping)) {
-                if (typeof mappingData === 'object' && mapKey.startsWith(baseModel) && mappingData.chipset) {
-                  chipset = mappingData.chipset;
-                  break;
-                }
-              }
-            }
-          }
-
-          // Read mapping exactly as requested
-          const source = item['Source'] || 'N/A';
-          const plmCode = item['Case Code'] || 'N/A';
-          const title = item['Title'] || 'No Title Available';
-          const status = item['Progr.Stat.'] || 'N/A';
-
-          // Define status color class mapping for UI flair
-          let statusColorClass = "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300";
-          if (status.toLowerCase().includes('open')) {
-            statusColorClass = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-          } else if (status.toLowerCase().includes('resolve') || status.toLowerCase().includes('close')) {
-            statusColorClass = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-          } else if (status.toLowerCase().includes('progress')) {
-            statusColorClass = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-          }
-
-          let modelDisplay = modelNumber !== 'N/A' ? modelNumber : friendlyName;
-
-          return {
-            source,
-            model: modelDisplay,
-            chipset,
-            plm: plmCode,
-            title,
-            status,
-            statusColorClass
-          };
-        });
-
-        // Map all rows, sort Open first then Resolve
-        allTableRows = filtered
-          .map(mapRow)
-          .sort((a, b) => {
-            const rank = s => s.toLowerCase().startsWith('open') ? 0 : 1;
-            return rank(a.status) - rank(b.status);
-          });
-
-        masterTableData = [...allTableRows];
-        globalTableData = [...allTableRows];
-        tablePage = 1;
-        populateFilterOptions();
-        renderTable();
-        updateTimestamp();
-      } catch (error) {
-        console.error('Failed to load global_voc_plm/analytics.json:', error);
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Failed to load table data.</td></tr>';
-      }
-    }
-
-    function renderTable() {
-      const tbody = document.getElementById('model-summary-table-body');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      const data = globalTableData;
-      const totalRows = data.length;
-      const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
-      if (tablePage > totalPages) tablePage = totalPages;
-
-      const start = (tablePage - 1) * PAGE_SIZE;
-      const end   = Math.min(start + PAGE_SIZE, totalRows);
-      const pageRows = data.slice(start, end);
-
-      if (pageRows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text3)">No issues found.</td></tr>';
-      } else {
-        pageRows.forEach((item, idx) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML =
-            '<td><span class="sl-num">' + (start + idx + 1) + '</span></td>' +
-            '<td>' + item.source + '</td>' +
-            '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + item.model + '</td>' +
-            '<td>' + item.chipset + '</td>' +
-            '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + item.plm + '</td>' +
-            '<td class="title-cell" title="' + item.title + '">' + item.title + '</td>' +
-            '<td><span class="status-pill ' + item.statusColorClass + '">' + item.status + '</span></td>';
-          tbody.appendChild(tr);
-        });
-      }
-
-      // Update pagination bar
-      const pgBar  = document.getElementById('table-pagination');
-      const pgFrom = document.getElementById('pg-from');
-      const pgTo   = document.getElementById('pg-to');
-      const pgTot  = document.getElementById('pg-total');
-      if (pgBar) {
-        pgBar.style.display = totalRows > 0 ? 'flex' : 'none';
-        if (pgFrom) pgFrom.textContent = totalRows > 0 ? start + 1 : 0;
-        if (pgTo)   pgTo.textContent   = end;
-        if (pgTot)  pgTot.textContent  = totalRows;
-        renderPaginationControls(totalPages);
-      }
-    }
-
-    function renderPaginationControls(totalPages) {
-      const ctrl = document.getElementById('pg-controls');
-      if (!ctrl) return;
-      ctrl.innerHTML = '';
-
-      const btn = (label, page, disabled, active, isIcon) => {
-        const b = document.createElement('button');
-        b.className = 'pg-btn' + (active ? ' active' : '');
-        b.disabled  = disabled;
-        b.innerHTML = isIcon ? '<i class="fa-solid ' + label + '"></i>' : label;
-        b.title     = isIcon ? label : '';
-        if (!disabled) b.onclick = () => { tablePage = page; renderTable(); };
-        return b;
-      };
-
-      // Prev
-      ctrl.appendChild(btn('fa-chevron-left',  tablePage - 1, tablePage <= 1,          false, true));
-
-      // Page number pills with ellipsis
-      const pages = [];
-      if (totalPages <= 7) {
-        for (let i = 1; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        if (tablePage > 3) { const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e); }
-        for (let i = Math.max(2, tablePage-1); i <= Math.min(totalPages-1, tablePage+1); i++) pages.push(i);
-        if (tablePage < totalPages - 2) { const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e); }
-        pages.push(totalPages);
-      }
-      // Rebuild with ellipsis inline
-      ctrl.innerHTML = '';
-      ctrl.appendChild(btn('fa-chevron-left', tablePage - 1, tablePage <= 1, false, true));
-      if (totalPages > 7 && tablePage > 3) {
-        ctrl.appendChild(btn('1', 1, false, false, false));
-        const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e);
-        for (let i = Math.max(2, tablePage-1); i <= Math.min(totalPages-1, tablePage+1); i++)
-          ctrl.appendChild(btn(String(i), i, false, i === tablePage, false));
-        if (tablePage < totalPages - 2) { const e2 = document.createElement('span'); e2.className='pg-ellipsis'; e2.textContent='…'; ctrl.appendChild(e2); }
-        ctrl.appendChild(btn(String(totalPages), totalPages, false, totalPages === tablePage, false));
-      } else {
-        for (let i = 1; i <= Math.min(totalPages, 7); i++)
-          ctrl.appendChild(btn(String(i), i, false, i === tablePage, false));
-        if (totalPages > 7) {
-          const e = document.createElement('span'); e.className='pg-ellipsis'; e.textContent='…'; ctrl.appendChild(e);
-          ctrl.appendChild(btn(String(totalPages), totalPages, false, totalPages === tablePage, false));
-        }
-      }
-      ctrl.appendChild(btn('fa-chevron-right', tablePage + 1, tablePage >= totalPages, false, true));
-    }
-
-    function sortTable(column) {
-      if (currentSortColumn === column) {
-        isAscending = !isAscending;
-      } else {
-        currentSortColumn = column;
-        isAscending = true;
-      }
-      ['source','model','chipset','plm','title','status'].forEach(col => {
-        const icon = document.getElementById('sort-icon-' + col);
-        if (icon) { icon.className = 'fa-solid fa-sort'; icon.style.color = ''; icon.style.opacity = '.4'; }
-      });
-      const currentIcon = document.getElementById('sort-icon-' + column);
-      if (currentIcon) {
-        currentIcon.className = 'fa-solid ' + (isAscending ? 'fa-sort-up' : 'fa-sort-down');
-        currentIcon.style.color = '#6366f1';
-        currentIcon.style.opacity = '1';
-      }
-      const sorter = (a, b) => {
-        let valA = a[column] ? a[column].toString().toLowerCase() : '';
-        let valB = b[column] ? b[column].toString().toLowerCase() : '';
-        if (valA < valB) return isAscending ? -1 : 1;
-        if (valA > valB) return isAscending ? 1 : -1;
-        return 0;
-      };
-      globalTableData.sort(sorter);
-      masterTableData.sort(sorter);
+      allTableRows = filtered.map(mapRow);
+      masterTableData = [...allTableRows];
+      globalTableData = [...allTableRows];
       tablePage = 1;
+      populateFilterOptions();
       renderTable();
+      updateTimestamp();
+    } catch(e) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:28px;text-align:center;color:var(--text3)">Could not load issues.</td></tr>';
     }
+  }
 
-    // ── Severity breakdown click → drill-down modal ───────────────────────
-    // Called when user clicks Open/Resolve count in the severity breakdown cards
-    function openIssueDrillModal(tier, statusKey) {
-      const sevDist = (window._lastSevDist) || {};
-      const d = sevDist[tier] || {};
-      const count = d[statusKey] || 0;
-      const statusLabel = statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
-      const title = tier + ' — ' + statusLabel + ' (' + count + ')';
+  function changePageSize(val) {
+    PAGE_SIZE = parseInt(val) || 10;
+    tablePage = 1;
+    renderTable();
+  }
 
-      document.getElementById('issue-drill-title').textContent = title;
-      const tbody = document.getElementById('issue-drill-body');
-      tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text3)"><i class="fa-solid fa-circle-notch fa-spin"></i></td></tr>';
-      document.getElementById('issue-drill-modal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-
-      // Filter allTableRows + raw rows from analytics by tier score and status
-      // We use masterTableData (which has all open+resolve rows) and filter by status
-      const statusFilter = statusKey.toLowerCase(); // 'open' or 'resolve'
-      const matchedRows = (window._lastAnalyticsRows || []).filter(item => {
-        const st = (item['Progr.Stat.'] || '').toLowerCase();
-        if (statusFilter === 'open')    return st.startsWith('open');
-        if (statusFilter === 'resolve') return st.startsWith('resolve');
-        if (statusFilter === 'close')   return st.startsWith('close');
-        return false;
-      });
-
-      tbody.innerHTML = '';
-      if (matchedRows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text3)">No issues found.</td></tr>';
-        return;
-      }
-      matchedRows.forEach((item, idx) => {
-        const status = item['Progr.Stat.'] || 'N/A';
-        let cls = 'status-default';
-        if (status.toLowerCase().startsWith('open'))    cls = 'status-open';
-        if (status.toLowerCase().startsWith('resolve')) cls = 'status-resolved';
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td><span class="sl-num">' + (idx+1) + '</span></td>' +
-          '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + (item['Case Code']||'N/A') + '</td>' +
-          '<td style="font-family:JetBrains Mono,monospace;font-size:11px">' + (item['Model No.']||'N/A') + '</td>' +
-          '<td class="title-cell">' + (item['Title']||'N/A') + '</td>' +
-          '<td><span class="status-pill ' + cls + '">' + status + '</span></td>';
-        tbody.appendChild(tr);
-      });
-    }
-
-    function closeIssueDrillModal() {
-      document.getElementById('issue-drill-modal').style.display = 'none';
-      document.body.style.overflow = '';
-    }
-
-    function updateTimestamp() {
-      const now = new Date();
-      const formatted = now.toISOString().split('T')[0];
-      const el = document.getElementById('last-updated');
-      if (el) el.textContent = `(${formatted})`;
-    }
-
-    function showDetailsModal() {
-      const modal = document.getElementById('details-modal');
-      const totalModelsEl = document.getElementById('modal-total-models');
-      const totalIssuesEl = document.getElementById('modal-total-issues');
-      const highRiskEl = document.getElementById('modal-high-risk');
-      const tbody = document.getElementById('modal-table-body');
-      if (!modal || !tbody) return;
-      const totalIssues = Object.values(dashboardData.kpis).reduce((sum, val) => sum + val, 0);
-      const totalModels = dashboardData.topModels.length;
-      const highRiskModels = dashboardData.topModels.filter(m => m.value > 200).length;
-      if (totalModelsEl) totalModelsEl.textContent = totalModels;
-      if (totalIssuesEl) totalIssuesEl.textContent = totalIssues;
-      if (highRiskEl) highRiskEl.textContent = highRiskModels;
-      tbody.innerHTML = '';
-      dashboardData.topModels.forEach((model, index) => {
-        const modelData = dashboardData.sourceModelSummary?.find(item => item.model === model.label);
-        const topModule = modelData?.top_modules?.[0] || 'N/A';
-        const topIssue = modelData?.top_titles?.[0] || 'Various issues reported';
-        const source = modelData?.source || 'Unknown';
-        const sourceDisplayName = { 'Beta':'Beta User Issues','PLM':'S.M. PLM','VOC':'S.M. VOC' }[source] || source;
-        const issueCount = modelData?.issue_count || model.value;
-        const severity = issueCount > 300 ? 'critical' : issueCount > 200 ? 'high' : issueCount > 100 ? 'medium' : 'low';
-        const severityText = severity.charAt(0).toUpperCase() + severity.slice(1);
-        const riskText = (severity === 'critical' || severity === 'high') ? 'High Risk' : 'Major Risk';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><span class="sl-num">${index+1}</span></td>
-          <td>${model.label}</td>
-          <td>${topModule}</td>
-          <td>${sourceDisplayName}</td>
-          <td style="font-family:JetBrains Mono,monospace">${issueCount}</td>
-          <td><span class="status-pill ${severity==='high'||severity==='critical'?'status-open':severity==='medium'?'':'status-default'}">${severityText}</span></td>
-          <td><span class="status-pill ${severity==='high'||severity==='critical'?'status-open':'status-default'}">${riskText}</span></td>
-        `;
-        tbody.appendChild(tr);
-      });
-      modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-      document.addEventListener('keydown', handleModalKeydown);
-    }
-
-    function closeDetailsModal() {
-      const modal = document.getElementById('details-modal');
-      if (modal) { modal.classList.add('hidden'); document.body.style.overflow = ''; }
-      document.removeEventListener('keydown', handleModalKeydown);
-    }
-
-    function handleModalKeydown(event) {
-      if (event.key === 'Escape') closeDetailsModal();
-    }
-
-    function getChartColors() {
-      const isDark = document.documentElement.classList.contains('dark');
-      return {
-        textPrimary: isDark ? '#94a3b8' : '#64748b',
-        textSecondary: isDark ? '#64748b' : '#94a3b8',
-        gridLines: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
-      };
-    }
-
-
-    // Error handling
-    function handleError(error) {
-      console.error('Dashboard error:', error);
-    }
-
-    // ── TABLE FILTER SYSTEM ───────────────────────────────────────────────
-    let masterTableData = [];
-
-    function populateFilterOptions() {
-      function fillSelect(id, field) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const current = el.value;
-        while (el.options.length > 1) el.remove(1);
-        const vals = [...new Set(masterTableData.map(d => d[field]).filter(v => v && v !== 'N/A'))].sort();
-        vals.forEach(v => {
-          const o = document.createElement('option');
-          o.value = v; o.textContent = v;
-          el.appendChild(o);
-        });
-        if (current) {
-          for (const opt of el.options) {
-            if (opt.value === current) { opt.selected = true; break; }
-          }
+  function mapRow(item){
+    const modelNumber = item['Model No.'] || 'N/A';
+    const modelStr    = modelNumber.trim();
+    let chipset = 'N/A';
+    if (modelNameMapping[modelStr]?.chipset) {
+      chipset = modelNameMapping[modelStr].chipset;
+    } else {
+      const match = modelStr.match(/^(SM-[A-Z]\d{2,4})/);
+      if (match) {
+        const base = match[1];
+        for (const [k,m] of Object.entries(modelNameMapping)) {
+          if (typeof m==='object' && k.startsWith(base) && m.chipset) { chipset=m.chipset; break; }
         }
       }
-      fillSelect('f-source',  'source');
-      fillSelect('f-model',   'model');
-      fillSelect('f-chipset', 'chipset');
-      fillSelect('f-status',  'status');
     }
+    const status = item['Progr.Stat.'] || 'N/A';
+    let sc = 'status-default';
+    if (status.toLowerCase().startsWith('open'))    sc = 'status-open';
+    if (status.toLowerCase().startsWith('resolve')) sc = 'status-resolved';
 
-    function applyTableFilters() {
-      const src     = document.getElementById('f-source')?.value  || '';
-      const model   = document.getElementById('f-model')?.value   || '';
-      const chipset = document.getElementById('f-chipset')?.value || '';
-      const status  = document.getElementById('f-status')?.value  || '';
-      const q       = (document.getElementById('f-search')?.value || '').trim().toLowerCase();
+    // Use updated_tier as the display tier (post scale-down)
+    const tier = item.updated_tier || item.tier || 'N/A';
+    let tierClass = 'tier-deferred';
+    if (tier === 'Severe')   tierClass = 'tier-severe';
+    if (tier === 'Moderate') tierClass = 'tier-moderate';
 
-      tablePage = 1;
-      const filtered = masterTableData.filter(d => {
-        if (src     && d.source  !== src)     return false;
-        if (model   && d.model   !== model)   return false;
-        if (chipset && d.chipset !== chipset) return false;
-        if (status  && d.status  !== status)  return false;
-        if (q) {
-          const hay = (d.title + ' ' + d.plm + ' ' + d.source + ' ' + d.model + ' ' + d.chipset + ' ' + d.status).toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
-        return true;
-      });
+    const score = item.criticality_score != null
+      ? Number(item.criticality_score).toFixed(1)
+      : '—';
 
-      const selIds = ['f-source','f-model','f-chipset','f-status'];
-      selIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('f-active', !!el.value);
-      });
+    // source: use _sourceLabel (set during load) or Source column
+    const source = item._sourceLabel || item['Source'] || 'N/A';
 
-      const chipDefs = [
-        { id: 'f-source',  label: 'Source',  val: src },
-        { id: 'f-model',   label: 'Model',   val: model },
-        { id: 'f-chipset', label: 'Chipset', val: chipset },
-        { id: 'f-status',  label: 'Status',  val: status },
-      ];
-      if (q) chipDefs.push({ id: 'f-search', label: 'Search', val: `"${q}"` });
-      const activeChips = chipDefs.filter(c => c.val);
+    return {
+      source, model: modelNumber, chipset,
+      plm:   item['Case Code'] || 'N/A',
+      title: item['Title']     || 'No Title',
+      status, statusColorClass: sc,
+      tier, tierClass, score,
+      criticality_score: item.criticality_score || 0,
+      _raw: item
+    };
+  }
 
-      const chipsRow  = document.getElementById('active-chips-row');
-      const chipsEl   = document.getElementById('active-chips');
-      if (activeChips.length > 0) {
-        chipsRow.style.display = 'flex';
-        chipsEl.innerHTML = activeChips.map(c =>
-          `<span class="chip" onclick="clearSingleFilter('${c.id}')">
-            <span class="chip-key">${c.label}</span>
-            ${c.val}
-            <span class="chip-x">×</span>
-          </span>`
-        ).join('');
-      } else {
-        chipsRow.style.display = 'none';
-        chipsEl.innerHTML = '';
-      }
+  function renderTable(){
+    const tbody=document.getElementById('model-summary-table-body');if(!tbody)return;
+    const data=globalTableData,totalRows=data.length;
+    const totalPages=Math.max(1,Math.ceil(totalRows/PAGE_SIZE));
+    if(tablePage>totalPages)tablePage=totalPages;
+    const start=(tablePage-1)*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,totalRows);
+    const pageRows=data.slice(start,end);
+    if(pageRows.length===0){tbody.innerHTML='<tr><td colspan="8" style="padding:28px;text-align:center;color:var(--text3)">No issues found.</td></tr>';}
+    else{tbody.innerHTML=pageRows.map((item,idx)=>`<tr>
+        <td><span class="sl-num">${start+idx+1}</span></td>
+        <td>${item.source}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px">${item.model}</td>
+        <td>${item.chipset}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px">${item.plm}</td>
+        <td class="title-cell" title="${item.title}">${item.title}</td>
+        <td><span class="tier-pill ${item.tierClass}">${item.tier}</span></td>
+        <td><span class="status-pill ${item.statusColorClass}">${item.status}</span></td>
+      </tr>`).join('');}
+    const pgBar=document.getElementById('table-pagination');
+    if(pgBar){pgBar.style.display=totalRows>0?'flex':'none';const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};set('pg-from',totalRows>0?start+1:0);set('pg-to',end);set('pg-total',totalRows);renderPaginationControls(totalPages);}
+  }
 
-      const resultBar = document.getElementById('filter-result-bar');
-      const hasFilters = activeChips.length > 0;
-      resultBar.style.display = hasFilters ? 'flex' : 'none';
-      if (hasFilters) {
-        document.getElementById('filter-result-count').textContent = filtered.length.toLocaleString();
-        document.getElementById('filter-result-label').textContent = filtered.length === 1 ? ' result' : ' results';
-        document.getElementById('filter-match-info').textContent =
-          filtered.length < masterTableData.length
-            ? `of ${masterTableData.length} total records`
-            : 'showing all records';
-      }
+  function renderPaginationControls(totalPages){
+    const ctrl=document.getElementById('pg-controls');if(!ctrl)return;
+    const btn=(label,page,disabled,active,isIcon)=>{const b=document.createElement('button');b.className='pg-btn'+(active?' active':'');b.disabled=disabled;b.innerHTML=isIcon?`<i class="fa-solid ${label}"></i>`:label;if(!disabled)b.onclick=()=>{tablePage=page;renderTable();};return b;};
+    ctrl.innerHTML='';ctrl.appendChild(btn('fa-chevron-left',tablePage-1,tablePage<=1,false,true));
+    if(totalPages<=7){for(let i=1;i<=totalPages;i++)ctrl.appendChild(btn(String(i),i,false,i===tablePage,false));}
+    else{ctrl.appendChild(btn('1',1,false,false,false));if(tablePage>3){const e=document.createElement('span');e.className='pg-ellipsis';e.textContent='…';ctrl.appendChild(e);}for(let i=Math.max(2,tablePage-1);i<=Math.min(totalPages-1,tablePage+1);i++)ctrl.appendChild(btn(String(i),i,false,i===tablePage,false));if(tablePage<totalPages-2){const e=document.createElement('span');e.className='pg-ellipsis';e.textContent='…';ctrl.appendChild(e);}ctrl.appendChild(btn(String(totalPages),totalPages,false,totalPages===tablePage,false));}
+    ctrl.appendChild(btn('fa-chevron-right',tablePage+1,tablePage>=totalPages,false,true));
+  }
 
-      renderFilteredTable(filtered);
-    }
+  function sortTable(column){
+    if(currentSortColumn===column)isAscending=!isAscending;else{currentSortColumn=column;isAscending=true;}
+    ['source','model','chipset','plm','title','tier','criticality_score','status'].forEach(col=>{
+      const icon=document.getElementById('sort-icon-'+col);
+      if(icon){icon.className='fa-solid fa-sort';icon.style.color='';icon.style.opacity='.3';}
+    });
+    const ci=document.getElementById('sort-icon-'+column);
+    if(ci){ci.className='fa-solid '+(isAscending?'fa-sort-up':'fa-sort-down');ci.style.color='#6366f1';ci.style.opacity='1';}
+    const sorter = column === 'criticality_score'
+      ? (a,b) => isAscending
+          ? (a.criticality_score||0) - (b.criticality_score||0)
+          : (b.criticality_score||0) - (a.criticality_score||0)
+      : (a,b)=>{const va=(a[column]||'').toString().toLowerCase(),vb=(b[column]||'').toString().toLowerCase();return va<vb?(isAscending?-1:1):va>vb?(isAscending?1:-1):0;};
+    globalTableData.sort(sorter);masterTableData.sort(sorter);tablePage=1;renderTable();
+  }
 
-    function renderFilteredTable(data) {
-      // Set globalTableData to the filtered set then re-render with pagination
-      globalTableData = data;
-      tablePage = 1;
-      renderTable();
-    }
+  function populateFilterOptions(){
+    const fill=(id,field)=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;while(el.options.length>1)el.remove(1);[...new Set(masterTableData.map(d=>d[field]).filter(v=>v&&v!=='N/A'))].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});if(cur)for(const o of el.options)if(o.value===cur){o.selected=true;break;}};
+    fill('f-source','source');fill('f-model','model');fill('f-chipset','chipset');fill('f-status','status');
+  }
 
-    function clearSingleFilter(id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      if (el.tagName === 'SELECT') el.selectedIndex = 0;
-      else el.value = '';
-      applyTableFilters();
-    }
+  function applyTableFilters(){
+    const src=(document.getElementById('f-source')?.value)||'',model=(document.getElementById('f-model')?.value)||'',chipset=(document.getElementById('f-chipset')?.value)||'',status=(document.getElementById('f-status')?.value)||'',q=((document.getElementById('f-search')?.value)||'').trim().toLowerCase();
+    tablePage=1;
+    const filtered=masterTableData.filter(d=>{
+      if(src&&d.source!==src)return false;if(model&&d.model!==model)return false;if(chipset&&d.chipset!==chipset)return false;if(status&&d.status!==status)return false;
+      if(q){const h=(d.title+' '+d.plm+' '+d.source+' '+d.model).toLowerCase();if(!h.includes(q))return false;}return true;
+    });
+    ['f-source','f-model','f-chipset','f-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('f-active',!!el.value);});
+    const chipDefs=[{id:'f-source',label:'Source',val:src},{id:'f-model',label:'Model',val:model},{id:'f-chipset',label:'Chipset',val:chipset},{id:'f-status',label:'Status',val:status}];
+    if(q)chipDefs.push({id:'f-search',label:'Search',val:`"${q}"`});
+    const active=chipDefs.filter(c=>c.val);
+    const cr=document.getElementById('active-chips-row'),ce=document.getElementById('active-chips');
+    if(active.length>0){cr.style.display='flex';ce.innerHTML=active.map(c=>`<span class="chip" onclick="clearSingleFilter('${c.id}')"><span class="chip-key">${c.label}</span>${c.val}<span style="font-size:12px;opacity:.5;margin-left:2px;">×</span></span>`).join('');}else{cr.style.display='none';ce.innerHTML='';}
+    const rb=document.getElementById('filter-result-bar');rb.style.display=active.length>0?'flex':'none';
+    if(active.length>0){document.getElementById('filter-result-count').textContent=filtered.length.toLocaleString();document.getElementById('filter-result-label').textContent=filtered.length===1?' result':' results';document.getElementById('filter-match-info').textContent=filtered.length<masterTableData.length?`of ${masterTableData.length} total records`:'showing all records';}
+    globalTableData=filtered;tablePage=1;renderTable();
+  }
 
-    function clearAllTableFilters() {
-      ['f-source','f-model','f-chipset','f-status'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.selectedIndex = 0;
-      });
-      const si = document.getElementById('f-search');
-      if (si) si.value = '';
-      applyTableFilters();
-    }
-  </script>
-
-  <script>
-    // ── Live clock ────────────────────────────────────────────────────────
-    function updateClock() {
-      const el = document.getElementById('live-clock');
-      if (el) el.textContent = new Date().toLocaleTimeString('en-IN', { hour12: true, hour: '2-digit', minute: '2-digit' });
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
+  function clearSingleFilter(id){const el=document.getElementById(id);if(!el)return;if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';applyTableFilters();}
+  function clearAllTableFilters(){['f-source','f-model','f-chipset','f-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});const si=document.getElementById('f-search');if(si)si.value='';applyTableFilters();}
+  function closeIssueDrillModal(){document.getElementById('issue-drill-modal').style.display='none';document.body.style.overflow='';}
+  function updateTimestamp(){const el=document.getElementById('last-updated');if(el)el.textContent='('+new Date().toISOString().split('T')[0]+')';}
+  function updateClock(){const el=document.getElementById('live-clock');if(el)el.textContent=new Date().toLocaleTimeString('en-IN',{hour12:true,hour:'2-digit',minute:'2-digit'});}
+  updateClock();setInterval(updateClock,1000);
   </script>
 </body>
 </html>

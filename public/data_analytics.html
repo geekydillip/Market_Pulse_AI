@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service Issues — Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & tokens ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--bg2:#ffffff;--bg3:#e8eaee;--bg4:#dde0e6;
+  --border:rgba(0,0,0,.07);--border2:rgba(0,0,0,.13);
+  --text:#18191f;--text2:#4e5364;--text3:#959cb2;
+  --blue:#4975c9;--blue-d:#3560b8;--blue-dim:rgba(73,117,201,.10);
+  --coral:#c96449;--coral-dim:rgba(201,100,73,.10);
+  --green:#3d8c5e;--green-dim:rgba(61,140,94,.10);
+  --red:#b84a4a;--red-dim:rgba(184,74,74,.10);
+  --amber:#b07a34;--amber-dim:rgba(176,122,52,.10);
+  --purple:#7059a8;--teal:#3d8a8a;--slate:#6278a0;
+  --r:10px;--rl:14px;--rx:18px;
+  --shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10),0 1px 4px rgba(0,0,0,.06);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+
+/* ── Layout ── */
+.shell{display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.sb{width:232px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-top{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.sb-eyebrow{font-size:10px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.sb-title{font-size:15px;font-weight:600;color:var(--text)}
+.sb-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.sb-nav{padding:10px 8px;flex:1}
+.nav-grp{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;padding:8px 10px 3px}
+.nav-btn{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);font-size:12.5px;color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.active{background:var(--blue-dim);color:var(--blue);font-weight:500}
+.nav-btn .ni{width:15px;text-align:center;font-size:13px;opacity:.8}
+.back-link{display:flex;align-items:center;gap:7px;margin:8px 8px 0;padding:8px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-weight:500;color:var(--text2);text-decoration:none;transition:all .15s}
+.back-link:hover{background:var(--bg2);color:var(--text)}
+.sb-stats{padding:14px 18px;border-top:1px solid var(--border)}
+.sb-stat{margin-bottom:10px;padding:5px 7px;border-radius:8px;cursor:pointer;transition:background .15s}
+.sb-stat:hover{background:var(--bg3)}
+.sb-stat .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.sb-stat .val{font-size:20px;font-weight:300;color:var(--text);font-family:'DM Mono',monospace;letter-spacing:-.02em}
+.sb-stat .sub{font-size:11px;color:var(--text2)}
+
+/* ── Main ── */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── Topbar ── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 26px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:20}
+.tb-left .tb-title{font-size:14.5px;font-weight:600;color:var(--text)}
+.tb-left .tb-sub{font-size:11px;color:var(--text2)}
+
+/* ── Source switcher (top source tab bar) ── */
+.source-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 26px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.source-bar::-webkit-scrollbar{display:none}
+.src-tab{display:flex;align-items:center;gap:7px;padding:11px 16px;border-bottom:2px solid transparent;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;border:none;background:none;font-family:'DM Sans',sans-serif}
+.src-tab:hover{color:var(--text);background:var(--bg3)}
+.src-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.src-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── Content ── */
+.content{padding:22px 26px 40px;overflow-y:auto;flex:1}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── Metrics ── */
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+@media(max-width:1100px){.metric-grid{grid-template-columns:repeat(2,1fr)}}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .15s,transform .15s}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--rl) var(--rl) 0 0}
+.mc.mc-blue::before{background:linear-gradient(90deg,var(--blue),#6e9be0)}
+.mc.mc-red::before{background:linear-gradient(90deg,var(--red),#d97070)}
+.mc.mc-amber::before{background:linear-gradient(90deg,var(--amber),#d4a060)}
+.mc.mc-green::before{background:linear-gradient(90deg,var(--green),#60b585)}
+.mc.clickable{cursor:pointer}
+.mc.clickable:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.mc .mlbl{font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.mc .mval{font-size:30px;font-weight:300;color:var(--text);font-family:'DM Mono',monospace;letter-spacing:-.03em;line-height:1}
+.mc .msub{font-size:11px;color:var(--text2);margin-top:4px}
+.mc .mdelta{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:20px;margin-top:6px}
+.tag-red{background:var(--red-dim);color:var(--red)}
+.tag-green{background:var(--green-dim);color:var(--green)}
+.tag-blue{background:var(--blue-dim);color:var(--blue)}
+.tag-amber{background:var(--amber-dim);color:var(--amber)}
+.tag-neutral{background:rgba(82,87,107,.07);color:var(--text2)}
+
+/* ── Cards ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.ch-header{margin-bottom:14px}
+.ch-title{font-size:13px;font-weight:600;color:var(--text)}
+.ch-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px}
+.ch{position:relative}
+.drill-hint{font-size:10px;color:var(--text3);text-align:right;margin-top:5px;font-style:italic}
+
+/* ── Legend ── */
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.lsq{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── Bar rows ── */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;border-radius:6px;padding:2px 3px;margin:-0px -3px}
+.bar-lbl{width:140px;font-size:12px;color:var(--text2);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:var(--bg3);border-radius:3px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.bar-val{width:36px;text-align:right;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.bar-row.clickable{cursor:pointer}
+.bar-row.clickable:hover{background:var(--blue-dim)}
+.bar-row.clickable:hover .bar-lbl{color:var(--blue);font-weight:500}
+.bar-row.clickable:hover .bar-val{color:var(--blue)}
+
+/* ── Double bar ── */
+.dbar-wrap{margin-bottom:13px}
+.dbar-header{display:flex;align-items:center;font-size:12px;margin-bottom:4px}
+.dbar-lbl{width:160px;color:var(--text2);flex-shrink:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbar-badge{font-size:10px;padding:1px 7px;border-radius:10px;margin-left:auto}
+.dbar-wrap.clickable{border-radius:7px;padding:4px 6px;margin:-4px -6px;cursor:pointer}
+.dbar-wrap.clickable:hover{background:var(--blue-dim)}
+.dbar-wrap.clickable:hover .dbar-lbl{color:var(--blue)}
+
+/* ── Severity cards ── */
+.sev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.sev-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.sev-card .sev-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px}
+.sev-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;padding:2px 4px;border-radius:5px;cursor:pointer;transition:background .12s}
+.sev-row:hover{background:rgba(255,255,255,.6)}
+.sev-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sev-lbl{font-size:11.5px;color:var(--text2);flex:1}
+.sev-val{font-size:12px;font-weight:600;color:var(--text);min-width:24px;text-align:right}
+.sev-pct{font-size:10px;color:var(--text3);min-width:32px;text-align:right}
+
+/* ── Status legend ── */
+.status-leg{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.sl-row{display:flex;align-items:center;gap:8px}
+.sl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sl-lbl{font-size:12px;color:var(--text2);flex:1}
+.sl-val{font-size:12px;font-weight:500;color:var(--text);font-family:'DM Mono',monospace}
+.sl-pct{font-size:10.5px;color:var(--text3);min-width:36px;text-align:right}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:500}
+.badge-open{background:var(--amber-dim);color:var(--amber)}
+.badge-close{background:rgba(82,87,107,.08);color:var(--text3)}
+.badge-resolve{background:var(--green-dim);color:var(--green)}
+.badge-severe{background:var(--red-dim);color:var(--red)}
+.badge-moderate{background:var(--amber-dim);color:var(--amber)}
+.badge-medium{background:var(--amber-dim);color:var(--amber)}
+.badge-deferred{background:var(--blue-dim);color:var(--blue)}
+
+/* ── Explorer filter bar ── */
+.filter-bar{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.fsel{background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none}
+.fsel:focus{border-color:var(--blue)}
+.finput{background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:6px 12px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;width:220px}
+.finput:focus{border-color:var(--blue)}
+.finput::placeholder{color:var(--text3)}
+.res-count{font-size:11px;color:var(--text3);margin-left:auto;font-family:'DM Mono',monospace}
+.dtable{width:100%;border-collapse:collapse;font-size:12px}
+.dtable th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);border-bottom:1px solid var(--border);font-weight:400;background:var(--bg3)}
+.dtable td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.dtable tr:hover td{background:var(--bg3)}
+.dtable td.main-col{color:var(--text);font-weight:500}
+.pg{display:flex;gap:5px;margin-top:12px;align-items:center;justify-content:flex-end}
+.pgbtn{padding:4px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.pgbtn:hover{background:var(--bg3);color:var(--text)}
+.pgbtn.active{background:var(--blue-dim);color:var(--blue);border-color:var(--blue)}
+.pgi{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin:0 6px}
+
+/* ── Drill drawer ── */
+#drill-overlay{position:fixed;inset:0;background:rgba(0,0,0,.22);z-index:200;opacity:0;transition:opacity .2s;pointer-events:none}
+#drill-overlay.open{opacity:1;pointer-events:all}
+#drill-drawer{position:fixed;top:0;right:0;bottom:0;width:760px;max-width:96vw;background:var(--bg2);box-shadow:-4px 0 28px rgba(0,0,0,.13);z-index:201;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+#drill-drawer.open{transform:translateX(0)}
+.drill-head{display:flex;align-items:flex-start;justify-content:space-between;padding:15px 22px 11px;border-bottom:1px solid var(--border);flex-shrink:0}
+.drill-title{font-size:14px;font-weight:600;color:var(--text)}
+.drill-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.drill-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3);padding:2px 6px;border-radius:6px}
+.drill-close:hover{background:var(--bg3);color:var(--text)}
+#drill-flt{padding:9px 22px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg)}
+.df-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:5px}
+.df-row:last-child{margin:0}
+.df-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;min-width:50px}
+.dfsel{background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:5px 8px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;flex:1;min-width:100px;max-width:155px}
+.dfsel:focus{border-color:var(--blue)}
+.dfsearch{background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:5px 10px;font-size:11px;font-family:'DM Sans',sans-serif;outline:none;flex:2;min-width:140px;max-width:220px}
+.dfsearch:focus{border-color:var(--blue)}
+.dfsearch::placeholder{color:var(--text3)}
+.drill-rbar{padding:5px 22px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.drill-rbar strong{color:var(--text);font-weight:500}
+.drill-body{flex:1;overflow-y:auto}
+.drill-table{width:100%;border-collapse:collapse;font-size:12px}
+.drill-table th{position:sticky;top:0;text-align:left;padding:8px 13px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);border-bottom:1px solid var(--border);font-weight:400;background:var(--bg3);z-index:1}
+.drill-table td{padding:8px 13px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.drill-table tr:hover td{background:var(--bg3)}
+.drill-table td.dc{color:var(--text);font-weight:500}
+.drill-footer{padding:9px 22px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.d-pgs{display:flex;gap:4px}
+.d-pgbtn{padding:3px 8px;border-radius:6px;border:1px solid var(--border2);background:transparent;font-size:11px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif}
+.d-pgbtn:hover{background:var(--bg3)}
+.d-pgbtn.active{background:var(--blue-dim);color:var(--blue);border-color:var(--blue)}
+
+/* ── Loading overlay ── */
+#lo{position:fixed;inset:0;background:rgba(240,242,245,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px;font-family:'DM Sans',sans-serif}
+#lo svg{animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#lo .lo-msg{font-size:15px;color:var(--text2)}
+#lo .lo-src{font-size:12px;color:var(--text3)}
+
+.ch canvas{cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="lo">
+  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+    <circle cx="22" cy="22" r="18" stroke="#dde0e6" stroke-width="4"/>
+    <path d="M22 4a18 18 0 0 1 18 18" stroke="var(--blue)" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+  <div class="lo-msg" id="lo-msg">Loading analytics…</div>
+  <div class="lo-src" id="lo-src"></div>
+</div>
+
+<div class="shell" id="app" style="display:none">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sb">
+  <div class="sb-top">
+    <div class="sb-eyebrow">Service Issues</div>
+    <div class="sb-title" id="sb-title">Analytics</div>
+    <div class="sb-sub" id="sb-src-label">Select a source</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-grp">Analytics</div>
+    <button class="nav-btn active" onclick="showPanel('overview',this)"><span class="ni">⬡</span> Overview</button>
+    <button class="nav-btn" onclick="showPanel('issuetypes',this)"><span class="ni">◈</span> Issue types</button>
+    <button class="nav-btn" onclick="showPanel('modules',this)"><span class="ni">◫</span> Module hotspots</button>
+    <button class="nav-btn" onclick="showPanel('severity',this)"><span class="ni">⚠</span> Severity</button>
+    <button class="nav-btn" onclick="showPanel('timeline',this)"><span class="ni">~</span> Timeline</button>
+    <button class="nav-btn" onclick="showPanel('swversion',this)"><span class="ni">⚙</span> S/W Version</button>
+    <div class="nav-grp" style="margin-top:8px">Data</div>
+    <button class="nav-btn" onclick="showPanel('explorer',this)"><span class="ni">≡</span> Issue explorer</button>
+  </nav>
+  <a href="javascript:history.back()" class="back-link">← Back to Main</a>
+  <div class="sb-stats">
+    <div class="sb-stat" onclick="openDrill({_all:true},'All issues','')">
+      <div class="lbl">Total issues ↗</div>
+      <div class="val" id="sb-total">—</div>
+      <div class="sub" id="sb-sub">—</div>
+    </div>
+    <div class="sb-stat" onclick="openDrill({_status_open:true},'Open issues','Active')">
+      <div class="lbl">Open ↗</div>
+      <div class="val" id="sb-open">—</div>
+      <div class="sub">Active issues</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="tb-title">Service Issues Analytics</div>
+      <div class="tb-sub" id="tb-sub">Select a source above to begin</div>
+    </div>
+  </div>
+
+  <!-- Source tabs -->
+  <div class="source-bar" id="source-bar">
+    <button class="src-tab" data-src="beta_ut" onclick="switchSource('beta_ut',this)">
+      <span class="src-dot" style="background:#4975c9"></span>Beta UT
+    </button>
+    <button class="src-tab" data-src="beta_ut_voc" onclick="switchSource('beta_ut_voc',this)">
+      <span class="src-dot" style="background:#3d8a8a"></span>Beta UT VOC
+    </button>
+    <button class="src-tab" data-src="employee_ut" onclick="switchSource('employee_ut',this)">
+      <span class="src-dot" style="background:#7059a8"></span>Employee UT
+    </button>
+    <button class="src-tab" data-src="samsung_member_voc" onclick="switchSource('samsung_members_voc',this)">
+      <span class="src-dot" style="background:#b07a34"></span>Samsung Member VOC
+    </button>
+    <button class="src-tab" data-src="global_voc_plm" onclick="switchSource('global_voc_plm',this)">
+      <span class="src-dot" style="background:#3d8c5e"></span>Global VOC PLM
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content-area">
+
+    <!-- OVERVIEW -->
+    <div id="panel-overview" class="panel active">
+      <div class="metric-grid" id="metric-grid"></div>
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Issue type volume</div>
+          <div class="ch-sub">Count across all issue categories · click any bar to drill down</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--text3);font-weight:600">Compare:</span>
+          <select id="sel-m1" onchange="onModelSelChange()" style="background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;border-left:3px solid #4975c9">
+            <option value="">Model 1</option>
+          </select>
+          <span style="font-size:11px;color:var(--text3)">vs</span>
+          <select id="sel-m2" onchange="onModelSelChange()" style="background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;border-left:3px solid #c97038">
+            <option value="">Model 2</option>
+          </select>
+        </div>
+        <div class="legend">
+          <div class="leg-item" id="leg-m1"></div>
+          <div class="leg-item" id="leg-m2"></div>
+        </div>
+        <div class="ch" style="height:240px"><canvas id="c-issuetype"></canvas></div>
+        <div class="drill-hint">Click any bar to see matching issues →</div>
+      </div>
+      <div class="row2">
+        <div class="card">
+          <div class="ch-header"><div class="ch-title">Issue status</div></div>
+          <div class="ch" style="height:190px"><canvas id="c-status"></canvas></div>
+          <div class="status-leg" id="status-leg"></div>
+          <div class="drill-hint">Click a slice to drill down →</div>
+        </div>
+        <div class="card">
+          <div class="ch-header"><div class="ch-title">Top Modules</div><div class="ch-sub" style="font-size:10.5px;color:var(--text3);margin-top:2px">Modules with most issues · click to drill down</div></div>
+          <div class="ch" style="height:190px"><canvas id="c-cats"></canvas></div>
+          <div class="drill-hint">Click a bar to drill down →</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Top device models by issue count</div>
+          <div class="ch-sub">Click any row or count to explore that device's issues</div>
+        </div>
+        <div id="overview-model-bars"></div>
+        <div class="drill-hint">Click any row →</div>
+      </div>
+    </div>
+
+    <!-- ISSUE TYPES -->
+    <div id="panel-issuetypes" class="panel">
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Issue type — model comparison</div>
+          <div class="ch-sub">Blue = <span id="it-m1-label">model 1</span> · Orange = <span id="it-m2-label">model 2</span> · Click any bar to drill down</div>
+        </div>
+        <div class="legend">
+          <div class="leg-item" id="it-leg-m1"></div>
+          <div class="leg-item" id="it-leg-m2"></div>
+        </div>
+        <div class="ch" style="height:300px"><canvas id="c-issuetype-cmp"></canvas></div>
+        <div class="drill-hint">Click any bar to drill down →</div>
+      </div>
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Sub-issue type comparison</div>
+          <div class="ch-sub">Blue = <span id="si-m1-label">model 1</span> · Orange = <span id="si-m2-label">model 2</span></div>
+        </div>
+        <div class="legend">
+          <div class="leg-item" id="si-leg-m1"></div>
+          <div class="leg-item" id="si-leg-m2"></div>
+        </div>
+        <div class="ch" style="height:280px"><canvas id="c-subissuetype-cmp"></canvas></div>
+        <div class="drill-hint">Click any bar to drill down →</div>
+      </div>
+    </div>
+
+    <!-- MODULES -->
+    <div id="panel-modules" class="panel">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text3);font-weight:600">Compare:</span>
+        <select id="mod-sel-m1" onchange="onModuleModelSelChange()" style="background:var(--bg2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--r);padding:3px 10px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;border-left:3px solid #4975c9">
+          <option value="">Model 1</option>
+        </select>
+        <span style="font-size:11px;color:var(--text3)">vs</span>
+        <select id="mod-sel-m2" onchange="onModuleModelSelChange()" style="background:var(--bg2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--r);padding:3px 10px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;border-left:3px solid #c96449">
+          <option value="">Model 2</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="card">
+          <div class="ch-header">
+            <div class="ch-title" id="mod-title-a">Top modules — model 1</div>
+            <div class="ch-sub">Click any row to see issues</div>
+          </div>
+          <div id="mod-bars-a"></div>
+        </div>
+        <div class="card">
+          <div class="ch-header">
+            <div class="ch-title" id="mod-title-b">Top modules — model 2</div>
+            <div class="ch-sub">Click any row to see issues</div>
+          </div>
+          <div id="mod-bars-b"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Module issue count — model 1 vs model 2</div>
+        </div>
+        <div class="legend">
+          <div class="leg-item" id="mod-leg-a"></div>
+          <div class="leg-item" id="mod-leg-b"></div>
+        </div>
+        <div class="ch" style="height:270px"><canvas id="c-modcompare"></canvas></div>
+        <div class="drill-hint">Click any bar →</div>
+      </div>
+      <div class="card">
+        <div class="ch-header"><div class="ch-title">Sub-module breakdown</div></div>
+        <div id="submod-bars"></div>
+      </div>
+    </div>
+
+
+    <!-- SEVERITY -->
+    <div id="panel-severity" class="panel">
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Severity distribution</div>
+          <div class="ch-sub">Breakdown by severity tier and status — click rows to view issues</div>
+        </div>
+        <div class="ch" style="height:220px"><canvas id="c-sev"></canvas></div>
+        <div class="sev-grid" id="sev-cards"></div>
+      </div>
+      <div class="row2">
+        <div class="card">
+          <div class="ch-header"><div class="ch-title">Severity by module</div></div>
+          <div id="sev-mod-bars"></div>
+        </div>
+        <div class="card">
+          <div class="ch-header"><div class="ch-title">Severity by model</div></div>
+          <div id="sev-mdl-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div id="panel-timeline" class="panel">
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Daily issue volume</div>
+          <div class="ch-sub">Issues reported over the collection period</div>
+        </div>
+        <div class="ch" style="height:250px"><canvas id="c-timeline"></canvas></div>
+      </div>
+      <div class="row2">
+        <div class="card">
+          <div class="ch-header">
+            <div class="ch-title">Top applications</div>
+            <div class="ch-sub">Click to explore</div>
+          </div>
+          <div id="app-bars"></div>
+        </div>
+        <div class="card">
+          <div class="ch-header"><div class="ch-title">OS version distribution</div></div>
+          <div class="ch" style="height:180px"><canvas id="c-osver"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S/W VERSION ANALYSIS -->
+    <div id="panel-swversion" class="panel">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Model</span>
+        <div id="swv-model-tabs" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        <span style="font-size:11px;color:var(--text3);margin-left:auto" id="swv-ver-count">— versions</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="swv-kpi-row"></div>
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Issue count per S/W version</div>
+          <div class="ch-sub">Total issues on each binary · click a bar to drill down</div>
+        </div>
+        <div class="ch" style="height:220px"><canvas id="c-swv-vol"></canvas></div>
+        <div class="drill-hint">Click any bar to see all issues for that version →</div>
+      </div>
+      <div class="row2">
+        <div class="card">
+          <div class="ch-header">
+            <div class="ch-title">Version stability ranking</div>
+            <div class="ch-sub">Ranked by issue count · lower = more stable</div>
+          </div>
+          <div id="swv-stability-bars"></div>
+        </div>
+        <div class="card">
+          <div class="ch-header">
+            <div class="ch-title">Severe issues per version</div>
+            <div class="ch-sub">Severe/High severity count per binary</div>
+          </div>
+          <div id="swv-sev-bars"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch-header">
+          <div class="ch-title">Module share % across versions — spike detection</div>
+          <div class="ch-sub">% of issues per version attributed to each module · sudden spikes = regressions</div>
+        </div>
+        <div class="legend" id="swv-spike-legend"></div>
+        <div class="ch" style="height:300px"><canvas id="c-swv-spike"></canvas></div>
+        <div class="drill-hint">Click any data point to drill into that module + version →</div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="ch-title" style="font-size:13px;font-weight:600;margin-bottom:3px">⚠ Detected spikes</div>
+        <div class="ch-sub" style="font-size:11px;color:var(--text2)">Modules whose share jumped significantly on a specific binary</div>
+      </div>
+      <div id="swv-spike-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border)">
+          <div class="ch-title">Module × Version heatmap</div>
+          <div class="ch-sub" style="font-size:11px;color:var(--text2);margin-top:2px">Cell intensity = issue share % · darker = higher concentration · click any cell to explore</div>
+        </div>
+        <div style="overflow-x:auto"><table id="swv-heatmap" style="border-collapse:collapse;font-size:11px;min-width:600px;width:100%"></table></div>
+      </div>
+    </div>
+
+    <!-- EXPLORER -->
+    <div id="panel-explorer" class="panel">
+      <div class="filter-bar" style="flex-wrap:wrap;gap:6px;align-items:center">
+        <select class="fsel" id="ex-status" onchange="applyEx()"><option value="">All status</option></select>
+        <select class="fsel" id="ex-model" onchange="applyEx()"><option value="">All models</option></select>
+        <select class="fsel" id="ex-swver" onchange="applyEx()"><option value="">All S/W versions</option></select>
+        <select class="fsel" id="ex-module" onchange="applyEx()"><option value="">All modules</option></select>
+        <select class="fsel" id="ex-issuetype" onchange="applyEx()"><option value="">All issue types</option></select>
+        <select class="fsel" id="ex-sev" onchange="applyEx()"><option value="">All severity</option></select>
+        <input class="finput" id="ex-search" type="text" placeholder="🔍 Search title, module, content…" oninput="applyEx()" style="min-width:200px;flex:1">
+        <button onclick="clearExFilters()" style="padding:6px 13px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="this.style.borderColor='#b84a4a';this.style.color='#b84a4a'" onmouseleave="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">✕ Clear</button>
+        <span class="res-count" id="ex-count">— issues</span>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="dtable">
+          <thead><tr>
+            <th>Date / Code</th><th>Status</th><th>Model</th><th>S/W Ver.</th>
+            <th>Module</th><th>Issue Type</th><th>Severity</th><th>Title / Content</th>
+          </tr></thead>
+          <tbody id="ex-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pg" id="ex-pages"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- Drill drawer -->
+<div id="drill-overlay" onclick="closeDrill()"></div>
+<div id="drill-drawer">
+  <div class="drill-head">
+    <div>
+      <div class="drill-title" id="drill-title">Issue details</div>
+      <div class="drill-sub" id="drill-sub"></div>
+    </div>
+    <button class="drill-close" onclick="closeDrill()">✕</button>
+  </div>
+  <div id="drill-flt">
+    <div class="df-row">
+      <span class="df-lbl">Status</span>
+      <select class="dfsel" id="df-status" onchange="applyDrillFlt()">
+        <option value="">All</option><option>OPEN</option><option>CLOSE</option><option>RESOLVE</option>
+      </select>
+      <span class="df-lbl">Module</span>
+      <select class="dfsel" id="df-module" onchange="applyDrillFlt()"><option value="">All</option></select>
+      <span class="df-lbl">Issue type</span>
+      <select class="dfsel" id="df-issuetype" onchange="applyDrillFlt()"><option value="">All</option></select>
+    </div>
+    <div class="df-row">
+      <span class="df-lbl">Model</span>
+      <select class="dfsel" id="df-model" onchange="applyDrillFlt()"><option value="">All</option></select>
+      <span class="df-lbl">Severity</span>
+      <select class="dfsel" id="df-sev" onchange="applyDrillFlt()"><option value="">All</option></select>
+      <input type="text" class="dfsearch" id="df-search" placeholder="🔍 Search…" oninput="applyDrillFlt()">
+    </div>
+  </div>
+  <div class="drill-rbar">
+    <strong id="drill-count">—</strong>
+    <span id="drill-count-lbl">issues</span>
+    <span style="color:var(--text3);margin-left:auto;font-size:10px" id="drill-ctx"></span>
+  </div>
+  <div class="drill-body">
+    <table class="drill-table">
+      <thead><tr>
+        <th>Date/Code</th><th>Status</th><th>Model</th><th>S/W Ver.</th>
+        <th>Module</th><th>Issue Type</th><th>Severity</th><th>Title / Content</th>
+      </tr></thead>
+      <tbody id="drill-tbody"></tbody>
+    </table>
+  </div>
+  <div class="drill-footer">
+    <span id="drill-pg-info"></span>
+    <div class="d-pgs" id="drill-pages"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════
+const SOURCES = {
+  beta_ut:            { label:'Beta UT',           color:'#4975c9', path:'downloads/beta_ut/analytics.json' },
+  beta_ut_voc:        { label:'Beta UT VOC',        color:'#3d8a8a', path:'downloads/beta_ut_voc/analytics.json' },
+  employee_ut:        { label:'Employee UT',        color:'#7059a8', path:'downloads/employee_ut/analytics.json' },
+  samsung_members_voc:{ label:'Samsung Member VOC', color:'#b07a34', path:'downloads/samsung_members_voc/analytics.json' },
+  global_voc_plm:     { label:'Global VOC PLM',     color:'#3d8c5e', path:'downloads/global_voc_plm/analytics.json' },
+};
+
+const BLUE='#4975c9', CORAL='#c96449';
+const PAL=['#4975c9','#c96449','#3d8a8a','#b07a34','#7059a8','#6278a0','#b06478','#5a8c6a'];
+const GC='rgba(0,0,0,.04)';
+const BASE={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},animation:{duration:600,easing:'easeInOutQuart'}};
+function ticks(){return{color:'#7a8099',font:{size:11,family:"'DM Sans'"}}}
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let RAW=null, ROWS=[], A={};
+let currentSrc=null;
+let exFiltered=[], exPage=1; const EX_PS=25;
+let drillBase=[], drillVisible=[], drillPage=1; const DRILL_PS=30;
+const panelInited={};
+
+// ══════════════════════════════════════════════════
+// BOOT — show app shell, auto-load first source
+// ══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('app').style.display='flex';
+  document.getElementById('lo').style.display='none';
+  // Default: click first tab
+  document.querySelector('.src-tab').click();
+});
+
+// ══════════════════════════════════════════════════
+// SOURCE SWITCH
+// ══════════════════════════════════════════════════
+async function switchSource(src, tabEl){
+  if(currentSrc===src)return;
+  currentSrc=src;
+  const cfg=SOURCES[src];
+  // Update tab active
+  document.querySelectorAll('.src-tab').forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+  // Show loading
+  document.getElementById('lo').style.display='flex';
+  document.getElementById('lo-msg').textContent='Loading '+cfg.label+'…';
+  // document.getElementById('lo-src').textContent=cfg.path;
+  // Reset panel init cache
+  Object.keys(panelInited).forEach(k=>delete panelInited[k]);
+  // Load
+  try{
+    const res=await fetch('/'+cfg.path+'?v='+Date.now());
+    if(!res.ok)throw new Error('HTTP '+res.status+' — /'+cfg.path);
+    RAW=await res.json();
+    ROWS=(RAW.rows||[]).filter(r=>r['Model No.']||r.Module||r.content||r.Title||r.Problem);
+    buildAnalytics(cfg,src);
+    populateModelSelectors();
+    bootUI(cfg,src);
+    resetAllPanelState();
+    // Re-init current visible panel
+    const visPanel=document.querySelector('.panel.active')?.id?.replace('panel-','');
+    if(visPanel){panelInited[visPanel]=true;initSection(visPanel);}
+  }catch(e){
+    document.getElementById('lo').innerHTML=`
+      <div style="font-size:32px">⚠️</div>
+      <div style="font-size:16px;font-weight:600">${cfg.label} — Failed to load</div>
+      <div style="font-size:13px;color:var(--text2);max-width:380px;text-align:center;line-height:1.5">${e.message}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Using bundled demo data instead</div>`;
+    // Load from uploaded file as fallback (dev/demo)
+    loadBundledData(src, cfg);
+    return;
+  }
+  document.getElementById('lo').style.display='none';
+}
+
+// Fallback: load from window.__BUNDLED__ if server data unavailable
+async function loadBundledData(src, cfg){
+  const fileMap={
+    beta_ut:           '__BETA_UT__',
+    beta_ut_voc:       '__BETA_UT_VOC__',
+    employee_ut:       '__EMP_UT__',
+    samsung_member_voc:'__SM_VOC__',
+    global_voc_plm:    '__GLOBAL_VOC__',
+  };
+  const key=fileMap[src];
+  if(window[key]){
+    RAW=window[key];
+    ROWS=(RAW.rows||[]).filter(r=>r['Model No.']||r.Module||r.content||r.Title||r.Problem);
+    buildAnalytics(cfg,src);
+    populateModelSelectors();
+    bootUI(cfg,src);
+    resetAllPanelState();
+    const visPanel=document.querySelector('.panel.active')?.id?.replace('panel-','');
+    if(visPanel){panelInited[visPanel]=true;initSection(visPanel);}
+    document.getElementById('lo').style.display='none';
+  }else{
+    document.getElementById('lo').innerHTML+=`<div style="font-size:12px;color:#b84a4a;margin-top:10px">No bundled data found for ${src}. Please check your file paths.</div>`;
+  }
+}
+
+function resetAllPanelState(){
+  exFiltered=[];exPage=1;drillBase=[];drillVisible=[];drillPage=1;
+  closeDrill();
+}
+
+// ══════════════════════════════════════════════════
+// ANALYTICS ENGINE
+// ══════════════════════════════════════════════════
+function buildAnalytics(cfg,src){
+  const rows=ROWS;
+  function freq(arr,field,n=0){
+    const m={};arr.forEach(r=>{const v=r[field];if(v!=null&&v!=='')m[v]=(m[v]||0)+1;});
+    const out=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l,v}));
+    return n?out.slice(0,n):out;
+  }
+  function normStatus(v){
+    const s=String(v||'').toUpperCase().trim();
+    if(s==='OPEN'||s==='OPENED')return'OPEN';
+    if(s==='CLOSE'||s==='CLOSED')return'CLOSE';
+    if(s.startsWith('RESOLV'))return'RESOLVE';
+    return s||'UNKNOWN';
+  }
+  function modelFn(m){return(RAW.top_models||[]).find(x=>x.label===m)?.friendly_name||m;}
+
+  const modelFreq=freq(rows,'Model No.',12);
+  const dom1=modelFreq[0]?.l||'';
+  const dom2=modelFreq[1]?.l||'';
+
+  const d1=dom1?rows.filter(r=>r['Model No.']=== dom1):rows;
+  const d2=dom2?rows.filter(r=>r['Model No.']=== dom2):[];
+
+  function statusCounts(arr){
+    const m={OPEN:0,CLOSE:0,RESOLVE:0};
+    arr.forEach(r=>{const s=normStatus(r.Status||r['Progr.Stat.']);if(s in m)m[s]++;else if(s!=='UNKNOWN')m.OPEN++;});
+    return m;
+  }
+
+  // Time series from data or fallback
+  const ts=RAW.time_series||[];
+
+  A={cfg,src,normStatus,
+    total:rows.length,
+    dom1,dom2,dom1fn:modelFn(dom1),dom2fn:modelFn(dom2),
+    d1,d2,
+    modelFreq,
+    models:modelFreq.slice(0,10).map(m=>({l:m.l,v:m.v,fn:modelFn(m.l)})),
+    statusCounts:statusCounts(rows),
+    issueTypes:freq(rows,'Issue Type',14),
+    issueVals1:Object.fromEntries(freq(d1,'Issue Type').map(x=>[x.l,x.v])),
+    issueVals2:Object.fromEntries(freq(d2,'Issue Type').map(x=>[x.l,x.v])),
+    subIssueTypes:freq(rows,'Sub-Issue Type',12),
+    subVals1:Object.fromEntries(freq(d1,'Sub-Issue Type').map(x=>[x.l,x.v])),
+    subVals2:Object.fromEntries(freq(d2,'Sub-Issue Type').map(x=>[x.l,x.v])),
+    mainTypes:freq(rows,'Main Type',8),
+    categories:freq(rows,'Category',10),
+    modules:freq(rows,'Module',14),
+    mods1:freq(d1,'Module',7),
+    mods2:freq(d2,'Module',7),
+    subModules:freq(rows,'Sub-Module',12),
+    appNames:freq(rows,'Application Name',10),
+    osVers:freq(rows,'OS',10),
+    timeSeries:ts,
+    severityFreq:freq(rows,'Severity',6),
+    kpis:RAW.kpis||{},
+  };
+}
+
+// ══════════════════════════════════════════════════
+// BOOT UI
+// ══════════════════════════════════════════════════
+function bootUI(cfg,src){
+  const kpis=A.kpis;
+  const total=kpis.total_rows||A.total;
+  document.getElementById('sb-title').textContent=cfg.label+' Analytics';
+  // document.getElementById('sb-src-label').textContent=cfg.path||src;
+  document.getElementById('sb-src-label').textContent=cfg.label+' data source';
+  document.getElementById('sb-total').textContent=total.toLocaleString();
+  document.getElementById('sb-sub').textContent=A.models.length+' device models';
+  document.getElementById('sb-open').textContent=(kpis.open_issues||A.statusCounts.OPEN||0).toLocaleString();
+  document.getElementById('tb-title').textContent=cfg.label+' — Issue Analytics';
+  document.getElementById('tb-sub').textContent=total.toLocaleString()+' total issues · '+A.models.length+' device models';
+  buildMetricGrid(kpis,total);
+  buildExplorerFilters();
+}
+
+function populateModelSelectors(){
+  if(!A.modelFreq) return;
+  const models = A.modelFreq.slice(0,12);
+  const optionsHTML = '<option value="">— None —</option>'
+    + models.map(m => {
+        const fn = (RAW&&RAW.top_models||[]).find(x=>x.label===m.l)?.friendly_name || m.l;
+        return `<option value="${m.l}">${fn} (${m.v})</option>`;
+      }).join('');
+
+  // Populate both overview selectors and module panel selectors
+  [['sel-m1','mod-sel-m1'], ['sel-m2','mod-sel-m2']].forEach(([ovId, modId], i) => {
+    [ovId, modId].forEach(selId => {
+      const sel = document.getElementById(selId);
+      if(!sel) return;
+      sel.innerHTML = optionsHTML;
+      sel.value = models[i]&&models[i].l || '';
+    });
+  });
+}
+
+function onModelSelChange(){
+  const sel1 = document.getElementById('sel-m1');
+  const sel2 = document.getElementById('sel-m2');
+  if(!sel1||!sel2) return;
+  A.dom1 = sel1.value;
+  A.dom2 = sel2.value;
+  const fn = m => (RAW&&RAW.top_models||[]).find(x=>x.label===m)?.friendly_name || m;
+  A.dom1fn = fn(A.dom1);
+  A.dom2fn = fn(A.dom2);
+  A.d1 = A.dom1 ? ROWS.filter(r=>r['Model No.']=== A.dom1) : ROWS;
+  A.d2 = A.dom2 ? ROWS.filter(r=>r['Model No.']=== A.dom2) : [];
+  // Keep module selectors in sync
+  const ms1=document.getElementById('mod-sel-m1'); if(ms1) ms1.value=A.dom1;
+  const ms2=document.getElementById('mod-sel-m2'); if(ms2) ms2.value=A.dom2;
+  // Re-render active panel with new model selection
+  Object.keys(panelInited).forEach(k => delete panelInited[k]);
+  const activePanel = document.querySelector('.panel.active');
+  if(activePanel) {
+    const panelId = activePanel.id.replace('panel-','');
+    panelInited[panelId] = false;
+    initSection(panelId);
+  }
+}
+
+function onModuleModelSelChange(){
+  const sel1 = document.getElementById('mod-sel-m1');
+  const sel2 = document.getElementById('mod-sel-m2');
+  if(!sel1||!sel2) return;
+  A.dom1 = sel1.value;
+  A.dom2 = sel2.value;
+  const fn = m => (RAW&&RAW.top_models||[]).find(x=>x.label===m)?.friendly_name || m;
+  A.dom1fn = fn(A.dom1);
+  A.dom2fn = fn(A.dom2);
+  A.d1 = A.dom1 ? ROWS.filter(r=>r['Model No.']=== A.dom1) : ROWS;
+  A.d2 = A.dom2 ? ROWS.filter(r=>r['Model No.']=== A.dom2) : [];
+  // Keep overview selectors in sync
+  const os1=document.getElementById('sel-m1'); if(os1) os1.value=A.dom1;
+  const os2=document.getElementById('sel-m2'); if(os2) os2.value=A.dom2;
+  // Re-render module panel
+  delete panelInited['modules'];
+  initSection('modules');
+}
+
+function buildMetricGrid(kpis,total){
+  const open=kpis.open_issues||A.statusCounts.OPEN||0;
+  const closed=kpis.close_issues||A.statusCounts.CLOSE||0;
+  const resolved=kpis.resolved_issues||A.statusCounts.RESOLVE||0;
+  const sevDist=kpis.severity_distribution||{};
+  // New format keys: High/Medium/Low (built from updated_tier)
+  // Old format keys: Severe/Moderate/Deferred
+  const isNewFmt = typeof sevDist.High === 'object' || typeof sevDist.Severe === 'object';
+  const severe = isNewFmt
+    ? (sevDist.High?.total || sevDist.Severe?.total || 0)
+    : (typeof sevDist.High === 'number' ? sevDist.High : 0);
+  const uniqMods=new Set(ROWS.map(r=>r.Module).filter(Boolean)).size;
+  document.getElementById('metric-grid').innerHTML=`
+    <div class="mc mc-blue clickable" onclick="openDrill({_all:true},'All issues','')">
+      <div class="mlbl">Total Issues</div><div class="mval">${total.toLocaleString()}</div>
+      <div class="msub">${A.models.length} models · ${uniqMods} modules</div>
+    </div>
+    <div class="mc mc-amber clickable" onclick="openDrill({_status_open:true},'Open issues','Active')">
+      <div class="mlbl">Open</div><div class="mval">${open.toLocaleString()}</div>
+      <div class="msub">Active issues</div>
+      <div class="mdelta ${open>0?'tag-amber':'tag-neutral'}">${total?((open/total)*100).toFixed(1)+'% of total':'—'}</div>
+    </div>
+    <div class="mc mc-green clickable" onclick="openDrill({_status_resolve:true},'Resolved issues','')">
+      <div class="mlbl">Resolved</div><div class="mval">${resolved.toLocaleString()}</div>
+      <div class="msub">Closed or fixed</div>
+      <div class="mdelta tag-green">${total?((resolved/total)*100).toFixed(1)+'%':''}</div>
+    </div>
+    <div class="mc mc-red clickable" onclick="openDrill({_sev:'Severe'},'Severe issues','')">
+      <div class="mlbl">Severe</div><div class="mval">${severe.toLocaleString()}</div>
+      <div class="msub">High-severity issues</div>
+      <div class="mdelta tag-red">${total?((severe/total)*100).toFixed(1)+'%':''}</div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════
+const panelMeta={
+  overview:  {title:'Overview',      sub:'Status, category and issue type distribution'},
+  issuetypes:{title:'Issue types',   sub:'Breakdown across top device models'},
+  modules:   {title:'Module hotspots',sub:'Which modules attract the most issues'},
+  severity:  {title:'Severity',         sub:'Severity tier breakdown and drill-down'},
+  timeline:  {title:'Timeline',         sub:'Issue volume over time'},
+  swversion: {title:'S/W Version',      sub:'Binary-level analysis · module spikes · stability ranking'},
+  explorer:  {title:'Issue explorer',   sub:'Search and filter all issue records'},
+};
+function showPanel(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('tb-title').textContent=(panelMeta[id]?.title||id);
+  document.getElementById('tb-sub').textContent=panelMeta[id]?.sub||'';
+  if(!panelInited[id]&&A.total){panelInited[id]=true;initSection(id);}
+}
+
+// ══════════════════════════════════════════════════
+// SECTION INIT
+// ══════════════════════════════════════════════════
+function initSection(id){
+  const rows=ROWS;
+  function freq(field,n=0){
+    const m={};rows.forEach(r=>{const v=r[field];if(v!=null&&v!=='')m[v]=(m[v]||0)+1;});
+    const out=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l,v}));
+    return n?out.slice(0,n):out;
+  }
+
+  if(id==='overview'){
+    const d1=rows.filter(r=>r['Model No.']=== A.dom1);
+    const d2=rows.filter(r=>r['Model No.']=== A.dom2);
+    const iv1=Object.fromEntries(fa(d1,'Issue Type'));
+    const iv2=Object.fromEntries(fa(d2,'Issue Type'));
+    const allTypes=[...new Set([...Object.keys(iv1),...Object.keys(iv2)])]
+      .map(l=>({l,t:(iv1[l]||0)+(iv2[l]||0)})).sort((a,b)=>b.t-a.t).map(x=>x.l);
+
+    if(A.dom2){
+      document.getElementById('leg-m1').innerHTML=`<span class="lsq" style="background:${BLUE}"></span>${A.dom1fn}`;
+      document.getElementById('leg-m2').innerHTML=`<span class="lsq" style="background:${CORAL}"></span>${A.dom2fn}`;
+      mkBar('c-issuetype',allTypes,
+        [{label:A.dom1fn,data:allTypes.map(t=>iv1[t]||0),backgroundColor:BLUE,borderRadius:4},
+         {label:A.dom2fn,data:allTypes.map(t=>iv2[t]||0),backgroundColor:CORAL,borderRadius:4}],
+        {xTicks:{autoSkip:false,maxRotation:35}});
+    }else{
+      document.getElementById('leg-m1').innerHTML=`<span class="lsq" style="background:${BLUE}"></span>All`;
+      document.getElementById('leg-m2').innerHTML='';
+      const its=freq('Issue Type',12);
+      mkBar('c-issuetype',its.map(x=>x.l),[{label:'Issues',data:its.map(x=>x.v),backgroundColor:BLUE,borderRadius:4}],{xTicks:{autoSkip:false,maxRotation:35}});
+    }
+
+    // Status donut
+    const sc=buildStatusFreq(rows);
+    mkDonut('c-status',sc.labels,sc.vals,sc.colors);
+    const leg=document.getElementById('status-leg');
+    if(leg){
+      const tot=sc.vals.reduce((a,b)=>a+b,0)||1;
+      leg.innerHTML=sc.labels.map((lbl,i)=>`<div class="sl-row">
+        <span class="sl-dot" style="background:${sc.colors[i]}"></span>
+        <span class="sl-lbl">${lbl}</span>
+        <span class="sl-val">${sc.vals[i]}</span>
+        <span class="sl-pct">${((sc.vals[i]/tot)*100).toFixed(1)}%</span>
+      </div>`).join('');
+    }
+
+    // Categories bar
+    const cats=freq('Module',8);
+    mkBarH('c-cats',cats.map(c=>c.l),cats.map(c=>c.v),A.cfg.color||BLUE);
+
+    setTimeout(()=>{
+      addDrill('c-issuetype',(di,idx)=>{
+        const model=di===0?A.dom1:A.dom2;
+        openDrill({_model:model,_issuetype:allTypes[idx]},allTypes[idx]+' — '+(di===0?A.dom1fn:A.dom2fn),'');
+      });
+      addDrill('c-status',(di,idx)=>{
+        openDrill({_status_key:sc.keys[idx]},sc.labels[idx]+' issues','');
+      });
+      addDrill('c-cats',(di,idx)=>{
+        openDrill({_module:cats[idx].l},cats[idx].l+' module','');
+      });
+    },300);
+
+    // Top models bar list with clickable counts
+    const ovModelEl = document.getElementById('overview-model-bars');
+    if(ovModelEl && A.models.length){
+      const max = A.models[0].v || 1;
+      ovModelEl.innerHTML = A.models.map((m,i) => `
+        <div class="bar-row clickable" style="margin-bottom:10px" onclick="openDrill({_model:'${esc(m.l)}'},'${esc(m.fn)} — all issues','Device model')">
+          <div class="bar-lbl" title="${m.fn}" style="width:160px;font-size:12.5px">${m.fn}</div>
+          <div class="bar-track" style="height:10px">
+            <div class="bar-fill" style="width:${pct100(m.v,max)}%;background:${A.cfg&&A.cfg.color||BLUE}"></div>
+          </div>
+          <div class="bar-val" style="width:44px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer"
+            onclick="event.stopPropagation();openDrill({_model:'${esc(m.l)}'},'${esc(m.fn)} — all issues','Device model')"
+            title="Click to see ${m.v} issues for ${m.fn}">${m.v}</div>
+        </div>`).join('');
+    }
+  }
+
+  if(id==='issuetypes'){
+    const d1=rows.filter(r=>r['Model No.']=== A.dom1);
+    const d2=rows.filter(r=>r['Model No.']=== A.dom2);
+    const iv1=Object.fromEntries(fa(d1,'Issue Type'));
+    const iv2=Object.fromEntries(fa(d2,'Issue Type'));
+    const si1=Object.fromEntries(fa(d1,'Sub-Issue Type'));
+    const si2=Object.fromEntries(fa(d2,'Sub-Issue Type'));
+
+    // Update labels
+    ['it-m1-label','it-leg-m1','si-m1-label','si-leg-m1'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){
+        if(id.includes('leg'))el.innerHTML=`<span class="lsq" style="background:${BLUE}"></span>${A.dom1fn||'Model 1'}`;
+        else el.textContent=A.dom1fn||'Model 1';
+      }
+    });
+    ['it-m2-label','it-leg-m2','si-m2-label','si-leg-m2'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){
+        if(id.includes('leg'))el.innerHTML=`<span class="lsq" style="background:${CORAL}"></span>${A.dom2fn||'Model 2'}`;
+        else el.textContent=A.dom2fn||'Model 2';
+      }
+    });
+
+    // Issue type vertical grouped bar
+    const allIT=[...new Set([...Object.keys(iv1),...Object.keys(iv2)])]
+      .map(l=>({l,t:(iv1[l]||0)+(iv2[l]||0)})).sort((a,b)=>b.t-a.t).slice(0,12).map(x=>x.l);
+
+    destroyChart('c-issuetype-cmp');
+    const itCtx=document.getElementById('c-issuetype-cmp');
+    if(itCtx&&allIT.length){
+      const itChart=new Chart(itCtx,{type:'bar',data:{
+        labels:allIT,
+        datasets:[
+          {label:A.dom1fn||'Model 1',data:allIT.map(l=>iv1[l]||0),backgroundColor:BLUE,borderRadius:4,barPercentage:.7},
+          {label:A.dom2fn||'Model 2',data:allIT.map(l=>iv2[l]||0),backgroundColor:CORAL,borderRadius:4,barPercentage:.7},
+        ]
+      },options:{...BASE,
+        scales:{
+          x:{ticks:{...ticks(),maxRotation:35,autoSkip:false},grid:{color:GC}},
+          y:{ticks:ticks(),grid:{color:GC}}
+        }
+      }});
+      setTimeout(()=>{
+        itCtx.addEventListener('click',evt=>{
+          const pts=itChart.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+          if(pts.length){
+            const di=pts[0].datasetIndex,idx=pts[0].index;
+            const model=di===0?A.dom1:A.dom2;
+            openDrill({_model:model,_issuetype:allIT[idx]},allIT[idx]+' — '+(di===0?A.dom1fn:A.dom2fn),'');
+          }
+        });
+      },300);
+    }else if(itCtx){
+      itCtx.parentElement.innerHTML='<div style="color:var(--text3);font-size:12px;padding:16px;text-align:center">No issue type data for this source.</div>';
+    }
+
+    // Sub-issue type vertical grouped bar
+    const allSI=[...new Set([...Object.keys(si1),...Object.keys(si2)])]
+      .map(l=>({l,t:(si1[l]||0)+(si2[l]||0)})).sort((a,b)=>b.t-a.t).slice(0,10).map(x=>x.l);
+
+    destroyChart('c-subissuetype-cmp');
+    const siCtx=document.getElementById('c-subissuetype-cmp');
+    if(siCtx&&allSI.length){
+      const siChart=new Chart(siCtx,{type:'bar',data:{
+        labels:allSI,
+        datasets:[
+          {label:A.dom1fn||'Model 1',data:allSI.map(l=>si1[l]||0),backgroundColor:BLUE,borderRadius:4,barPercentage:.7},
+          {label:A.dom2fn||'Model 2',data:allSI.map(l=>si2[l]||0),backgroundColor:CORAL,borderRadius:4,barPercentage:.7},
+        ]
+      },options:{...BASE,
+        scales:{
+          x:{ticks:{...ticks(),maxRotation:35,autoSkip:false},grid:{color:GC}},
+          y:{ticks:ticks(),grid:{color:GC}}
+        }
+      }});
+      setTimeout(()=>{
+        siCtx.addEventListener('click',evt=>{
+          const pts=siChart.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+          if(pts.length){
+            const di=pts[0].datasetIndex,idx=pts[0].index;
+            openDrill({_subissue:allSI[idx]},allSI[idx]+' — sub-issue type','');
+          }
+        });
+      },300);
+    }else if(siCtx){
+      siCtx.parentElement.innerHTML='<div style="color:var(--text3);font-size:12px;padding:16px;text-align:center">No sub-issue type data for this source.</div>';
+    }
+  }
+
+  if(id==='modules'){
+    // Sync module panel selectors to current selection
+    const msSel1=document.getElementById('mod-sel-m1'); if(msSel1&&msSel1.value!==A.dom1) msSel1.value=A.dom1;
+    const msSel2=document.getElementById('mod-sel-m2'); if(msSel2&&msSel2.value!==A.dom2) msSel2.value=A.dom2;
+    const d1=rows.filter(r=>r['Model No.']=== A.dom1);
+    const d2=rows.filter(r=>r['Model No.']=== A.dom2);
+    const mods1=faArr(d1,'Module',7);
+    const mods2=faArr(d2,'Module',7);
+    const allMods=faArr(rows,'Module',10);
+    const smods=faArr(rows,'Sub-Module',10);
+
+    document.getElementById('mod-title-a').textContent='Top modules — '+(A.dom1fn||'Model 1');
+    document.getElementById('mod-title-b').textContent='Top modules — '+(A.dom2fn||'Model 2');
+    document.getElementById('mod-leg-a').innerHTML=`<span class="lsq" style="background:${BLUE}"></span>${A.dom1fn||'Model 1'}`;
+    document.getElementById('mod-leg-b').innerHTML=`<span class="lsq" style="background:${CORAL}"></span>${A.dom2fn||'Model 2'}`;
+
+    renderBars('mod-bars-a',mods1,BLUE,item=>openDrill({_model:A.dom1,_module:item.l},item.l+' — '+A.dom1fn,''));
+    renderBars('mod-bars-b',mods2,CORAL,item=>openDrill({_model:A.dom2,_module:item.l},item.l+' — '+A.dom2fn,''));
+    renderBars('submod-bars',smods,'#3d8a8a',item=>openDrill({_submodule:item.l},item.l+' sub-module',''));
+
+    const mv1=Object.fromEntries(faArr(d1,'Module').map(x=>[x.l,x.v]));
+    const mv2=Object.fromEntries(faArr(d2,'Module').map(x=>[x.l,x.v]));
+    const labels=allMods.map(x=>x.l);
+    mkBar('c-modcompare',labels,
+      [{label:A.dom1fn||'Model 1',data:labels.map(m=>mv1[m]||0),backgroundColor:BLUE,borderRadius:4},
+       {label:A.dom2fn||'Model 2',data:labels.map(m=>mv2[m]||0),backgroundColor:CORAL,borderRadius:4}],
+      {xTicks:{autoSkip:false,maxRotation:35}});
+
+    setTimeout(()=>{
+      addDrill('c-modcompare',(di,idx)=>{
+        const model=di===0?A.dom1:A.dom2;
+        openDrill({_model:model,_module:labels[idx]},labels[idx]+' — '+(di===0?A.dom1fn:A.dom2fn),'');
+      });
+    },300);
+
+    if(smods.length===0){
+      document.getElementById('submod-bars').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No sub-module data for this source.</div>';
+    }
+  }
+
+
+  if(id==='severity'){
+    const kpis=A.kpis;
+    const sevDist=kpis.severity_distribution||{};
+    // Detect format: new=High/Medium/Low keys, old=Severe/Moderate/Deferred
+    const isNewFmt = typeof sevDist.High === 'object' || typeof sevDist.Severe === 'object';
+
+    let sevLabels,sevVals,sevColors;
+    if(isNewFmt){
+      // New format: High(updated_tier=Severe), Medium(updated_tier=Moderate), Low(updated_tier=Low/Deferred)
+      // Also support old Severe/Moderate/Deferred keys
+      const hasHighKey   = typeof sevDist.High   === 'object';
+      const labelMap     = hasHighKey
+        ? [{k:'High',   label:'Severe',   color:'#b84a4a'},
+           {k:'Medium', label:'Moderate', color:'#b07a34'},
+           {k:'Low',    label:'Deferred', color:'#6278a0'}]
+        : [{k:'Severe',  label:'Severe',  color:'#b84a4a'},
+           {k:'Moderate',label:'Moderate',color:'#b07a34'},
+           {k:'Deferred',label:'Deferred',color:'#6278a0'}];
+      sevLabels = labelMap.map(x=>x.label);
+      sevColors = labelMap.map(x=>x.color);
+      sevVals   = labelMap.map(x=>sevDist[x.k]?.total||0);
+    }else{
+      // Flat numeric format or row-level Severity field
+      const sf=A.severityFreq;
+      sevLabels=sf.map(x=>x.l);
+      sevColors=['#b84a4a','#b07a34','#6278a0','#4975c9','#7059a8'].slice(0,sf.length);
+      sevVals=sf.map(x=>x.v);
+    }
+
+    // Chart
+    destroyChart('c-sev');
+    new Chart(document.getElementById('c-sev'),{type:'bar',data:{
+      labels:sevLabels,
+      datasets:[{data:sevVals,backgroundColor:sevColors,borderRadius:6}]
+    },options:{...BASE,
+      scales:{x:{ticks:ticks(),grid:{color:GC}},y:{ticks:ticks(),grid:{color:GC}}}
+    }});
+
+    // Severity tier cards (only for new format)
+    const cards=document.getElementById('sev-cards');
+    if(isNewFmt){
+      const hasHighKey = typeof sevDist.High === 'object';
+      const tierDefs=hasHighKey
+        ? [{key:'High',   label:'Severe',   color:'#b84a4a'},
+           {key:'Medium', label:'Moderate', color:'#b07a34'},
+           {key:'Low',    label:'Deferred', color:'#6278a0'}]
+        : [{key:'Severe',  label:'Severe',  color:'#b84a4a'},
+           {key:'Moderate',label:'Moderate',color:'#b07a34'},
+           {key:'Deferred',label:'Deferred',color:'#6278a0'}];
+      cards.innerHTML=tierDefs.map(td=>{
+        const d=sevDist[td.key]||{};
+        const tot=d.total||0;
+        if(!tot)return'';
+        const statuses=[
+          {key:'open',   label:'Open',    color:'#b07a34'},
+          {key:'resolve',label:'Resolve', color:'#3d8c5e'},
+          {key:'close',  label:'Close',   color:'#6278a0'},
+        ];
+        return`<div class="sev-card">
+          <div class="sev-name" style="color:${td.color}">${td.label||td.key} (${tot})</div>
+          ${statuses.map(s=>{
+            const v=d[s.key]||0;
+            const pct=tot>0?((v/tot)*100).toFixed(0):0;
+            return`<div class="sev-row" onclick="if(${v}>0)openDrill({_sev_tier:'${td.key}',_status_key:'${s.key.toUpperCase()}'},'${td.key} — ${s.label}','')">
+              <span class="sev-dot" style="background:${s.color}"></span>
+              <span class="sev-lbl">${s.label}</span>
+              <span class="sev-val">${v}</span>
+              <span class="sev-pct">${pct}%</span>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).filter(Boolean).join('');
+    }else{
+      const sf=A.severityFreq;
+      cards.innerHTML=sf.slice(0,6).map((s,i)=>`<div class="sev-card">
+        <div class="sev-name" style="color:${sevColors[i]||BLUE}">${s.l} (${s.v})</div>
+        <div class="sev-row" onclick="openDrill({_sev:'${esc(s.l)}'},'${esc(s.l)} severity','')">
+          <span class="sev-dot" style="background:${sevColors[i]||BLUE}"></span>
+          <span class="sev-lbl">All issues</span>
+          <span class="sev-val">${s.v}</span>
+        </div>
+      </div>`).join('');
+    }
+
+    // Severity by module
+    const sModData=faArr(rows,'Module',8);
+    renderBars('sev-mod-bars',sModData,'#b84a4a',item=>openDrill({_module:item.l},item.l+' module issues',''));
+    // Severity by model
+    renderBars('sev-mdl-bars',A.models.slice(0,8).map(m=>({l:m.fn,raw:m.l,v:m.v})),'#7059a8',
+      item=>openDrill({_model:item.raw||item.l},item.l,'Device model'));
+  }
+
+  if(id==='timeline'){
+    const ts=A.timeSeries;
+    if(ts.length){
+      mkLine('c-timeline',ts.map(d=>d.date),ts.map(d=>d.count),A.cfg.color||BLUE);
+    }else{
+      const cv=document.getElementById('c-timeline');
+      if(cv)cv.parentElement.innerHTML='<div style="color:var(--text3);font-size:12px;padding:16px;text-align:center">No time series data for this source.</div>';
+    }
+    const apps=faArr(rows,'Application Name',10);
+    if(apps.length)renderBars('app-bars',apps,CORAL,item=>openDrill({_app:item.l},item.l+' — application',''));
+    else document.getElementById('app-bars').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No application data for this source.</div>';
+    const osv=faArr(rows,'OS',10).filter(x=>x.l!='null'&&x.l);
+    if(osv.length)mkDonut('c-osver',osv.map(x=>String(x.l)),osv.map(x=>x.v),PAL);
+  }
+
+  if(id==='explorer'){
+    applyEx();
+  }
+
+  if(id==='swversion'){
+    initSwVersion();
+  }
+}
+
+// ══════════════════════════════════════════════════
+// CHART HELPERS
+// ══════════════════════════════════════════════════
+function mkBar(id,labels,datasets,opts={}){
+  destroyChart(id);
+  new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets},options:{
+    ...BASE,
+    scales:{x:{ticks:{...ticks(),...(opts.xTicks||{})},grid:{color:GC}},y:{ticks:ticks(),grid:{color:GC}}}
+  }});
+}
+function mkBarH(id,labels,vals,color){
+  destroyChart(id);
+  new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:color,borderRadius:3}]},options:{
+    ...BASE,indexAxis:'y',
+    scales:{x:{ticks:ticks(),grid:{color:GC}},y:{ticks:{...ticks(),autoSkip:false},grid:{color:GC}}}
+  }});
+}
+function mkDonut(id,labels,values,colors){
+  destroyChart(id);
+  new Chart(document.getElementById(id),{type:'doughnut',data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:0}]},options:{
+    ...BASE,cutout:'65%',
+    plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10,family:"'DM Sans'"},boxWidth:9,padding:8}}}
+  }});
+}
+function mkLine(id,labels,data,color){
+  destroyChart(id);
+  new Chart(document.getElementById(id),{type:'line',data:{labels,datasets:[{
+    label:'Issues',data,borderColor:color,backgroundColor:color+'18',
+    pointBackgroundColor:color,pointRadius:4,pointHoverRadius:7,fill:true,tension:.35,borderWidth:2.5
+  }]},options:{...BASE,
+    scales:{x:{ticks:{...ticks(),maxRotation:labels.length>20?35:0},grid:{color:GC}},y:{ticks:ticks(),grid:{color:GC}}}
+  }});
+}
+function destroyChart(id){
+  const c=document.getElementById(id);if(!c)return;const ch=Chart.getChart(c);if(ch)ch.destroy();
+}
+function addDrill(canvasId,cb){
+  const c=document.getElementById(canvasId);if(!c)return;
+  const ch=Chart.getChart(c);if(!ch)return;
+  c.addEventListener('click',evt=>{
+    const pts=ch.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+    if(pts.length)cb(pts[0].datasetIndex,pts[0].index);
+  });
+}
+function renderBars(elId,data,color,onClick){
+  const max=Math.max(...data.map(d=>d.v||0),1);
+  if(!data.length){document.getElementById(elId).innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No data.</div>';return;}
+  document.getElementById(elId).innerHTML=data.slice(0,12).map((d,i)=>`
+    <div class="bar-row clickable" onclick="___cb_${elId}(${i})">
+      <div class="bar-lbl" title="${d.l}">${d.l}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct100(d.v,max)}%;background:${color}"></div></div>
+      <div class="bar-val">${d.v}</div>
+    </div>`).join('');
+  window['___cb_'+elId]=i=>onClick(data[i]);
+}
+
+// ══════════════════════════════════════════════════
+// FREQUENCY HELPERS
+// ══════════════════════════════════════════════════
+function fa(arr,field){
+  const m={};arr.forEach(r=>{const v=r[field];if(v)m[v]=(m[v]||0)+1;});
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+}
+function faArr(arr,field,n=0){
+  const out=fa(arr,field).map(([l,v])=>({l,v}));
+  return n?out.slice(0,n):out;
+}
+function buildStatusFreq(rows){
+  const m={OPEN:0,CLOSE:0,RESOLVE:0};
+  rows.forEach(r=>{const s=A.normStatus(r.Status||r['Progr.Stat.']||'');if(s in m)m[s]++;});
+  const defs=[{k:'OPEN',l:'Open',c:'#b07a34'},{k:'RESOLVE',l:'Resolved',c:'#3d8c5e'},{k:'CLOSE',l:'Closed',c:'#4975c9'}];
+  const valid=defs.filter(d=>m[d.k]>0);
+  return{labels:valid.map(d=>d.l),vals:valid.map(d=>m[d.k]),colors:valid.map(d=>d.c),keys:valid.map(d=>d.k)};
+}
+function pct100(v,max){return max>0?Math.round(v/max*100):0;}
+function esc(s){return String(s||'').replace(/'/g,"\\'")}
+
+// ══════════════════════════════════════════════════
+// EXPLORER
+// ══════════════════════════════════════════════════
+function buildExplorerFilters(){
+  function fill(id, vals){
+    const sel=document.getElementById(id);if(!sel)return;
+    while(sel.options.length>1)sel.remove(1);
+    vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});
+  }
+  function uniq(arr){ return [...new Set(arr.filter(Boolean))].sort(); }
+
+  // Status
+  const stSel=document.getElementById('ex-status');
+  while(stSel.options.length>1)stSel.remove(1);
+  ['OPEN','CLOSE','RESOLVE'].forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;stSel.appendChild(o);});
+
+  // Module — use Module field, fall back to Category if Module empty
+  fill('ex-module', uniq(ROWS.map(r=>r.Module||r.Category||'')));
+
+  // Issue Type
+  fill('ex-issuetype', uniq(ROWS.map(r=>r['Issue Type']||'')));
+
+  // Model
+  fill('ex-model', uniq(ROWS.map(r=>r['Model No.']||'')));
+
+  // S/W Version — take the primary version (before '/')
+  fill('ex-swver', uniq(ROWS.map(r=>(r['S/W Ver.']||'').split('/')[0].trim())));
+
+  // Severity
+  fill('ex-sev', uniq(ROWS.map(r=>r.Severity||r['Problem Type']||'')));
+}
+function clearExFilters(){
+  ['ex-status','ex-model','ex-swver','ex-module','ex-issuetype','ex-sev'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.selectedIndex=0;
+  });
+  const s=document.getElementById('ex-search'); if(s) s.value='';
+  applyEx();
+}
+function applyEx(){
+  const q=(document.getElementById('ex-search')?.value||'').toLowerCase();
+  const stF=document.getElementById('ex-status')?.value||'';
+  const modF=document.getElementById('ex-module')?.value||'';
+  const issF=document.getElementById('ex-issuetype')?.value||'';
+  const mdlF=document.getElementById('ex-model')?.value||'';
+  const sevF=document.getElementById('ex-sev')?.value||'';
+  const swvF=document.getElementById('ex-swver')?.value||'';
+  exFiltered=ROWS.filter(r=>{
+    if(stF&&A.normStatus(r.Status||r['Progr.Stat.'])!==stF)return false;
+    const rowMod=r.Module||r.Category||'';
+    if(modF&&rowMod!==modF)return false;
+    if(issF&&r['Issue Type']!==issF)return false;
+    if(mdlF&&r['Model No.']!==mdlF)return false;
+    if(sevF&&(r.Severity||r['Problem Type'])!==sevF)return false;
+    if(swvF&&(r['S/W Ver.']||'').split('/')[0].trim()!==swvF)return false;
+    if(q){
+      const hay=[r.content,r.Title,r.Problem,r['Ai Summary'],r['AI Insight'],r.Module,r.Category,r['Issue Type'],r['Model No.'],r['S/W Ver.']].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  });
+  exPage=1;
+  document.getElementById('ex-count').textContent=exFiltered.length+' issues';
+  renderExTable();
+}
+function renderExTable(){
+  const total=Math.ceil(exFiltered.length/EX_PS)||1;
+  const start=(exPage-1)*EX_PS;
+  const sl=exFiltered.slice(start,start+EX_PS);
+  document.getElementById('ex-tbody').innerHTML=sl.map(r=>`<tr>
+    <td style="font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${fmtDate(r.Date||r['Registered Date'])}<br><span style="color:var(--text3)">${r['Case Code']||''}</span></td>
+    <td>${stBadge(r.Status||r['Progr.Stat.'])}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:10px">${r['Model No.']||'—'}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:10px">${r['S/W Ver.']||'—'}</td>
+    <td class="main-col">${r.Module||r.Category||'—'}</td>
+    <td>${r['Issue Type']||'—'}</td>
+    <td>${sevBadge(r.Severity||r['Problem Type'])}</td>
+    <td style="max-width:270px;line-height:1.4">${fmtContent(r)}</td>
+  </tr>`).join('');
+  let html=`<span class="pgi">Page ${exPage} of ${total}</span>`;
+  if(exPage>1)html+=`<button class="pgbtn" onclick="exGoPage(${exPage-1})">← Prev</button>`;
+  const s=Math.max(1,exPage-2),e=Math.min(total,exPage+2);
+  for(let i=s;i<=e;i++)html+=`<button class="pgbtn${i===exPage?' active':''}" onclick="exGoPage(${i})">${i}</button>`;
+  if(exPage<total)html+=`<button class="pgbtn" onclick="exGoPage(${exPage+1})">Next →</button>`;
+  document.getElementById('ex-pages').innerHTML=html;
+}
+function exGoPage(p){exPage=p;renderExTable();window.scrollTo(0,0);}
+
+// ══════════════════════════════════════════════════
+// DRILL DRAWER
+// ══════════════════════════════════════════════════
+function openDrill(seed,title,sub){
+  drillBase=ROWS.filter(r=>{
+    if(seed._all)return true;
+    if(seed._status_open){const s=A.normStatus(r.Status||r['Progr.Stat.']);return s==='OPEN';}
+    if(seed._status_resolve){const s=A.normStatus(r.Status||r['Progr.Stat.']);return s==='RESOLVE';}
+    if(seed._status_key){const s=A.normStatus(r.Status||r['Progr.Stat.']);return s===seed._status_key;}
+    if(seed._module&&r.Module!==seed._module)return false;
+    if(seed._submodule&&r['Sub-Module']!==seed._submodule)return false;
+    if(seed._issuetype&&r['Issue Type']!==seed._issuetype)return false;
+    if(seed._subissue&&r['Sub-Issue Type']!==seed._subissue)return false;
+    if(seed._category&&r.Category!==seed._category)return false;
+    if(seed._maintype&&r['Main Type']!==seed._maintype)return false;
+    if(seed._model&&r['Model No.']!==seed._model)return false;
+    if(seed._app&&r['Application Name']!==seed._app)return false;
+    if(seed._sev&&r.Severity!==seed._sev)return false;
+    if(seed._swver){
+      const rv=(r['S/W Ver.']||'').split('/')[0].trim();
+      if(rv!==seed._swver)return false;
+    }
+    if(seed._sev_any){
+      const sev=(r.Severity||'').toLowerCase();
+      if(!sev.includes('severe')&&sev!=='high'&&!sev.includes('moder')&&sev!=='medium')return false;
+    }
+    if(seed._sev_tier){
+      // match by severity distribution tier
+      const sevTierMap={Severe:['severe','high','critical'],Moderate:['moderate','medium'],Deferred:['deferred','low','low risk']};
+      const allowed=sevTierMap[seed._sev_tier]||[];
+      const rv=(r.Severity||'').toLowerCase();
+      if(!allowed.some(a=>rv.includes(a)))return false;
+    }
+    return true;
+  });
+  document.getElementById('drill-title').textContent=title||'Issue details';
+  document.getElementById('drill-sub').textContent=sub||'';
+  document.getElementById('drill-ctx').textContent=A.cfg?.label||'';
+  fillDrillDropdowns();resetDrillFlt();
+  document.getElementById('drill-overlay').classList.add('open');
+  document.getElementById('drill-drawer').classList.add('open');
+  drillPage=1;applyDrillFlt();
+}
+function fillDrillDropdowns(){
+  function fill(id,field){
+    const el=document.getElementById(id);if(!el)return;
+    while(el.options.length>1)el.remove(1);
+    [...new Set(drillBase.map(r=>r[field]).filter(Boolean))].sort()
+      .forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});
+  }
+  fill('df-module','Module');fill('df-issuetype','Issue Type');
+  fill('df-model','Model No.');
+  const sevSel=document.getElementById('df-sev');
+  while(sevSel.options.length>1)sevSel.remove(1);
+  [...new Set(drillBase.map(r=>r.Severity||r['Problem Type']).filter(Boolean))].sort()
+    .forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sevSel.appendChild(o);});
+}
+function resetDrillFlt(){
+  ['df-status','df-module','df-issuetype','df-model','df-sev'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  const s=document.getElementById('df-search');if(s)s.value='';
+}
+function applyDrillFlt(){
+  const get=id=>document.getElementById(id)?.value||'';
+  const stF=get('df-status'),modF=get('df-module'),issF=get('df-issuetype');
+  const mdlF=get('df-model'),sevF=get('df-sev');
+  const q=get('df-search').toLowerCase();
+  drillVisible=drillBase.filter(r=>{
+    if(stF&&A.normStatus(r.Status||r['Progr.Stat.'])!==stF)return false;
+    if(modF&&r.Module!==modF)return false;
+    if(issF&&r['Issue Type']!==issF)return false;
+    if(mdlF&&r['Model No.']!==mdlF)return false;
+    if(sevF&&(r.Severity||r['Problem Type'])!==sevF)return false;
+    if(q){
+      const hay=[r.content,r.Title,r.Problem,r['Ai Summary'],r.Module,r['Issue Type'],r['Model No.']].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  });
+  drillPage=1;renderDrillTable();
+}
+function closeDrill(){
+  document.getElementById('drill-overlay').classList.remove('open');
+  document.getElementById('drill-drawer').classList.remove('open');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrill();});
+
+function renderDrillTable(){
+  const total=Math.ceil((drillVisible.length||1)/DRILL_PS);
+  if(drillPage>total)drillPage=1;
+  const start=(drillPage-1)*DRILL_PS;
+  const sl=drillVisible.slice(start,start+DRILL_PS);
+  document.getElementById('drill-count').textContent=drillVisible.length.toLocaleString();
+  document.getElementById('drill-count-lbl').textContent=
+    drillVisible.length<drillBase.length?`shown (${drillBase.length} in ctx)`:'issues';
+  document.getElementById('drill-tbody').innerHTML=sl.map(r=>`<tr>
+    <td style="font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${fmtDate(r.Date||r['Registered Date'])}<br><span style="color:var(--text3);font-size:10px">${r['Case Code']||''}</span></td>
+    <td>${stBadge(r.Status||r['Progr.Stat.'])}</td>
+    <td class="dc" style="font-size:11px;white-space:nowrap">${r['Model No.']||'—'}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:10px">${r['S/W Ver.']||'—'}</td>
+    <td style="white-space:nowrap">${r.Module||r.Category||'—'}</td>
+    <td style="font-size:11px">${r['Issue Type']||'—'}</td>
+    <td>${sevBadge(r.Severity||r['Problem Type'])}</td>
+    <td style="max-width:260px;line-height:1.4;color:var(--text)">${fmtContent(r)}</td>
+  </tr>`).join('');
+  let pgHtml='';
+  document.getElementById('drill-pg-info').textContent=total>1?`Page ${drillPage} of ${total}`:'';
+  if(drillPage>1)pgHtml+=`<button class="d-pgbtn" onclick="drillGoPage(${drillPage-1})">←</button>`;
+  const s=Math.max(1,drillPage-2),e=Math.min(total,drillPage+2);
+  for(let i=s;i<=e;i++)pgHtml+=`<button class="d-pgbtn${i===drillPage?' active':''}" onclick="drillGoPage(${i})">${i}</button>`;
+  if(drillPage<total)pgHtml+=`<button class="d-pgbtn" onclick="drillGoPage(${drillPage+1})">→</button>`;
+  document.getElementById('drill-pages').innerHTML=pgHtml;
+}
+function drillGoPage(p){drillPage=p;renderDrillTable();}
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function fmtDate(v){if(!v)return'—';const d=new Date(v);return isNaN(d)?v:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'});}
+function fmtContent(r){
+  const t=r.Title||r.content||r.Problem||'';
+  if(!t)return'—';
+  const c=String(t).replace(/_x000d_/gi,' ').replace(/\s+/g,' ').trim();
+  const ai=r['Ai Summary']||r['AI Insight']||'';
+  const aiPart=ai?`<div style="font-size:10px;color:var(--blue);margin-bottom:2px;font-style:italic">AI: ${ai.slice(0,70)}${ai.length>70?'…':''}</div>`:'';
+  return aiPart+(c.length>85?`<span title="${c.replace(/"/g,'&quot;')}">${c.slice(0,85)}…</span>`:c);
+}
+function stBadge(v){
+  const s=A.normStatus?(A.normStatus(v||'')):(String(v||'').toUpperCase());
+  if(s==='OPEN'||s==='OPENED')return`<span class="badge badge-open">Open</span>`;
+  if(s==='CLOSE'||s==='CLOSED')return`<span class="badge badge-close">Closed</span>`;
+  if(s.startsWith('RESOLV'))return`<span class="badge badge-resolve">Resolve</span>`;
+  return`<span class="badge tag-neutral">${s||'—'}</span>`;
+}
+function sevBadge(v){
+  if(!v)return'<span style="color:var(--text3);font-size:11px">—</span>';
+  const s=String(v).toLowerCase();
+  if(s.includes('severe')||s==='high'||s==='critical')return`<span class="badge badge-severe">${v}</span>`;
+  if(s.includes('moder')||s==='medium')return`<span class="badge badge-moderate">${v}</span>`;
+  if(s.includes('defer')||s==='low')return`<span class="badge badge-deferred">${v}</span>`;
+  return`<span class="badge tag-neutral">${v}</span>`;
+}
+// ══════════════════════════════════════════════════
+// S/W VERSION ANALYSIS
+// ══════════════════════════════════════════════════
+const SWV_PAL=['#4975c9','#c96449','#3d8a8a','#b07a34','#7059a8','#6278a0','#b06478','#5a8c6a','#8a6a3a','#3a6a8a'];
+
+function shortVer(v){
+  // For long employee_ut style versions, take first segment before /
+  if(!v)return'';
+  const seg=(v.split('/')[0]||v).trim();
+  // Show last 8 chars if very long
+  return seg.length>16?'…'+seg.slice(-13):seg;
+}
+
+function initSwVersion(){
+  const rows=ROWS;
+  if(!rows.length)return;
+
+  // Build model list for filter tabs
+  const models=[...new Set(rows.map(r=>r['Model No.']).filter(Boolean))];
+  const modelFn=m=>(RAW.top_models||[]).find(x=>x.label===m)?.friendly_name||m;
+
+  // State: which model is selected (null = all)
+  let swvModel=null;
+
+  function getFilteredRows(){
+    return swvModel?rows.filter(r=>r['Model No.']=== swvModel):rows;
+  }
+
+  function buildModelTabs(){
+    const wrap=document.getElementById('swv-model-tabs');
+    if(!wrap)return;
+    const allBtn=`<button onclick="swvSelectModel(null,this)" id="swv-tab-all"
+      style="padding:5px 12px;border-radius:20px;border:1px solid var(--border2);font-size:11px;font-weight:500;
+      cursor:pointer;background:var(--blue-dim);color:var(--blue);font-family:'DM Sans',sans-serif;transition:all .15s">
+      All models</button>`;
+    const modelBtns=models.slice(0,6).map(m=>`<button onclick="swvSelectModel('${m}',this)"
+      style="padding:5px 12px;border-radius:20px;border:1px solid var(--border2);font-size:11px;font-weight:500;
+      cursor:pointer;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;transition:all .15s">
+      ${modelFn(m)}</button>`).join('');
+    wrap.innerHTML=allBtn+modelBtns;
+  }
+
+  window.swvSelectModel=function(model,btn){
+    swvModel=model;
+    document.querySelectorAll('#swv-model-tabs button').forEach(b=>{
+      b.style.background='transparent';b.style.color='var(--text2)';b.style.borderColor='var(--border2)';
+    });
+    btn.style.background='var(--blue-dim)';btn.style.color='var(--blue)';btn.style.borderColor='var(--blue)';
+    renderSwvAll();
+  };
+
+  buildModelTabs();
+  renderSwvAll();
+
+  function renderSwvAll(){
+    const frows=getFilteredRows();
+
+    // Build version frequency map
+    const verMap={};
+    const verSevMap={};
+    frows.forEach(r=>{
+      const v=(r['S/W Ver.']||'').split('/')[0].trim();
+      if(!v)return;
+      verMap[v]=(verMap[v]||0)+1;
+      const sev=(r.Severity||'').toLowerCase();
+      if(sev.includes('severe')||sev==='high'||sev==='medium'||sev.includes('moder')){
+        verSevMap[v]=(verSevMap[v]||0)+1;
+      }
+    });
+
+    const vers=Object.entries(verMap).sort((a,b)=>b[1]-a[1]);
+    const topVers=vers.slice(0,12);
+    const verLabels=topVers.map(([v])=>shortVer(v));
+    const verCounts=topVers.map(([,c])=>c);
+    const verKeys=topVers.map(([v])=>v);
+
+    // Version count label
+    const vcEl=document.getElementById('swv-ver-count');
+    if(vcEl)vcEl.textContent=`${vers.length} version${vers.length!==1?'s':''} detected`;
+
+    // KPI cards
+    const total=frows.length;
+    const mostBuggy=vers[0]?.[0]||'—';
+    const leastBuggy=vers[vers.length-1]?.[0]||'—';
+    const sevTotal=Object.values(verSevMap).reduce((a,b)=>a+b,0);
+    const kpiEl=document.getElementById('swv-kpi-row');
+    if(kpiEl){
+      kpiEl.innerHTML=`
+        <div class="mc mc-blue"><div class="mlbl">Versions tracked</div><div class="mval" style="font-size:24px">${vers.length}</div><div class="msub">unique binaries</div></div>
+        <div class="mc mc-red clickable" onclick="openDrill({_swver:'${mostBuggy}'},'${shortVer(mostBuggy)} — most issues','')">
+          <div class="mlbl">Most issues ↗</div><div class="mval" style="font-size:16px;margin-top:4px">${shortVer(mostBuggy)}</div>
+          <div class="msub">${vers[0]?.[1]||0} issues</div></div>
+        <div class="mc mc-green clickable" onclick="openDrill({_swver:'${leastBuggy}'},'${shortVer(leastBuggy)} — most stable','')">
+          <div class="mlbl">Most stable ↗</div><div class="mval" style="font-size:16px;margin-top:4px">${shortVer(leastBuggy)}</div>
+          <div class="msub">${vers[vers.length-1]?.[1]||0} issues</div></div>
+        <div class="mc mc-amber"><div class="mlbl">Severe across versions</div><div class="mval" style="font-size:24px">${sevTotal}</div>
+          <div class="msub">${total?((sevTotal/total)*100).toFixed(1)+'% of total':''}</div></div>`;
+    }
+
+    // Volume bar chart
+    destroyChart('c-swv-vol');
+    const volCtx=document.getElementById('c-swv-vol');
+    if(volCtx&&topVers.length){
+      const maxV=Math.max(...verCounts);
+      const bgColors=verCounts.map(v=>v===maxV?'#b84a4a':A.cfg?.color||BLUE);
+      const vc=new Chart(volCtx,{type:'bar',data:{labels:verLabels,datasets:[{
+        data:verCounts,backgroundColor:bgColors,borderRadius:5,
+      }]},options:{...BASE,
+        scales:{x:{ticks:{...ticks(),maxRotation:35,autoSkip:false},grid:{color:GC}},y:{ticks:ticks(),grid:{color:GC}}}
+      }});
+      volCtx.addEventListener('click',evt=>{
+        const pts=vc.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+        if(pts.length){
+          const idx=pts[0].index;
+          openDrill({_swver:verKeys[idx]},shortVer(verKeys[idx])+' — all issues','S/W Version drill-down');
+        }
+      });
+    }
+
+    // Stability bars (sorted ascending = most stable first)
+    const stabData=[...topVers].sort((a,b)=>a[1]-b[1]).map(([v,c])=>({l:shortVer(v),raw:v,v:c}));
+    const stabMax=Math.max(...stabData.map(d=>d.v),1);
+    const stabEl=document.getElementById('swv-stability-bars');
+    if(stabEl){
+      stabEl.innerHTML=stabData.map((d,i)=>{
+        const color=d.v===stabMax?'#b84a4a':d.v<stabMax*0.3?'#3d8c5e':A.cfg?.color||BLUE;
+        const tag=d.v===stabMax?'<span class="badge badge-severe" style="font-size:9px;margin-left:6px">Most buggy</span>':
+                  d.v<stabMax*0.3?'<span class="badge badge-resolve" style="font-size:9px;margin-left:6px">Stable</span>':'';
+        return`<div class="bar-row clickable" onclick="openDrill({_swver:'${d.raw}'},'${d.l} — issues','')">
+          <div class="bar-lbl" title="${d.raw}">${d.l}${tag}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct100(d.v,stabMax)}%;background:${color}"></div></div>
+          <div class="bar-val">${d.v}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Severe per version bars
+    const sevData=verKeys.map(v=>({l:shortVer(v),raw:v,v:verSevMap[v]||0}))
+      .filter(d=>d.v>0).sort((a,b)=>b.v-a.v);
+    const sevMax=Math.max(...sevData.map(d=>d.v),1);
+    const sevEl=document.getElementById('swv-sev-bars');
+    if(sevEl){
+      if(sevData.length){
+        sevEl.innerHTML=sevData.map(d=>`<div class="bar-row clickable" onclick="openDrill({_swver:'${d.raw}',_sev_any:true},'${d.l} — severe issues','')">
+          <div class="bar-lbl" title="${d.raw}">${d.l}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct100(d.v,sevMax)}%;background:#b84a4a"></div></div>
+          <div class="bar-val">${d.v}</div>
+        </div>`).join('');
+      }else{
+        sevEl.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No severity data for this source.</div>';
+      }
+    }
+
+    // Build module × version matrix for spike detection
+    const topMods=faArr(frows,'Module',8).map(x=>x.l);
+    if(!topMods.length||!verKeys.length){
+      document.getElementById('swv-spike-legend').innerHTML='';
+      document.getElementById('swv-spike-cards').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No module data available for spike detection.</div>';
+      return;
+    }
+
+    // % share of each module per version
+    const modVerPct={};
+    topMods.forEach(mod=>{
+      modVerPct[mod]=verKeys.map(ver=>{
+        const sub=frows.filter(r=>(r['S/W Ver.']||'').split('/')[0].trim()===ver);
+        const cnt=sub.filter(r=>r.Module===mod).length;
+        return sub.length?+((cnt/sub.length)*100).toFixed(1):0;
+      });
+    });
+
+    // Spike detection: find module×version combos where share is notably above average
+    const spikes=[];
+    topMods.forEach(mod=>{
+      const vals=modVerPct[mod];
+      const max=Math.max(...vals,0);
+      const maxIdx=vals.indexOf(max);
+      const others=vals.filter((_,i)=>i!==maxIdx);
+      const avg=others.length?others.reduce((a,b)=>a+b,0)/others.length:0;
+      const delta=max-avg;
+      if(max>4&&delta>5){
+        spikes.push({mod,max:max.toFixed(1),avg:avg.toFixed(1),delta:delta.toFixed(1),
+          peakVer:verKeys[maxIdx],peakVerShort:shortVer(verKeys[maxIdx]),
+          trend:vals.map((v,i)=>i===maxIdx?`<b>${v}%</b>`:v+'%').join(' → ')});
+      }
+    });
+    spikes.sort((a,b)=>b.delta-a.delta);
+
+    // Spike legend
+    const legEl=document.getElementById('swv-spike-legend');
+    if(legEl){
+      legEl.innerHTML=topMods.map((m,i)=>`<div class="leg-item"><span class="lsq" style="background:${SWV_PAL[i]}"></span>${m}</div>`).join('');
+    }
+
+    // Spike line chart
+    destroyChart('c-swv-spike');
+    const spikeCtx=document.getElementById('c-swv-spike');
+    if(spikeCtx){
+      const sc=new Chart(spikeCtx,{type:'line',data:{
+        labels:verLabels,
+        datasets:topMods.map((mod,i)=>({
+          label:mod,data:modVerPct[mod],
+          borderColor:SWV_PAL[i],backgroundColor:SWV_PAL[i]+'22',
+          pointBackgroundColor:SWV_PAL[i],pointRadius:5,pointHoverRadius:8,
+          fill:false,tension:.3,borderWidth:2.2,
+        }))
+      },options:{...BASE,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%`}}},
+        scales:{
+          x:{ticks:{...ticks(),maxRotation:35,autoSkip:false},grid:{color:GC}},
+          y:{ticks:{...ticks(),callback:v=>v+'%'},grid:{color:GC},
+            title:{display:true,text:'% share of version issues',color:'#7a8099',font:{size:11}}}
+        }
+      }});
+      spikeCtx.addEventListener('click',evt=>{
+        const pts=sc.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+        if(pts.length){
+          const dsIdx=pts[0].datasetIndex,idx=pts[0].index;
+          const mod=topMods[dsIdx],ver=verKeys[idx];
+          openDrill({_swver:ver,_module:mod},`${mod} — ${shortVer(ver)}`,'Module × Version drill-down');
+        }
+      });
+    }
+
+    // Spike alert cards
+    const cardsEl=document.getElementById('swv-spike-cards');
+    if(cardsEl){
+      if(spikes.length){
+        cardsEl.innerHTML=spikes.slice(0,6).map((s,i)=>{
+          const accentColor=i===0?'#b84a4a':i<3?'#b07a34':'#4975c9';
+          const accentBg=i===0?'rgba(184,74,74,.08)':i<3?'rgba(176,122,52,.08)':'rgba(73,117,201,.08)';
+          // Highlight trend: bold the peak value and wrap in coloured span
+          const trendHighlighted=s.trend.replace(/<b>(.*?)<\/b>/g,
+            `<span style="font-weight:700;color:${accentColor};background:${accentBg};padding:1px 4px;border-radius:3px">$1</span>`);
+          return`
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;
+            border-left:3px solid ${accentColor};box-shadow:var(--shadow);cursor:pointer;transition:all .15s"
+            onclick="openDrill({_swver:'${s.peakVer}',_module:'${s.mod}'},'${s.mod} — ${s.peakVerShort}','Spike detected')"
+            onmouseenter="this.style.boxShadow='var(--shadow-md)'" onmouseleave="this.style.boxShadow='var(--shadow)'">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${s.mod}</div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:6px">Peaked on
+              <code style="background:${accentBg};color:${accentColor};padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:700;letter-spacing:.02em">${s.peakVerShort}</code>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <span style="font-size:22px;font-weight:700;color:${accentColor};font-family:'DM Mono',monospace;background:${accentBg};padding:3px 10px;border-radius:6px">${s.max}%</span>
+              <div style="font-size:10.5px;color:var(--text3);line-height:1.6">
+                peak share<br>
+                avg <span style="color:var(--text2);font-weight:500">${s.avg}%</span>
+                &nbsp;·&nbsp;<span style="color:${accentColor};font-weight:700">+${s.delta}% spike</span>
+              </div>
+            </div>
+            <div style="font-size:10.5px;color:var(--text3);line-height:2">${trendHighlighted}</div>
+            <div style="font-size:10.5px;color:var(--blue);margin-top:8px;font-weight:500">View issues →</div>
+          </div>`;}).join('');
+      }else{
+        cardsEl.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px;grid-column:span 3">No significant spikes detected for this source / filter.</div>';
+      }
+    }
+
+    // Heatmap table
+    buildHeatmap(topMods,verKeys,verLabels,modVerPct,frows);
+  }
+
+  function buildHeatmap(topMods,verKeys,verLabels,modVerPct,frows){
+    const tbl=document.getElementById('swv-heatmap');
+    if(!tbl)return;
+
+    // Max value for color scaling
+    const allVals=topMods.flatMap(m=>modVerPct[m]);
+    const maxVal=Math.max(...allVals,1);
+
+    function cellColor(pct){
+      // Blue gradient: 0% = white-ish, 100% = deep blue
+      const intensity=Math.round((pct/maxVal)*100);
+      if(intensity===0)return{bg:'#f4f5f7',text:'var(--text3)'};
+      if(intensity<20)return{bg:'#dde8f8',text:'#3560b8'};
+      if(intensity<40)return{bg:'#aec4ee',text:'#2a4fa0'};
+      if(intensity<60)return{bg:'#7aa0e0',text:'#1a3578'};
+      if(intensity<80)return{bg:'#4975c9',text:'#ffffff'};
+      return{bg:'#2a4fa0',text:'#ffffff'};
+    }
+
+    const thStyle='padding:8px 12px;background:var(--bg3);border:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:400;white-space:nowrap;position:sticky;top:0;z-index:2';
+    const tdStyle='border:1px solid var(--border);padding:8px 10px;text-align:center;font-size:11px;font-family:"DM Mono",monospace;cursor:pointer;transition:opacity .15s;white-space:nowrap';
+
+    let html=`<thead><tr><th style="${thStyle};position:sticky;left:0;z-index:3;min-width:130px">Module</th>`;
+    verLabels.forEach(v=>html+=`<th style="${thStyle}">${v}</th>`);
+    html+=`<th style="${thStyle}">Total</th></tr></thead><tbody>`;
+
+    topMods.forEach(mod=>{
+      const rowTotal=faArr(frows.filter(r=>r.Module===mod),'Module').reduce((a,b)=>a+b.v,0)||
+        frows.filter(r=>r.Module===mod).length;
+      html+=`<tr>`;
+      html+=`<td style="${tdStyle};text-align:left;background:var(--bg3);font-family:'DM Sans',sans-serif;font-weight:500;color:var(--text);position:sticky;left:0;z-index:1">${mod}</td>`;
+      verKeys.forEach((ver,vi)=>{
+        const pct=modVerPct[mod][vi];
+        const cnt=frows.filter(r=>(r['S/W Ver.']||'').split('/')[0].trim()===ver&&r.Module===mod).length;
+        const {bg,text}=cellColor(pct);
+        const title=`${mod} on ${shortVer(ver)}: ${cnt} issues (${pct}%)`;
+        html+=`<td style="${tdStyle};background:${bg};color:${text}" title="${title}"
+          onclick="openDrill({_swver:'${ver}',_module:'${mod}'},'${mod} — ${shortVer(ver)}','Heatmap drill-down')"
+          onmouseenter="this.style.opacity='.75'" onmouseleave="this.style.opacity='1'">
+          ${pct>0?pct+'%':'—'}</td>`;
+      });
+      html+=`<td style="${tdStyle};background:var(--blue-dim);color:var(--blue);font-weight:600">${rowTotal}</td>`;
+      html+=`</tr>`;
+    });
+
+    // Version totals row
+    html+=`<tr style="background:var(--bg3)"><td style="${tdStyle};text-align:left;font-weight:600;color:var(--text);font-family:'DM Sans',sans-serif;position:sticky;left:0;background:var(--bg3)">Total issues</td>`;
+    verKeys.forEach(ver=>{
+      const cnt=frows.filter(r=>(r['S/W Ver.']||'').split('/')[0].trim()===ver).length;
+      html+=`<td style="${tdStyle};font-weight:600;color:var(--text);cursor:pointer" onclick="openDrill({_swver:'${ver}'},'${shortVer(ver)} — all issues','')">${cnt}</td>`;
+    });
+    html+=`<td style="${tdStyle};font-weight:600;color:var(--text)">${frows.length}</td></tr>`;
+    html+=`</tbody>`;
+    tbl.innerHTML=html;
+  }
+}
+
+</script>
+</html>

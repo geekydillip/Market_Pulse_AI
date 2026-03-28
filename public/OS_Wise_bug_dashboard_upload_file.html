@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Beta UT VOC — Upload Data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --bg2: #ffffff;
+      --bg3: #e9ebee;
+      --border: rgba(0, 0, 0, .08);
+      --border2: rgba(0, 0, 0, .14);
+      --text: #1a1d23;
+      --text2: #52576b;
+      --text3: #9299ad;
+      --blue: #4f7cac;
+      --blue-bright: #3a6490;
+      --blue-dim: rgba(79, 124, 172, .10);
+      --coral: #c27b5a;
+      --coral-dim: rgba(194, 123, 90, .10);
+      --green: #5a8a6a;
+      --green-dim: rgba(90, 138, 106, .10);
+      --red: #b05a5a;
+      --glow: 0 1px 3px rgba(0, 0, 0, .06);
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--blue);
+      background: var(--blue-dim);
+      border: 1px solid rgba(79, 124, 172, .2);
+      border-radius: 20px;
+      padding: 5px 14px;
+      margin-bottom: 20px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--blue);
+      animation: pulse 2s ease infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    h1 {
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 600;
+      letter-spacing: -.01em;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    h1 span {
+      color: var(--blue);
+      font-weight: 700
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text2);
+      font-weight: 400;
+      max-width: 480px;
+      margin: 0 auto
+    }
+
+    /* ── Upload card ── */
+    .card {
+      width: 100%;
+      max-width: 680px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    }
+
+    .card-header {
+      padding: 28px 32px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--blue-dim);
+      border: 1px solid rgba(79, 124, 172, .2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text)
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px
+    }
+
+    .card-body {
+      padding: 32px
+    }
+
+    /* ── File zones ── */
+    .file-zones {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px
+    }
+
+    @media(max-width:520px) {
+      .file-zones {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .zone {
+      position: relative;
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--radius);
+      padding: 28px 16px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--bg3);
+    }
+
+    .zone:hover,
+    .zone.drag {
+      border-color: var(--blue);
+      background: var(--blue-dim);
+      box-shadow: 0 0 0 3px rgba(79, 124, 172, .08);
+    }
+
+    .zone.loaded {
+      border-color: var(--green);
+      border-style: solid;
+      background: rgba(74, 138, 106, .06);
+    }
+
+    .zone.error {
+      border-color: var(--red);
+      border-style: solid;
+      background: rgba(194, 90, 90, .05);
+    }
+
+    .zone input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .zone-icon {
+      font-size: 28px;
+      margin-bottom: 10px;
+      display: block;
+      transition: transform .2s
+    }
+
+    .zone:hover .zone-icon,
+    .zone.drag .zone-icon {
+      transform: translateY(-3px)
+    }
+
+    .zone-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 6px;
+    }
+
+    .zone-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px
+    }
+
+    .zone-hint {
+      font-size: 11px;
+      color: var(--text3)
+    }
+
+    .zone-status {
+      margin-top: 10px;
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text2);
+      min-height: 16px;
+      word-break: break-all;
+    }
+
+    .zone.loaded .zone-status {
+      color: #4a8a6a
+    }
+
+    .zone.error .zone-status {
+      color: var(--red)
+    }
+
+    /* ── Column mapping ── */
+    .mapping-section {
+      display: none;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      animation: fadeIn .3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .mapping-section.visible {
+      display: block
+    }
+
+    .mapping-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mapping-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    @media(max-width:480px) {
+      .mapping-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .map-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px
+    }
+
+    .map-key {
+      color: var(--text2);
+      white-space: nowrap;
+      min-width: 110px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+    }
+
+    .map-sel {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .map-sel:focus {
+      border-color: var(--blue)
+    }
+
+    /* ── Stats preview ── */
+    .preview-bar {
+      display: none;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+      animation: fadeIn .3s ease;
+    }
+
+    .preview-bar.visible {
+      display: flex
+    }
+
+    .prev-stat {
+      text-align: center;
+      flex: 1;
+      min-width: 80px
+    }
+
+    .prev-stat .val {
+      font-size: 22px;
+      font-weight: 500;
+      font-family: 'DM Mono', monospace;
+      color: var(--text)
+    }
+
+    .prev-stat .lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text3);
+      margin-top: 2px
+    }
+
+    .prev-divider {
+      width: 1px;
+      height: 36px;
+      background: var(--border);
+      flex-shrink: 0
+    }
+
+    /* ── Actions ── */
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center
+    }
+
+    .btn-generate {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #4f7cac, #3a5f8a);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-generate::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .1), transparent);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .btn-generate:hover::before {
+      opacity: 1
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(79, 124, 172, .3)
+    }
+
+    .btn-generate:active {
+      transform: translateY(0)
+    }
+
+    .btn-generate:disabled {
+      background: var(--bg3);
+      color: var(--text3);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-generate:disabled::before {
+      display: none
+    }
+
+    .btn-reset {
+      padding: 14px 20px;
+      background: var(--bg3);
+      color: var(--text2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      transition: all .2s;
+    }
+
+    .btn-reset:hover {
+      background: var(--bg2);
+      color: var(--text);
+      border-color: var(--border2)
+    }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      display: none;
+      margin-top: 20px
+    }
+
+    .progress-wrap.visible {
+      display: block
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between
+    }
+
+    .progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      transition: width .3s ease;
+      width: 0%
+    }
+
+    /* ── Info cards ── */
+    .info-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 680px;
+      margin-top: 20px;
+    }
+
+    @media(max-width:520px) {
+      .info-row {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .info-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    }
+
+    .info-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px
+    }
+
+    .info-text .t {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 3px
+    }
+
+    .info-text .s {
+      font-size: 11px;
+      color: var(--text3);
+      line-height: 1.5
+    }
+
+    /* ── Nav link ── */
+    .nav-link {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text2);
+      font-size: 13px;
+      text-decoration: none;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      transition: all .2s;
+      z-index: 10;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      border-color: var(--border2)
+    }
+  </style>
+</head>
+
+<body>
+
+  <a href="main.html" class="nav-link">← Back to Home Page</a>
+
+  <div class="shell">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="badge"><span class="badge-dot"></span>Compare any File</div>
+      <h1>Upload <span>Data Files</span></h1>
+      <p class="subtitle">Select two Excel/CSV files to generate your comparative bug analytics report.
+      </p>
+    </div>
+
+    <!-- Upload card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📁</div>
+        <div>
+          <div class="card-title">Data Source Configuration</div>
+          <div class="card-sub">Supports .xlsx, .xls, and .csv formats</div>
+        </div>
+      </div>
+
+      <div class="card-body">
+
+        <!-- File drop zones -->
+        <div class="file-zones">
+
+          <!-- File 1 — OneUI 8.0 -->
+          <div class="zone" id="zone1" ondragover="onDrag(event,'zone1',true)" ondragleave="onDrag(event,'zone1',false)"
+            ondrop="onDrop(event,'zone1')">
+            <input type="file" id="file1" accept=".xlsx,.xls,.csv" onchange="handleFile('zone1','file1',0)">
+            <span class="zone-icon">📊</span>
+            <div class="zone-label">File 1</div>
+            <div class="zone-name">Data</div>
+            <div class="zone-hint">Bug report export</div>
+            <div class="zone-status" id="status1">No file selected</div>
+          </div>
+
+          <!-- File 2 — OneUI 8.5 -->
+          <div class="zone" id="zone2" ondragover="onDrag(event,'zone2',true)" ondragleave="onDrag(event,'zone2',false)"
+            ondrop="onDrop(event,'zone2')">
+            <input type="file" id="file2" accept=".xlsx,.xls,.csv" onchange="handleFile('zone2','file2',1)">
+            <span class="zone-icon">📈</span>
+            <div class="zone-label">File 2</div>
+            <div class="zone-name">Data</div>
+            <div class="zone-hint">Bug report export</div>
+            <div class="zone-status" id="status2">No file selected</div>
+          </div>
+
+        </div>
+
+        <!-- Column mapping -->
+        <div class="mapping-section" id="mappingSection">
+          <div class="mapping-title">
+            <span>⚙</span> Column Mapping
+            <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:auto">Auto-detected from headers
+              · adjust if needed</span>
+          </div>
+          <div class="mapping-grid" id="mappingGrid"></div>
+        </div>
+
+        <!-- Stats preview -->
+        <div class="preview-bar" id="previewBar">
+          <div class="prev-stat">
+            <div class="val" id="pv-total">—</div>
+            <div class="lbl">Total Rows</div>
+          </div>
+          <div class="prev-divider"></div>
+          <div class="prev-stat">
+            <div class="val" id="pv-f1">—</div>
+            <div class="lbl">File 1 Rows</div>
+          </div>
+          <div class="prev-divider"></div>
+          <div class="prev-stat">
+            <div class="val" id="pv-f2">—</div>
+            <div class="lbl">File 2 Rows</div>
+          </div>
+          <div class="prev-divider"></div>
+          <div class="prev-stat">
+            <div class="val" id="pv-cols">—</div>
+            <div class="lbl">Columns</div>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-label"><span id="progressLabel">Processing…</span><span id="progressPct">0%</span></div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button class="btn-reset" onclick="resetAll()">↺ Reset</button>
+          <button class="btn-generate" id="btnGenerate" disabled onclick="generate()">
+            <span>Generate Dashboard</span>
+            <span>→</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Info row -->
+    <div class="info-row">
+      <div class="info-card">
+        <div class="info-icon">🔒</div>
+        <div class="info-text">
+          <div class="t">Processed Locally</div>
+          <div class="s">Files are parsed in your browser. No data is uploaded to any server.</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🗂</div>
+        <div class="info-text">
+          <div class="t">Flexible Columns</div>
+          <div class="s">Auto-detects standard column names. Remap any column in seconds.</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">⚡</div>
+        <div class="info-text">
+          <div class="t">Instant Analytics</div>
+          <div class="s">Full interactive dashboard renders immediately after processing.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ─── State ────────────────────────────────────────────────────────────────────
+    const FILES = [null, null];        // parsed rows per file
+    let ALL_HEADERS = [];              // union of headers from both files
+    let CURRENT_COLS = [];             // header list for mapping UI
+
+    // Required dashboard fields → friendly label
+    const REQUIRED_FIELDS = [
+      { key: 'Case Code', label: 'Case Code' },
+      { key: 'Model No.', label: 'Model No.' },
+      { key: 'Device', label: 'Device' },
+      { key: 'Progr.Stat.', label: 'Status' },
+      { key: 'S/W Ver.', label: 'S/W Version' },
+      { key: 'Title', label: 'Title' },
+      { key: 'Resolve', label: 'Resolution' },
+      { key: 'Module', label: 'Module' },
+      { key: 'Sub-Module', label: 'Sub-Module' },
+      { key: 'Issue Type', label: 'Issue Type' },
+      { key: 'Sub-Issue Type', label: 'Sub-Issue Type' },
+      { key: 'Severity', label: 'Severity' },
+      { key: 'OS', label: 'OS' },
+    ];
+
+    // Aliases for auto-detection
+    const ALIASES = {
+      'Case Code': ['case code', 'case', 'code', 'case_code', 'casecode', 'ticket', 'id', 'bug id', 'bug_id'],
+      'Model No.': ['model no', 'model no.', 'model number', 'model', 'device model', 'model_no'],
+      'Device': ['device', 'device name', 'device type', 'handset'],
+      'Progr.Stat.': ['progr.stat.', 'progr stat', 'prog stat', 'status', 'progress status', 'issue status', 'state'],
+      'S/W Ver.': ['s/w ver.', 'sw ver', 'sw version', 'software version', 'firmware', 'build', 'version', 's/w version'],
+      'Title': ['title', 'issue title', 'summary', 'description', 'bug title', 'subject'],
+      'Resolve': ['resolve', 'resolution', 'fix', 'resolved by', 'resolve type'],
+      'Module': ['module', 'category', 'component', 'area', 'module name'],
+      'Sub-Module': ['sub-module', 'submodule', 'sub module', 'sub_module', 'feature', 'sub-category'],
+      'Issue Type': ['issue type', 'type', 'bug type', 'issue_type'],
+      'Sub-Issue Type': ['sub-issue type', 'sub issue type', 'sub_issue_type', 'sub issue', 'defect type'],
+      'Severity': ['severity', 'priority', 'level', 'sev'],
+      'OS': ['os', 'operating system', 'oneui', 'one ui', 'software'],
+    };
+
+    // ─── Drag & drop helpers ─────────────────────────────────────────────────────
+    function onDrag(e, zoneId, entering) {
+      e.preventDefault();
+      document.getElementById(zoneId).classList.toggle('drag', entering);
+    }
+
+    function onDrop(e, zoneId) {
+      e.preventDefault();
+      document.getElementById(zoneId).classList.remove('drag');
+      const fileIdx = zoneId === 'zone1' ? 0 : 1;
+      const fileInputId = 'file' + (fileIdx + 1);
+      const file = e.dataTransfer.files[0];
+      if (file) processFile(file, zoneId, fileInputId, fileIdx);
+    }
+
+    // ─── File handler ─────────────────────────────────────────────────────────────
+    function handleFile(zoneId, inputId, fileIdx) {
+      const file = document.getElementById(inputId).files[0];
+      if (!file) return;
+      processFile(file, zoneId, inputId, fileIdx);
+    }
+
+    function processFile(file, zoneId, inputId, fileIdx) {
+      const zone = document.getElementById(zoneId);
+      const status = document.getElementById('status' + (fileIdx + 1));
+      status.textContent = '⏳ Parsing ' + file.name + '…';
+      zone.className = 'zone';
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          let rows;
+          const name = file.name.toLowerCase();
+          if (name.endsWith('.csv')) {
+            rows = parseCSV(e.target.result);
+          } else {
+            const wb = XLSX.read(e.target.result, { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+          }
+          if (!rows || rows.length === 0) throw new Error('No data found in file.');
+          FILES[fileIdx] = rows;
+          zone.classList.add('loaded');
+          status.textContent = `✓ ${rows.length.toLocaleString()} rows · ${Object.keys(rows[0]).length} cols`;
+          onFileLoaded();
+        } catch (err) {
+          zone.classList.add('error');
+          status.textContent = '✗ Error: ' + err.message;
+          FILES[fileIdx] = null;
+          onFileLoaded();
+        }
+      };
+
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function parseCSV(text) {
+      const lines = text.split('\n').filter(l => l.trim());
+      if (lines.length < 2) throw new Error('CSV must have header and data rows.');
+      const headers = splitCSVLine(lines[0]);
+      return lines.slice(1).map(line => {
+        const vals = splitCSVLine(line);
+        const row = {};
+        headers.forEach((h, i) => { row[h] = (vals[i] || '').trim(); });
+        return row;
+      });
+    }
+
+    function splitCSVLine(line) {
+      const result = []; let cur = ''; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+      result.push(cur);
+      return result;
+    }
+
+    // ─── After file(s) loaded ────────────────────────────────────────────────────
+    function onFileLoaded() {
+      const loaded = FILES.filter(Boolean);
+      if (loaded.length === 0) return;
+
+      // Collect all headers
+      const headerSet = new Set();
+      loaded.forEach(rows => Object.keys(rows[0]).forEach(h => headerSet.add(h)));
+      CURRENT_COLS = [...headerSet];
+
+      // Build mapping UI
+      buildMappingUI(CURRENT_COLS);
+      document.getElementById('mappingSection').classList.add('visible');
+
+      // Update preview if both loaded
+      if (FILES[0] && FILES[1]) {
+        const t = FILES[0].length + FILES[1].length;
+        document.getElementById('pv-total').textContent = t.toLocaleString();
+        document.getElementById('pv-f1').textContent = FILES[0].length.toLocaleString();
+        document.getElementById('pv-f2').textContent = FILES[1].length.toLocaleString();
+        document.getElementById('pv-cols').textContent = CURRENT_COLS.length;
+        document.getElementById('previewBar').classList.add('visible');
+        document.getElementById('btnGenerate').disabled = false;
+      }
+    }
+
+    // ─── Column mapping UI ───────────────────────────────────────────────────────
+    function buildMappingUI(headers) {
+      const grid = document.getElementById('mappingGrid');
+      grid.innerHTML = '';
+      const opts = headers.map(h => `<option value="${h}">${h}</option>`).join('');
+
+      REQUIRED_FIELDS.forEach(f => {
+        const detected = autoDetect(f.key, headers);
+        const row = document.createElement('div');
+        row.className = 'map-row';
+        row.innerHTML = `
+      <span class="map-key">${f.label}</span>
+      <select class="map-sel" id="map_${f.key.replace(/[^a-z0-9]/gi, '_')}">
+        <option value="">(skip)</option>
+        ${opts}
+      </select>`;
+        grid.appendChild(row);
+        const sel = row.querySelector('select');
+        if (detected) sel.value = detected;
+      });
+    }
+
+    function autoDetect(fieldKey, headers) {
+      const aliases = ALIASES[fieldKey] || [];
+      // exact match first
+      const exact = headers.find(h => h.trim().toLowerCase() === fieldKey.trim().toLowerCase());
+      if (exact) return exact;
+      // alias match
+      for (const h of headers) {
+        const hl = h.trim().toLowerCase();
+        if (aliases.some(a => hl === a || hl.includes(a) || a.includes(hl))) return h;
+      }
+      return '';
+    }
+
+    function getMapping() {
+      const map = {};
+      REQUIRED_FIELDS.forEach(f => {
+        const id = 'map_' + f.key.replace(/[^a-z0-9]/gi, '_');
+        const el = document.getElementById(id);
+        if (el && el.value) map[f.key] = el.value;
+      });
+      return map;
+    }
+
+    // ─── Generate ─────────────────────────────────────────────────────────────────
+    function generate() {
+      if (!FILES[0] || !FILES[1]) {
+        alert('Please upload both files before generating.');
+        return;
+      }
+
+      const mapping = getMapping();
+      const btn = document.getElementById('btnGenerate');
+      const pw = document.getElementById('progressWrap');
+      btn.disabled = true;
+      btn.innerHTML = '<span>Processing…</span>';
+      pw.classList.add('visible');
+
+      setProgress(20, 'Mapping columns…');
+
+      setTimeout(() => {
+        try {
+          const data80 = mapRows(FILES[0], mapping, 'OneUI 8.0');
+          const data85 = mapRows(FILES[1], mapping, 'OneUI 8.5');
+
+          setProgress(60, 'Merging datasets…');
+
+          setTimeout(() => {
+            const combined = [...data80, ...data85];
+            setProgress(85, 'Saving to session…');
+
+            setTimeout(() => {
+              sessionStorage.setItem('BUG_DATA', JSON.stringify(combined));
+              setProgress(100, 'Opening dashboard…');
+              setTimeout(() => {
+                window.location.href = 'OS_Wise_bug_dashboard.html';
+              }, 400);
+            }, 200);
+          }, 200);
+        } catch (err) {
+          alert('Error processing data: ' + err.message);
+          btn.disabled = false;
+          btn.innerHTML = '<span>Generate Dashboard</span><span>→</span>';
+          pw.classList.remove('visible');
+          setProgress(0, '');
+        }
+      }, 100);
+    }
+
+    function mapRows(rows, mapping, osLabel) {
+      return rows.map(row => {
+        const out = {};
+        REQUIRED_FIELDS.forEach(f => {
+          const srcCol = mapping[f.key];
+          out[f.key] = srcCol ? (row[srcCol] ?? '') : '';
+        });
+        // Auto-assign OS if the column is empty or doesn't match expected pattern
+        if (!out['OS'] || (!out['OS'].toLowerCase().includes('8.0') && !out['OS'].toLowerCase().includes('8.5'))) {
+          out['OS'] = osLabel;
+        }
+        return out;
+      });
+    }
+
+    function setProgress(pct, label) {
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressPct').textContent = pct + '%';
+      if (label) document.getElementById('progressLabel').textContent = label;
+    }
+
+    // ─── Reset ────────────────────────────────────────────────────────────────────
+    function resetAll() {
+      FILES[0] = FILES[1] = null;
+      ['zone1', 'zone2'].forEach(id => { document.getElementById(id).className = 'zone'; });
+      ['status1', 'status2'].forEach(id => { document.getElementById(id).textContent = 'No file selected'; });
+      ['file1', 'file2'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('mappingSection').classList.remove('visible');
+      document.getElementById('previewBar').classList.remove('visible');
+      document.getElementById('progressWrap').classList.remove('visible');
+      document.getElementById('btnGenerate').disabled = true;
+      document.getElementById('btnGenerate').innerHTML = '<span>Generate Dashboard</span><span>→</span>';
+      setProgress(0, '');
+    }
+  </script>
+</body>
+
+</html>

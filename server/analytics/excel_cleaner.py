@@ -7,9 +7,29 @@ from datetime import date, datetime
 
 def clean_title(title_val):
     if pd.isna(title_val):
-        return ""
+        return "", ""
     
-    title_str = sanitize_excel_artifacts(str(title_val))
+    title_str = str(title_val).strip()
+    source = "Unknown"
+    
+    # Extract all bracketed tokens (supporting both [ and { as openers)
+    all_brackets = re.findall(r'[\[{](.*?)[\]}]', title_str)
+    
+    # Priority rule: if any bracket contains "Market Issue", use that as Source
+    market_issue_match = next(
+        (b.strip() for b in all_brackets if re.search(r'market\s*issue', b, re.IGNORECASE)),
+        None
+    )
+    if market_issue_match:
+        # Normalize to "Market Issue" regardless of date suffixes like "Market Issue-26DO-23"
+        source = re.sub(r'[-–]\s*\w+$', '', market_issue_match).strip()
+        if not re.search(r'market\s*issue', source, re.IGNORECASE):
+            source = "Market Issue"
+        else:
+            source = "Market Issue"
+    elif all_brackets:
+        # Fallback: use first bracket as source
+        source = all_brackets[0].strip()
     
     # Remove all bracketed items e.g. [CS], [EWP], [SM-F415F_SWA], [Display]
     cleaned = re.sub(r'[\[{].*?[\]}]', '', title_str)
@@ -26,15 +46,17 @@ def clean_title(title_val):
     # Clean up double spaces or trailing spaces
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
     
-    return cleaned
+    return source, cleaned
 
 
 def clean_problem(problem_val):
     if pd.isna(problem_val):
         return ""
     
-    # ── Excel artifacts and Whitespace ─────────────────────────
-    problem_str = sanitize_excel_artifacts(str(problem_val))
+    problem_str = str(problem_val)
+    # ── Zero-width and special spaces ─────────────────────────
+    problem_str = re.sub(r'[\xa0\u200b\u200c]+', ' ', problem_str)
+    problem_str = problem_str.strip()
     
     # ── SIP and IMS Logs (usually rest of text) ───────────────
     problem_str = re.compile(
@@ -508,6 +530,15 @@ def clean_excel(file_path, folder_type=None):
                 cleaned_titles.append(cln)
                 
             df[title_col] = cleaned_titles
+            
+            # Map Source to column
+            source_col = next((c for c in df.columns if str(c).lower().strip() == 'source'), None)
+            if source_col:
+                df[source_col] = sources
+            else:
+                # Insert Source column near Title
+                title_idx = df.columns.get_loc(title_col)
+                df.insert(title_idx, 'Source', sources)
                 
         if problem_col:
             df[problem_col] = df[problem_col].apply(clean_problem)
@@ -537,5 +568,4 @@ if __name__ == "__main__":
         sys.exit(1)
     
     file_path = sys.argv[1].strip().strip('"\'')
-    folder_type = sys.argv[2].strip() if len(sys.argv) > 2 else None
-    clean_excel(file_path, folder_type)
+    clean_excel(file_path)
